@@ -1,7 +1,7 @@
 import React from 'react';
 import { Chain, CompletionHistory } from '../types';
 import { ArrowLeft, Flame, CheckCircle, XCircle, Calendar, Clock, AlertCircle, Trash2 } from 'lucide-react';
-import { formatTime } from '../utils/time';
+import { formatTime, formatDuration } from '../utils/time';
 
 interface ChainDetailProps {
   chain: Chain;
@@ -130,7 +130,7 @@ export const ChainDetail: React.FC<ChainDetailProps> = ({
                     <div className="space-y-2">
                       {chain.exceptions.map((exception, index) => (
                         <div key={index} className="bg-yellow-900/30 rounded-lg p-3 border border-yellow-700/50">
-                          <p className="text-yellow-300 text-sm">{exception}</p>
+                          <p className="text-yellow-300 text-sm">{exception.name}: {exception.condition}</p>
                         </div>
                       ))}
                     </div>
@@ -143,7 +143,7 @@ export const ChainDetail: React.FC<ChainDetailProps> = ({
                     <div className="space-y-2">
                       {chain.auxiliaryExceptions.map((exception, index) => (
                         <div key={index} className="bg-blue-900/30 rounded-lg p-3 border border-blue-700/50">
-                          <p className="text-blue-300 text-sm">{exception}</p>
+                          <p className="text-blue-300 text-sm">{exception.name}: {exception.condition}</p>
                         </div>
                       ))}
                     </div>
@@ -194,9 +194,18 @@ export const ChainDetail: React.FC<ChainDetailProps> = ({
                         <p className="text-gray-400 text-sm">
                           {record.completedAt.toLocaleDateString('zh-CN')}
                         </p>
-                        <div className="flex items-center space-x-1 text-gray-500 text-sm">
+                        <div className="flex items-center justify-end space-x-1 text-gray-500 text-sm">
                           <Clock size={14} />
-                          <span>{formatTime(record.duration)}</span>
+                          <span>
+                            {record.extraDuration > 0 
+                              ? formatTime(record.plannedDuration + record.extraDuration)
+                              : formatTime(record.actualDuration ?? record.plannedDuration)}
+                          </span>
+                        </div>
+                        <div className="text-gray-400 text-xs">
+                {record.extraDuration > 0
+                  ? `计划: ${formatDuration(record.plannedDuration * 60)}, 额外: ${formatDuration(record.extraDuration * 60)}`
+                  : `计划: ${formatDuration(record.plannedDuration * 60)}, 实际: ${formatDuration((record.actualDuration ?? record.plannedDuration) * 60)}`}
                         </div>
                       </div>
                     </div>

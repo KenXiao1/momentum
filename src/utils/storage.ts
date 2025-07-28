@@ -1,4 +1,13 @@
-import { Chain, ScheduledSession, ActiveSession, CompletionHistory } from '../types';
+import { 
+  Chain, 
+  ScheduledSession, 
+  ActiveSession, 
+  CompletionHistory,
+  SerializedChain,
+  SerializedSession,
+  SerializedActiveSession,
+  SerializedCompletionHistory
+} from '../types';
 
 const STORAGE_KEYS = {
   CHAINS: 'momentum_chains',
@@ -11,11 +20,18 @@ export const storage = {
   getChains: (): Chain[] => {
     const data = localStorage.getItem(STORAGE_KEYS.CHAINS);
     if (!data) return [];
-    return JSON.parse(data).map((chain: any) => ({
+    return JSON.parse(data).map((chain: SerializedChain) => ({
       ...chain,
       auxiliaryStreak: chain.auxiliaryStreak || 0,
       auxiliaryFailures: chain.auxiliaryFailures || 0,
-      auxiliaryExceptions: chain.auxiliaryExceptions || [],
+      exceptions: chain.exceptions?.map((e) => ({
+        ...e,
+        editable: e.editable !== false
+      })) || [],
+      auxiliaryExceptions: chain.auxiliaryExceptions?.map((e) => ({
+        ...e,
+        editable: e.editable !== false
+      })) || [],
       createdAt: new Date(chain.createdAt),
       lastCompletedAt: chain.lastCompletedAt ? new Date(chain.lastCompletedAt) : undefined,
     }));
@@ -28,7 +44,7 @@ export const storage = {
   getScheduledSessions: (): ScheduledSession[] => {
     const data = localStorage.getItem(STORAGE_KEYS.SCHEDULED_SESSIONS);
     if (!data) return [];
-    return JSON.parse(data).map((session: any) => ({
+    return JSON.parse(data).map((session: SerializedSession) => ({
       ...session,
       auxiliarySignal: session.auxiliarySignal || '预约信号',
       scheduledAt: new Date(session.scheduledAt),
@@ -43,7 +59,7 @@ export const storage = {
   getActiveSession: (): ActiveSession | null => {
     const data = localStorage.getItem(STORAGE_KEYS.ACTIVE_SESSION);
     if (!data) return null;
-    const session = JSON.parse(data);
+    const session: SerializedActiveSession = JSON.parse(data);
     return {
       ...session,
       startedAt: new Date(session.startedAt),
@@ -62,7 +78,7 @@ export const storage = {
   getCompletionHistory: (): CompletionHistory[] => {
     const data = localStorage.getItem(STORAGE_KEYS.COMPLETION_HISTORY);
     if (!data) return [];
-    return JSON.parse(data).map((history: any) => ({
+    return JSON.parse(data).map((history: SerializedCompletionHistory) => ({
       ...history,
       completedAt: new Date(history.completedAt),
     }));

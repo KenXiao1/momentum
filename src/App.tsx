@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AppState, Chain, ScheduledSession, ActiveSession, CompletionHistory } from './types';
+import { AppState, Chain, ScheduledSession, ActiveSession, CompletionHistory, ExceptionRule } from './types';
 import { Dashboard } from './components/Dashboard';
 import { ChainEditor } from './components/ChainEditor';
 import { FocusMode } from './components/FocusMode';
@@ -49,7 +49,6 @@ function App() {
   useEffect(() => {
     const interval = setInterval(() => {
       setState(prev => {
-        const now = Date.now();
         const expiredSessions = prev.scheduledSessions.filter(
           session => isSessionExpired(session.expiresAt)
         );
@@ -90,7 +89,7 @@ function App() {
     }
   };
 
-  const handleSaveChain = (chainData: Omit<Chain, 'id' | 'currentStreak' | 'totalCompletions' | 'totalFailures' | 'createdAt' | 'lastCompletedAt'>) => {
+  const handleSaveChain = (chainData: Omit<Chain, 'id' | 'currentStreak' | 'totalCompletions' | 'totalFailures' | 'createdAt' | 'lastCompletedAt' | 'auxiliaryStreak' | 'auxiliaryFailures'>) => {
     setState(prev => {
       let updatedChains: Chain[];
       
@@ -192,16 +191,20 @@ function App() {
     });
   };
 
-  const handleCompleteSession = () => {
-    if (!state.activeSession) return;
-
-    const chain = state.chains.find(c => c.id === state.activeSession!.chainId);
+  const handleCompleteSession = (session: ActiveSession) => {
+    const chain = state.chains.find(c => c.id === session.chainId);
     if (!chain) return;
 
+    const actualDuration = session.learnedDuration || Math.floor(
+      (Date.now() - session.startedAt.getTime() - session.totalPausedTime) / 60000
+    );
+    
     const completionRecord: CompletionHistory = {
       chainId: chain.id,
       completedAt: new Date(),
-      duration: state.activeSession.duration,
+      plannedDuration: chain.duration,
+      extraDuration: Math.max(0, actualDuration - chain.duration),
+      actualDuration: actualDuration,
       wasSuccessful: true,
     };
 
@@ -233,16 +236,20 @@ function App() {
     });
   };
 
-  const handleInterruptSession = (reason?: string) => {
-    if (!state.activeSession) return;
-
-    const chain = state.chains.find(c => c.id === state.activeSession!.chainId);
+  const handleInterruptSession = (reason: string, session: ActiveSession) => {
+    const chain = state.chains.find(c => c.id === session.chainId);
     if (!chain) return;
 
+    const actualDuration = session.learnedDuration || Math.floor(
+      (Date.now() - session.startedAt.getTime() - session.totalPausedTime) / 60000
+    );
+    
     const completionRecord: CompletionHistory = {
       chainId: chain.id,
       completedAt: new Date(),
-      duration: state.activeSession.duration,
+      plannedDuration: chain.duration,
+      extraDuration: Math.max(0, actualDuration - chain.duration),
+      actualDuration: actualDuration,
       wasSuccessful: false,
       reasonForFailure: reason || '用户主动中断',
     };
@@ -314,7 +321,7 @@ function App() {
     });
   };
 
-  const handleAuxiliaryJudgmentFailure = (chainId: string, reason: string) => {
+  const handleAuxiliaryJudgmentFailure = (chainId: string) => {
     setState(prev => {
       // Remove the scheduled session
       const updatedScheduledSessions = prev.scheduledSessions.filter(
@@ -344,7 +351,7 @@ function App() {
     setShowAuxiliaryJudgment(null);
   };
 
-  const handleAuxiliaryJudgmentAllow = (chainId: string, exceptionRule: string) => {
+  const handleAuxiliaryJudgmentAllow = (chainId: string, exceptionRule: ExceptionRule) => {
     setState(prev => {
       // Remove the scheduled session
       const updatedScheduledSessions = prev.scheduledSessions.filter(
@@ -377,7 +384,7 @@ function App() {
     setShowAuxiliaryJudgment(chainId);
   };
 
-  const handleAddException = (exceptionRule: string) => {
+  const handleAddException = (exceptionRule: ExceptionRule) => {
     if (!state.activeSession) return;
 
     setState(prev => {
@@ -467,17 +474,22 @@ function App() {
             onCancel={handleBackToDashboard}
           />
           {showAuxiliaryJudgment && (
-            <AuxiliaryJudgment
-              chain={state.chains.find(c => c.id === showAuxiliaryJudgment)!}
-              onJudgmentFailure={(reason) => handleAuxiliaryJudgmentFailure(showAuxiliaryJudgment, reason)}
-              onJudgmentAllow={(exceptionRule) => handleAuxiliaryJudgmentAllow(showAuxiliaryJudgment, exceptionRule)}
-              onCancel={() => setShowAuxiliaryJudgment(null)}
-            />
+          <AuxiliaryJudgment
+            chain={state.chains.find(c => c.id === showAuxiliaryJudgment)!}
+            onJudgmentFailure={() => handleAuxiliaryJudgmentFailure(showAuxiliaryJudgment)}
+            onJudgmentAllow={(exceptionRule: string) => handleAuxiliaryJudgmentAllow(showAuxiliaryJudgment, {
+              id: crypto.randomUUID(),
+              name: '自定义例外',
+              condition: exceptionRule,
+              editable: true
+            })}
+            onCancel={() => setShowAuxiliaryJudgment(null)}
+          />
           )}
         </>
       );
 
-    case 'focus':
+    case 'focus': {
       const activeChain = state.chains.find(c => c.id === state.activeSession?.chainId);
       if (!state.activeSession || !activeChain) {
         handleBackToDashboard();
@@ -497,15 +509,21 @@ function App() {
           {showAuxiliaryJudgment && (
             <AuxiliaryJudgment
               chain={state.chains.find(c => c.id === showAuxiliaryJudgment)!}
-              onJudgmentFailure={(reason) => handleAuxiliaryJudgmentFailure(showAuxiliaryJudgment, reason)}
-              onJudgmentAllow={(exceptionRule) => handleAuxiliaryJudgmentAllow(showAuxiliaryJudgment, exceptionRule)}
+            onJudgmentFailure={() => handleAuxiliaryJudgmentFailure(showAuxiliaryJudgment)}
+            onJudgmentAllow={(exceptionRule: string) => handleAuxiliaryJudgmentAllow(showAuxiliaryJudgment, {
+              id: crypto.randomUUID(),
+              name: '自定义例外',
+              condition: exceptionRule,
+              editable: true
+            })}
               onCancel={() => setShowAuxiliaryJudgment(null)}
             />
           )}
         </>
       );
+    }
 
-    case 'detail':
+    case 'detail': {
       const viewingChain = state.chains.find(c => c.id === state.viewingChainId);
       if (!viewingChain) {
         handleBackToDashboard();
@@ -523,13 +541,19 @@ function App() {
           {showAuxiliaryJudgment && (
             <AuxiliaryJudgment
               chain={state.chains.find(c => c.id === showAuxiliaryJudgment)!}
-              onJudgmentFailure={(reason) => handleAuxiliaryJudgmentFailure(showAuxiliaryJudgment, reason)}
-              onJudgmentAllow={(exceptionRule) => handleAuxiliaryJudgmentAllow(showAuxiliaryJudgment, exceptionRule)}
+            onJudgmentFailure={() => handleAuxiliaryJudgmentFailure(showAuxiliaryJudgment)}
+            onJudgmentAllow={(exceptionRule: string) => handleAuxiliaryJudgmentAllow(showAuxiliaryJudgment, {
+              id: crypto.randomUUID(),
+              name: '自定义例外',
+              condition: exceptionRule,
+              editable: true
+            })}
               onCancel={() => setShowAuxiliaryJudgment(null)}
             />
           )}
         </>
       );
+    }
 
     default:
       return (
@@ -547,8 +571,13 @@ function App() {
           {showAuxiliaryJudgment && (
             <AuxiliaryJudgment
               chain={state.chains.find(c => c.id === showAuxiliaryJudgment)!}
-              onJudgmentFailure={(reason) => handleAuxiliaryJudgmentFailure(showAuxiliaryJudgment, reason)}
-              onJudgmentAllow={(exceptionRule) => handleAuxiliaryJudgmentAllow(showAuxiliaryJudgment, exceptionRule)}
+            onJudgmentFailure={() => handleAuxiliaryJudgmentFailure(showAuxiliaryJudgment)}
+            onJudgmentAllow={(exceptionRule: string) => handleAuxiliaryJudgmentAllow(showAuxiliaryJudgment, {
+              id: crypto.randomUUID(),
+              name: '自定义例外',
+              condition: exceptionRule,
+              editable: true
+            })}
               onCancel={() => setShowAuxiliaryJudgment(null)}
             />
           )}

@@ -1,16 +1,29 @@
 export const formatTime = (minutes: number): string => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (hours > 0) {
-    return `${hours}h ${mins}m`;
-  }
-  return `${mins}m`;
+  const mins = Math.floor(minutes);
+  const secs = Math.round((minutes - mins) * 60);
+  // 确保秒数总是两位数显示
+  return `${mins}m${secs.toString().padStart(2, '0')}s`;
+};
+
+export const formatTimer = (seconds: number): string => {
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${minutes}:${secs.toString().padStart(2, '0')}`;
 };
 
 export const formatDuration = (seconds: number): string => {
   const minutes = Math.floor(seconds / 60);
+  // 小于1分钟统一显示为0分
+  if (minutes === 0) {
+    return `0分`;
+  }
+  
   const secs = seconds % 60;
-  return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  if (secs === 0) {
+    return `${minutes}分`;
+  }
+  
+  return `${minutes}分${secs}秒`;
 };
 
 export const getTimeRemaining = (expiresAt: Date): number => {

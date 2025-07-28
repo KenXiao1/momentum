@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ActiveSession, Chain } from '../types';
+import { ActiveSession, Chain, ExceptionRule } from '../types';
 import { AlertTriangle, Pause, Play, CheckCircle } from 'lucide-react';
-import { formatDuration } from '../utils/time';
+import { formatTimer } from '../utils/time';
 
 interface FocusModeProps {
   session: ActiveSession;
   chain: Chain;
-  onComplete: () => void;
-  onInterrupt: (reason?: string) => void;
-  onAddException: (exceptionRule: string) => void;
+  onComplete: (session: ActiveSession) => void;
+  onInterrupt: (reason: string, session: ActiveSession) => void;
+  onAddException: (exceptionRule: ExceptionRule) => void;
   onPause: () => void;
   onResume: () => void;
 }
@@ -23,60 +23,104 @@ export const FocusMode: React.FC<FocusModeProps> = ({
   onResume,
 }) => {
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [isOvertime, setIsOvertime] = useState(false);
+  const [overtimeSeconds, setOvertimeSeconds] = useState(0);
   const [showInterruptWarning, setShowInterruptWarning] = useState(false);
   const [interruptReason, setInterruptReason] = useState('');
-  const [selectedExistingRule, setSelectedExistingRule] = useState('');
+  const [selectedExistingRule, setSelectedExistingRule] = useState<ExceptionRule | null>(null);
   const [useExistingRule, setUseExistingRule] = useState(false);
+  const [showRestPrompt, setShowRestPrompt] = useState(false);
 
   useEffect(() => {
-    const calculateTimeRemaining = () => {
-      const now = Date.now();
-      const sessionDurationMs = session.duration * 60 * 1000;
-      const elapsedTime = session.isPaused 
-        ? (session.pausedAt?.getTime() || now) - session.startedAt.getTime()
-        : now - session.startedAt.getTime();
-      
-      const adjustedElapsedTime = elapsedTime - session.totalPausedTime;
-      const remaining = Math.max(0, sessionDurationMs - adjustedElapsedTime);
-      
-      return Math.ceil(remaining / 1000);
-    };
-
     const updateTimer = () => {
       if (session.isPaused) return;
       
-      const remaining = calculateTimeRemaining();
-      setTimeRemaining(remaining);
+      const now = Date.now();
+      const sessionDurationMs = session.duration * 60 * 1000;
       
-      if (remaining <= 0) {
-        onComplete();
+      if (!(session.startedAt instanceof Date)) {
+        console.error('Invalid startedAt:', session.startedAt);
+        return;
       }
+      
+      const elapsedTime = Math.max(0, now - session.startedAt.getTime() - session.totalPausedTime);
+      
+      if (isNaN(elapsedTime)) {
+        console.error('Invalid elapsedTime calculation');
+        return;
+      }
+
+      // 更新计时器状态
+      if (elapsedTime < sessionDurationMs) {
+        const remaining = Math.ceil((sessionDurationMs - elapsedTime) / 1000);
+        setTimeRemaining(remaining);
+        if (isOvertime) {
+          setIsOvertime(false);
+        }
+      } else {
+        if (!isOvertime) {
+          setIsOvertime(true);
+          setOvertimeSeconds(session.duration * 60);
+        }
+        
+        const extraSeconds = Math.ceil((elapsedTime - sessionDurationMs) / 1000) || 0;
+        setOvertimeSeconds(session.duration * 60 + extraSeconds);
+      }
+      
     };
 
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [session, onComplete]);
+  }, [session, onComplete, isOvertime]);
 
-  const progress = ((session.duration * 60 - timeRemaining) / (session.duration * 60)) * 100;
+  const currentDurationSeconds = isOvertime 
+    ? overtimeSeconds 
+    : session.duration * 60 - timeRemaining;
+  const progress = isOvertime 
+    ? 100 
+    : (currentDurationSeconds / (session.duration * 60)) * 100;
 
   const handleInterruptClick = () => {
     setShowInterruptWarning(true);
   };
 
   const handleJudgmentFailure = () => {
-    onInterrupt(interruptReason || '用户主动中断');
+    const learnedMinutes = Math.floor((Date.now() - session.startedAt.getTime() - session.totalPausedTime) / 60000);
+    
+    onInterrupt(interruptReason || '用户主动中断', {
+      ...session,
+      learnedDuration: learnedMinutes
+    });
     setShowInterruptWarning(false);
   };
 
   const handleJudgmentAllow = () => {
-    const ruleToAdd = useExistingRule ? selectedExistingRule : interruptReason.trim();
-    if (ruleToAdd) {
-      // 只有在使用新规则且不存在时才添加
-      if (!useExistingRule && !chain.exceptions.includes(ruleToAdd)) {
-        onAddException(ruleToAdd);
+    const learnedMinutes = Math.floor((Date.now() - session.startedAt.getTime() - session.totalPausedTime) / 60000);
+    const plannedMinutes = session.duration;
+    const extraMinutes = Math.max(0, learnedMinutes - plannedMinutes);
+    
+    const updatedSession: ActiveSession = {
+      ...session,
+      plannedDuration: plannedMinutes,
+      extraDuration: extraMinutes,
+      learnedDuration: learnedMinutes
+    };
+
+    if (useExistingRule && selectedExistingRule) {
+      onComplete(updatedSession);
+    } else if (!useExistingRule && interruptReason.trim()) {
+      const newRule: ExceptionRule = {
+        id: Date.now().toString(),
+        name: `自定义规则-${Date.now()}`,
+        condition: interruptReason.trim(),
+        editable: true
+      };
+      const exists = chain.exceptions.some(rule => rule.condition === newRule.condition);
+      if (!exists) {
+        onAddException(newRule);
       }
-      onComplete(); // 允许完成任务
+      onComplete(updatedSession);
     }
     setShowInterruptWarning(false);
   };
@@ -85,51 +129,44 @@ export const FocusMode: React.FC<FocusModeProps> = ({
     setUseExistingRule(useExisting);
     if (useExisting) {
       setInterruptReason('');
-      setSelectedExistingRule(chain.exceptions[0] || '');
+      setSelectedExistingRule(chain.exceptions[0] || null);
     } else {
-      setSelectedExistingRule('');
+      setSelectedExistingRule(null);
     }
   };
 
   const resetInterruptModal = () => {
     setShowInterruptWarning(false);
     setInterruptReason('');
-    setSelectedExistingRule('');
+    setSelectedExistingRule(null);
     setUseExistingRule(false);
   };
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-      {/* Background blur effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 opacity-95"></div>
       
-      {/* Main content */}
       <div className="relative z-10 text-center">
         <div className="mb-8">
           <h1 className="text-6xl font-light text-white mb-4">{chain.name}</h1>
           <p className="text-gray-400 text-xl">{chain.trigger}</p>
         </div>
         
-        {/* Timer display */}
         <div className="mb-12">
           <div className="text-8xl font-mono font-light text-white mb-6">
-            {formatDuration(timeRemaining)}
+          {isOvertime 
+            ? `已学习 ${formatTimer(overtimeSeconds)}`
+            : formatTimer(timeRemaining)}
           </div>
           
-          {/* Progress bar */}
           <div className="w-96 h-2 bg-gray-800 rounded-full mx-auto mb-4">
             <div 
               className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full transition-all duration-1000 ease-out"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
-          
-          <p className="text-gray-400">
-            {Math.floor((session.duration * 60 - timeRemaining) / 60)}分钟 / {session.duration}分钟
-          </p>
         </div>
 
-        {/* Control buttons */}
         <div className="flex justify-center space-x-6">
           <button
             onClick={session.isPaused ? onResume : onPause}
@@ -147,7 +184,23 @@ export const FocusMode: React.FC<FocusModeProps> = ({
         )}
       </div>
 
-      {/* Interrupt button */}
+      {showRestPrompt && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-30">
+          <div className="bg-blue-800 p-8 rounded-xl text-center max-w-md">
+            <h2 className="text-2xl font-bold text-white mb-4">该休息了！</h2>
+            <div className="flex flex-col items-end mb-6">
+              <p className="text-blue-200 text-right">您已连续学习{formatTimer(currentDurationSeconds)}，请休息片刻</p>
+            </div>
+            <button 
+              onClick={() => setShowRestPrompt(false)}
+              className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-medium"
+            >
+              确定
+            </button>
+          </div>
+        </div>
+      )}
+
       <button
         onClick={handleInterruptClick}
         className="absolute bottom-8 right-8 bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
@@ -156,7 +209,6 @@ export const FocusMode: React.FC<FocusModeProps> = ({
         <span>中断/规则判定</span>
       </button>
 
-      {/* Interrupt warning modal */}
       {showInterruptWarning && (
         <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-20">
           <div className="bg-gray-800 rounded-xl p-8 max-w-lg border border-gray-700">
@@ -169,7 +221,6 @@ export const FocusMode: React.FC<FocusModeProps> = ({
             </div>
             
             <div className="mb-6 space-y-4">
-              {/* 规则类型选择 */}
               {chain.exceptions.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center space-x-4">
@@ -197,20 +248,27 @@ export const FocusMode: React.FC<FocusModeProps> = ({
                 </div>
               )}
 
-              {/* 已有规则选择 */}
               {useExistingRule && chain.exceptions.length > 0 && (
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
                     选择适用的例外规则：
                   </label>
                   <select
-                    value={selectedExistingRule}
-                    onChange={(e) => setSelectedExistingRule(e.target.value)}
+                    value={selectedExistingRule ? chain.exceptions.findIndex(r => r.id === selectedExistingRule.id) : -1}
+                    onChange={(e) => {
+                      const index = parseInt(e.target.value);
+                      if (index >= 0 && index < chain.exceptions.length) {
+                        setSelectedExistingRule(chain.exceptions[index]);
+                      } else {
+                        setSelectedExistingRule(null);
+                      }
+                    }}
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
                   >
-                    {chain.exceptions.map((exception, index) => (
-                      <option key={index} value={exception}>
-                        {exception}
+                    <option value={-1}>请选择规则</option>
+                    {chain.exceptions.map((rule, index) => (
+                      <option key={rule.id} value={index}>
+                        {rule.name}: {rule.condition}
                       </option>
                     ))}
                   </select>
@@ -223,7 +281,6 @@ export const FocusMode: React.FC<FocusModeProps> = ({
                 </div>
               )}
 
-              {/* 新规则输入 */}
               {!useExistingRule && (
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
@@ -237,7 +294,7 @@ export const FocusMode: React.FC<FocusModeProps> = ({
                     rows={3}
                     required
                   />
-                  {interruptReason.trim() && chain.exceptions.includes(interruptReason.trim()) && (
+                  {interruptReason.trim() && chain.exceptions.some(r => r.condition === interruptReason.trim()) && (
                     <div className="mt-2 p-3 bg-yellow-900/30 rounded-lg border border-yellow-700/50">
                       <p className="text-yellow-300 text-sm">
                         ⚠️ 此规则已存在，建议选择"使用已有例外规则"
@@ -293,8 +350,8 @@ export const FocusMode: React.FC<FocusModeProps> = ({
               <div className="mt-6 p-4 bg-gray-700 rounded-lg">
                 <h4 className="text-white font-medium mb-2">当前例外规则：</h4>
                 <div className="space-y-1">
-                  {chain.exceptions.map((exception, index) => (
-                    <div key={index} className="text-yellow-300 text-sm">• {exception}</div>
+                  {chain.exceptions.map((rule) => (
+                    <div key={rule.id} className="text-yellow-300 text-sm">• {rule.name}: {rule.condition}</div>
                   ))}
                 </div>
               </div>

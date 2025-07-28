@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Chain } from '../types';
+import { Chain, ExceptionRule } from '../types';
 import { ArrowLeft, Save, Headphones, Code, BookOpen, Dumbbell, Coffee, Target, Clock, Bell } from 'lucide-react';
 
 interface ChainEditorProps {
@@ -49,6 +49,17 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
   const [auxiliaryCompletionTrigger, setAuxiliaryCompletionTrigger] = useState(
     chain?.auxiliaryCompletionTrigger || ''
   );
+  const [exceptions, setExceptions] = useState(chain?.exceptions || []);
+  const [editingException, setEditingException] = useState<number | null>(null);
+  const [newException, setNewException] = useState<{
+    name: string;
+    condition: string;
+    editable: boolean;
+  }>({
+    name: '',
+    condition: '',
+    editable: true
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +74,7 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
       auxiliarySignal: auxiliarySignal === '自定义信号' ? customAuxiliarySignal.trim() : auxiliarySignal,
       auxiliaryDuration,
       auxiliaryCompletionTrigger: auxiliaryCompletionTrigger.trim(),
-      exceptions: chain?.exceptions || [],
+      exceptions,
       auxiliaryExceptions: chain?.auxiliaryExceptions || [],
     });
   };
@@ -99,6 +110,117 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
         </header>
 
         <form onSubmit={handleSubmit} className="space-y-8">
+          {/* 例外规则编辑 */}
+          <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 border-l-4 border-l-green-500">
+            <h3 className="text-lg font-semibold text-green-300 mb-4">例外规则</h3>
+            
+            <div className="space-y-4 mb-4">
+              {exceptions.map((rule, index) => (
+                <div key={rule.id} className="bg-gray-700 p-4 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium text-white">{rule.name}</span>
+                    <div className="flex space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewException({...rule});
+                          setEditingException(index);
+                        }}
+                        className="text-blue-400 hover:text-blue-300"
+                      >
+                        编辑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setExceptions(exceptions.filter((_, i) => i !== index));
+                        }}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        删除
+                      </button>
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-300">
+                    <p>条件: {String(rule.condition || '')}</p>
+                    <p>动作: 跳过</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-gray-700 p-4 rounded-lg">
+              <h4 className="text-white mb-3">
+                {editingException !== null ? '编辑规则' : '添加新规则'}
+              </h4>
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  value={newException.name}
+                  onChange={(e) => setNewException({...newException, name: e.target.value})}
+                  placeholder="规则名称"
+                  className="w-full bg-gray-600 border border-gray-500 rounded px-3 py-2 text-white"
+                />
+                <input
+                  type="text"
+                  value={newException.condition}
+                  onChange={(e) => setNewException({...newException, condition: e.target.value})}
+                  placeholder="触发条件"
+                  className="w-full bg-gray-600 border border-gray-500 rounded px-3 py-2 text-white"
+                />
+                <div className="flex justify-end space-x-2">
+                  {editingException !== null && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingException(null);
+                        setNewException({
+                          name: '',
+                          condition: '',
+                          editable: true
+                        });
+                      }}
+                      className="px-3 py-1 bg-gray-500 text-white rounded"
+                    >
+                      取消
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!newException.name || !newException.condition) return;
+                      
+                      const updatedRule: ExceptionRule = {
+                        ...newException,
+                        id: editingException !== null ? 
+                            exceptions[editingException].id : 
+                            Date.now().toString(),
+                      };
+
+                      if (editingException !== null) {
+                        setExceptions(exceptions.map((r, i) => 
+                          i === editingException ? updatedRule : r
+                        ));
+                      } else {
+                        setExceptions([...exceptions, updatedRule]);
+                      }
+                      
+                      setNewException({
+                        name: '',
+                        condition: '',
+                        editable: true
+                      });
+                      setEditingException(null);
+                    }}
+                    className="px-3 py-1 bg-green-500 text-white rounded"
+                  >
+                    {editingException !== null ? '更新' : '添加'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
             <label className="block text-sm font-medium text-gray-300 mb-3">
               链名称
