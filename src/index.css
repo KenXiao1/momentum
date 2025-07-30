@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply antialiased;
+  }
+  
+  body {
+    font-family: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    @apply bg-[#FDFDFD] text-[#161615];
+  }
+  
+  .font-mono {
+    font-family: 'JetBrains Mono', 'Noto Sans SC', monospace;
+  }
+  
+  .font-chinese {
+    font-family: 'Noto Sans SC', 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .bento-card {
+    @apply bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-500 hover:scale-[1.02] hover:bg-white/90;
+  }
+  
+  .bento-card-dark {
+    @apply bg-[#161615] text-white border border-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 hover:scale-[1.02];
+  }
+  
+  .gradient-primary {
+    background: linear-gradient(135deg, #5751D5 0%, rgba(87, 81, 213, 0.8) 100%);
+  }
+  
+  .gradient-dark {
+    background: linear-gradient(135deg, #161615 0%, rgba(22, 22, 21, 0.9) 100%);
+  }
+  
+  .glass-effect {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.8s ease-out forwards;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.5s ease-out forwards;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
