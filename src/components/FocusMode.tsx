@@ -86,7 +86,7 @@ export const FocusMode: React.FC<FocusModeProps> = ({
   };
 
   const handleJudgmentFailure = () => {
-    const learnedMinutes = Math.floor((Date.now() - session.startedAt.getTime() - session.totalPausedTime) / 60000);
+    const learnedMinutes = (Date.now() - session.startedAt.getTime() - session.totalPausedTime) / 60000;
     
     onInterrupt(interruptReason || '用户主动中断', {
       ...session,
@@ -96,7 +96,7 @@ export const FocusMode: React.FC<FocusModeProps> = ({
   };
 
   const handleJudgmentAllow = () => {
-    const learnedMinutes = Math.floor((Date.now() - session.startedAt.getTime() - session.totalPausedTime) / 60000);
+    const learnedMinutes = (Date.now() - session.startedAt.getTime() - session.totalPausedTime) / 60000;
     const plannedMinutes = session.duration;
     const extraMinutes = Math.max(0, learnedMinutes - plannedMinutes);
     

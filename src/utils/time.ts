@@ -1,7 +1,12 @@
 export const formatTime = (minutes: number): string => {
+  // 当传入整数分钟时直接显示分钟数
+  if (minutes % 1 === 0) {
+    return `${minutes}m`;
+  }
+  
+  // 处理带小数的分钟数
   const mins = Math.floor(minutes);
-  const secs = Math.round((minutes - mins) * 60);
-  // 确保秒数总是两位数显示
+  const secs = Math.floor((minutes - mins) * 60);
   return `${mins}m${secs.toString().padStart(2, '0')}s`;
 };
 
