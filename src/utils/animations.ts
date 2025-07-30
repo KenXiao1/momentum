@@ -1,22 +1,7 @@
 // Animation utilities using anime.js
-type AnimeParams = {
-  targets: string | HTMLElement | HTMLElement[];
-  translateY?: [number, number];
-  translateX?: [number, number];
-  scale?: [number, number] | [number, number, number];
-  opacity?: [number, number];
-  duration: number;
-  delay?: number | ((el: HTMLElement, index: number) => number);
-  easing: string;
-  loop?: boolean;
-};
-
 declare global {
   interface Window {
-    anime: {
-      (params: AnimeParams): { finished: Promise<void> };
-      stagger: (delay: number) => number;
-    };
+    anime: any;
   }
 }
 

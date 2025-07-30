@@ -1,3 +1,10 @@
+export interface ExceptionRule {
+  id: string;
+  name: string;
+  editable: boolean;
+  condition?: string; // 改为可选属性
+}
+
 export interface Chain {
   id: string;
   name: string;
@@ -19,13 +26,6 @@ export interface Chain {
   lastCompletedAt?: Date;
 }
 
-export interface ExceptionRule {
-  id: string;
-  name: string;
-  condition: string;
-  editable: boolean;
-}
-
 export interface ScheduledSession {
   chainId: string;
   scheduledAt: Date;
@@ -40,76 +40,17 @@ export interface ActiveSession {
   isPaused: boolean;
   pausedAt?: Date;
   totalPausedTime: number;
-  learnedDuration?: number; // 单位：分钟
-  plannedDuration?: number; // 计划时长（分钟）
-  extraDuration?: number; // 额外时长（分钟）
 }
 
 export interface CompletionHistory {
   chainId: string;
   completedAt: Date;
-  plannedDuration: number; // 计划时长（分钟）
-  extraDuration: number; // 额外时长（分钟）
-  actualDuration: number; // 实际学习时长（分钟）
+  duration: number;
   wasSuccessful: boolean;
   reasonForFailure?: string;
 }
 
 export type ViewState = 'dashboard' | 'editor' | 'focus' | 'detail';
-
-export interface SerializedChain {
-  id: string;
-  name: string;
-  trigger: string;
-  duration: number;
-  description: string;
-  currentStreak: number;
-  auxiliaryStreak: number;
-  totalCompletions: number;
-  totalFailures: number;
-  auxiliaryFailures: number;
-  exceptions: Array<{
-    id: string;
-    name: string;
-    condition: string;
-    editable: boolean;
-  }>;
-  auxiliaryExceptions: Array<{
-    id: string;
-    name: string;
-    condition: string;
-    editable: boolean;
-  }>;
-  auxiliarySignal: string;
-  auxiliaryDuration: number;
-  auxiliaryCompletionTrigger: string;
-  createdAt: string;
-  lastCompletedAt?: string;
-}
-
-export interface SerializedSession {
-  chainId: string;
-  scheduledAt: string;
-  expiresAt: string;
-  auxiliarySignal: string;
-}
-
-export interface SerializedActiveSession {
-  chainId: string;
-  startedAt: string;
-  duration: number;
-  isPaused: boolean;
-  pausedAt?: string;
-  totalPausedTime: number;
-}
-
-export interface SerializedCompletionHistory {
-  chainId: string;
-  completedAt: string;
-  duration: number;
-  wasSuccessful: boolean;
-  reasonForFailure?: string;
-}
 
 export interface AppState {
   chains: Chain[];

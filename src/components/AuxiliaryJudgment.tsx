@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Chain } from '../types';
-import { AlertTriangle, Calendar } from 'lucide-react';
+import { AlertTriangle, Calendar, CheckCircle } from 'lucide-react';
 
 interface AuxiliaryJudgmentProps {
   chain: Chain;
@@ -22,7 +22,7 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
   // 初始化时如果有已存在的规则，设置默认选择
   React.useEffect(() => {
     if (chain.auxiliaryExceptions && chain.auxiliaryExceptions.length > 0) {
-      setSelectedExistingRule(chain.auxiliaryExceptions[0]);
+      setSelectedExistingRule(chain.auxiliaryExceptions[0].name);
     }
   }, [chain.auxiliaryExceptions]);
 
@@ -30,7 +30,7 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
     setUseExistingRule(useExisting);
     if (useExisting) {
       setReason('');
-      setSelectedExistingRule(chain.auxiliaryExceptions?.[0] || '');
+      setSelectedExistingRule(chain.auxiliaryExceptions?.[0]?.name || '');
     } else {
       setSelectedExistingRule('');
     }
@@ -40,7 +40,7 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
     const ruleToAdd = useExistingRule ? selectedExistingRule : reason.trim();
     if (ruleToAdd) {
       // 只有在使用新规则且不存在时才添加
-      if (!useExistingRule && !chain.auxiliaryExceptions?.includes(ruleToAdd)) {
+      if (!useExistingRule && !chain.auxiliaryExceptions?.some(e => e.name === ruleToAdd)) {
         onJudgmentAllow(ruleToAdd);
       } else if (useExistingRule) {
         // 使用已有规则，不需要添加新规则，直接允许
@@ -53,54 +53,75 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-xl p-8 max-w-lg border border-gray-700">
-        <div className="text-center mb-6">
-          <div className="flex items-center justify-center space-x-2 text-blue-400 mb-4">
-            <Calendar size={32} />
-            <AlertTriangle size={32} />
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl p-8 max-w-2xl w-full border border-gray-200 shadow-2xl animate-scale-in">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center space-x-4 mb-6">
+            <div className="w-16 h-16 rounded-3xl bg-blue-500/10 flex items-center justify-center">
+              <Calendar size={32} className="text-blue-500" />
+            </div>
+            <div className="w-16 h-16 rounded-3xl bg-yellow-500/10 flex items-center justify-center">
+              <AlertTriangle size={32} className="text-yellow-500" />
+            </div>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">辅助链规则判定</h2>
-          <p className="text-gray-300 mb-4">
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold font-chinese text-[#161615] mb-2">辅助链规则判定</h2>
+            <p className="text-sm font-mono text-gray-500 tracking-wider">AUXILIARY CHAIN RULE JUDGMENT</p>
+          </div>
+          <p className="text-gray-600 mb-6 leading-relaxed font-chinese">
             你似乎做出了与预约承诺不符的行为。请描述具体情况并选择处理方式：
           </p>
-          <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-700/50">
-            <p className="text-blue-300 font-medium">
-              预约信号：{chain.auxiliarySignal}
-            </p>
-            <p className="text-blue-300 font-medium">
-              完成条件：{chain.auxiliaryCompletionTrigger}
-            </p>
-            <p className="text-blue-300 font-medium">
-              预约时长：{chain.auxiliaryDuration}分钟
-            </p>
+          <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-blue-700">
+              <div className="text-center">
+                <div className="flex items-center justify-center space-x-2 mb-2">
+                  <i className="fas fa-bell text-blue-500"></i>
+                  <span className="font-medium font-chinese">预约信号</span>
+                </div>
+                <p className="font-mono text-sm">{chain.auxiliarySignal}</p>
+              </div>
+              <div className="text-center">
+                <div className="flex items-center justify-center space-x-2 mb-2">
+                  <i className="fas fa-check-circle text-blue-500"></i>
+                  <span className="font-medium font-chinese">完成条件</span>
+                </div>
+                <p className="font-chinese text-sm">{chain.auxiliaryCompletionTrigger}</p>
+              </div>
+              <div className="text-center">
+                <div className="flex items-center justify-center space-x-2 mb-2">
+                  <i className="fas fa-clock text-blue-500"></i>
+                  <span className="font-medium font-chinese">预约时长</span>
+                </div>
+                <p className="font-mono text-sm">{chain.auxiliaryDuration}分钟</p>
+              </div>
+            </div>
           </div>
         </div>
         
-        <div className="mb-6 space-y-4">
+        <div className="mb-8 space-y-6">
           {/* 规则类型选择 */}
           {chain.auxiliaryExceptions && chain.auxiliaryExceptions.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center space-x-4">
-                <label className="flex items-center space-x-2 cursor-pointer">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-6">
+                <label className="flex items-center space-x-3 cursor-pointer">
                   <input
                     type="radio"
                     name="ruleType"
                     checked={useExistingRule}
                     onChange={() => handleRuleTypeChange(true)}
-                    className="text-green-500 focus:ring-green-500"
+                    className="w-5 h-5 text-green-500 focus:ring-green-500 focus:ring-2"
                   />
-                  <span className="text-green-300 font-medium">使用已有例外规则</span>
+                  <span className="text-green-600 font-medium font-chinese">使用已有例外规则</span>
                 </label>
-                <label className="flex items-center space-x-2 cursor-pointer">
+                <label className="flex items-center space-x-3 cursor-pointer">
                   <input
                     type="radio"
                     name="ruleType"
                     checked={!useExistingRule}
                     onChange={() => handleRuleTypeChange(false)}
-                    className="text-yellow-500 focus:ring-yellow-500"
+                    className="w-5 h-5 text-yellow-500 focus:ring-yellow-500 focus:ring-2"
                   />
-                  <span className="text-yellow-300 font-medium">添加新例外规则</span>
+                  <span className="text-yellow-600 font-medium font-chinese">添加新例外规则</span>
                 </label>
               </div>
             </div>
@@ -108,24 +129,25 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
 
           {/* 已有规则选择 */}
           {useExistingRule && chain.auxiliaryExceptions && chain.auxiliaryExceptions.length > 0 && (
-            <div>
-              <label className="block text-gray-300 text-sm font-medium mb-2">
+            <div className="bento-card bg-green-50 border-green-200">
+              <label className="block text-green-700 text-sm font-medium mb-3 font-chinese">
                 选择适用的例外规则：
               </label>
               <select
                 value={selectedExistingRule}
                 onChange={(e) => setSelectedExistingRule(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                className="w-full bg-white border border-green-300 rounded-2xl px-4 py-3 text-[#161615] focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-300 font-chinese"
               >
                 {chain.auxiliaryExceptions.map((exception, index) => (
-                  <option key={index} value={exception}>
-                    {exception}
+                  <option key={index} value={exception.name}>
+                    {exception.name}
                   </option>
                 ))}
               </select>
-              <div className="mt-2 p-3 bg-green-900/30 rounded-lg border border-green-700/50">
-                <div className="flex items-center space-x-2 text-green-300">
-                  <span className="text-sm">✅ 此行为已被允许，可以直接结束预约</span>
+              <div className="mt-4 p-4 bg-green-100 rounded-2xl border border-green-200">
+                <div className="flex items-center space-x-3 text-green-700">
+                  <CheckCircle size={20} />
+                  <span className="text-sm font-chinese">此行为已被允许，可以直接结束预约</span>
                 </div>
               </div>
             </div>
@@ -133,20 +155,20 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
 
           {/* 新规则输入 */}
           {!useExistingRule && (
-            <div>
-          <label className="block text-gray-300 text-sm font-medium mb-2">
+            <div className="bento-card bg-yellow-50 border-yellow-200">
+              <label className="block text-yellow-700 text-sm font-medium mb-3 font-chinese">
                 请描述具体行为：
-          </label>
-          <textarea
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="例如：忘记了预约、被紧急事务打断、身体不适、临时有其他安排等"
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 resize-none"
-            rows={3}
-          />
-              {reason.trim() && chain.auxiliaryExceptions?.includes(reason.trim()) && (
-                <div className="mt-2 p-3 bg-yellow-900/30 rounded-lg border border-yellow-700/50">
-                  <p className="text-yellow-300 text-sm">
+              </label>
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="例如：忘记了预约、被紧急事务打断、身体不适、临时有其他安排等"
+                className="w-full bg-white border border-yellow-300 rounded-2xl px-4 py-3 text-[#161615] placeholder-gray-400 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-300 resize-none font-chinese"
+                rows={3}
+              />
+              {reason.trim() && chain.auxiliaryExceptions?.some(exception => exception.name === reason.trim()) && (
+                <div className="mt-4 p-4 bg-yellow-100 rounded-2xl border border-yellow-200">
+                  <p className="text-yellow-700 text-sm font-chinese">
                     ⚠️ 此规则已存在，建议选择"使用已有例外规则"
                   </p>
                 </div>
@@ -158,10 +180,10 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
         <div className="space-y-4">
           <button
             onClick={() => onJudgmentFailure(reason || '用户主动中断预约')}
-            className="w-full bg-red-600 hover:bg-red-500 text-white px-6 py-4 rounded-lg font-medium transition-colors duration-200"
+            className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-4 rounded-2xl font-medium transition-all duration-300 hover:scale-105 shadow-lg font-chinese"
           >
             <div className="text-left">
-              <div className="font-bold">判定失败</div>
+              <div className="font-bold text-lg">判定失败</div>
               <div className="text-sm text-red-200">
                 辅助链记录将从 #{chain.auxiliaryStreak} 清零为 #0
               </div>
@@ -171,14 +193,14 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
           <button
             onClick={handleJudgmentAllowClick}
             disabled={useExistingRule ? !selectedExistingRule : !reason.trim()}
-            className={`w-full px-6 py-4 rounded-lg font-medium transition-colors duration-200 disabled:bg-gray-600 disabled:cursor-not-allowed text-white ${
+            className={`w-full px-6 py-4 rounded-2xl font-medium transition-all duration-300 disabled:bg-gray-300 disabled:cursor-not-allowed text-white hover:scale-105 shadow-lg font-chinese ${
               useExistingRule 
-                ? 'bg-green-600 hover:bg-green-500' 
-                : 'bg-yellow-600 hover:bg-yellow-500'
+                ? 'bg-green-500 hover:bg-green-600' 
+                : 'bg-yellow-500 hover:bg-yellow-600'
             }`}
           >
             <div className="text-left">
-              <div className="font-bold">判定允许（下必为例）</div>
+              <div className="font-bold text-lg">判定允许（下必为例）</div>
               <div className={`text-sm ${useExistingRule ? 'text-green-200' : 'text-yellow-200'}`}>
                 {useExistingRule 
                   ? '根据已有规则，此行为被允许' 
@@ -190,18 +212,24 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
           
           <button
             onClick={onCancel}
-            className="w-full bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+            className="w-full bg-gray-100 hover:bg-gray-200 text-[#161615] px-4 py-3 rounded-2xl font-medium transition-all duration-300 hover:scale-105 font-chinese"
           >
             取消 - 继续预约
           </button>
         </div>
         
         {chain.auxiliaryExceptions && chain.auxiliaryExceptions.length > 0 && (
-          <div className="mt-6 p-4 bg-gray-700 rounded-lg">
-            <h4 className="text-white font-medium mb-2">当前辅助链例外规则：</h4>
-            <div className="space-y-1">
+          <div className="mt-8 p-6 bg-gray-50 rounded-2xl border border-gray-200">
+            <h4 className="text-[#161615] font-medium mb-4 flex items-center space-x-2 font-chinese">
+              <i className="fas fa-list text-blue-500"></i>
+              <span>当前辅助链例外规则：</span>
+            </h4>
+            <div className="space-y-2">
               {chain.auxiliaryExceptions.map((exception, index) => (
-                <div key={index} className="text-blue-300 text-sm">• {exception}</div>
+                <div key={index} className="text-blue-600 text-sm flex items-center space-x-2">
+                  <i className="fas fa-check-circle text-xs"></i>
+                  <span className="font-chinese">{exception.name}</span>
+                </div>
               ))}
             </div>
           </div>

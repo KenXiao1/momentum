@@ -1,6 +1,7 @@
 import React from 'react';
 import { Chain, ScheduledSession } from '../types';
 import { ChainCard } from './ChainCard';
+import { Plus } from 'lucide-react';
 
 interface DashboardProps {
   chains: Chain[];
