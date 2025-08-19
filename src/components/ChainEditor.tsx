@@ -5,10 +5,7 @@ import { PureDOMSlider } from './PureDOMSlider';
 import { ResponsiveContainer } from './ResponsiveContainer';
 import { SettingSection } from './SettingSection';
 import { SliderContainer } from './SliderContainer';
-import { useLayoutOverflowDetection } from '../hooks/useLayoutOverflowDetection';
 import { useMobileOptimization, useTouchOptimization, useVirtualKeyboardAdaptation } from '../hooks/useMobileOptimization';
-import { usePerformanceMonitoring } from '../utils/performanceMonitor';
-import { useRenderCount, useWhyDidYouUpdate } from '../utils/renderOptimization';
 
 interface ChainEditorProps {
   chain?: Chain;
@@ -73,11 +70,6 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
     chain?.auxiliaryCompletionTrigger || ''
   );
 
-  // 时间限定状态
-  const [timeLimitHours, setTimeLimitHours] = useState(chain?.timeLimitHours);
-  const [timeLimitExceptions, setTimeLimitExceptions] = useState<string[]>(
-    chain?.timeLimitExceptions || []
-  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,14 +88,9 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
       auxiliaryCompletionTrigger: auxiliaryCompletionTrigger.trim()
     });
     
-    // For group chains, only name and description are required
-    if (type === 'group') {
-      if (!name.trim() || !description.trim()) return;
-    } else {
-      // For other chain types, all fields are required
-      if (!name.trim() || !trigger.trim() || !description.trim() || 
-          !auxiliarySignal.trim() || !auxiliaryCompletionTrigger.trim()) return;
-    }
+    // All fields are required for non-group chains
+    if (!name.trim() || !trigger.trim() || !description.trim() || 
+        !auxiliarySignal.trim() || !auxiliaryCompletionTrigger.trim()) return;
 
     // 如果时长为0（空值状态），使用默认值
     const finalDuration = isDurationless ? 0 : (duration === 0 ? 45 : duration);
@@ -120,18 +107,16 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
       type,
       parentId: finalParentId,
       sortOrder,
-      trigger: type === 'group' && !trigger ? '任务群容器' : (trigger === '自定义触发器' ? customTrigger.trim() : trigger),
+      trigger: trigger === '自定义触发器' ? customTrigger.trim() : trigger,
       duration: finalDuration,
       isDurationless,
       minimumDuration: isDurationless ? minimumDuration : undefined,
       description: description.trim(),
-      auxiliarySignal: type === 'group' && !auxiliarySignal ? '打响指' : (auxiliarySignal === '自定义信号' ? customAuxiliarySignal.trim() : auxiliarySignal),
+      auxiliarySignal: auxiliarySignal === '自定义信号' ? customAuxiliarySignal.trim() : auxiliarySignal,
       auxiliaryDuration: finalAuxiliaryDuration,
-      auxiliaryCompletionTrigger: type === 'group' && !auxiliaryCompletionTrigger ? '开始第一个子任务' : auxiliaryCompletionTrigger.trim(),
+      auxiliaryCompletionTrigger: auxiliaryCompletionTrigger.trim(),
       exceptions: chain?.exceptions || [],
       auxiliaryExceptions: chain?.auxiliaryExceptions || [],
-      timeLimitHours: type === 'group' ? timeLimitHours : undefined,
-      timeLimitExceptions: type === 'group' ? timeLimitExceptions.filter(ex => ex.trim()) : [],
     };
     
     console.log('ChainEditor - 即将保存的链条数据:', chainData);
@@ -159,32 +144,10 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
     }
   };
 
-  // 布局溢出检测
-  useLayoutOverflowDetection();
-  
   // 移动端优化
   const mobileInfo = useMobileOptimization();
   useTouchOptimization();
   const { keyboardHeight, isKeyboardVisible } = useVirtualKeyboardAdaptation();
-  
-  // 性能监控
-  const performance = usePerformanceMonitoring('ChainEditor');
-  const renderCount = useRenderCount('ChainEditor');
-  
-  // 调试重渲染原因
-  useWhyDidYouUpdate('ChainEditor', {
-    chain,
-    isEditing,
-    initialParentId,
-    onSave,
-    onCancel
-  });
-
-  // 启动性能监控
-  useEffect(() => {
-    performance.startMonitoring();
-    return () => performance.stopMonitoring();
-  }, [performance]);
 
   return (
     <div 
@@ -257,11 +220,9 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
                 name="chainType"
                 value={type}
                 onChange={(e) => setType(e.target.value as ChainType)}
-                className="w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-2xl px-6 py-4 text-gray-900 dark:text-slate-100 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-300 font-chinese"
-                required
+                className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-2xl px-6 py-4 text-gray-900 dark:text-slate-100 transition-all duration-300 hover:border-primary-300 dark:hover:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 font-chinese"
               >
                 <option value="unit">基础单元</option>
-                <option value="group">任务群容器</option>
                 <option value="assault">突击单元（学习、实验、论文）</option>
                 <option value="recon">侦查单元（信息搜集）</option>
                 <option value="command">指挥单元（制定计划）</option>
@@ -383,10 +344,10 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
                   value={trigger}
                   onChange={(e) => handleTriggerSelect(e.target.value)}
                   className="w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-2xl px-4 py-3 text-gray-900 dark:text-slate-100 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-300 mb-4 font-chinese"
-                 required={type !== 'group'}
+                  required
                 >
-                 <option value="" disabled className="text-gray-400">
-                   {type === 'group' ? '选择触发动作（可选）' : '选择触发动作'}
+                  <option value="" disabled className="text-gray-400">
+                    选择触发动作
                   </option>
                   {TRIGGER_TEMPLATES.map((template, index) => (
                     <option key={index} value={template.text} className="text-gray-900 dark:text-slate-100 bg-white dark:bg-slate-700">
@@ -472,163 +433,15 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
                 </div>
               )}
 
-              {type === 'group' && (
-                <>
-                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-2xl">
-                    <div className="flex items-start space-x-3">
-                      <i className="fas fa-info-circle text-blue-500 mt-1"></i>
-                      <div>
-                        <h4 className="text-blue-700 dark:text-blue-300 font-semibold font-chinese mb-2">任务群创建提示</h4>
-                        <ul className="text-blue-600 dark:text-blue-400 text-sm space-y-1 font-chinese">
-                          <li>• 任务群用于将多个相关任务组织在一起</li>
-                          <li>• 创建后可以在任务群详情页添加子任务</li>
-                          <li>• 适用于大型项目的分解管理</li>
-                          <li>• 可以追踪整个项目群的总体进度</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 时间限定设置 */}
-                  <div className="mt-6 space-y-4">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center">
-                        <i className="fas fa-clock text-orange-500"></i>
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-bold font-chinese text-gray-900 dark:text-slate-100">时间限定设置</h3>
-                        <p className="text-sm font-mono text-gray-500 tracking-wide">TIME LIMIT</p>
-                      </div>
-                    </div>
-
-                    {/* 时间限制开关 */}
-                    <div className="bento-card border-l-4 border-l-orange-500 animate-scale-in">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <i className="fas fa-stopwatch text-orange-500"></i>
-                          <div>
-                            <h4 className="text-lg font-bold font-chinese text-gray-900 dark:text-slate-100">启用时间限制</h4>
-                            <p className="text-xs font-mono text-gray-500">TIME LIMIT ENABLED</p>
-                          </div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={!!timeLimitHours}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setTimeLimitHours(24); // 默认24小时
-                              } else {
-                                setTimeLimitHours(undefined);
-                              }
-                            }}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-500"></div>
-                        </label>
-                      </div>
-                      
-                      {timeLimitHours && (
-                        <div className="space-y-4">
-                          {/* 时间限制设置 */}
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2 font-chinese">
-                              时间限制（小时）
-                            </label>
-                            <input
-                              type="number"
-                              min="1"
-                              max="168" // 一周
-                              value={timeLimitHours}
-                              onChange={(e) => setTimeLimitHours(parseInt(e.target.value) || undefined)}
-                              className="w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-2xl px-4 py-3 text-gray-900 dark:text-slate-100 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all duration-300 font-chinese"
-                              placeholder="24"
-                            />
-                          </div>
-
-                          {/* 例外规则 */}
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2 font-chinese">
-                              例外规则（可选）
-                            </label>
-                            <div className="space-y-2">
-                              {timeLimitExceptions.map((exception, index) => (
-                                <div key={index} className="flex items-center space-x-2">
-                                  <input
-                                    type="text"
-                                    value={exception}
-                                    onChange={(e) => {
-                                      const newExceptions = [...timeLimitExceptions];
-                                      newExceptions[index] = e.target.value;
-                                      setTimeLimitExceptions(newExceptions);
-                                    }}
-                                    className="flex-1 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-2xl px-4 py-3 text-gray-900 dark:text-slate-100 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all duration-300 font-chinese"
-                                    placeholder="例如：紧急会议、生病等"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const newExceptions = timeLimitExceptions.filter((_, i) => i !== index);
-                                      setTimeLimitExceptions(newExceptions);
-                                    }}
-                                    className="p-2 text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors"
-                                  >
-                                    <i className="fas fa-trash"></i>
-                                  </button>
-                                </div>
-                              ))}
-                              <button
-                                type="button"
-                                onClick={() => setTimeLimitExceptions([...timeLimitExceptions, ''])}
-                                className="w-full bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 border border-orange-200 dark:border-orange-700/50 rounded-2xl px-4 py-3 text-orange-600 dark:text-orange-400 transition-colors font-chinese"
-                              >
-                                <i className="fas fa-plus mr-2"></i>
-                                添加例外规则
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* 说明 */}
-                          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700/50 rounded-2xl p-4">
-                            <div className="flex items-start space-x-2">
-                              <i className="fas fa-info-circle text-orange-500 mt-1"></i>
-                              <div className="text-sm text-orange-700 dark:text-orange-300 font-chinese">
-                                <p className="mb-2">时间限制功能说明：</p>
-                                <ul className="space-y-1 text-xs">
-                                  <li>• 任务群开始后，必须在指定时间内完成所有子任务</li>
-                                  <li>• 超时未完成将清空任务群进度并记录失败</li>
-                                  <li>• 例外规则允许在特定情况下延长或豁免时间限制</li>
-                                  <li>• 建议根据任务复杂度合理设置时间限制</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
           </SettingSection>
 
           {/* 辅助链设置区 */}
           <SettingSection
             title="辅助链设置"
             icon={<Calendar className="text-blue-500" size={20} />}
-            description={type === 'group' ? '任务群的辅助设置（可选）' : '配置预约和完成条件'}
-            className={type === 'group' ? 'opacity-60' : ''}
+            description="配置预约和完成条件"
           >
                
-               {type === 'group' && (
-                 <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-2xl p-4 mb-6">
-                   <div className="flex items-center space-x-2 text-yellow-700 dark:text-yellow-300">
-                     <i className="fas fa-lightbulb"></i>
-                     <span className="text-sm font-chinese">
-                       任务群本身不执行具体任务，以下设置为可选项。你可以简化设置，重点关注任务群的整体描述。
-                     </span>
-                   </div>
-                 </div>
-               )}
               
               {/* 预约信号 */}
               <div className="bento-card border-l-4 border-l-blue-500 animate-scale-in">
@@ -645,10 +458,10 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
                   value={auxiliarySignal}
                   onChange={(e) => handleAuxiliarySignalSelect(e.target.value)}
                   className="w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-2xl px-4 py-3 text-gray-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300 mb-4 font-chinese"
-                  required={type !== 'group'}
+                  required
                 >
                   <option value="" disabled className="text-gray-400">
-                    {type === 'group' ? '选择预约信号（可选）' : '选择预约信号'}
+                    选择预约信号
                   </option>
                   {AUXILIARY_SIGNAL_TEMPLATES.map((template, index) => (
                     <option key={index} value={template.text} className="text-gray-900 dark:text-slate-100 bg-white dark:bg-slate-700">
@@ -747,15 +560,12 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
                   name="auxiliaryCompletionTrigger"
                   value={auxiliaryCompletionTrigger}
                   onChange={(e) => setAuxiliaryCompletionTrigger(e.target.value)}
-                  placeholder={type === 'group' ? '任务群的预约完成条件（可选）' : '例如：打开编程软件、坐到书房书桌前'}
+                  placeholder="例如：打开编程软件、坐到书房书桌前"
                   className="w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-2xl px-4 py-3 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300 font-chinese"
-                  required={type !== 'group'}
+                  required
                 />
                 <p className="text-gray-500 text-xs mt-3 leading-relaxed">
-                  {type === 'group' 
-                    ? '任务群的预约完成条件，通常是开始执行第一个子任务' 
-                    : '这是你在预约时间内必须完成的动作，通常就是主链的"神圣座位"触发器'
-                  }
+                  这是你在预约时间内必须完成的动作，通常就是主链的"神圣座位"触发器
                 </p>
               </div>
           </SettingSection>
@@ -772,32 +582,11 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
               name="taskDescription"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder={
-                type === 'group' 
-                  ? '描述这个任务群的目标和范围，例如：期末复习计划、网站开发项目、健身训练计划等'
-                  : '具体要做什么？例如：完成CS61A项目的第一部分'
-              }
+              placeholder="具体要做什么？例如：完成CS61A项目的第一部分"
               rows={4}
               className="w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-2xl px-6 py-4 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-400 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-300 resize-none font-chinese leading-relaxed"
               required
             />
-            
-            {type === 'group' && (
-              <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/50 rounded-2xl">
-                <div className="flex items-start space-x-3">
-                  <i className="fas fa-check-circle text-green-500 mt-1"></i>
-                  <div>
-                    <h4 className="text-green-700 dark:text-green-300 font-semibold font-chinese mb-2">任务群描述建议</h4>
-                    <ul className="text-green-600 dark:text-green-400 text-sm space-y-1 font-chinese">
-                      <li>• 明确这个任务群的总体目标</li>
-                      <li>• 说明预期包含哪些类型的子任务</li>
-                      <li>• 描述完成标准或里程碑</li>
-                      <li>• 可以提及时间安排或优先级</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            )}
             </div>
           </SettingSection>
 

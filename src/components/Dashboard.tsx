@@ -19,11 +19,13 @@ interface DashboardProps {
   scheduledSessions: ScheduledSession[];
   isLoading?: boolean;
   onCreateChain: () => void;
+  onCreateTaskGroup?: () => void;
   onOpenRSIP?: () => void;
   onStartChain: (chainId: string) => void;
   onScheduleChain: (chainId: string) => void;
   onViewChainDetail: (chainId: string) => void;
   onCancelScheduledSession?: (chainId: string) => void;
+  onCompleteBooking?: (chainId: string) => void;
   onDeleteChain: (chainId: string) => void;
   onImportChains: (chains: Chain[], options?: { history?: CompletionHistory[] }) => void;
   onRestoreChains?: (chainIds: string[]) => void;
@@ -36,10 +38,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
   scheduledSessions,
   isLoading = false,
   onCreateChain,
+  onCreateTaskGroup,
   onStartChain,
   onScheduleChain,
   onViewChainDetail,
   onCancelScheduledSession,
+  onCompleteBooking,
   onDeleteChain,
   onImportChains,
   onRestoreChains,
@@ -213,6 +217,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <i className="fas fa-plus"></i>
                   <span className="font-chinese font-medium">新建链</span>
                 </button>
+                {onCreateTaskGroup && (
+                  <button
+                    onClick={onCreateTaskGroup}
+                    className="bg-green-500 hover:bg-green-600 hover:shadow-xl text-white px-6 py-3 rounded-2xl font-medium transition-all duration-300 flex items-center space-x-2 hover:scale-105 shadow-lg"
+                  >
+                    <i className="fas fa-layer-group"></i>
+                    <span className="font-chinese font-medium">新建任务群</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -231,6 +244,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         onScheduleChain={onScheduleChain}
                         onViewDetail={onViewChainDetail}
                         onCancelScheduledSession={onCancelScheduledSession}
+                        onCompleteBooking={onCompleteBooking}
                         onDelete={onDeleteChain}
                       />
                     );
@@ -244,6 +258,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     onScheduleChain={onScheduleChain}
                     onViewDetail={onViewChainDetail}
                     onCancelScheduledSession={onCancelScheduledSession}
+                    onCompleteBooking={onCompleteBooking}
                     onDelete={onDeleteChain}
                   />
                 )

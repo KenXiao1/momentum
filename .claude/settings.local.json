@@ -8,7 +8,14 @@
       "Bash(npm run dev:*)",
       "Bash(npm run typecheck:*)",
       "Bash(npm run:*)",
-      "Bash(claude mcp add:*)"
+      "Bash(claude mcp add:*)",
+      "Bash(where claude)",
+      "Bash(claude mcp:*)",
+      "Bash(npx:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(docker:*)",
+      "mcp__firecrawl__firecrawl_scrape"
     ],
     "defaultMode": "acceptEdits"
   }

@@ -12,6 +12,7 @@ interface GroupCardProps {
   onScheduleChain: (chainId: string) => void;
   onViewDetail: (chainId: string) => void;
   onCancelScheduledSession?: (chainId: string) => void;
+  onCompleteBooking?: (chainId: string) => void;
   onDelete: (chainId: string) => void;
 }
 
@@ -22,6 +23,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({
   onScheduleChain,
   onViewDetail,
   onCancelScheduledSession,
+  onCompleteBooking,
   onDelete,
 }) => {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
@@ -176,6 +178,11 @@ export const GroupCard: React.FC<GroupCardProps> = ({
             <div className="flex items-center justify-center space-x-2 text-primary-500 mb-2">
               <i className="fas fa-fire text-lg"></i>
               <span className="text-2xl font-bold font-mono">#{group.currentStreak}</span>
+              {(group.groupRepeatCount && group.groupRepeatCount > 1) && (
+                <span className="text-sm text-gray-500 dark:text-slate-400 font-mono">
+                  ×{group.groupRepeatCount}
+                </span>
+              )}
             </div>
             <div className="text-xs font-chinese text-gray-600 dark:text-slate-400 font-medium">群组记录</div>
           </div>
@@ -193,19 +200,34 @@ export const GroupCard: React.FC<GroupCardProps> = ({
                 {formatDuration(timeRemaining)}
               </div>
             </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                // 取消的是具体已预约的单元
-                if (scheduledSession) {
-                  onCancelScheduledSession?.(scheduledSession.chainId);
-                }
-              }}
-              className="w-full bg-red-500/10 hover:bg-red-500/20 dark:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 px-3 py-3 rounded-xl text-sm transition-colors duration-200 flex items-center justify-center space-x-2 border border-red-200/50 dark:border-red-400/30"
-            >
-              <i className="fas fa-exclamation-triangle"></i>
-              <span className="font-chinese font-medium">中断/规则判定</span>
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // 对于任务群，完成预约使用实际的预约会话ID
+                  if (scheduledSession) {
+                    onCompleteBooking?.(scheduledSession.chainId);
+                  }
+                }}
+                className="flex-1 bg-green-500/10 hover:bg-green-500/20 dark:bg-green-500/20 dark:hover:bg-green-500/30 text-green-600 dark:text-green-400 px-3 py-3 rounded-xl text-sm transition-colors duration-200 flex items-center justify-center space-x-2 border border-green-200/50 dark:border-green-400/30"
+              >
+                <i className="fas fa-check"></i>
+                <span className="font-chinese font-medium">完成预约</span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // 取消的是具体已预约的单元
+                  if (scheduledSession) {
+                    onCancelScheduledSession?.(scheduledSession.chainId);
+                  }
+                }}
+                className="flex-1 bg-red-500/10 hover:bg-red-500/20 dark:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 px-3 py-3 rounded-xl text-sm transition-colors duration-200 flex items-center justify-center space-x-2 border border-red-200/50 dark:border-red-400/30"
+              >
+                <i className="fas fa-exclamation-triangle"></i>
+                <span className="font-chinese font-medium">中断/规则判定</span>
+              </button>
+            </div>
           </div>
         )}
 

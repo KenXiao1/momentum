@@ -173,8 +173,9 @@ export const getGroupProgress = (group: ChainTreeNode): { completed: number; tot
  */
 export const getNextUnitInGroup = (group: ChainTreeNode): ChainTreeNode | null => {
   if (group.type === 'unit') {
-    // Return this unit if it hasn't been completed yet
-    return group.currentStreak === 0 ? group : null;
+    // 检查该单元是否已完成其重复次数
+    const requiredRepeats = group.taskRepeatCount || 1;
+    return group.currentStreak < requiredRepeats ? group : null;
   }
 
   // For groups, find the first incomplete unit in order
@@ -189,7 +190,120 @@ export const getNextUnitInGroup = (group: ChainTreeNode): ChainTreeNode | null =
 };
 
 /**
- * 完成任务群时更新所有子单元的完成次数
+ * 检查任务群中的所有任务是否都已完成其重复次数
+ */
+export const isGroupFullyCompleted = (groupNode: ChainTreeNode): boolean => {
+  if (groupNode.type === 'unit') {
+    const requiredRepeats = groupNode.taskRepeatCount || 1;
+    return groupNode.currentStreak >= requiredRepeats;
+  }
+
+  // 对于任务群，检查所有子任务是否都已完成
+  return groupNode.children.every(child => isGroupFullyCompleted(child));
+};
+
+/**
+ * 检查单个任务是否已完成其重复次数
+ */
+export const isTaskCompleted = (task: ChainTreeNode): boolean => {
+  if (task.type !== 'unit') {
+    return false;
+  }
+  
+  const requiredRepeats = task.taskRepeatCount || 1;
+  return task.currentStreak >= requiredRepeats;
+};
+
+/**
+ * 获取任务还需要重复的次数
+ */
+export const getRemainingRepeats = (task: ChainTreeNode): number => {
+  if (task.type !== 'unit') {
+    return 0;
+  }
+  
+  const requiredRepeats = task.taskRepeatCount || 1;
+  const remaining = requiredRepeats - task.currentStreak;
+  return Math.max(0, remaining);
+};
+
+/**
+ * 重置任务群中所有任务的完成进度
+ */
+export const resetGroupTaskProgress = (chains: Chain[], groupId: string): Chain[] => {
+  const chainTree = buildChainTree(chains);
+  const groupNode = chainTree.find(node => node.id === groupId);
+  
+  if (!groupNode || groupNode.type !== 'group') {
+    return chains;
+  }
+  
+  // 获取所有子单元的ID
+  const getAllChildIds = (node: ChainTreeNode): string[] => {
+    let ids: string[] = [];
+    node.children.forEach(child => {
+      if (child.type === 'unit') {
+        ids.push(child.id);
+      } else {
+        ids = ids.concat(getAllChildIds(child));
+      }
+    });
+    return ids;
+  };
+  
+  const childIds = getAllChildIds(groupNode);
+  
+  // 重置所有子单元的完成进度
+  return chains.map(chain => {
+    if (childIds.includes(chain.id)) {
+      return {
+        ...chain,
+        currentStreak: 0, // 重置当前连续完成数
+      };
+    }
+    return chain;
+  });
+};
+
+/**
+ * 增加任务群的完成计数并重置子任务进度
+ */
+export const incrementGroupCompletionCount = (chains: Chain[], groupId: string): Chain[] => {
+  // 首先增加任务群的完成计数
+  const updatedChains = chains.map(chain => {
+    if (chain.id === groupId && chain.type === 'group') {
+      return {
+        ...chain,
+        currentStreak: chain.currentStreak + 1,
+        totalCompletions: chain.totalCompletions + 1,
+        lastCompletedAt: new Date(),
+      };
+    }
+    return chain;
+  });
+
+  // 然后重置子任务进度，准备下一轮重复
+  return resetGroupTaskProgress(updatedChains, groupId);
+};
+
+/**
+ * 重置任务群完成计数（当任务群失败或被中断时）
+ */
+export const resetGroupCompletionCount = (chains: Chain[], groupId: string): Chain[] => {
+  return chains.map(chain => {
+    if (chain.id === groupId && chain.type === 'group') {
+      return {
+        ...chain,
+        currentStreak: 0, // 重置任务群完成计数为0
+        totalFailures: chain.totalFailures + 1, // 增加失败次数
+      };
+    }
+    return chain;
+  });
+};
+
+/**
+ * 完成任务群时更新所有子单元的完成次数（保持向后兼容）
  */
 export const updateGroupCompletions = (chains: Chain[], groupId: string): Chain[] => {
   const chainTree = buildChainTree(chains);

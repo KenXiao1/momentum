@@ -26,6 +26,10 @@ export interface Chain {
   // 无时长任务（手动结束）
   isDurationless?: boolean; // 为 true 时不倒计时，由用户手动结束
   minimumDuration?: number; // 无时长任务的最小时长（分钟），达到后可提前完成
+  // 任务群重复功能
+  isTaskGroup?: boolean; // 是否为任务群（独立于链系统）
+  taskRepeatCount?: number; // 单个任务重复次数
+  groupRepeatCount?: number; // 整个任务群重复次数
   // 回收箱功能
   deletedAt?: Date | null; // 软删除时间戳，null表示未删除
   createdAt: Date;
@@ -416,7 +420,7 @@ export class EnhancedExceptionRuleException extends ExceptionRuleException {
   }
 }
 
-export type ViewState = 'dashboard' | 'editor' | 'focus' | 'detail' | 'group' | 'rsip';
+export type ViewState = 'dashboard' | 'editor' | 'focus' | 'detail' | 'group' | 'rsip' | 'taskgroup-editor';
 
 export interface AppState {
   chains: Chain[];

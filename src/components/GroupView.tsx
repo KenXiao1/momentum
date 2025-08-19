@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChainTreeNode, ScheduledSession } from '../types';
-import { ArrowLeft, Play, Plus, Users, Target, Import, Pencil } from 'lucide-react';
+import { ArrowLeft, Play, Plus, Users, Target, Import, Pencil, X } from 'lucide-react';
 import { getGroupProgress, getNextUnitInGroup, getChainTypeConfig } from '../utils/chainTree';
 import { formatTime } from '../utils/time';
 import { getGroupTimeStatus } from '../utils/timeLimit';
@@ -17,6 +17,7 @@ interface GroupViewProps {
   onDeleteChain: (chainId: string) => void;
   onAddUnit: () => void;
   onImportUnits: (unitIds: string[], groupId: string, mode?: 'move' | 'copy') => void;
+  onUpdateTaskRepeatCount?: (chainId: string, repeatCount: number) => void;
 }
 
 export const GroupView: React.FC<GroupViewProps> = ({
@@ -30,15 +31,33 @@ export const GroupView: React.FC<GroupViewProps> = ({
   onDeleteChain,
   onAddUnit,
   onImportUnits,
+  onUpdateTaskRepeatCount,
 }) => {
   const progress = getGroupProgress(group);
   const nextUnit = getNextUnitInGroup(group);
   const typeConfig = getChainTypeConfig(group.type);
   const timeStatus = getGroupTimeStatus(group);
   const [showImportModal, setShowImportModal] = React.useState(false);
+  const [showRepeatModal, setShowRepeatModal] = React.useState(false);
+  const [selectedUnitId, setSelectedUnitId] = React.useState<string>('');
+  const [repeatCount, setRepeatCount] = React.useState(1);
 
   const getScheduledSession = (chainId: string) => {
     return scheduledSessions.find(session => session.chainId === chainId);
+  };
+
+  const handleOpenRepeatModal = (unit: ChainTreeNode) => {
+    setSelectedUnitId(unit.id);
+    setRepeatCount(unit.taskRepeatCount || 1);
+    setShowRepeatModal(true);
+  };
+
+  const handleUpdateRepeatCount = () => {
+    if (onUpdateTaskRepeatCount && selectedUnitId) {
+      onUpdateTaskRepeatCount(selectedUnitId, repeatCount);
+    }
+    setShowRepeatModal(false);
+    setSelectedUnitId('');
   };
 
   const renderUnit = (unit: ChainTreeNode, index: number) => {
@@ -46,11 +65,12 @@ export const GroupView: React.FC<GroupViewProps> = ({
     const scheduledSession = getScheduledSession(unit.id);
     const isCompleted = unit.currentStreak > 0;
     const isNext = nextUnit?.id === unit.id;
+    const currentRepeatCount = unit.taskRepeatCount || 1;
 
     return (
       <div
         key={unit.id}
-        className={`bento-card transition-all duration-300 ${
+        className={`bento-card transition-all duration-300 relative ${
           isNext ? 'ring-2 ring-primary-500 ring-opacity-50' : ''
         } ${isCompleted ? 'bg-green-50 dark:bg-green-900/10' : ''}`}
       >
@@ -141,6 +161,21 @@ export const GroupView: React.FC<GroupViewProps> = ({
             </div>
           </div>
         </div>
+        
+        {/* 重复次数按钮 - 右下角 */}
+        <button
+          onClick={() => handleOpenRepeatModal(unit)}
+          className="absolute bottom-3 right-3 flex items-center space-x-1 px-2 py-1 
+                     bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-800 
+                     hover:bg-slate-700 dark:hover:bg-slate-300 
+                     rounded-md text-xs font-bold transition-all duration-200 
+                     shadow-md hover:shadow-lg border border-slate-600 dark:border-slate-400
+                     hover:scale-105"
+          title={`设置重复次数 (当前: ${currentRepeatCount})`}
+        >
+          <X size={12} className="opacity-90" />
+          <span>{currentRepeatCount}</span>
+        </button>
       </div>
     );
   };
@@ -338,6 +373,79 @@ export const GroupView: React.FC<GroupViewProps> = ({
           onImport={onImportUnits}
           onClose={() => setShowImportModal(false)}
         />
+      )}
+
+      {/* Repeat Count Modal */}
+      {showRepeatModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md animate-scale-in shadow-2xl border border-gray-200 dark:border-slate-600">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold font-chinese text-gray-900 dark:text-slate-100">
+                设置重复次数
+              </h3>
+              <button
+                onClick={() => setShowRepeatModal(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-3 font-chinese">
+                重复次数 (1-99)
+              </label>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setRepeatCount(Math.max(1, repeatCount - 1))}
+                  className="w-10 h-10 rounded-full bg-gray-200 dark:bg-slate-600 hover:bg-gray-300 dark:hover:bg-slate-500 flex items-center justify-center text-gray-600 dark:text-slate-300 font-bold transition-colors"
+                  disabled={repeatCount <= 1}
+                >
+                  -
+                </button>
+                
+                <input
+                  type="number"
+                  min="1"
+                  max="99"
+                  value={repeatCount}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 1;
+                    setRepeatCount(Math.min(99, Math.max(1, value)));
+                  }}
+                  className="w-20 h-12 text-center text-2xl font-bold bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-slate-100"
+                />
+                
+                <button
+                  onClick={() => setRepeatCount(Math.min(99, repeatCount + 1))}
+                  className="w-10 h-10 rounded-full bg-gray-200 dark:bg-slate-600 hover:bg-gray-300 dark:hover:bg-slate-500 flex items-center justify-center text-gray-600 dark:text-slate-300 font-bold transition-colors"
+                  disabled={repeatCount >= 99}
+                >
+                  +
+                </button>
+              </div>
+              
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-2 font-chinese">
+                设置该任务单元在任务群中需要重复执行的次数
+              </p>
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowRepeatModal(false)}
+                className="flex-1 px-4 py-3 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-chinese"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleUpdateRepeatCount}
+                className="flex-1 px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl transition-colors font-chinese font-medium"
+              >
+                确认设置
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

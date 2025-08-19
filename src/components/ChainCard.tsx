@@ -13,6 +13,7 @@ interface ChainCardProps {
   onScheduleChain: (chainId: string) => void;
   onViewDetail: (chainId: string) => void;
   onCancelScheduledSession?: (chainId: string) => void;
+  onCompleteBooking?: (chainId: string) => void;
   onDelete: (chainId: string) => void;
 }
 
@@ -23,6 +24,7 @@ export const ChainCard: React.FC<ChainCardProps> = ({
   onScheduleChain,
   onViewDetail,
   onCancelScheduledSession,
+  onCompleteBooking,
   onDelete,
 }) => {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
@@ -217,16 +219,28 @@ export const ChainCard: React.FC<ChainCardProps> = ({
             <div className="text-blue-600 dark:text-blue-400 text-xs mb-3 font-chinese">
               请在时间结束前完成: {chain.auxiliaryCompletionTrigger}
             </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onCancelScheduledSession?.(chain.id);
-              }}
-              className="w-full bg-red-500/10 hover:bg-red-500/20 dark:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 px-3 py-3 rounded-xl text-sm transition-colors duration-200 flex items-center justify-center space-x-2 border border-red-200/50 dark:border-red-400/30"
-            >
-              <i className="fas fa-exclamation-triangle"></i>
-              <span className="font-chinese font-medium">中断/规则判定</span>
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCompleteBooking?.(chain.id);
+                }}
+                className="flex-1 bg-green-500/10 hover:bg-green-500/20 dark:bg-green-500/20 dark:hover:bg-green-500/30 text-green-600 dark:text-green-400 px-3 py-3 rounded-xl text-sm transition-colors duration-200 flex items-center justify-center space-x-2 border border-green-200/50 dark:border-green-400/30"
+              >
+                <i className="fas fa-check"></i>
+                <span className="font-chinese font-medium">完成预约</span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCancelScheduledSession?.(chain.id);
+                }}
+                className="flex-1 bg-red-500/10 hover:bg-red-500/20 dark:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 px-3 py-3 rounded-xl text-sm transition-colors duration-200 flex items-center justify-center space-x-2 border border-red-200/50 dark:border-red-400/30"
+              >
+                <i className="fas fa-exclamation-triangle"></i>
+                <span className="font-chinese font-medium">中断/规则判定</span>
+              </button>
+            </div>
           </div>
         )}
 

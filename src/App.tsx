@@ -7,12 +7,13 @@ import { ChainEditor } from './components/ChainEditor';
 import { FocusMode } from './components/FocusMode';
 import { ChainDetail } from './components/ChainDetail';
 import { GroupView } from './components/GroupView';
+import { TaskGroupEditor } from './components/TaskGroupEditor';
 import { AuxiliaryJudgment } from './components/AuxiliaryJudgment';
 import { storage as localStorageUtils } from './utils/storage';
 import { supabaseStorage } from './utils/supabaseStorage';
 import { isSupabaseConfigured } from './lib/supabase';
 import { isSessionExpired } from './utils/time';
-import { buildChainTree, getNextUnitInGroup, updateGroupCompletions } from './utils/chainTree';
+import { buildChainTree, getNextUnitInGroup, updateGroupCompletions, isGroupFullyCompleted, incrementGroupCompletionCount, resetGroupCompletionCount } from './utils/chainTree';
 import { notificationManager } from './utils/notifications';
 import { startGroupTimer, isGroupExpired, resetGroupProgress } from './utils/timeLimit';
 import { forwardTimerManager } from './utils/forwardTimer';
@@ -123,6 +124,19 @@ function App() {
           </>
         );
 
+      case 'taskgroup-editor':
+        return (
+          <>
+            <TaskGroupEditor
+              chain={state.editingChain || undefined}
+              isEditing={!!state.editingChain}
+              initialParentId={state.viewingChainId || undefined}
+              onSave={handleSaveChain}
+              onCancel={handleBackToDashboard}
+            />
+          </>
+        );
+
       case 'focus': {
         const activeChain = state.chains.find(c => c.id === state.activeSession?.chainId);
         if (!state.activeSession || !activeChain) {
@@ -208,6 +222,7 @@ function App() {
               onDeleteChain={handleDeleteChain}
               onAddUnit={() => handleCreateChain(state.viewingChainId!)}
              onImportUnits={handleImportUnits}
+              onUpdateTaskRepeatCount={handleUpdateTaskRepeatCount}
             />
             {showAuxiliaryJudgment && (
               <AuxiliaryJudgment
@@ -246,11 +261,13 @@ function App() {
               scheduledSessions={state.scheduledSessions}
               isLoading={isLoadingData}
               onCreateChain={handleCreateChain}
+              onCreateTaskGroup={handleCreateTaskGroup}
               onOpenRSIP={() => setState(prev => ({ ...prev, currentView: 'rsip' }))}
               onStartChain={handleStartChain}
               onScheduleChain={handleScheduleChain}
               onViewChainDetail={handleViewChainDetail}
               onCancelScheduledSession={handleCancelScheduledSession}
+              onCompleteBooking={handleCompleteBooking}
               onDeleteChain={handleDeleteChain}
               onImportChains={handleImportChains}
               onRestoreChains={handleRestoreChains}
@@ -450,6 +467,14 @@ function App() {
     }));
   };
 
+  const handleCreateTaskGroup = () => {
+    setState(prev => ({
+      ...prev,
+      currentView: 'taskgroup-editor',
+      editingChain: null,
+    }));
+  };
+
   // 辅助函数：安全保存链条数据，保持回收箱完整
   const safelySaveChains = async (updatedActiveChains: Chain[]) => {
     try {
@@ -472,9 +497,11 @@ function App() {
   const handleEditChain = (chainId: string) => {
     const chain = state.chains.find(c => c.id === chainId);
     if (chain) {
+      // 区分任务群和普通链条的编辑
+      const isTaskGroup = chain.type === 'group' || chain.isTaskGroup;
       setState(prev => ({
         ...prev,
-        currentView: 'editor',
+        currentView: isTaskGroup ? 'taskgroup-editor' : 'editor',
         editingChain: chain,
       }));
     }
@@ -618,6 +645,11 @@ function App() {
     const chain = state.chains.find(c => c.id === chainId);
     if (!chain) return;
 
+    // 检查是否存在对该链的预约会话
+    const existingScheduledSession = state.scheduledSessions.find(
+      session => session.chainId === chainId
+    );
+
     // 如果是任务群，检查时间限定
     if (chain.type === 'group') {
       // 检查是否已过期
@@ -677,19 +709,40 @@ function App() {
       totalPausedTime: 0,
     };
 
-    // Remove any scheduled session for this chain
+    // Remove any scheduled session for this chain and update auxiliary streak if there was a booking
     const updatedScheduledSessions = state.scheduledSessions.filter(
       session => session.chainId !== chainId
     );
+
+    // 如果存在预约，增加辅助链记录（相当于自动完成预约）
+    let updatedChains = state.chains;
+    if (existingScheduledSession) {
+      updatedChains = state.chains.map(c =>
+        c.id === chainId
+          ? { ...c, auxiliaryStreak: c.auxiliaryStreak + 1 }
+          : c
+      );
+      
+      // 显示预约完成通知
+      notificationManager.notifyTaskCompleted(`${chain.name} (预约)`, chain.auxiliaryStreak + 1, '预约已完成');
+    }
 
     setState(prev => {
       storage.saveActiveSession(activeSession);
       storage.saveScheduledSessions(updatedScheduledSessions);
       
+      // 如果有预约完成，保存更新的链条数据
+      if (existingScheduledSession) {
+        safelySaveChains(updatedChains).catch(error => {
+          console.error('开始任务时保存链条数据失败:', error);
+        });
+      }
+      
       return {
         ...prev,
         activeSession,
         scheduledSessions: updatedScheduledSessions,
+        chains: updatedChains,
         currentView: 'focus',
       };
     });
@@ -738,9 +791,31 @@ function App() {
           : c
       );
       
-      // 如果完成的是单元任务，且该单元属于某个任务群，也要更新任务群的完成次数
+      // 如果完成的是单元任务，且该单元属于某个任务群，检查任务群是否完成
       if (chain.parentId && chain.type !== 'group') {
-        updatedChains = updateGroupCompletions(updatedChains, chain.parentId);
+        // 构建任务树来检查任务群状态
+        const chainTree = buildChainTree(updatedChains);
+        const groupNode = chainTree.find(node => node.id === chain.parentId);
+        
+        if (groupNode && groupNode.type === 'group') {
+          // 检查任务群中的所有任务是否都已完成其重复次数
+          if (isGroupFullyCompleted(groupNode)) {
+            console.log(`任务群 ${groupNode.name} 已完成所有任务，增加完成计数`);
+            
+            // 增加任务群的完成计数并重置子任务进度
+            updatedChains = incrementGroupCompletionCount(updatedChains, chain.parentId);
+            
+            // 显示任务群完成通知
+            const parentChain = updatedChains.find(c => c.id === chain.parentId);
+            if (parentChain) {
+              notificationManager.notifyTaskCompleted(
+                `${parentChain.name} (任务群)`, 
+                parentChain.currentStreak, 
+                '任务群完成一轮'
+              );
+            }
+          }
+        }
       }
 
       const updatedHistory = [...prev.completionHistory, completionRecord];
@@ -790,7 +865,7 @@ function App() {
     };
 
     setState(prev => {
-      const updatedChains = prev.chains.map(c =>
+      let updatedChains = prev.chains.map(c =>
         c.id === chain.id
           ? {
               ...c,
@@ -799,6 +874,12 @@ function App() {
             }
           : c
       );
+
+      // 如果中断的是单元任务，且该单元属于某个任务群，重置任务群的完成计数
+      if (chain.parentId && chain.type !== 'group') {
+        console.log(`任务 ${chain.name} 失败/中断，重置任务群完成计数`);
+        updatedChains = resetGroupCompletionCount(updatedChains, chain.parentId);
+      }
 
       const updatedHistory = [...prev.completionHistory, completionRecord];
       
@@ -926,6 +1007,40 @@ function App() {
 
   const handleCancelScheduledSession = (chainId: string) => {
     setShowAuxiliaryJudgment(chainId);
+  };
+
+  const handleCompleteBooking = (chainId: string) => {
+    setState(prev => {
+      // 移除对应的预约会话
+      const updatedScheduledSessions = prev.scheduledSessions.filter(
+        session => session.chainId !== chainId
+      );
+      
+      // 找到对应的链条并增加辅助链记录
+      const updatedChains = prev.chains.map(chain =>
+        chain.id === chainId
+          ? { ...chain, auxiliaryStreak: chain.auxiliaryStreak + 1 }
+          : chain
+      );
+      
+      // 保存更新的数据
+      storage.saveScheduledSessions(updatedScheduledSessions);
+      safelySaveChains(updatedChains).catch(error => {
+        console.error('完成预约时保存链条数据失败:', error);
+      });
+      
+      return {
+        ...prev,
+        scheduledSessions: updatedScheduledSessions,
+        chains: updatedChains
+      };
+    });
+    
+    // 显示完成通知
+    const chain = state.chains.find(c => c.id === chainId);
+    if (chain) {
+      notificationManager.notifyTaskCompleted(`${chain.name} (预约)`, chain.auxiliaryStreak + 1, '预约已完成');
+    }
   };
 
   const handleAddException = (exceptionRule: string) => {
@@ -1163,6 +1278,48 @@ function App() {
       alert(`导入失败: ${errorMessage}\n\n请查看控制台了解详细信息，然后重试`);
       
       // 如果导入失败，重新加载数据以确保状态一致性
+      try {
+        const currentChains = await storage.getChains();
+        setState(prev => ({
+          ...prev,
+          chains: currentChains,
+        }));
+      } catch (reloadError) {
+        console.error('重新加载数据也失败了:', reloadError);
+      }
+    }
+  };
+
+  const handleUpdateTaskRepeatCount = async (chainId: string, repeatCount: number) => {
+    console.log('开始更新任务重复次数...', { chainId, repeatCount });
+    
+    try {
+      // 找到要更新的链条
+      const updatedChains = state.chains.map(chain => {
+        if (chain.id === chainId) {
+          return { ...chain, taskRepeatCount: repeatCount };
+        }
+        return chain;
+      });
+
+      console.log('准备保存重复次数更新到存储...');
+      // Wait for data to be saved before updating UI - 使用安全保存方法
+      await safelySaveChains(updatedChains);
+      console.log('重复次数更新保存成功，更新UI状态');
+
+      // Only update state after successful save
+      setState(prev => ({
+        ...prev,
+        chains: updatedChains,
+      }));
+      console.log('重复次数更新完成，UI状态更新完成');
+    } catch (error) {
+      console.error('Failed to update task repeat count:', error);
+      // 提供更详细的错误信息
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      alert(`重复次数更新失败: ${errorMessage}\n\n请查看控制台了解详细信息，然后重试`);
+      
+      // 如果更新失败，重新加载数据以确保状态一致性
       try {
         const currentChains = await storage.getChains();
         setState(prev => ({
