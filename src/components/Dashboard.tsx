@@ -30,10 +30,12 @@ interface DashboardProps {
   onCancelScheduledSession?: (chainId: string) => void;
   onCompleteBooking?: (chainId: string) => void;
   onDeleteChain: (chainId: string) => void;
-  onImportChains: (chains: Chain[], options?: { history?: CompletionHistory[] }) => void;
+  onImportChains: (chains: Chain[], options?: { history?: CompletionHistory[]; rsipNodes?: any[]; rsipMeta?: any; exceptionRules?: any[] }) => void;
   onRestoreChains?: (chainIds: string[]) => void;
   onPermanentDeleteChains?: (chainIds: string[]) => void;
   history?: CompletionHistory[];
+  rsipNodes?: any[];
+  rsipMeta?: any;
 }
 
 // Performance optimized Dashboard component with React.memo and proper memoization
@@ -53,6 +55,8 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
   onRestoreChains,
   onPermanentDeleteChains,
   history,
+  rsipNodes,
+  rsipMeta,
   onOpenRSIP,
 }) => {
   const [showImportExport, setShowImportExport] = useState(false);
@@ -124,7 +128,7 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
     }
   }, [onPermanentDeleteChains, loadRecycleBinStats]);
   
-  const handleImport = useCallback((newChains: Chain[], options?: { history?: CompletionHistory[] }) => {
+  const handleImport = useCallback((newChains: Chain[], options?: { history?: CompletionHistory[]; rsipNodes?: any[]; rsipMeta?: any; exceptionRules?: any[] }) => {
     onImportChains(newChains, options);
   }, [onImportChains]);
   
@@ -298,6 +302,8 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
         <ImportExportModal
           chains={chains}
           history={history}
+          rsipNodes={rsipNodes}
+          rsipMeta={rsipMeta}
           onImport={handleImport}
           onClose={handleHideImportExport}
         />

@@ -240,7 +240,20 @@ class QueryOptimizer {
   }
   
   /**
-   * Generate performance report combining cache and React metrics
+   * Get performance stats without logging (for UI display)
+   */
+  getPerformanceStats() {
+    const cacheStats = this.getCacheStats();
+    const reactStats = reactPerformanceMonitor.getStats();
+    
+    return {
+      cache: cacheStats,
+      react: reactStats,
+    };
+  }
+
+  /**
+   * Generate performance report combining cache and React metrics (with logging)
    */
   generatePerformanceReport() {
     const cacheStats = this.getCacheStats();

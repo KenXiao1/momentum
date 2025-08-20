@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AppState, Chain, ScheduledSession, ActiveSession, CompletionHistory } from './types';
+import { AppState, Chain, ScheduledSession, ActiveSession, CompletionHistory, RSIPNode, RSIPMeta } from './types';
 import { Dashboard } from './components/Dashboard';
 import { RSIPView } from './components/RSIPView';
 import { AuthWrapper } from './components/AuthWrapper';
@@ -274,6 +274,8 @@ function App() {
               onRestoreChains={handleRestoreChains}
               onPermanentDeleteChains={handlePermanentDeleteChains}
               history={state.completionHistory}
+              rsipNodes={state.rsipNodes}
+              rsipMeta={state.rsipMeta}
             />
             {showAuxiliaryJudgment && (
               <AuxiliaryJudgment
@@ -1181,39 +1183,66 @@ function App() {
     }
   };
 
-  const handleImportChains = async (importedChains: Chain[], options?: { history?: CompletionHistory[] }) => {
-    console.log('开始导入链数据...', importedChains);
+  const handleImportChains = async (importedChains: Chain[], options?: { 
+    history?: CompletionHistory[];
+    rsipNodes?: RSIPNode[];
+    rsipMeta?: RSIPMeta;
+    exceptionRules?: any[];
+  }) => {
+    console.log('开始导入数据...', { chains: importedChains.length, options });
     
     try {
       // 合并导入的链条到现有链条中
       const updatedChains = [...state.chains, ...importedChains];
       const importedHistory = options?.history || [];
+      const importedRsipNodes = options?.rsipNodes || [];
+      const importedRsipMeta = options?.rsipMeta;
       
       console.log('准备保存导入的数据到存储...');
-      // Wait for data to be saved before updating UI - 使用安全保存方法
+      
+      // 保存链条数据
       await safelySaveChains(updatedChains);
       queryOptimizer.onDataChange('chains');
+      
+      // 保存完成历史
       if (Array.isArray(importedHistory) && importedHistory.length > 0) {
         const existing = await storage.getCompletionHistory();
-        const merged = [
-          ...existing,
-          ...importedHistory,
-        ];
+        const merged = [...existing, ...importedHistory];
         await storage.saveCompletionHistory(merged);
       }
+      
+      // 保存 RSIP 节点数据
+      if (Array.isArray(importedRsipNodes) && importedRsipNodes.length > 0) {
+        const existingNodes = await storage.getRSIPNodes();
+        const mergedNodes = [...existingNodes, ...importedRsipNodes];
+        await storage.saveRSIPNodes(mergedNodes);
+      }
+      
+      // 保存 RSIP 元数据
+      if (importedRsipMeta) {
+        const existingMeta = await storage.getRSIPMeta();
+        const mergedMeta = { ...existingMeta, ...importedRsipMeta };
+        await storage.saveRSIPMeta(mergedMeta);
+      }
+      
       console.log('导入数据保存成功，更新UI状态');
       
-      // Only update state after successful save
+      // 更新状态
       setState(prev => ({
         ...prev,
         chains: updatedChains,
         completionHistory: Array.isArray(importedHistory) && importedHistory.length > 0
           ? [...prev.completionHistory, ...importedHistory]
           : prev.completionHistory,
+        rsipNodes: Array.isArray(importedRsipNodes) && importedRsipNodes.length > 0
+          ? [...prev.rsipNodes, ...importedRsipNodes]
+          : prev.rsipNodes,
+        rsipMeta: importedRsipMeta ? { ...prev.rsipMeta, ...importedRsipMeta } : prev.rsipMeta,
       }));
+      
       console.log('导入完成，UI状态更新完成');
     } catch (error) {
-      console.error('Failed to import chains:', error);
+      console.error('Failed to import data:', error);
       // 提供更详细的错误信息
       const errorMessage = error instanceof Error ? error.message : '未知错误';
       alert(`导入失败: ${errorMessage}\n\n请查看控制台了解详细信息，然后重试`);
@@ -1221,9 +1250,13 @@ function App() {
       // 如果导入失败，重新加载数据以确保状态一致性
       try {
         const currentChains = await storage.getChains();
+        const currentRsipNodes = await storage.getRSIPNodes();
+        const currentRsipMeta = await storage.getRSIPMeta();
         setState(prev => ({
           ...prev,
           chains: currentChains,
+          rsipNodes: currentRsipNodes,
+          rsipMeta: currentRsipMeta,
         }));
       } catch (reloadError) {
         console.error('重新加载数据也失败了:', reloadError);
