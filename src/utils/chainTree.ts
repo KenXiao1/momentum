@@ -1,4 +1,5 @@
 import { Chain, ChainTreeNode } from '../types';
+import { performanceLogger } from './performanceLogger';
 
 /**
  * 验证链数据的完整性
@@ -37,39 +38,40 @@ const validateChainData = (chains: Chain[]): { isValid: boolean; errors: string[
  * 将扁平的链数组转换为树状结构
  */
 export const buildChainTree = (chains: Chain[]): ChainTreeNode[] => {
+  return performanceLogger.time('buildChainTree', () => {
   try {
     // Validate input data
     if (!Array.isArray(chains)) {
-      console.error('buildChainTree: 输入不是数组');
+      performanceLogger.error('buildChainTree: 输入不是数组');
       return [];
     }
     
     if (chains.length === 0) {
-      console.log('buildChainTree: 输入为空数组');
+      performanceLogger.debug('buildChainTree: 输入为空数组');
       return [];
     }
     
     // Validate chain data integrity
     const validation = validateChainData(chains);
     if (!validation.isValid) {
-      console.warn('buildChainTree: 数据完整性检查发现问题:', validation.errors);
+      performanceLogger.warn('buildChainTree: 数据完整性检查发现问题:', validation.errors);
       // Continue processing but log warnings
     }
     
     // 创建ID到节点的映射
     const nodeMap = new Map<string, ChainTreeNode>();
     
-    console.log('buildChainTree - 输入的chains:', chains.length, chains.map(c => ({ id: c.id, name: c.name, parentId: c.parentId, type: c.type })));
+    performanceLogger.debug('buildChainTree - 输入的chains:', chains.length, chains.map(c => ({ id: c.id, name: c.name, parentId: c.parentId, type: c.type })));
     
     // 修复循环引用和其他数据问题
     const cleanedChains = chains.map(chain => {
       if (!chain.id) {
-        console.error(`跳过无效链条（缺少ID）:`, chain);
+        performanceLogger.error(`跳过无效链条（缺少ID）:`, chain);
         return null;
       }
       
       if (chain.parentId === chain.id) {
-        console.warn(`修复循环引用: 链条 ${chain.name} (${chain.id}) 的父节点是自己，重置为根节点`);
+        performanceLogger.warn(`修复循环引用: 链条 ${chain.name} (${chain.id}) 的父节点是自己，重置为根节点`);
         return { ...chain, parentId: undefined };
       }
       
@@ -96,16 +98,16 @@ export const buildChainTree = (chains: Chain[]): ChainTreeNode[] => {
       if (parent) {
         parent.children.push(node);
         node.depth = parent.depth + 1;
-        console.log(`节点 ${chain.name} 作为 ${parent.name} 的子节点`);
+        performanceLogger.debug(`节点 ${chain.name} 作为 ${parent.name} 的子节点`);
       } else {
         // 父节点不存在，作为根节点处理
-        console.warn(`父节点 ${chain.parentId} 不存在，节点 ${chain.name} (${chain.id}) 将作为根节点处理`);
+        performanceLogger.warn(`父节点 ${chain.parentId} 不存在，节点 ${chain.name} (${chain.id}) 将作为根节点处理`);
         // Reset parentId to undefined and add to rootNodes
         node.parentId = undefined;
         rootNodes.push(node);
       }
     } else {
-      console.log(`节点 ${chain.name} 是根节点`);
+      performanceLogger.debug(`节点 ${chain.name} 是根节点`);
       rootNodes.push(node);
     }
   });
@@ -121,7 +123,7 @@ export const buildChainTree = (chains: Chain[]): ChainTreeNode[] => {
   // 对根节点也进行排序
   rootNodes.sort((a, b) => a.sortOrder - b.sortOrder);
 
-  console.log('buildChainTree - 构建的根节点:', rootNodes.length, rootNodes.map(r => ({ id: r.id, name: r.name, childrenCount: r.children.length })));
+  performanceLogger.debug('buildChainTree - 构建的根节点:', rootNodes.length, rootNodes.map(r => ({ id: r.id, name: r.name, childrenCount: r.children.length })));
   
   // Final validation - ensure all input chains are represented in the tree
   const treeNodeIds = new Set<string>();
@@ -137,15 +139,16 @@ export const buildChainTree = (chains: Chain[]): ChainTreeNode[] => {
   const missingIds = [...inputIds].filter(id => !treeNodeIds.has(id));
   
   if (missingIds.length > 0) {
-    console.error('buildChainTree: 以下链条在树中丢失:', missingIds);
+    performanceLogger.error('buildChainTree: 以下链条在树中丢失:', missingIds);
   }
   
   return rootNodes;
   } catch (error) {
-    console.error('buildChainTree: 构建树时发生错误:', error);
+    performanceLogger.error('buildChainTree: 构建树时发生错误:', error);
     // Return empty array to prevent app crash
     return [];
   }
+  }); // End performanceLogger.time
 };
 
 /**

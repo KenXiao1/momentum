@@ -29,7 +29,8 @@ const EXPECTED_SCHEMA = {
     'total_failures', 'auxiliary_failures', 'exceptions', 'auxiliary_exceptions', 
     'auxiliary_signal', 'auxiliary_duration', 'auxiliary_completion_trigger', 
     'created_at', 'last_completed_at', 'user_id', 'is_durationless', 
-    'time_limit_hours', 'time_limit_exceptions', 'group_started_at', 'group_expires_at'
+    'time_limit_hours', 'time_limit_exceptions', 'group_started_at', 'group_expires_at',
+    'deleted_at'
   ],
   scheduled_sessions: [
     'id', 'chain_id', 'scheduled_at', 'expires_at', 'auxiliary_signal', 'user_id'
@@ -52,7 +53,26 @@ const EXPECTED_SCHEMA = {
 };
 
 export class SchemaChecker {
+  private schemaCache: Map<string, { result: TableInfo | null; timestamp: number }> = new Map();
+  private readonly CACHE_DURATION = 15 * 60 * 1000; // 15 minutes cache
+
+  /**
+   * Clear schema cache
+   */
+  clearSchemaCache(): void {
+    this.schemaCache.clear();
+    logger.info('SCHEMA', '架构缓存已清除');
+  }
+
   async getTableInfo(tableName: string): Promise<TableInfo | null> {
+    // Check cache first
+    const cached = this.schemaCache.get(tableName);
+    const now = Date.now();
+    
+    if (cached && (now - cached.timestamp) < this.CACHE_DURATION) {
+      logger.debug('SCHEMA', `使用缓存的表信息: ${tableName}`);
+      return cached.result;
+    }
     try {
       const { data, error } = await supabase
         .from('information_schema.columns')
@@ -62,15 +82,24 @@ export class SchemaChecker {
 
       if (error) {
         logger.error('SCHEMA', `获取表 ${tableName} 信息失败`, { error: error.message });
+        // Cache null result to avoid repeated failed queries
+        this.schemaCache.set(tableName, { result: null, timestamp: now });
         return null;
       }
 
-      return {
+      const result: TableInfo = {
         table_name: tableName,
         columns: data || []
       };
+      
+      // Cache successful result
+      this.schemaCache.set(tableName, { result, timestamp: now });
+      
+      return result;
     } catch (error) {
       logger.error('SCHEMA', `查询表 ${tableName} 时发生异常`, { error });
+      // Cache null result to avoid repeated failed queries
+      this.schemaCache.set(tableName, { result: null, timestamp: now });
       return null;
     }
   }
@@ -147,8 +176,16 @@ export class SchemaChecker {
       recommendations.push('运行无时长任务迁移: 20250808001000_add_durationless_flag.sql');
     }
     
+    if (missingColumns.chains?.includes('deleted_at')) {
+      recommendations.push('运行软删除功能迁移: 20250814000000_add_soft_delete.sql');
+    }
+    
     if (missingTables.includes('rsip_nodes') || missingTables.includes('rsip_meta')) {
       recommendations.push('运行RSIP功能迁移: 20250810000000_add_rsip_tables.sql');
+    }
+    
+    if (Object.keys(missingColumns).length === 0 && missingTables.length === 0) {
+      recommendations.push('数据库架构完整，建议运行性能优化索引脚本以提升查询性能');
     }
     
     const status: SchemaStatus = {

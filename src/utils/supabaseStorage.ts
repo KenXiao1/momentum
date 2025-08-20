@@ -1,4 +1,5 @@
 import { supabase, getCurrentUser } from '../lib/supabase';
+import { queryOptimizer } from './queryOptimizer';
 import { Chain, DeletedChain, ScheduledSession, ActiveSession, CompletionHistory, RSIPNode, RSIPMeta } from '../types';
 import { logger, measurePerformance } from './logger';
 
@@ -11,6 +12,8 @@ interface SchemaVerificationResult {
 export class SupabaseStorage {
   private schemaCache: Map<string, SchemaVerificationResult> = new Map();
   private lastSchemaCheck: Date | null = null;
+  private sessionSchemaVerified: Set<string> = new Set(); // Track tables verified this session
+  private readonly CACHE_DURATION = 10 * 60 * 1000; // 10 minutes cache
   
   /**
    * Retry a database operation with exponential backoff
@@ -37,12 +40,14 @@ export class SupabaseStorage {
         }
         
         if (attempt === maxRetries) {
-          console.error(`操作在 ${maxRetries} 次重试后仍失败:`, lastError.message);
+          logger.error('Database operation failed after retries', { maxRetries, error: lastError.message });
           throw lastError;
         }
         
         const delay = baseDelay * Math.pow(2, attempt);
-        console.warn(`操作失败，${delay}ms 后重试 (尝试 ${attempt + 1}/${maxRetries}):`, lastError.message);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`Operation failed, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries}):`, lastError.message);
+        }
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
@@ -56,20 +61,32 @@ export class SupabaseStorage {
   clearSchemaCache(): void {
     this.schemaCache.clear();
     this.lastSchemaCheck = null;
-    console.log('Schema cache cleared - will re-verify database schema');
+    this.sessionSchemaVerified.clear();
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Schema cache cleared - will re-verify database schema');
+    }
   }
 
   /**
    * Verify that required columns exist in the database schema
+   * Uses per-session caching to avoid repeated verification during same session
    */
   async verifySchemaColumns(tableName: string, requiredColumns: string[]): Promise<SchemaVerificationResult> {
     const cacheKey = `${tableName}:${requiredColumns.join(',')}`;
     const now = new Date();
     
-    // Use cached result if it's less than 1 minute old (reduced from 5 minutes)
-    if (this.lastSchemaCheck && (now.getTime() - this.lastSchemaCheck.getTime()) < 60000) {
+    // Skip verification if already verified this session for critical operations
+    if (this.sessionSchemaVerified.has(cacheKey)) {
       const cached = this.schemaCache.get(cacheKey);
       if (cached) {
+        return cached;
+      }
+    }
+    
+    // Use cached result if it's less than 10 minutes old
+    if (this.lastSchemaCheck && (now.getTime() - this.lastSchemaCheck.getTime()) < this.CACHE_DURATION) {
+      const cached = this.schemaCache.get(cacheKey);
+      if (cached && process.env.NODE_ENV === 'development') {
         console.log('Using cached schema verification result');
         return cached;
       }
@@ -84,7 +101,9 @@ export class SupabaseStorage {
         .in('column_name', requiredColumns);
         
       if (error) {
-        console.warn('Schema verification failed:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Schema verification failed:', error);
+        }
         return { hasAllColumns: false, missingColumns: requiredColumns, error: error.message };
       }
       
@@ -99,10 +118,13 @@ export class SupabaseStorage {
       // Cache the result
       this.schemaCache.set(cacheKey, result);
       this.lastSchemaCheck = now;
+      this.sessionSchemaVerified.add(cacheKey); // Mark as verified for this session
       
       return result;
     } catch (error) {
-      console.warn('Schema verification error:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Schema verification error:', error);
+      }
       return { 
         hasAllColumns: false, 
         missingColumns: requiredColumns, 
@@ -115,11 +137,14 @@ export class SupabaseStorage {
   async getChains(): Promise<Chain[]> {
     const user = await getCurrentUser();
     if (!user) {
-      console.warn('getChains: 用户未认证');
+      logger.warn('getChains: User not authenticated');
       return [];
     }
 
-    console.log('[DEBUG] getChains - 当前用户ID:', user.id);
+    // Debug log for authenticated user (development only)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEBUG] getChains - Current user ID:', user.id);
+    }
 
     try {
       const { data, error } = await supabase
@@ -129,7 +154,7 @@ export class SupabaseStorage {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('获取链数据失败:', {
+        logger.error('Failed to get chains data', {
           code: error.code,
           message: error.message,
           details: error.details,
@@ -140,7 +165,9 @@ export class SupabaseStorage {
         
         // Return empty array for non-critical errors
         if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
-          console.warn('表不存在或权限问题，返回空数组');
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('Table does not exist or permission issue, returning empty array');
+          }
           return [];
         }
         
@@ -180,21 +207,25 @@ export class SupabaseStorage {
       lastCompletedAt: chain.last_completed_at ? new Date(chain.last_completed_at) : undefined,
     }));
     
-    // 添加调试日志来检查 deleted_at 字段的映射
-    console.log('[DEBUG] getChains - 原始数据样本:', data.slice(0, 7).map(c => ({ 
-      id: c.id, 
-      name: c.name, 
-      deleted_at: (c as any).deleted_at,
-      deleted_at_type: typeof (c as any).deleted_at
-    })));
+    // Debug logging for development only
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEBUG] getChains - Raw data sample:', data.slice(0, 7).map(c => ({ 
+        id: c.id, 
+        name: c.name, 
+        deleted_at: (c as any).deleted_at,
+        deleted_at_type: typeof (c as any).deleted_at
+      })));
+    }
     
-    console.log('[DEBUG] getChains - 映射后数据样本:', mappedChains.slice(0, 7).map(c => ({ 
-      id: c.id, 
-      name: c.name, 
-      deletedAt: c.deletedAt,
-      deletedAtType: typeof c.deletedAt,
-      isDeleted: c.deletedAt != null
-    })));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEBUG] getChains - Mapped data sample:', mappedChains.slice(0, 7).map(c => ({ 
+        id: c.id, 
+        name: c.name, 
+        deletedAt: c.deletedAt,
+        deletedAtType: typeof c.deletedAt,
+        isDeleted: c.deletedAt != null
+      })));
+    }
     
     return mappedChains;
     } catch (error) {
@@ -216,21 +247,25 @@ export class SupabaseStorage {
   // 回收箱相关方法
   async getActiveChains(): Promise<Chain[]> {
     const allChains = await this.getChains();
-    console.log('[DEBUG] getActiveChains - 所有链条:', allChains.length, allChains.map(c => ({ 
-      id: c.id, 
-      name: c.name, 
-      deletedAt: c.deletedAt,
-      deletedAtType: typeof c.deletedAt,
-      isDeleted: c.deletedAt != null
-    })));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEBUG] getActiveChains - All chains:', allChains.length, allChains.map(c => ({ 
+        id: c.id, 
+        name: c.name, 
+        deletedAt: c.deletedAt,
+        deletedAtType: typeof c.deletedAt,
+        isDeleted: c.deletedAt != null
+      })));
+    }
     
     // 过滤掉已删除的链条（deletedAt不为null且不为undefined）
     const activeChains = allChains.filter(chain => chain.deletedAt == null);
-    console.log('[DEBUG] getActiveChains - 活跃链条:', activeChains.length, activeChains.map(c => ({ 
-      id: c.id, 
-      name: c.name, 
-      deletedAt: c.deletedAt 
-    })));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEBUG] getActiveChains - Active chains:', activeChains.length, activeChains.map(c => ({ 
+        id: c.id, 
+        name: c.name, 
+        deletedAt: c.deletedAt 
+      })));
+    }
     
     return activeChains;
   }
@@ -238,26 +273,30 @@ export class SupabaseStorage {
   async getDeletedChains(): Promise<DeletedChain[]> {
     try {
       const allChains = await this.getChains();
-      console.log('[DEBUG] getDeletedChains - 所有链条:', allChains.length, allChains.map(c => ({ 
-        id: c.id, 
-        name: c.name, 
-        deletedAt: c.deletedAt,
-        deletedAtType: typeof c.deletedAt
-      })));
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DEBUG] getDeletedChains - All chains:', allChains.length, allChains.map(c => ({ 
+          id: c.id, 
+          name: c.name, 
+          deletedAt: c.deletedAt,
+          deletedAtType: typeof c.deletedAt
+        })));
+      }
       
       const deletedChains = allChains.filter(chain => chain.deletedAt != null);
-      console.log('[DEBUG] getDeletedChains - 已删除链条:', deletedChains.length, deletedChains.map(c => ({ 
-        id: c.id, 
-        name: c.name, 
-        deletedAt: c.deletedAt 
-      })));
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DEBUG] getDeletedChains - Deleted chains:', deletedChains.length, deletedChains.map(c => ({ 
+          id: c.id, 
+          name: c.name, 
+          deletedAt: c.deletedAt 
+        })));
+      }
       
       return deletedChains
         .map(chain => ({ ...chain, deletedAt: chain.deletedAt! }))
         .sort((a, b) => b.deletedAt.getTime() - a.deletedAt.getTime());
     } catch (error) {
       // 如果获取链条失败，返回空数组
-      console.warn('获取已删除链条失败，可能是数据库不支持软删除:', error);
+      logger.warn('Failed to get deleted chains, database may not support soft delete', { error });
       return [];
     }
   }
@@ -283,17 +322,17 @@ export class SupabaseStorage {
       if (error) {
         // 如果数据库不支持 deleted_at 字段，回退到永久删除
         if (error.code === '42703' || error.message?.includes('deleted_at') || error.code === 'PGRST204') {
-          console.warn('数据库不支持软删除，执行永久删除');
+          logger.warn('Database does not support soft delete, executing permanent delete');
           await this.permanentlyDeleteChain(chainId);
           return;
         }
-        console.error('软删除链条失败:', error);
-        throw new Error(`软删除链条失败: ${error.message}`);
+        logger.error('Soft delete chain failed', { error });
+        throw new Error(`Soft delete chain failed: ${error.message}`);
       }
     } catch (error) {
       // 如果是字段不存在的错误，回退到永久删除
       if (error instanceof Error && (error.message.includes('deleted_at') || error.message.includes('PGRST204'))) {
-        console.warn('数据库不支持软删除，执行永久删除');
+        logger.warn('Database does not support soft delete, executing permanent delete');
         await this.permanentlyDeleteChain(chainId);
         return;
       }
@@ -322,14 +361,14 @@ export class SupabaseStorage {
       if (error) {
         // 如果数据库不支持 deleted_at 字段，说明链条已经被永久删除，无法恢复
         if (error.code === '42703' || error.message?.includes('deleted_at') || error.code === 'PGRST204') {
-          throw new Error('数据库不支持软删除功能，无法恢复已删除的链条');
+          throw new Error('Database does not support soft delete, cannot restore deleted chains');
         }
-        console.error('恢复链条失败:', error);
-        throw new Error(`恢复链条失败: ${error.message}`);
+        logger.error('Restore chain failed', { error });
+        throw new Error(`Restore chain failed: ${error.message}`);
       }
     } catch (error) {
       if (error instanceof Error && (error.message.includes('deleted_at') || error.message.includes('PGRST204'))) {
-        throw new Error('数据库不支持软删除功能，无法恢复已删除的链条');
+        throw new Error('Database does not support soft delete, cannot restore deleted chains');
       }
       throw error;
     }
@@ -353,8 +392,8 @@ export class SupabaseStorage {
       .eq('user_id', user.id);
 
     if (error) {
-      console.error('永久删除链条失败:', error);
-      throw new Error(`永久删除链条失败: ${error.message}`);
+      logger.error('Permanent delete chain failed', { error });
+      throw new Error(`Permanent delete chain failed: ${error.message}`);
     }
   }
 
@@ -379,11 +418,13 @@ export class SupabaseStorage {
       if (selectError) {
         // 如果数据库没有 deleted_at 字段，直接返回0，不抛出错误
         if (selectError.code === '42703' || selectError.message?.includes('deleted_at does not exist')) {
-          console.warn('数据库没有 deleted_at 字段，跳过自动清理');
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('Database does not have deleted_at field, skipping cleanup');
+          }
           return 0;
         }
-        console.error('查找过期链条失败:', selectError);
-        throw new Error(`查找过期链条失败: ${selectError.message}`);
+        logger.error('Failed to find expired chains', { error: selectError });
+        throw new Error(`Failed to find expired chains: ${selectError.message}`);
       }
 
       if (!expiredChains || expiredChains.length === 0) {
@@ -398,15 +439,17 @@ export class SupabaseStorage {
         .eq('user_id', user.id);
 
       if (deleteError) {
-        console.error('清理过期链条失败:', deleteError);
-        throw new Error(`清理过期链条失败: ${deleteError.message}`);
+        logger.error('Failed to cleanup expired chains', { error: deleteError });
+        throw new Error(`Failed to cleanup expired chains: ${deleteError.message}`);
       }
 
       return expiredChains.length;
     } catch (error) {
       // 如果是字段不存在的错误，不抛出异常，只是记录警告
       if (error instanceof Error && error.message.includes('deleted_at does not exist')) {
-        console.warn('数据库架构不支持软删除，跳过自动清理');
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Database schema does not support soft delete, skipping cleanup');
+        }
         return 0;
       }
       throw error;
@@ -438,33 +481,48 @@ export class SupabaseStorage {
   async saveChains(chains: Chain[]): Promise<void> {
     const user = await getCurrentUser();
     if (!user) {
-      const error = new Error('用户未认证，无法保存数据');
-      console.error('No authenticated user found when trying to save chains');
+      const error = new Error('User not authenticated, cannot save data');
+      logger.error('No authenticated user found when trying to save chains');
       throw error;
     }
 
-    console.log('正在为用户保存链数据:', user.id, '链数量:', chains.length);
-    console.log('要保存的链条详情:', chains.map(c => ({ 
-      id: c.id, 
-      name: c.name, 
-      type: c.type,
-      parentId: c.parentId,
-      sortOrder: c.sortOrder 
-    })));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Saving chains for user:', user.id, 'Chain count:', chains.length);
+      console.log('Chain details to save:', chains.map(c => ({ 
+        id: c.id, 
+        name: c.name, 
+        type: c.type,
+        parentId: c.parentId,
+        sortOrder: c.sortOrder 
+      })));
+    }
 
-    // Verify schema before attempting to save
+    // Only verify schema once per session, not on every saveChains call
     const newColumns = ['is_durationless', 'time_limit_hours', 'time_limit_exceptions', 'group_started_at', 'group_expires_at', 'deleted_at'];
-    const schemaCheck = await this.verifySchemaColumns('chains', newColumns);
+    const schemaVerificationKey = `chains:${newColumns.join(',')}`;
     
-    if (!schemaCheck.hasAllColumns) {
-      console.warn('数据库架构检查发现缺失列:', schemaCheck.missingColumns);
+    let schemaCheck: SchemaVerificationResult;
+    if (!this.sessionSchemaVerified.has(schemaVerificationKey)) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Performing one-time schema verification for this session');
+      }
+      schemaCheck = await this.verifySchemaColumns('chains', newColumns);
+      
+      if (!schemaCheck.hasAllColumns && process.env.NODE_ENV === 'development') {
+        console.warn('Database schema check found missing columns:', schemaCheck.missingColumns);
+      }
+    } else {
+      // Use cached result to avoid repeated schema checks
+      schemaCheck = this.schemaCache.get(schemaVerificationKey) || { hasAllColumns: false, missingColumns: newColumns };
     }
 
     // 生成两套数据：完整字段集（包含新列）与基础字段集（兼容旧后端）
     const buildRow = (chain: Chain, includeNewColumns: boolean) => {
       let parentId = chain.parentId || null;
       if (parentId === chain.id) {
-        console.warn(`检测到循环引用: 链条 ${chain.name} (${chain.id}) 的父节点是自己，重置为null`);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`Detected circular reference: Chain ${chain.name} (${chain.id}) has itself as parent, resetting to null`);
+        }
         parentId = null;
       }
 
@@ -1096,4 +1154,36 @@ export class SupabaseStorage {
 export const supabaseStorage = new SupabaseStorage();
 
 // Clear schema cache on module load to ensure fresh schema verification
+// Also clear session verification cache to handle hot reloads during development
 supabaseStorage.clearSchemaCache();
+
+// Add performance monitoring for frequent operations
+// Add query optimizer integration
+const originalGetChains = supabaseStorage.getChains.bind(supabaseStorage);
+supabaseStorage.getChains = async function() {
+  return queryOptimizer.deduplicateQuery("chains:getAll", () => originalGetChains());
+};
+
+const originalGetActiveChains = supabaseStorage.getActiveChains.bind(supabaseStorage);
+supabaseStorage.getActiveChains = async function() {
+  return queryOptimizer.deduplicateQuery("chains:getActive", () => originalGetActiveChains());
+};
+const originalSaveChains = supabaseStorage.saveChains.bind(supabaseStorage);
+supabaseStorage.saveChains = async function(chains: Chain[]) {
+  const startTime = performance.now();
+  try {
+    const result = await originalSaveChains(chains);
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    
+    if (duration > 1000) { // Log slow operations > 1 second
+      console.warn(`[PERFORMANCE] saveChains took ${duration.toFixed(2)}ms for ${chains.length} chains`);
+    }
+    
+    return result;
+  } catch (error) {
+    const endTime = performance.now();
+    console.error(`[PERFORMANCE] saveChains failed after ${(endTime - startTime).toFixed(2)}ms:`, error);
+    throw error;
+  }
+};

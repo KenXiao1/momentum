@@ -74,8 +74,8 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('ChainEditor - 提交表单');
-    console.log('当前表单数据:', {
+    console.log('ChainEditor - Submitting form');
+    console.log('Current form data:', {
       name: name.trim(),
       type,
       parentId,
@@ -99,7 +99,7 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
     // CRITICAL: 防止循环引用 - 不能把自己设为自己的父节点
     let finalParentId = parentId;
     if (chain && finalParentId === chain.id) {
-      console.warn('检测到循环引用，将parentId重置为undefined');
+      console.warn('Detected circular reference, resetting parentId to undefined');
       finalParentId = undefined;
     }
     const chainData = {
@@ -119,7 +119,7 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
       auxiliaryExceptions: chain?.auxiliaryExceptions || [],
     };
     
-    console.log('ChainEditor - 即将保存的链条数据:', chainData);
+    console.log('ChainEditor - Chain data to save:', chainData);
     console.log('ChainEditor - 是否为编辑模式:', !!chain);
     if (chain) {
       console.log('ChainEditor - 原始链条数据:', chain);

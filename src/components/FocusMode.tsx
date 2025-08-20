@@ -231,14 +231,14 @@ export const FocusMode: React.FC<FocusModeProps> = ({
 
   // 处理规则选择（增强版本）
   const handleRuleSelected = async (rule: ExceptionRule, pauseOptions?: PauseOptions) => {
-    console.log('🔧 handleRuleSelected 调用:', { rule, pendingActionType, ruleId: rule?.id, ruleType: typeof rule });
+    console.log('🔧 handleRuleSelected called:', { rule, pendingActionType, ruleId: rule?.id, ruleType: typeof rule });
     
     if (!pendingActionType) return;
 
     try {
       // 验证规则对象
       if (!rule || !rule.id) {
-        console.error('❌ 无效的规则对象:', rule);
+        console.error('❌ Invalid rule object:', rule);
         userFeedbackHandler.showErrorMessage(
           new EnhancedExceptionRuleException(
             'RULE_NOT_FOUND' as any,
@@ -254,7 +254,7 @@ export const FocusMode: React.FC<FocusModeProps> = ({
 
       const sessionContext = createSessionContext();
       
-      console.log('🔧 准备使用规则:', { ruleId: rule.id, sessionContext, actionType: pendingActionType });
+      console.log('🔧 Preparing to use rule:', { ruleId: rule.id, sessionContext, actionType: pendingActionType });
       
       // 使用规则并记录统计
       const result = await exceptionRuleManager.useRule(rule.id, sessionContext, pendingActionType, pauseOptions);
@@ -297,7 +297,7 @@ export const FocusMode: React.FC<FocusModeProps> = ({
       // 隐藏进度
       userFeedbackHandler.hideProgress();
       
-      console.error('使用规则失败:', error);
+      console.error('Failed to use rule:', error);
       
       // 使用增强的错误处理
       await handleRuleError(error, 'use_rule', { rule, actionType: pendingActionType });
@@ -306,7 +306,7 @@ export const FocusMode: React.FC<FocusModeProps> = ({
 
   // 处理创建新规则（增强版本）
   const handleCreateNewRule = async (name: string, type: ExceptionRuleType) => {
-    console.log('🔧 handleCreateNewRule 调用:', { name, type, typeOf: typeof type });
+    console.log('🔧 handleCreateNewRule called:', { name, type, typeOf: typeof type });
     
     try {
       // 验证参数
@@ -324,7 +324,7 @@ export const FocusMode: React.FC<FocusModeProps> = ({
       // 确保类型有效
       let validType = type;
       if (!validType || !Object.values(ExceptionRuleType).includes(validType)) {
-        console.warn('⚠️ 规则类型无效，使用默认类型');
+        console.warn('⚠️ Invalid rule type, using default type');
         validType = pendingActionType === 'pause' 
           ? ExceptionRuleType.PAUSE_ONLY 
           : ExceptionRuleType.EARLY_COMPLETION_ONLY;

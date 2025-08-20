@@ -27,7 +27,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
       const currentUser = await getCurrentUser();
       setUser(currentUser);
     } catch (err) {
-      console.error('获取用户信息失败:', err);
+      console.error('Failed to get user info:', err);
       setError('获取用户信息失败');
     } finally {
       setLoading(false);
@@ -46,7 +46,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
         // 页面会自动重新加载到登录界面
       }
     } catch (err) {
-      console.error('退出登录失败:', err);
+      console.error('Sign out failed:', err);
       setError('退出登录失败，请重试');
     } finally {
       setSigningOut(false);

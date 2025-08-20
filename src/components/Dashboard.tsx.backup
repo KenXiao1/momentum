@@ -1,12 +1,10 @@
-import React, { useMemo, useCallback, useEffect, useState } from 'react';
-import { Chain, ScheduledSession, CompletionHistory, ChainTreeNode } from '../types';
+import React from 'react';
+import { Chain, ScheduledSession, CompletionHistory } from '../types';
 import { ChainCard } from './ChainCard';
 import { GroupCard } from './GroupCard';
 import { ThemeToggle } from './ThemeToggle';
 import { ImportExportModal } from './ImportExportModal';
-import { VirtualizedChainList } from './VirtualizedChainList';
 import { buildChainTree, getTopLevelChains } from '../utils/chainTree';
-import { queryOptimizer } from '../utils/queryOptimizer';
 import { getNextUnitInGroup } from '../utils/chainTree';
 import { Download, TreePine, Trash2 } from 'lucide-react';
 import { NotificationToggle } from './NotificationToggle';
@@ -35,8 +33,7 @@ interface DashboardProps {
   history?: CompletionHistory[];
 }
 
-// Performance optimized Dashboard component with React.memo and proper memoization
-export const Dashboard: React.FC<DashboardProps> = React.memo(({
+export const Dashboard: React.FC<DashboardProps> = ({
   chains,
   scheduledSessions,
   isLoading = false,
@@ -54,82 +51,37 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
   history,
   onOpenRSIP,
 }) => {
-  const [showImportExport, setShowImportExport] = useState(false);
-  const [showRecycleBin, setShowRecycleBin] = useState(false);
-  const [showAccountModal, setShowAccountModal] = useState(false);
-  const [recycleBinCount, setRecycleBinCount] = useState(0);
+  const [showImportExport, setShowImportExport] = React.useState(false);
+  const [showRecycleBin, setShowRecycleBin] = React.useState(false);
+  const [showAccountModal, setShowAccountModal] = React.useState(false);
+  const [recycleBinCount, setRecycleBinCount] = React.useState(0);
   
-  // Only log in development mode to improve production performance
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Dashboard - Received chains:', chains.length, chains.map(c => ({ id: c.id, name: c.name, type: c.type, parentId: c.parentId })));
-  }
+  console.log('Dashboard - 收到的chains:', chains.length, chains.map(c => ({ id: c.id, name: c.name, type: c.type, parentId: c.parentId })));
   
-  // Optimize chain tree building with deep memoization
-  const chainTree = useMemo(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Dashboard - Rebuilding chainTree, chains count:', chains.length);
-    }
-    return queryOptimizer.memoizedBuildChainTree(chains);
-  }, [chains]);
+  // 构建任务树并获取顶层任务
+  const chainTree = buildChainTree(chains);
+  console.log('Dashboard - 构建的chainTree:', chainTree.length, chainTree.map(c => ({ id: c.id, name: c.name, type: c.type })));
   
-  // Memoize top level chains calculation
-  const topLevelChains = useMemo(() => {
-    const result = getTopLevelChains(chainTree);
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Dashboard - Top-level chains:', result.length, result.map(c => ({ id: c.id, name: c.name, type: c.type })));
-    }
-    return result;
-  }, [chainTree]);
+  const topLevelChains = getTopLevelChains(chainTree);
+  console.log('Dashboard - 顶层链条:', topLevelChains.length, topLevelChains.map(c => ({ id: c.id, name: c.name, type: c.type })));
 
-  // Optimize recycle bin stats loading with useCallback and proper dependency management
-  const loadRecycleBinStats = useCallback(async () => {
-    try {
-      const stats = await RecycleBinService.getRecycleBinStats();
-      setRecycleBinCount(stats.totalDeleted);
-    } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Failed to load recycle bin statistics:', error);
+  // 加载回收箱统计信息
+  React.useEffect(() => {
+    const loadRecycleBinStats = async () => {
+      try {
+        const stats = await RecycleBinService.getRecycleBinStats();
+        setRecycleBinCount(stats.totalDeleted);
+      } catch (error) {
+        console.error('加载回收箱统计信息失败:', error);
       }
-    }
-  }, []);
+    };
 
-  // Only reload stats when chains count changes, not on every chain mutation
-  const chainsCount = chains.length;
-  useEffect(() => {
     loadRecycleBinStats();
-  }, [chainsCount, loadRecycleBinStats]);
+  }, [chains]); // 当链条变化时重新加载统计信息
 
-  // Memoize event handlers to prevent child component re-renders
-  const handleShowImportExport = useCallback(() => setShowImportExport(true), []);
-  const handleHideImportExport = useCallback(() => setShowImportExport(false), []);
-  const handleShowRecycleBin = useCallback(() => setShowRecycleBin(true), []);
-  const handleHideRecycleBin = useCallback(() => setShowRecycleBin(false), []);
-  const handleShowAccountModal = useCallback(() => setShowAccountModal(true), []);
-  const handleHideAccountModal = useCallback(() => setShowAccountModal(false), []);
-  
-  // Memoize restore and delete handlers to prevent recreating functions
-  const handleRestore = useCallback(async (chainIds: string[]) => {
-    if (onRestoreChains) {
-      await onRestoreChains(chainIds);
-      await loadRecycleBinStats();
-    }
-  }, [onRestoreChains, loadRecycleBinStats]);
-  
-  const handlePermanentDelete = useCallback(async (chainIds: string[]) => {
-    if (onPermanentDeleteChains) {
-      await onPermanentDeleteChains(chainIds);
-      await loadRecycleBinStats();
-    }
-  }, [onPermanentDeleteChains, loadRecycleBinStats]);
-  
-  const handleImport = useCallback((newChains: Chain[], options?: { history?: CompletionHistory[] }) => {
-    onImportChains(newChains, options);
-  }, [onImportChains]);
-  
-  // Memoize scheduled session lookup to prevent recalculation on every render
-  const getScheduledSession = useCallback((chainId: string) => {
+  const getScheduledSession = (chainId: string) => {
     return scheduledSessions.find(session => session.chainId === chainId);
-  }, [scheduledSessions]);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4 md:p-6">
@@ -138,7 +90,7 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
         <div className="flex justify-end items-center space-x-4 mb-6">
           {isSupabaseConfigured && (
             <button
-              onClick={handleShowAccountModal}
+              onClick={() => setShowAccountModal(true)}
               className="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 rounded-2xl border border-gray-200 dark:border-slate-600 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
               title="账号管理"
             >
@@ -209,7 +161,7 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
                   <span className="font-chinese font-semibold">创建第一条链</span>
                 </button>
                 <button
-                  onClick={handleShowImportExport}
+                  onClick={() => setShowImportExport(true)}
                   className="bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-200 px-6 py-4 rounded-2xl font-medium transition-all duration-300 flex items-center space-x-2 hover:scale-105 shadow-lg"
                 >
                   <Download size={16} />
@@ -231,7 +183,7 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
               </div>
               <div className="flex items-center space-x-3">
                 <button
-                  onClick={handleShowRecycleBin}
+                  onClick={() => setShowRecycleBin(true)}
                   className="relative bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-200 px-4 py-3 rounded-2xl font-medium transition-all duration-300 flex items-center space-x-2 hover:scale-105 shadow-lg"
                   title="回收箱"
                 >
@@ -244,7 +196,7 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
                   )}
                 </button>
                 <button
-                  onClick={handleShowImportExport}
+                  onClick={() => setShowImportExport(true)}
                   className="bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-200 px-4 py-3 rounded-2xl font-medium transition-all duration-300 flex items-center space-x-2 hover:scale-105 shadow-lg"
                 >
                   <Download size={16} />
@@ -277,16 +229,41 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
               </div>
             </div>
 
-            <VirtualizedChainList
-              topLevelChains={topLevelChains}
-              getScheduledSession={getScheduledSession}
-              onStartChain={onStartChain}
-              onScheduleChain={onScheduleChain}
-              onViewDetail={onViewChainDetail}
-              onCancelScheduledSession={onCancelScheduledSession}
-              onCompleteBooking={onCompleteBooking}
-              onDelete={onDeleteChain}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {topLevelChains.map(chainNode => (
+                chainNode.type === 'group' ? (
+                  (() => {
+                    const nextUnit = getNextUnitInGroup(chainNode);
+                    const session = getScheduledSession(nextUnit ? nextUnit.id : chainNode.id);
+                    return (
+                      <GroupCard
+                        key={chainNode.id}
+                        group={chainNode}
+                        scheduledSession={session}
+                        onStartChain={onStartChain}
+                        onScheduleChain={onScheduleChain}
+                        onViewDetail={onViewChainDetail}
+                        onCancelScheduledSession={onCancelScheduledSession}
+                        onCompleteBooking={onCompleteBooking}
+                        onDelete={onDeleteChain}
+                      />
+                    );
+                  })()
+                ) : (
+                  <ChainCard
+                    key={chainNode.id}
+                    chain={chainNode}
+                    scheduledSession={getScheduledSession(chainNode.id)}
+                    onStartChain={onStartChain}
+                    onScheduleChain={onScheduleChain}
+                    onViewDetail={onViewChainDetail}
+                    onCancelScheduledSession={onCancelScheduledSession}
+                    onCompleteBooking={onCompleteBooking}
+                    onDelete={onDeleteChain}
+                  />
+                )
+              ))}
+            </div>
           </div>
         ))}
       </div>
@@ -296,8 +273,8 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
         <ImportExportModal
           chains={chains}
           history={history}
-          onImport={handleImport}
-          onClose={handleHideImportExport}
+          onImport={(newChains, options) => onImportChains(newChains, options)}
+          onClose={() => setShowImportExport(false)}
         />
       )}
 
@@ -305,9 +282,23 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
       {showRecycleBin && (
         <RecycleBinModal
           isOpen={showRecycleBin}
-          onClose={handleHideRecycleBin}
-          onRestore={handleRestore}
-          onPermanentDelete={handlePermanentDelete}
+          onClose={() => setShowRecycleBin(false)}
+          onRestore={async (chainIds) => {
+            if (onRestoreChains) {
+              await onRestoreChains(chainIds);
+              // 重新加载回收箱统计信息
+              const stats = await RecycleBinService.getRecycleBinStats();
+              setRecycleBinCount(stats.totalDeleted);
+            }
+          }}
+          onPermanentDelete={async (chainIds) => {
+            if (onPermanentDeleteChains) {
+              await onPermanentDeleteChains(chainIds);
+              // 重新加载回收箱统计信息
+              const stats = await RecycleBinService.getRecycleBinStats();
+              setRecycleBinCount(stats.totalDeleted);
+            }
+          }}
         />
       )}
 
@@ -315,12 +306,9 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
       {showAccountModal && (
         <AccountModal
           isOpen={showAccountModal}
-          onClose={handleHideAccountModal}
+          onClose={() => setShowAccountModal(false)}
         />
       )}
     </div>
   );
-});
-
-// Add display name for better debugging
-Dashboard.displayName = 'Dashboard';
+};

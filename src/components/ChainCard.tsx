@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Chain, ScheduledSession, ChainTreeNode } from '../types';
 import { Play, Clock } from 'lucide-react';
 import { formatTime, getTimeRemaining, formatDuration, formatTimeDescription } from '../utils/time';
@@ -17,7 +17,8 @@ interface ChainCardProps {
   onDelete: (chainId: string) => void;
 }
 
-export const ChainCard: React.FC<ChainCardProps> = ({
+// Performance optimized ChainCard component with React.memo
+export const ChainCard: React.FC<ChainCardProps> = React.memo(({
   chain,
   scheduledSession,
   onStartChain,
@@ -33,13 +34,14 @@ export const ChainCard: React.FC<ChainCardProps> = ({
   const [hasShownWarning, setHasShownWarning] = useState(false);
   const [lastCompletionTime, setLastCompletionTime] = useState<number | null>(null);
   
-  // 获取实际的链条数据，确保显示最新的时长信息
-  const actualChain = React.useMemo(() => {
+  // 获取实际的链条数据，确保显示最新的时长信息 - memoized for performance
+  const actualChain = useMemo(() => {
     // 如果传入的是 ChainTreeNode，需要确保数据是最新的
     return chain;
   }, [chain]);
 
-  const typeConfig = getChainTypeConfig(chain.type);
+  // Memoize type configuration to prevent recalculation
+  const typeConfig = useMemo(() => getChainTypeConfig(chain.type), [chain.type]);
 
   // 获取上次完成时间（仅对无时长任务）
   useEffect(() => {
@@ -356,4 +358,7 @@ export const ChainCard: React.FC<ChainCardProps> = ({
       )}
     </div>
   );
-};
+});
+
+// Add display name for better debugging
+ChainCard.displayName = 'ChainCard';

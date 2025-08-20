@@ -14,13 +14,18 @@ import { supabaseStorage } from './utils/supabaseStorage';
 import { isSupabaseConfigured } from './lib/supabase';
 import { isSessionExpired } from './utils/time';
 import { buildChainTree, getNextUnitInGroup, updateGroupCompletions, isGroupFullyCompleted, incrementGroupCompletionCount, resetGroupCompletionCount } from './utils/chainTree';
-import { queryOptimizer } from './utils/queryOptimizer';
 import { notificationManager } from './utils/notifications';
-import { performanceDashboard } from './utils/performanceDashboard';
 import { startGroupTimer, isGroupExpired, resetGroupProgress } from './utils/timeLimit';
 import { forwardTimerManager } from './utils/forwardTimer';
 import { initializeRuleSystem } from './utils/initializeRuleSystem';
 import { runMigration } from './utils/migration';
+import './utils/quickFix'; // 自动运行快速修复
+import './utils/debugRuleCreation'; // 调试工具
+import './utils/emergencyFix'; // 紧急修复
+import './utils/simpleTest'; // 简单测试
+import './utils/fixRuleIds'; // 修复规则ID
+import './utils/directFix'; // 直接修复
+import './utils/ultimateFix'; // 终极修复
 
 function App() {
   const [state, setState] = useState<AppState>({
@@ -44,28 +49,23 @@ function App() {
   const storage = isSupabaseConfigured ? supabaseStorage : localStorageUtils;
   
   useEffect(() => {
-    // Storage source determined based on Supabase configuration
+    console.log('存储源确定:', isSupabaseConfigured ? 'Supabase' : 'LocalStorage');
     
     // 初始化规则系统
     initializeRuleSystem().then(result => {
-      if (!result.success) {
-        console.error('Rule system initialization failed:', result.message);
+      if (result.success) {
+        console.log('✅ 规则系统初始化成功');
+      } else {
+        console.error('❌ 规则系统初始化失败:', result.message);
       }
     }).catch(error => {
-      console.error('Rule system initialization error:', error);
+      console.error('❌ 规则系统初始化异常:', error);
     });
 
     // 运行迁移脚本
     runMigration();
     
     setIsInitialized(true);
-    
-    // Initialize performance monitoring for development
-    if (process.env.NODE_ENV === 'development') {
-      setTimeout(() => {
-        performanceDashboard.displayConsoleReport();
-      }, 5000);
-    }
   }, []);
 
   const renderContent = () => {
@@ -202,7 +202,7 @@ function App() {
         }
         
         // 构建任务树并找到对应的群组节点
-        const chainTree = queryOptimizer.memoizedBuildChainTree(state.chains);
+        const chainTree = buildChainTree(state.chains);
         const groupNode = chainTree.find(node => node.id === state.viewingChainId);
         if (!groupNode) {
           handleBackToDashboard();
@@ -290,27 +290,27 @@ function App() {
   // Load data from storage on mount
   useEffect(() => {
     const loadData = async () => {
-      console.log('Starting data load, using storage type:', isSupabaseConfigured ? 'Supabase' : 'LocalStorage');
+      console.log('开始加载数据，使用存储类型:', isSupabaseConfigured ? 'Supabase' : 'LocalStorage');
       setIsLoadingData(true);
       try {
         // 在加载数据前先执行自动清理
         try {
           const cleanedCount = await storage.cleanupExpiredDeletedChains(30);
           if (cleanedCount > 0) {
-            console.log(`Auto-cleaned ${cleanedCount} expired deleted chains`);
+            console.log(`自动清理了 ${cleanedCount} 条过期的已删除链条`);
           }
         } catch (cleanupError) {
-          console.error('Auto cleanup failed:', cleanupError);
+          console.error('自动清理失败:', cleanupError);
         }
         const chains = await storage.getActiveChains();
         
         // 检查并修复循环引用的数据
         const hasCircularReferences = chains.some(chain => chain.parentId === chain.id);
         if (hasCircularReferences) {
-          console.log('Detected circular reference data, fixing...');
+          console.log('检测到循环引用数据，正在修复...');
           const fixedChains = chains.map(chain => {
             if (chain.parentId === chain.id) {
-              console.log(`Fixed circular reference for chain ${chain.name}`);
+              console.log(`修复链条 ${chain.name} 的循环引用`);
               return { ...chain, parentId: undefined };
             }
             return chain;
@@ -318,7 +318,7 @@ function App() {
           
           // 将修复后的数据保存回数据库
           await storage.saveChains(fixedChains);
-          console.log('Circular reference data fix completed and saved');
+          console.log('循环引用数据修复完成并已保存');
           
           // 使用修复后的数据
           setState(prev => ({
@@ -332,8 +332,8 @@ function App() {
           return;
         }
         
-        console.log('Loaded chain data:', chains.length, 'items');
-        console.log('Chain data details:', chains.map(c => ({ id: c.id, name: c.name })));
+        console.log('加载到的链数据:', chains.length, '条');
+        console.log('链数据详情:', chains.map(c => ({ id: c.id, name: c.name })));
         const allScheduledSessions = await storage.getScheduledSessions();
         const scheduledSessions = allScheduledSessions.filter(
           session => !isSessionExpired(session.expiresAt)
@@ -353,16 +353,16 @@ function App() {
             const { dataMigrationManager } = await import('./utils/dataMigration');
             const migrationResult = await dataMigrationManager.migrateAll();
             if (!migrationResult.success || migrationResult.errors.length > 0) {
-              console.warn('Data migration completed with warnings:', migrationResult);
+              console.warn('数据迁移完成，但有警告:', migrationResult);
             } else {
-              console.log('Data migration completed successfully');
+              console.log('数据迁移成功完成');
             }
           } catch (migrationError) {
-            console.warn('Error occurred during data migration:', migrationError);
+            console.warn('数据迁移过程中出现错误:', migrationError);
           }
         }
 
-        console.log('Setting app state, chain count:', chains.length);
+        console.log('设置应用状态，链数量:', chains.length);
         setState(prev => ({
           ...prev,
           chains,
@@ -380,14 +380,14 @@ function App() {
           await storage.saveScheduledSessions(scheduledSessions);
         }
       } catch (error) {
-        console.error('Failed to load data:', error);
+        console.error('加载数据失败:', error);
       } finally {
         setIsLoadingData(false);
       }
     };
 
     if (isInitialized) {
-      console.log('Application initialization complete, starting data load');
+      console.log('应用初始化完成，开始加载数据');
       loadData();
     } else {
       setIsLoadingData(false);
@@ -487,10 +487,9 @@ function App() {
       
       // 保存合并后的数据
       await storage.saveChains(allUpdatedChains);
-      console.log('✅ Safe save completed, recycle bin data preserved');
-      queryOptimizer.onDataChange('chains');
+      console.log('✅ 安全保存完成，回收箱数据已保留');
     } catch (error) {
-      console.error('❌ Safe save failed:', error);
+      console.error('❌ 安全保存失败:', error);
       throw error;
     }
   };
@@ -509,8 +508,8 @@ function App() {
   };
 
   const handleSaveChain = async (chainData: Omit<Chain, 'id' | 'currentStreak' | 'auxiliaryStreak' | 'totalCompletions' | 'totalFailures' | 'auxiliaryFailures' | 'createdAt' | 'lastCompletedAt'>) => {
-    console.log('Starting to save chain data...', chainData);
-    console.log('Currently editing chain:', state.editingChain);
+    console.log('开始保存链数据...', chainData);
+    console.log('当前编辑的链:', state.editingChain);
     console.log('当前所有链条:', state.chains.map(c => ({ id: c.id, name: c.name })));
     
     try {
@@ -566,7 +565,6 @@ function App() {
       console.log('准备安全保存到存储（包含回收箱数据）...');
       // 使用安全保存方法
       await safelySaveChains(updatedActiveChains);
-      queryOptimizer.onDataChange('chains');
       console.log('数据保存成功（包含回收箱数据），更新UI状态');
       
       // Only update state after successful save (only with active chains)
@@ -627,7 +625,6 @@ function App() {
           storage.saveScheduledSessions(updatedSessions),
           safelySaveChains(updatedChains)
         ]);
-        queryOptimizer.onDataChange('chains');
         
         // Update state after successful save
         setState(prev => ({ 
@@ -684,7 +681,7 @@ function App() {
         }));
       }
 
-      const chainTree = queryOptimizer.memoizedBuildChainTree(state.chains);
+      const chainTree = buildChainTree(state.chains);
       const groupNode = chainTree.find(node => node.id === chainId);
       if (groupNode) {
         const nextUnit = getNextUnitInGroup(groupNode);
@@ -737,7 +734,6 @@ function App() {
       // 如果有预约完成，保存更新的链条数据
       if (existingScheduledSession) {
         safelySaveChains(updatedChains).catch(error => {
-      queryOptimizer.onDataChange('chains');
           console.error('开始任务时保存链条数据失败:', error);
         });
       }
@@ -798,7 +794,7 @@ function App() {
       // 如果完成的是单元任务，且该单元属于某个任务群，检查任务群是否完成
       if (chain.parentId && chain.type !== 'group') {
         // 构建任务树来检查任务群状态
-        const chainTree = queryOptimizer.memoizedBuildChainTree(updatedChains);
+        const chainTree = buildChainTree(updatedChains);
         const groupNode = chainTree.find(node => node.id === chain.parentId);
         
         if (groupNode && groupNode.type === 'group') {
@@ -826,7 +822,6 @@ function App() {
       
       // 使用安全保存方法保持回收箱数据完整
       safelySaveChains(updatedChains).catch(error => {
-      queryOptimizer.onDataChange('chains');
         console.error('完成任务时保存链条数据失败:', error);
       });
       storage.saveActiveSession(null);
@@ -890,7 +885,6 @@ function App() {
       
       // 使用安全保存方法保持回收箱数据完整
       safelySaveChains(updatedChains).catch(error => {
-      queryOptimizer.onDataChange('chains');
         console.error('中断任务时保存链条数据失败:', error);
       });
       storage.saveActiveSession(null);
@@ -965,7 +959,6 @@ function App() {
       
       // 使用安全保存方法保持回收箱数据完整
       safelySaveChains(updatedChains).catch(error => {
-      queryOptimizer.onDataChange('chains');
         console.error('辅助判断失败时保存链条数据失败:', error);
       });
       storage.saveScheduledSessions(updatedScheduledSessions);
@@ -998,7 +991,6 @@ function App() {
       
       // 使用安全保存方法保持回收箱数据完整
       safelySaveChains(updatedChains).catch(error => {
-      queryOptimizer.onDataChange('chains');
         console.error('辅助判断允许时保存链条数据失败:', error);
       });
       storage.saveScheduledSessions(updatedScheduledSessions);
@@ -1034,7 +1026,6 @@ function App() {
       // 保存更新的数据
       storage.saveScheduledSessions(updatedScheduledSessions);
       safelySaveChains(updatedChains).catch(error => {
-      queryOptimizer.onDataChange('chains');
         console.error('完成预约时保存链条数据失败:', error);
       });
       
@@ -1067,7 +1058,6 @@ function App() {
       
       // 使用安全保存方法保持回收箱数据完整
       safelySaveChains(updatedChains).catch(error => {
-      queryOptimizer.onDataChange('chains');
         console.error('添加异常时保存链条数据失败:', error);
       });
       
@@ -1192,7 +1182,6 @@ function App() {
       console.log('准备保存导入的数据到存储...');
       // Wait for data to be saved before updating UI - 使用安全保存方法
       await safelySaveChains(updatedChains);
-      queryOptimizer.onDataChange('chains');
       if (Array.isArray(importedHistory) && importedHistory.length > 0) {
         const existing = await storage.getCompletionHistory();
         const merged = [
@@ -1274,7 +1263,6 @@ function App() {
       console.log('准备保存导入后的数据到存储...');
       // Wait for data to be saved before updating UI - 使用安全保存方法
       await safelySaveChains(updatedChains);
-      queryOptimizer.onDataChange('chains');
       console.log('导入数据保存成功，更新UI状态');
       
       // Only update state after successful save
@@ -1317,7 +1305,6 @@ function App() {
       console.log('准备保存重复次数更新到存储...');
       // Wait for data to be saved before updating UI - 使用安全保存方法
       await safelySaveChains(updatedChains);
-      queryOptimizer.onDataChange('chains');
       console.log('重复次数更新保存成功，更新UI状态');
 
       // Only update state after successful save

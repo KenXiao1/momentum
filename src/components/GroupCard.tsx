@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { ChainTreeNode, ScheduledSession } from '../types';
 import { Play, Users } from 'lucide-react';
 import { getTimeRemaining, formatDuration } from '../utils/time';
@@ -16,7 +16,8 @@ interface GroupCardProps {
   onDelete: (chainId: string) => void;
 }
 
-export const GroupCard: React.FC<GroupCardProps> = ({
+// Performance optimized GroupCard component with React.memo
+export const GroupCard: React.FC<GroupCardProps> = React.memo(({
   group,
   scheduledSession,
   onStartChain,
@@ -31,10 +32,11 @@ export const GroupCard: React.FC<GroupCardProps> = ({
   const [showMenu, setShowMenu] = useState(false);
   const [hasShownWarning, setHasShownWarning] = useState(false);
 
-  const progress = getGroupProgress(group);
-  const nextUnit = getNextUnitInGroup(group);
-  const typeConfig = getChainTypeConfig(group.type);
-  const isScheduled = !!scheduledSession && timeRemaining > 0;
+  // Memoize expensive calculations to prevent recalculation on every render
+  const progress = useMemo(() => getGroupProgress(group), [group]);
+  const nextUnit = useMemo(() => getNextUnitInGroup(group), [group]);
+  const typeConfig = useMemo(() => getChainTypeConfig(group.type), [group.type]);
+  const isScheduled = useMemo(() => !!scheduledSession && timeRemaining > 0, [scheduledSession, timeRemaining]);
 
   // 计算通知时机
   const getNotificationThreshold = (durationMinutes: number) => {
@@ -303,4 +305,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({
       )}
     </div>
   );
-};
+});
+
+// Add display name for better debugging
+GroupCard.displayName = 'GroupCard';

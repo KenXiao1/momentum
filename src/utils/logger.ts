@@ -22,6 +22,7 @@ class Logger {
   private logLevel: LogLevel = LogLevel.INFO;
   private logs: LogEntry[] = [];
   private maxLogs: number = 1000;
+  private isProduction = process.env.NODE_ENV === 'production';
 
   setLogLevel(level: LogLevel) {
     this.logLevel = level;
@@ -29,6 +30,15 @@ class Logger {
 
   private shouldLog(level: LogLevel): boolean {
     return level >= this.logLevel;
+  }
+
+  private shouldLogToConsole(level: LogLevel): boolean {
+    // In production, only log to console for errors and warnings
+    // This reduces console noise in production while preserving important information
+    if (this.isProduction) {
+      return level >= LogLevel.WARN;
+    }
+    return this.shouldLog(level);
   }
 
   private createLogEntry(
@@ -54,6 +64,11 @@ class Logger {
     // Keep only the most recent logs
     if (this.logs.length > this.maxLogs) {
       this.logs = this.logs.slice(-this.maxLogs);
+    }
+
+    // Only output to console based on production settings
+    if (!this.shouldLogToConsole(entry.level)) {
+      return;
     }
 
     // Console output with appropriate method
@@ -103,7 +118,7 @@ class Logger {
 
   // Specialized logging methods for common operations
   dbOperation(operation: string, success: boolean, context?: Record<string, any>, error?: Error) {
-    const message = `数据库操作 ${operation} ${success ? '成功' : '失败'}`;
+    const message = `Database operation ${operation} ${success ? 'success' : 'failed'}`;
     if (success) {
       this.info('DATABASE', message, context);
     } else {
@@ -112,7 +127,7 @@ class Logger {
   }
 
   chainOperation(operation: string, chainId: string, success: boolean, context?: Record<string, any>, error?: Error) {
-    const message = `链操作 ${operation} (${chainId}) ${success ? '成功' : '失败'}`;
+    const message = `Chain operation ${operation} (${chainId}) ${success ? 'success' : 'failed'}`;
     if (success) {
       this.info('CHAIN', message, context);
     } else {
@@ -121,11 +136,11 @@ class Logger {
   }
 
   userAction(action: string, context?: Record<string, any>) {
-    this.info('USER', `用户操作: ${action}`, context);
+    this.info('USER', `User action: ${action}`, context);
   }
 
   performance(operation: string, duration: number, context?: Record<string, any>) {
-    this.debug('PERFORMANCE', `${operation} 耗时 ${duration}ms`, context);
+    this.debug('PERFORMANCE', `${operation} took ${duration}ms`, context);
   }
 
   // Get logs for debugging
@@ -155,7 +170,7 @@ class Logger {
   // Clear logs
   clearLogs() {
     this.logs = [];
-    this.info('SYSTEM', '日志已清空');
+    this.info('SYSTEM', 'Logs cleared');
   }
 }
 
@@ -165,7 +180,11 @@ export const logger = new Logger();
 // Set log level based on environment
 if (process.env.NODE_ENV === 'development') {
   logger.setLogLevel(LogLevel.DEBUG);
+} else if (process.env.NODE_ENV === 'production') {
+  // In production, only log warnings and errors to reduce noise
+  logger.setLogLevel(LogLevel.WARN);
 } else {
+  // Default for other environments (staging, test, etc.)
   logger.setLogLevel(LogLevel.INFO);
 }
 
@@ -183,7 +202,7 @@ export const measurePerformance = async <T>(
     return result;
   } catch (error) {
     const duration = performance.now() - start;
-    logger.error('PERFORMANCE', `${operation} 失败`, { ...context, duration }, error as Error);
+    logger.error('PERFORMANCE', `${operation} failed`, { ...context, duration }, error as Error);
     throw error;
   }
 };
