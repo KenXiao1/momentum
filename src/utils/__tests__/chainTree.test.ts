@@ -1,4 +1,4 @@
-import { buildChainTree, getNextUnitInGroup, getGroupProgress } from '../chainTree';
+import { buildChainTree, getNextUnitInGroup, getGroupProgress, getGroupUnitProgress } from '../chainTree';
 import { Chain, ChainTreeNode } from '../../types';
 
 // Mock chain data for testing
@@ -138,6 +138,36 @@ describe('chainTree utilities', () => {
       expect(result).toBeNull();
     });
 
+    it('should handle task with repeat count', () => {
+      const unit: ChainTreeNode = {
+        ...createMockChain({ 
+          id: 'unit1', 
+          currentStreak: 1, 
+          taskRepeatCount: 3 
+        }),
+        children: [],
+        depth: 0,
+      };
+      
+      const result = getNextUnitInGroup(unit);
+      expect(result?.id).toBe('unit1'); // Still available since 1 < 3
+    });
+
+    it('should return null for unit that completed all repeats', () => {
+      const unit: ChainTreeNode = {
+        ...createMockChain({ 
+          id: 'unit1', 
+          currentStreak: 3, 
+          taskRepeatCount: 3 
+        }),
+        children: [],
+        depth: 0,
+      };
+      
+      const result = getNextUnitInGroup(unit);
+      expect(result).toBeNull(); // Completed all repeats
+    });
+
     it('should find first incomplete unit in group', () => {
       const group: ChainTreeNode = {
         ...createMockChain({ id: 'group1', type: 'group' }),
@@ -163,6 +193,58 @@ describe('chainTree utilities', () => {
       
       const result = getNextUnitInGroup(group);
       expect(result?.id).toBe('unit2');
+    });
+
+    it('should skip units that completed their repeat counts', () => {
+      const group: ChainTreeNode = {
+        ...createMockChain({ id: 'group1', type: 'group' }),
+        children: [
+          {
+            // Unit 1: completed all repeats (2/2)
+            ...createMockChain({ 
+              id: 'unit1', 
+              currentStreak: 2, 
+              taskRepeatCount: 2 
+            }),
+            children: [],
+            depth: 1,
+          },
+          {
+            // Unit 2: completed all repeats (1/1)
+            ...createMockChain({ 
+              id: 'unit2', 
+              currentStreak: 1, 
+              taskRepeatCount: 1 
+            }),
+            children: [],
+            depth: 1,
+          },
+          {
+            // Unit 3: not completed (0/3) - should be next
+            ...createMockChain({ 
+              id: 'unit3', 
+              currentStreak: 0, 
+              taskRepeatCount: 3 
+            }),
+            children: [],
+            depth: 1,
+          },
+          {
+            // Unit 4: not completed (0/1)
+            ...createMockChain({ 
+              id: 'unit4', 
+              currentStreak: 0, 
+              taskRepeatCount: 1 
+            }),
+            children: [],
+            depth: 1,
+          },
+        ],
+        depth: 0,
+      };
+      
+      const result = getNextUnitInGroup(group);
+      expect(result?.id).toBe('unit3'); // First incomplete task
     });
 
     it('should return null when all units are completed', () => {
@@ -250,6 +332,89 @@ describe('chainTree utilities', () => {
       expect(result).toEqual({ completed: 1, total: 1 });
     });
 
+    it('should handle task with repeat count', () => {
+      const unit: ChainTreeNode = {
+        ...createMockChain({ 
+          id: 'unit1', 
+          currentStreak: 1, 
+          taskRepeatCount: 3 
+        }),
+        children: [],
+        depth: 0,
+      };
+      
+      const result = getGroupProgress(unit);
+      expect(result).toEqual({ completed: 0, total: 1 }); // Not complete until currentStreak >= taskRepeatCount
+    });
+
+    it('should handle completed task with repeat count', () => {
+      const unit: ChainTreeNode = {
+        ...createMockChain({ 
+          id: 'unit1', 
+          currentStreak: 3, 
+          taskRepeatCount: 3 
+        }),
+        children: [],
+        depth: 0,
+      };
+      
+      const result = getGroupProgress(unit);
+      expect(result).toEqual({ completed: 1, total: 1 });
+    });
+
+    it('should handle user issue scenario: 4 tasks, 2 completed their repeats', () => {
+      // This replicates the user's issue: 4 subtasks, 2 have reached their repeat counts
+      const group: ChainTreeNode = {
+        ...createMockChain({ id: 'group1', type: 'group' }),
+        children: [
+          {
+            // Task 1: completed its repeat count (2/2)
+            ...createMockChain({ 
+              id: 'unit1', 
+              currentStreak: 2, 
+              taskRepeatCount: 2 
+            }),
+            children: [],
+            depth: 1,
+          },
+          {
+            // Task 2: completed its repeat count (1/1)
+            ...createMockChain({ 
+              id: 'unit2', 
+              currentStreak: 1, 
+              taskRepeatCount: 1 
+            }),
+            children: [],
+            depth: 1,
+          },
+          {
+            // Task 3: not completed (0/3)
+            ...createMockChain({ 
+              id: 'unit3', 
+              currentStreak: 0, 
+              taskRepeatCount: 3 
+            }),
+            children: [],
+            depth: 1,
+          },
+          {
+            // Task 4: not completed (0/1)
+            ...createMockChain({ 
+              id: 'unit4', 
+              currentStreak: 0, 
+              taskRepeatCount: 1 
+            }),
+            children: [],
+            depth: 1,
+          },
+        ],
+        depth: 0,
+      };
+      
+      const result = getGroupProgress(group);
+      expect(result).toEqual({ completed: 2, total: 4 });
+    });
+
     it('should calculate progress for group with mixed completion', () => {
       const group: ChainTreeNode = {
         ...createMockChain({ id: 'group1', type: 'group' }),
@@ -286,6 +451,178 @@ describe('chainTree utilities', () => {
       
       const result = getGroupProgress(group);
       expect(result).toEqual({ completed: 0, total: 0 });
+    });
+  });
+
+  describe('getGroupUnitProgress', () => {
+    it('should return correct progress for incomplete unit', () => {
+      const unit: ChainTreeNode = {
+        ...createMockChain({ id: 'unit1', currentStreak: 0 }),
+        children: [],
+        depth: 0,
+      };
+      
+      const result = getGroupUnitProgress(unit);
+      expect(result).toEqual({ completed: 0, total: 1 });
+    });
+
+    it('should return correct progress for completed unit', () => {
+      const unit: ChainTreeNode = {
+        ...createMockChain({ id: 'unit1', currentStreak: 1 }),
+        children: [],
+        depth: 0,
+      };
+      
+      const result = getGroupUnitProgress(unit);
+      expect(result).toEqual({ completed: 1, total: 1 });
+    });
+
+    it('should handle task with repeat count - incomplete', () => {
+      const unit: ChainTreeNode = {
+        ...createMockChain({ 
+          id: 'unit1', 
+          currentStreak: 1, 
+          taskRepeatCount: 3 
+        }),
+        children: [],
+        depth: 0,
+      };
+      
+      const result = getGroupUnitProgress(unit);
+      expect(result).toEqual({ completed: 0, total: 1 }); // Unit not complete until currentStreak >= taskRepeatCount
+    });
+
+    it('should handle completed task with repeat count', () => {
+      const unit: ChainTreeNode = {
+        ...createMockChain({ 
+          id: 'unit1', 
+          currentStreak: 3, 
+          taskRepeatCount: 3 
+        }),
+        children: [],
+        depth: 0,
+      };
+      
+      const result = getGroupUnitProgress(unit);
+      expect(result).toEqual({ completed: 1, total: 1 });
+    });
+
+    it('should solve user issue scenario: 3 tasks, 2 completed their repeats', () => {
+      // This directly addresses the user's issue: 3 subtasks, 2 have reached their repeat counts
+      const group: ChainTreeNode = {
+        ...createMockChain({ id: 'group1', type: 'group' }),
+        children: [
+          {
+            // Task 1: completed its repeat count (2/2) - COMPLETED UNIT
+            ...createMockChain({ 
+              id: 'unit1', 
+              currentStreak: 2, 
+              taskRepeatCount: 2 
+            }),
+            children: [],
+            depth: 1,
+          },
+          {
+            // Task 2: completed its repeat count (1/1) - COMPLETED UNIT  
+            ...createMockChain({ 
+              id: 'unit2', 
+              currentStreak: 1, 
+              taskRepeatCount: 1 
+            }),
+            children: [],
+            depth: 1,
+          },
+          {
+            // Task 3: not completed (0/3) - INCOMPLETE UNIT
+            ...createMockChain({ 
+              id: 'unit3', 
+              currentStreak: 0, 
+              taskRepeatCount: 3 
+            }),
+            children: [],
+            depth: 1,
+          },
+        ],
+        depth: 0,
+      };
+      
+      const unitResult = getGroupUnitProgress(group);
+      expect(unitResult).toEqual({ completed: 2, total: 3 }); // 2 out of 3 units completed
+      
+      // Compare with old repeat-based progress
+      const repeatResult = getGroupProgress(group);
+      expect(repeatResult).toEqual({ completed: 3, total: 6 }); // 3 out of 6 total repeats (2+1+3)
+    });
+
+    it('should calculate unit progress for group with mixed completion', () => {
+      const group: ChainTreeNode = {
+        ...createMockChain({ id: 'group1', type: 'group' }),
+        children: [
+          {
+            ...createMockChain({ id: 'unit1', currentStreak: 1 }),
+            children: [],
+            depth: 1,
+          },
+          {
+            ...createMockChain({ id: 'unit2', currentStreak: 0 }),
+            children: [],
+            depth: 1,
+          },
+          {
+            ...createMockChain({ id: 'unit3', currentStreak: 1 }),
+            children: [],
+            depth: 1,
+          },
+        ],
+        depth: 0,
+      };
+      
+      const result = getGroupUnitProgress(group);
+      expect(result).toEqual({ completed: 2, total: 3 });
+    });
+
+    it('should handle empty group', () => {
+      const group: ChainTreeNode = {
+        ...createMockChain({ id: 'group1', type: 'group' }),
+        children: [],
+        depth: 0,
+      };
+      
+      const result = getGroupUnitProgress(group);
+      expect(result).toEqual({ completed: 0, total: 0 });
+    });
+
+    it('should handle nested groups correctly', () => {
+      const group: ChainTreeNode = {
+        ...createMockChain({ id: 'group1', type: 'group' }),
+        children: [
+          {
+            ...createMockChain({ id: 'subgroup1', type: 'group' }),
+            children: [
+              {
+                ...createMockChain({ id: 'unit1', currentStreak: 1 }),
+                children: [],
+                depth: 2,
+              },
+              {
+                ...createMockChain({ id: 'unit2', currentStreak: 0 }),
+                children: [],
+                depth: 2,
+              },
+            ],
+            depth: 1,
+          },
+          {
+            ...createMockChain({ id: 'unit3', currentStreak: 1 }),
+            children: [],
+            depth: 1,
+          },
+        ],
+        depth: 0,
+      };
+      
+      const result = getGroupUnitProgress(group);
+      expect(result).toEqual({ completed: 2, total: 3 }); // 2 units completed out of 3 total
     });
   });
 });

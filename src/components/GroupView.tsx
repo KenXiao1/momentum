@@ -1,7 +1,7 @@
 import React from 'react';
 import { ChainTreeNode, ScheduledSession } from '../types';
 import { ArrowLeft, Play, Plus, Users, Target, Import, Pencil, X } from 'lucide-react';
-import { getGroupProgress, getNextUnitInGroup, getChainTypeConfig } from '../utils/chainTree';
+import { getGroupProgress, getGroupUnitProgress, getNextUnitInGroup, getChainTypeConfig } from '../utils/chainTree';
 import { formatTime } from '../utils/time';
 import { getGroupTimeStatus } from '../utils/timeLimit';
 import { ImportUnitsModal } from './ImportUnitsModal';
@@ -34,6 +34,7 @@ export const GroupView: React.FC<GroupViewProps> = ({
   onUpdateTaskRepeatCount,
 }) => {
   const progress = getGroupProgress(group);
+  const unitProgress = getGroupUnitProgress(group);
   const nextUnit = getNextUnitInGroup(group);
   const typeConfig = getChainTypeConfig(group.type);
   const timeStatus = getGroupTimeStatus(group);
@@ -63,7 +64,8 @@ export const GroupView: React.FC<GroupViewProps> = ({
   const renderUnit = (unit: ChainTreeNode, index: number) => {
     const unitTypeConfig = getChainTypeConfig(unit.type);
     const scheduledSession = getScheduledSession(unit.id);
-    const isCompleted = unit.currentStreak > 0;
+    const requiredRepeats = unit.taskRepeatCount || 1;
+    const isCompleted = unit.currentStreak >= requiredRepeats;
     const isNext = nextUnit?.id === unit.id;
     const currentRepeatCount = unit.taskRepeatCount || 1;
 
@@ -201,7 +203,7 @@ export const GroupView: React.FC<GroupViewProps> = ({
                   {group.name}
                 </h1>
                 <p className="text-sm font-mono text-gray-500 tracking-wider uppercase">
-                  {typeConfig.name} • {progress.completed}/{progress.total} 已完成
+                  {typeConfig.name} • {unitProgress.completed}/{unitProgress.total} 已完成
                 </p>
               </div>
             </div>
@@ -256,19 +258,24 @@ export const GroupView: React.FC<GroupViewProps> = ({
               </div>
               <div className="flex items-center space-x-2">
                 <Target size={16} />
-                <span>{progress.completed}/{progress.total} 已完成</span>
+                <span>{unitProgress.completed}/{unitProgress.total} 已完成</span>
               </div>
+              {progress.total !== unitProgress.total && (
+                <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-slate-500">
+                  <span>({progress.completed}/{progress.total} 重复次数)</span>
+                </div>
+              )}
             </div>
           </div>
           
           <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-4 mb-4">
             <div 
               className="bg-gradient-to-r from-primary-500 to-primary-600 h-4 rounded-full transition-all duration-500 flex items-center justify-end pr-2"
-              style={{ width: `${progress.total > 0 ? (progress.completed / progress.total) * 100 : 0}%` }}
+              style={{ width: `${unitProgress.total > 0 ? (unitProgress.completed / unitProgress.total) * 100 : 0}%` }}
             >
-              {progress.completed > 0 && (
+              {unitProgress.completed > 0 && (
                 <span className="text-white text-xs font-bold">
-                  {Math.round((progress.completed / progress.total) * 100)}%
+                  {Math.round((unitProgress.completed / unitProgress.total) * 100)}%
                 </span>
               )}
             </div>

@@ -15,7 +15,8 @@
       "WebSearch",
       "WebFetch(domain:github.com)",
       "Bash(docker:*)",
-      "mcp__firecrawl__firecrawl_scrape"
+      "mcp__firecrawl__firecrawl_scrape",
+      "Bash(npm test)"
     ],
     "defaultMode": "acceptEdits"
   }

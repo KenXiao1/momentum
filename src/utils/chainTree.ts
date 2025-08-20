@@ -149,11 +149,13 @@ export const buildChainTree = (chains: Chain[]): ChainTreeNode[] => {
 };
 
 /**
- * 获取任务群的完成进度
+ * 获取任务群的完成进度（基于重复次数）
  */
 export const getGroupProgress = (group: ChainTreeNode): { completed: number; total: number } => {
   if (group.type === 'unit') {
-    return { completed: group.currentStreak > 0 ? 1 : 0, total: 1 };
+    const requiredRepeats = group.taskRepeatCount || 1;
+    const completedRepeats = Math.min(group.currentStreak, requiredRepeats);
+    return { completed: completedRepeats, total: requiredRepeats };
   }
 
   let completed = 0;
@@ -161,6 +163,28 @@ export const getGroupProgress = (group: ChainTreeNode): { completed: number; tot
 
   group.children.forEach(child => {
     const progress = getGroupProgress(child);
+    completed += progress.completed;
+    total += progress.total;
+  });
+
+  return { completed, total };
+};
+
+/**
+ * 获取任务群的单元完成进度（基于单元数量，更直观）
+ */
+export const getGroupUnitProgress = (group: ChainTreeNode): { completed: number; total: number } => {
+  if (group.type === 'unit') {
+    const requiredRepeats = group.taskRepeatCount || 1;
+    const isCompleted = group.currentStreak >= requiredRepeats;
+    return { completed: isCompleted ? 1 : 0, total: 1 };
+  }
+
+  let completed = 0;
+  let total = 0;
+
+  group.children.forEach(child => {
+    const progress = getGroupUnitProgress(child);
     completed += progress.completed;
     total += progress.total;
   });
