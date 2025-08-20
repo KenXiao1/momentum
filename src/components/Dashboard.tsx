@@ -15,6 +15,7 @@ import { RecycleBinService } from '../services/RecycleBinService';
 import { AccountModal } from './AccountModal';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { User } from 'lucide-react';
+import { PerformanceMonitor } from './PerformanceMonitor';
 
 interface DashboardProps {
   chains: Chain[];
@@ -57,6 +58,7 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
   const [showImportExport, setShowImportExport] = useState(false);
   const [showRecycleBin, setShowRecycleBin] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showPerformanceMonitor, setShowPerformanceMonitor] = useState(process.env.NODE_ENV === 'development');
   const [recycleBinCount, setRecycleBinCount] = useState(0);
   
   // Only log in development mode to improve production performance
@@ -316,6 +318,13 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
         <AccountModal
           isOpen={showAccountModal}
           onClose={handleHideAccountModal}
+        />
+      )}
+      {/* Performance Monitor (Development) */}
+      {process.env.NODE_ENV === 'development' && (
+        <PerformanceMonitor
+          isVisible={showPerformanceMonitor}
+          onToggle={() => setShowPerformanceMonitor(!showPerformanceMonitor)}
         />
       )}
     </div>

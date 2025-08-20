@@ -21,6 +21,7 @@ import { startGroupTimer, isGroupExpired, resetGroupProgress } from './utils/tim
 import { forwardTimerManager } from './utils/forwardTimer';
 import { initializeRuleSystem } from './utils/initializeRuleSystem';
 import { runMigration } from './utils/migration';
+import { realTimeSyncService } from './services/RealTimeSyncService';
 
 function App() {
   const [state, setState] = useState<AppState>({
@@ -487,8 +488,11 @@ function App() {
       
       // 保存合并后的数据
       await storage.saveChains(allUpdatedChains);
-      console.log('✅ Safe save completed, recycle bin data preserved');
+      
+      // CRITICAL FIX: Clear cache immediately after save operation
       queryOptimizer.onDataChange('chains');
+      
+      console.log('✅ Safe save completed, recycle bin data preserved');
     } catch (error) {
       console.error('❌ Safe save failed:', error);
       throw error;
@@ -1102,11 +1106,8 @@ function App() {
 
   const handleDeleteChain = async (chainId: string) => {
     try {
-      // Use soft deletion instead of permanent deletion
-      await storage.softDeleteChain(chainId);
-      
-      // Reload chains to reflect the soft deletion
-      const updatedChains = await storage.getActiveChains();
+      // ENHANCED: Use real-time sync service for immediate and reliable updates
+      const updatedChains = await realTimeSyncService.deleteWithSync(storage, chainId);
       
       setState(prev => {
         // Remove any scheduled sessions for this chain
@@ -1146,13 +1147,9 @@ function App() {
     try {
       console.log('恢复链条:', chainIds);
       
-      // 批量恢复链条
-      for (const chainId of chainIds) {
-        await storage.restoreChain(chainId);
-      }
+      // ENHANCED: Use real-time sync service for immediate and reliable updates
+      const updatedChains = await realTimeSyncService.restoreWithSync(storage, chainIds);
       
-      // 重新加载活跃链条
-      const updatedChains = await storage.getActiveChains();
       setState(prev => ({
         ...prev,
         chains: updatedChains,
@@ -1173,6 +1170,9 @@ function App() {
       for (const chainId of chainIds) {
         await storage.permanentlyDeleteChain(chainId);
       }
+      
+      // CRITICAL FIX: Clear cache after database operations
+      queryOptimizer.onDataChange('chains');
       
       console.log(`成功永久删除 ${chainIds.length} 条链条`);
     } catch (error) {
