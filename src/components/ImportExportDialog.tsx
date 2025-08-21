@@ -73,12 +73,12 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
 
   const handleExport = async () => {
     try {
-      setLoading(true);
-      setError(null);
+          createdAt: rule.createdAt.toISOString(),
+          lastUsedAt: rule.lastUsedAt?.toISOString(),
       setSuccess(null);
       
       const exportData = await exceptionRuleManager.exportRules(exportOptions.includeUsageData);
-      
+          usedAt: record.usedAt.toISOString(),
       let content: string;
       let filename: string;
       let mimeType: string;
@@ -90,11 +90,9 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
       } else {
         // CSV format
         const csvLines = [
-          'Name,Type,Description,Usage Count,Last Used,Created At',
-          ...exportData.rules.map(rule => [
             `"${rule.name.replace(/"/g, '""')}"`,
             rule.type,
-            `"${(rule.description || '').replace(/"/g, '""')}"`,
+        filename = `exception-rules-${new Date().toISOString().split('T')[0]}.json`;
             rule.usageCount,
             rule.lastUsedAt ? rule.lastUsedAt.toISOString() : '',
             rule.createdAt.toISOString()
@@ -105,6 +103,15 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
         mimeType = 'text/csv';
       }
       
+            rule.lastUsedAt ? rule.lastUsedAt.toISOString() : '',
+            rule.createdAt.toISOString()
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+        filename = `exception-rules-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       // 下载文件
       const blob = new Blob([content], { type: mimeType });
       const url = URL.createObjectURL(blob);
@@ -115,7 +122,6 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
       setSuccess(`成功导出 ${exportData.rules.length} 个规则`);
       
     } catch (err) {
@@ -123,25 +129,6 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
-    setImportFile(file);
-    setImportPreview(null);
-    setImportResult(null);
-    setError(null);
-    
-    // 预览文件内容
-    previewImportFile(file);
-  };
-
-  const previewImportFile = async (file: File) => {
-    try {
-      setLoading(true);
-      
       const text = await file.text();
       let data: any;
       

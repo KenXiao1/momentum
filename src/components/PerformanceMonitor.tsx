@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { realTimeSyncService } from '../services/RealTimeSyncService';
 import { queryOptimizer } from '../utils/queryOptimizer';
 
@@ -11,37 +11,39 @@ export const PerformanceMonitor: React.FC<{
   onToggle: () => void; 
 }> = ({ isVisible, onToggle }) => {
   const [stats, setStats] = useState<any>({});
-  const [refreshInterval, setRefreshInterval] = useState<number | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isVisible) {
       const updateStats = () => {
         const syncStats = realTimeSyncService.getStats();
         const cacheStats = queryOptimizer.getCacheStats();
-        const performanceReport = queryOptimizer.generatePerformanceReport();
+        const performanceStats = queryOptimizer.getPerformanceStats();
         
         setStats({
           sync: syncStats,
           cache: cacheStats,
-          performance: performanceReport,
+          performance: performanceStats,
           timestamp: new Date().toLocaleTimeString()
         });
       };
 
       updateStats();
-      const interval = setInterval(updateStats, 1000);
-      setRefreshInterval(interval as any);
+      intervalRef.current = setInterval(updateStats, 1000);
 
       return () => {
-        if (interval) clearInterval(interval);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
       };
     } else {
-      if (refreshInterval) {
-        clearInterval(refreshInterval);
-        setRefreshInterval(null);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     }
-  }, [isVisible, refreshInterval]);
+  }, [isVisible]);
 
   if (!isVisible) {
     return (

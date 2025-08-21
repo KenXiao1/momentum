@@ -104,7 +104,6 @@ export const VirtualizedChainList: React.FC<VirtualizedChainListProps> = React.m
       const session = getScheduledSession(nextUnit ? nextUnit.id : chainNode.id);
       return (
         <GroupCard
-          key={chainNode.id}
           group={chainNode}
           scheduledSession={session}
           onStartChain={onStartChain}
@@ -118,7 +117,6 @@ export const VirtualizedChainList: React.FC<VirtualizedChainListProps> = React.m
     } else {
       return (
         <ChainCard
-          key={chainNode.id}
           chain={chainNode}
           scheduledSession={getScheduledSession(chainNode.id)}
           onStartChain={onStartChain}
@@ -144,7 +142,11 @@ export const VirtualizedChainList: React.FC<VirtualizedChainListProps> = React.m
   if (!shouldVirtualize) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {topLevelChains.map((chainNode, index) => renderChainItem(chainNode, index))}
+        {topLevelChains.map((chainNode, index) => (
+          <div key={`${chainNode.id}-${index}`}>
+            {renderChainItem(chainNode, index)}
+          </div>
+        ))}
       </div>
     );
   }
@@ -167,7 +169,11 @@ export const VirtualizedChainList: React.FC<VirtualizedChainListProps> = React.m
             transform: `translateY(${Math.floor(scrollTop / ITEM_HEIGHT) * ITEM_HEIGHT}px)`,
           }}
         >
-          {visibleItems.map((chainNode, index) => renderChainItem(chainNode, index))}
+          {visibleItems.map((chainNode, index) => (
+            <div key={`${chainNode.id}-${index}`}>
+              {renderChainItem(chainNode, index)}
+            </div>
+          ))}
         </div>
       </div>
       

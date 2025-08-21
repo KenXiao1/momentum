@@ -1,17 +1,36 @@
 import React, { useState } from 'react';
-import { Chain, CompletionHistory } from '../types';
+import { Chain, CompletionHistory, RSIPNode, RSIPMeta } from '../types';
 import { Download, Upload, X, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { exceptionRuleManager } from '../services/ExceptionRuleManager';
+import { storage } from '../utils/storage';
+
+interface ExportData {
+  version: string;
+  exportedAt: string;
+  chains: any[];
+  completionHistory: any[];
+  rsipNodes?: any[];
+  rsipMeta?: any;
+  userPreferences?: any;
+  exceptionRules?: any[];
+}
 
 interface ImportExportModalProps {
   chains: Chain[];
   history?: CompletionHistory[];
-  onImport: (chains: Chain[], options?: { history?: CompletionHistory[] }) => void;
+  rsipNodes?: RSIPNode[];
+  rsipMeta?: RSIPMeta;
+  userPreferences?: any;
+  onImport: (chains: Chain[], options?: { history?: CompletionHistory[]; rsipNodes?: RSIPNode[]; rsipMeta?: RSIPMeta; exceptionRules?: any[] }) => void;
   onClose: () => void;
 }
 
 export const ImportExportModal: React.FC<ImportExportModalProps> = ({
   chains,
   history,
+  rsipNodes,
+  rsipMeta,
+  userPreferences,
   onImport,
   onClose,
 }) => {
@@ -20,80 +39,97 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [importError, setImportError] = useState('');
 
-  const handleExport = () => {
-    const exportData = {
-      version: '1.0',
-      exportedAt: new Date().toISOString(),
-      chains: chains.map(chain => ({
-        ...chain,
-        createdAt: chain.createdAt.toISOString(),
-        lastCompletedAt: chain.lastCompletedAt?.toISOString(),
-      })),
-      completionHistory: (history || []).map(h => ({
-        ...h,
-        completedAt: h.completedAt.toISOString(),
-      })),
-    };
-
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `momentum-chains-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  const handleExport = async () => {
+    try {
+      // 获取例外规则数据
+      const exceptionRulesData = await exceptionRuleManager.exportRules(true);
+      
+      const exportData: ExportData = {
+        version: '2.0',
+        exportedAt: new Date().toISOString(),
+        chains: chains.map(chain => ({
+          ...chain,
+          createdAt: chain.createdAt.toISOString(),
+          lastCompletedAt: chain.lastCompletedAt?.toISOString(),
+          groupStartedAt: chain.groupStartedAt?.toISOString(),
+          groupExpiresAt: chain.groupExpiresAt?.toISOString(),
+          deletedAt: chain.deletedAt?.toISOString(),
+        })),
+        completionHistory: (history || []).map(h => ({
+          ...h,
+          completedAt: h.completedAt.toISOString(),
+        })),
+        rsipNodes: (rsipNodes || []).map(node => ({
+          ...node,
+          createdAt: node.createdAt.toISOString(),
+          lastScheduledAt: node.lastScheduledAt?.toISOString(),
+        })),
+        rsipMeta: rsipMeta ? {
+          ...rsipMeta,
+          lastAddedAt: rsipMeta.lastAddedAt?.toISOString(),
+        } : undefined,
+        userPreferences: userPreferences,
+        exceptionRules: exceptionRulesData
+      };
+      
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `momentum-data-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('导出失败:', error);
+    }
   };
 
-  const handleImport = () => {
+  // 生成唯一ID的辅助函数
+  const generateUniqueId = () => {
+    return `chain_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  };
+
+  const generateUniqueRsipId = () => {
+    return `rsip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  };
+
+  // 检查ID是否重复的函数
+  const checkIdConflict = (importedId: string, existingIds: Set<string>) => {
+    return existingIds.has(importedId);
+  };
+
+  const handleImport = async () => {
     try {
       setImportStatus('idle');
       setImportError('');
-
-      if (!importData.trim()) {
-        setImportError('请输入要导入的数据');
-        setImportStatus('error');
-        return;
-      }
-
+      
       const parsedData = JSON.parse(importData);
       
-      // 验证数据格式
-      if (!parsedData.chains || !Array.isArray(parsedData.chains)) {
-        throw new Error('无效的数据格式：缺少chains数组');
-      }
-
-      // 旧ID -> 新ID 映射，确保父子关系正确迁移
-      const idMap = new Map<string, string>();
-
-      // 预先为每个导入链生成新ID
-      parsedData.chains.forEach((chain: any) => {
-        const newId = crypto.randomUUID();
-        idMap.set(chain.id || crypto.randomUUID(), newId);
-      });
-
-      // 转换和验证链数据
-      const importedChains: Chain[] = parsedData.chains.map((chain: any, index: number) => {
-        // 验证必需字段
-        const requiredFields = ['name', 'trigger', 'duration', 'description', 'auxiliarySignal', 'auxiliaryDuration', 'auxiliaryCompletionTrigger'];
-        for (const field of requiredFields) {
-          if (!chain[field]) {
-            throw new Error(`链条 ${index + 1} 缺少必需字段: ${field}`);
-          }
+      // 收集现有的ID
+      const existingChainIds = new Set(chains.map(chain => chain.id));
+      const existingRsipIds = new Set((rsipNodes || []).map(node => node.id));
+      
+      // 处理链数据
+      const importedChains = (parsedData.chains || []).map((chain: any) => {
+        let chainId = chain.id;
+        
+        // 检查ID冲突，如果重复则生成新ID
+        if (checkIdConflict(chainId, existingChainIds)) {
+          const newId = generateUniqueId();
+          console.log(`检测到链ID冲突: ${chainId} -> ${newId}`);
+          chainId = newId;
         }
-
+        
+        // 将新ID添加到已存在的ID集合中，避免导入数据内部冲突
+        existingChainIds.add(chainId);
+        
         return {
-          id: idMap.get(chain.id) || crypto.randomUUID(), // 新ID
-          name: chain.name,
-          parentId: chain.parentId ? idMap.get(chain.parentId) : undefined, // 维护层级
-          type: chain.type || 'unit',
-          sortOrder: chain.sortOrder || Math.floor(Date.now() / 1000) + index,
-          trigger: chain.trigger,
-          duration: Number(chain.duration) || 45,
-          description: chain.description,
+          ...chain,
+          id: chainId, // 使用可能替换后的ID
           // 保留导入前的统计与历史指标
           currentStreak: Number(chain.currentStreak) || 0,
           auxiliaryStreak: Number(chain.auxiliaryStreak) || 0,
@@ -109,25 +145,94 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
           lastCompletedAt: chain.lastCompletedAt ? new Date(chain.lastCompletedAt) : undefined,
         };
       });
-
-      // 兼容导入历史记录
-      const importedHistory: CompletionHistory[] = (parsedData.completionHistory || []).map((h: any) => ({
-        chainId: idMap.get(h.chainId) || h.chainId,
-        completedAt: new Date(h.completedAt),
-        duration: Number(h.duration) || 0,
-        wasSuccessful: !!h.wasSuccessful,
-        reasonForFailure: h.reasonForFailure,
-      }));
-
-      // 将链与历史一起传递，交由上层合并存储
-      onImport(importedChains, { history: importedHistory });
+      
+      // 创建ID映射表，用于更新历史数据中的链ID引用
+      const chainIdMapping = new Map<string, string>();
+      (parsedData.chains || []).forEach((originalChain: any, index: number) => {
+        const newChain = importedChains[index];
+        if (originalChain.id !== newChain.id) {
+          chainIdMapping.set(originalChain.id, newChain.id);
+        }
+      });
+      
+      // 处理历史数据，更新链ID引用
+      const importedHistory = (parsedData.completionHistory || []).map((h: any) => {
+        let chainId = h.chainId;
+        
+        // 如果历史记录引用的链ID被替换了，更新引用
+        if (chainIdMapping.has(chainId)) {
+          chainId = chainIdMapping.get(chainId);
+          console.log(`更新历史记录中的链ID引用: ${h.chainId} -> ${chainId}`);
+        }
+        
+        return {
+          ...h,
+          chainId, // 使用可能更新后的链ID
+          completedAt: new Date(h.completedAt),
+          duration: Number(h.duration) || 0,
+        };
+      });
+      
+      // 处理 RSIP 节点数据
+      const importedRsipNodes = (parsedData.rsipNodes || []).map((node: any) => {
+        let nodeId = node.id;
+        
+        // 检查ID冲突，如果重复则生成新ID
+        if (checkIdConflict(nodeId, existingRsipIds)) {
+          const newId = generateUniqueRsipId();
+          console.log(`检测到RSIP节点ID冲突: ${nodeId} -> ${newId}`);
+          nodeId = newId;
+        }
+        
+        // 将新ID添加到已存在的ID集合中，避免导入数据内部冲突
+        existingRsipIds.add(nodeId);
+        
+        return {
+          ...node,
+          id: nodeId, // 使用可能替换后的ID
+          createdAt: node.createdAt ? new Date(node.createdAt) : new Date(),
+          lastScheduledAt: node.lastScheduledAt ? new Date(node.lastScheduledAt) : undefined,
+        };
+      });
+      
+      // 处理 RSIP 元数据
+      const importedRsipMeta = parsedData.rsipMeta ? {
+        ...parsedData.rsipMeta,
+        lastAddedAt: parsedData.rsipMeta.lastAddedAt ? new Date(parsedData.rsipMeta.lastAddedAt) : undefined,
+      } : undefined;
+      
+      // 处理例外规则数据
+      let importedExceptionRules: any[] = [];
+      if (parsedData.exceptionRules && parsedData.exceptionRules.rules) {
+        const rulesToImport = parsedData.exceptionRules.rules.map((rule: any) => ({
+          name: rule.name,
+          type: rule.type,
+          description: rule.description
+        }));
+        
+        const importResult = await exceptionRuleManager.importRules(rulesToImport, {
+          skipDuplicates: true,
+          updateExisting: false
+        });
+        
+        importedExceptionRules = importResult.imported;
+      }
+      
+      // 将所有数据传递给上层组件
+      onImport(importedChains, { 
+        history: importedHistory,
+        rsipNodes: importedRsipNodes,
+        rsipMeta: importedRsipMeta,
+        exceptionRules: importedExceptionRules
+      });
+      
       setImportStatus('success');
       
       // 3秒后自动关闭
       setTimeout(() => {
         onClose();
       }, 3000);
-
+      
     } catch (error) {
       console.error('导入失败:', error);
       setImportError(error instanceof Error ? error.message : '导入数据格式错误');
@@ -167,15 +272,15 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
+            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors duration-200 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Tabs */}
-        {chains.length > 0 ? (
-          <div className="flex space-x-1 mb-8 bg-gray-100 dark:bg-slate-700 rounded-2xl p-1">
+        {/* Tab Navigation */}
+        <div className="flex bg-gray-100 dark:bg-slate-700 rounded-2xl p-1 mb-8">
+          {chains.length > 0 && (
             <button
               onClick={() => setActiveTab('export')}
               className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center space-x-2 font-chinese ${
@@ -187,43 +292,10 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
               <Download size={16} />
               <span>导出数据</span>
             </button>
-            <button
-              onClick={() => setActiveTab('import')}
-              className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center space-x-2 font-chinese ${
-                activeTab === 'import'
-                  ? 'bg-white dark:bg-slate-600 text-gray-900 dark:text-slate-100 shadow-sm'
-                  : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200'
-              }`}
-            >
-              <Upload size={16} />
-              <span>导入数据</span>
-            </button>
-          </div>
-        ) : (
-          <div className="mb-8 text-center">
-            <div className="inline-flex items-center space-x-2 px-6 py-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-2xl border border-blue-200/50 dark:border-blue-400/30">
-              <Upload size={16} />
-              <span className="font-chinese font-medium">导入任务链数据</span>
-            </div>
-          </div>
-        )}
-
-        {chains.length > 0 && (
-          <div className="flex space-x-1 mb-8 bg-gray-100 dark:bg-slate-700 rounded-2xl p-1" style={{ display: 'none' }}>
-          <button
-            onClick={() => setActiveTab('export')}
-            className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center space-x-2 font-chinese ${
-              activeTab === 'export'
-                ? 'bg-white dark:bg-slate-600 text-gray-900 dark:text-slate-100 shadow-sm'
-                : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200'
-            }`}
-          >
-            <Download size={16} />
-            <span>导出数据</span>
-          </button>
+          )}
           <button
             onClick={() => setActiveTab('import')}
-            className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center space-x-2 font-chinese ${
+            className={`${chains.length > 0 ? 'flex-1' : 'w-full'} px-4 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center space-x-2 font-chinese ${
               activeTab === 'import'
                 ? 'bg-white dark:bg-slate-600 text-gray-900 dark:text-slate-100 shadow-sm'
                 : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200'
@@ -232,8 +304,9 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
             <Upload size={16} />
             <span>导入数据</span>
           </button>
-          </div>
-        )}
+        </div>
+
+        {/* Tab Content */}
 
         {/* Export Tab */}
         {activeTab === 'export' && chains.length > 0 && (
@@ -243,25 +316,24 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                 导出任务链数据
               </h3>
               <p className="text-blue-700 dark:text-blue-300 text-sm mb-4 font-chinese leading-relaxed">
-                导出功能将保存您当前的所有任务链配置与统计（可选兼容历史记录）。
-                从新版开始，导出文件可包含完成记录与时间信息，导入后可继续累计。
+                导出功能将保存您当前的所有数据，包括任务链配置、统计数据、国策树和例外规则。
               </p>
-              <div className="grid grid-cols-2 gap-4 text-sm text-blue-600 dark:text-blue-400">
-                <div className="flex items-center space-x-2">
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
                   <CheckCircle size={16} />
-                  <span className="font-chinese">任务链配置</span>
+                  <span className="font-chinese text-sm">任务链配置与统计</span>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
                   <CheckCircle size={16} />
-                  <span className="font-chinese">触发器设置</span>
+                  <span className="font-chinese text-sm">完成历史记录</span>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
                   <CheckCircle size={16} />
-                  <span className="font-chinese">辅助链配置</span>
+                  <span className="font-chinese text-sm">国策树（RSIP）数据</span>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
                   <CheckCircle size={16} />
-                  <span className="font-chinese">例外规则</span>
+                  <span className="font-chinese text-sm">例外规则配置</span>
                 </div>
               </div>
             </div>
@@ -290,9 +362,22 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                 导入任务链数据
               </h3>
               <p className="text-yellow-700 dark:text-yellow-300 text-sm mb-4 font-chinese leading-relaxed">
-                导入功能将添加新的任务链到您的系统中。导入的链条将生成新的ID，不会覆盖现有数据。
-                所有统计数据将重置为0。
+                导入功能将添加新的数据到您的系统中，包括任务链、国策树和例外规则。导入的链条将生成新的ID，不会覆盖现有数据。
               </p>
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center space-x-2 text-yellow-600 dark:text-yellow-400">
+                  <CheckCircle size={16} />
+                  <span className="text-sm font-chinese">任务链数据（生成新ID）</span>
+                </div>
+                <div className="flex items-center space-x-2 text-yellow-600 dark:text-yellow-400">
+                  <CheckCircle size={16} />
+                  <span className="text-sm font-chinese">国策树节点与配置</span>
+                </div>
+                <div className="flex items-center space-x-2 text-yellow-600 dark:text-yellow-400">
+                  <CheckCircle size={16} />
+                  <span className="text-sm font-chinese">例外规则（跳过重复）</span>
+                </div>
+              </div>
               <div className="flex items-center space-x-2 text-yellow-600 dark:text-yellow-400">
                 <AlertCircle size={16} />
                 <span className="text-sm font-chinese">请确保导入的是从Momentum导出的有效JSON文件</span>
