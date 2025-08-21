@@ -122,16 +122,21 @@ export const RecycleBinModal: React.FC<RecycleBinModalProps> = ({
     
     setIsLoading(true);
     try {
+      console.log(`[RECYCLE_BIN] Starting ${showConfirmDialog.type} operation for chains:`, showConfirmDialog.chainIds);
+      
       if (showConfirmDialog.type === 'restore') {
         await onRestore(showConfirmDialog.chainIds);
+        console.log(`[RECYCLE_BIN] Restore operation completed for ${showConfirmDialog.chainIds.length} chains`);
       } else {
         await onPermanentDelete(showConfirmDialog.chainIds);
+        console.log(`[RECYCLE_BIN] Permanent delete operation completed for ${showConfirmDialog.chainIds.length} chains`);
       }
       
-      // 重新加载数据
+      // Force reload local data after parent callbacks complete
       await loadDeletedChains();
+      console.log(`[RECYCLE_BIN] Local data refreshed after ${showConfirmDialog.type} operation`);
     } catch (error) {
-      console.error('操作失败:', error);
+      console.error(`[RECYCLE_BIN] ${showConfirmDialog.type} operation failed:`, error);
       alert('操作失败，请重试');
     } finally {
       setIsLoading(false);

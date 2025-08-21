@@ -178,6 +178,26 @@ class RealTimeSyncService {
   }
   
   /**
+   * Enhanced permanent delete operation with real-time sync
+   */
+  async permanentDeleteWithSync(storage: any, chainIds: string[]): Promise<any[]> {
+    console.log(`[REALTIME_SYNC] Starting permanent delete operation for chains:`, chainIds);
+    
+    // Perform database operations
+    for (const chainId of chainIds) {
+      await storage.permanentlyDeleteChain(chainId);
+    }
+    
+    // Get fresh data immediately
+    const freshChains = await storage.getActiveChains();
+    
+    // Trigger real-time sync
+    await this.syncAfterOperation('chains', 'delete', freshChains);
+    
+    return freshChains;
+  }
+  
+  /**
    * Enhanced save operation with real-time sync
    */
   async saveWithSync(storage: any, chains: any[]): Promise<any[]> {

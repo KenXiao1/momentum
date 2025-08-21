@@ -1152,12 +1152,13 @@ function App() {
       // ENHANCED: Use real-time sync service for immediate and reliable updates
       const updatedChains = await realTimeSyncService.restoreWithSync(storage, chainIds);
       
+      // ADDITIONAL FIX: Explicitly update state to ensure UI reflects changes immediately
       setState(prev => ({
         ...prev,
         chains: updatedChains,
       }));
       
-      console.log(`成功恢复 ${chainIds.length} 条链条`);
+      console.log(`成功恢复 ${chainIds.length} 条链条，UI状态已更新`);
     } catch (error) {
       console.error('恢复链条失败:', error);
       alert('恢复失败，请重试');
@@ -1168,15 +1169,16 @@ function App() {
     try {
       console.log('永久删除链条:', chainIds);
       
-      // 批量永久删除链条
-      for (const chainId of chainIds) {
-        await storage.permanentlyDeleteChain(chainId);
-      }
+      // ENHANCED: Use real-time sync service for immediate and reliable updates
+      const updatedChains = await realTimeSyncService.permanentDeleteWithSync(storage, chainIds);
       
-      // CRITICAL FIX: Clear cache after database operations
-      queryOptimizer.onDataChange('chains');
+      // ADDITIONAL FIX: Explicitly update state to ensure UI reflects changes immediately
+      setState(prev => ({
+        ...prev,
+        chains: updatedChains,
+      }));
       
-      console.log(`成功永久删除 ${chainIds.length} 条链条`);
+      console.log(`成功永久删除 ${chainIds.length} 条链条，UI状态已更新`);
     } catch (error) {
       console.error('永久删除链条失败:', error);
       alert('永久删除失败，请重试');

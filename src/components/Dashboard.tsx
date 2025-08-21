@@ -117,14 +117,18 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
   const handleRestore = useCallback(async (chainIds: string[]) => {
     if (onRestoreChains) {
       await onRestoreChains(chainIds);
+      // Force reload of recycle bin stats after successful restore
       await loadRecycleBinStats();
+      console.log(`[DASHBOARD] Restored ${chainIds.length} chains, stats updated`);
     }
   }, [onRestoreChains, loadRecycleBinStats]);
   
   const handlePermanentDelete = useCallback(async (chainIds: string[]) => {
     if (onPermanentDeleteChains) {
       await onPermanentDeleteChains(chainIds);
+      // Force reload of recycle bin stats after successful permanent deletion
       await loadRecycleBinStats();
+      console.log(`[DASHBOARD] Permanently deleted ${chainIds.length} chains, stats updated`);
     }
   }, [onPermanentDeleteChains, loadRecycleBinStats]);
   
