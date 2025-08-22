@@ -681,7 +681,7 @@ function App() {
     updateStateAndSave();
   };
 
-  const handleStartChain = (chainId: string) => {
+  const handleStartChain = async (chainId: string) => {
     const chain = state.chains.find(c => c.id === chainId);
     if (!chain) return;
 
@@ -727,12 +727,27 @@ function App() {
         const nextUnit = getNextUnitInGroup(groupNode);
         if (nextUnit) {
           console.log(`任务群 ${chain.name} 开始下一个任务: ${nextUnit.name}`);
-          handleStartChain(nextUnit.id);
+          await handleStartChain(nextUnit.id);
           return;
         } else {
-          // No next unit available - all tasks completed or no tasks in group
-          console.log(`任务群 ${chain.name} 没有可用的下一个任务`);
-          notificationManager.notifyTaskCompleted(chain.name, 0, '所有任务已完成');
+          // 所有子任务都已完成：增加任务群完成计数并重置子任务进度，然后从头开始
+          let updatedChains = incrementGroupCompletionCount(state.chains, chainId);
+          try {
+            await safelySaveChains(updatedChains);
+            queryOptimizer.onDataChange('chains');
+            setState(prev => ({ ...prev, chains: updatedChains }));
+          } catch (e) {
+            console.error('保存任务群完成计数失败:', e);
+          }
+          // 重新构建树并从第一个未完成单元开始（此时都会被重置为未完成）
+          const newTree = queryOptimizer.memoizedBuildChainTree(updatedChains);
+          const newGroupNode = newTree.find(n => n.id === chainId);
+          const firstUnit = newGroupNode ? getNextUnitInGroup(newGroupNode) : null;
+          if (firstUnit) {
+            await handleStartChain(firstUnit.id);
+          } else {
+            console.log(`任务群 ${chain.name} 没有子任务可执行`);
+          }
           return;
         }
       } else {
