@@ -163,16 +163,61 @@ class RealTimeSyncService {
   async restoreWithSync(storage: any, chainIds: string[]): Promise<any[]> {
     console.log(`[REALTIME_SYNC] Starting restore operation for chains:`, chainIds);
     
-    // Perform database operations
+    const results = {
+      successful: [] as string[],
+      failed: [] as { id: string; error: string }[]
+    };
+
+    // ENHANCED: Process each chain individually with better error handling
     for (const chainId of chainIds) {
-      await storage.restoreChain(chainId);
+      try {
+        console.log(`[REALTIME_SYNC] Restoring chain: ${chainId}`);
+        await storage.restoreChain(chainId);
+        results.successful.push(chainId);
+        console.log(`[REALTIME_SYNC] Successfully restored chain: ${chainId}`);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        results.failed.push({ id: chainId, error: errorMessage });
+        console.error(`[REALTIME_SYNC] Failed to restore chain ${chainId}:`, errorMessage);
+      }
+    }
+
+    // CRITICAL FIX: Force clear all caches immediately before fetching fresh data
+    console.log(`[REALTIME_SYNC] Clearing all caches before fetching fresh data`);
+    queryOptimizer.clearCache();
+    
+    // ENHANCED: Clear any storage-level caches if available
+    if (storage.clearCache && typeof storage.clearCache === 'function') {
+      storage.clearCache();
     }
     
-    // Get fresh data immediately
+    // Get fresh data immediately with forced cache bypass
+    console.log(`[REALTIME_SYNC] Fetching fresh chains data after restore operation`);
     const freshChains = await storage.getActiveChains();
     
-    // Trigger real-time sync
+    // ENHANCED: Force cache invalidation again after fresh data fetch
+    queryOptimizer.onDataChange('chains');
+    
+    // Trigger real-time sync with fresh data
     await this.syncAfterOperation('chains', 'restore', freshChains);
+    
+    // Log operation summary
+    console.log(`[REALTIME_SYNC] Restore operation completed:`, {
+      total: chainIds.length,
+      successful: results.successful.length,
+      failed: results.failed.length,
+      failures: results.failed
+    });
+
+    // Throw error if all operations failed
+    if (results.failed.length === chainIds.length) {
+      throw new Error(`All restore operations failed: ${results.failed.map(f => f.error).join('; ')}`);
+    }
+    
+    // Log partial failures but don't throw error
+    if (results.failed.length > 0) {
+      console.warn(`[REALTIME_SYNC] Partial restore failure - ${results.failed.length} of ${chainIds.length} chains failed to restore:`, results.failed);
+    }
     
     return freshChains;
   }

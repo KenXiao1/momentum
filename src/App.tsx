@@ -23,6 +23,17 @@ import { initializeRuleSystem } from './utils/initializeRuleSystem';
 import { runMigration } from './utils/migration';
 import { realTimeSyncService } from './services/RealTimeSyncService';
 
+// ENHANCED: Import restore function tester for development debugging
+if (process.env.NODE_ENV === 'development') {
+  import('./utils/restoreFunctionTester').then(({ restoreFunctionTester }) => {
+    // Make tester available globally for debugging
+    (window as any).__restoreTester = restoreFunctionTester;
+    console.log('🔧 Restore function tester loaded - use window.__restoreTester to test restore functionality');
+  }).catch(error => {
+    console.warn('Failed to load restore function tester:', error);
+  });
+}
+
 function App() {
   const [state, setState] = useState<AppState>({
     chains: [],
@@ -1146,22 +1157,71 @@ function App() {
   };
 
   const handleRestoreChains = async (chainIds: string[]) => {
+    console.log('[APP] Starting restore operation for chains:', chainIds);
+    
     try {
-      console.log('恢复链条:', chainIds);
-      
       // ENHANCED: Use real-time sync service for immediate and reliable updates
+      console.log('[APP] Calling realTimeSyncService.restoreWithSync...');
       const updatedChains = await realTimeSyncService.restoreWithSync(storage, chainIds);
       
-      // ADDITIONAL FIX: Explicitly update state to ensure UI reflects changes immediately
-      setState(prev => ({
-        ...prev,
-        chains: updatedChains,
-      }));
+      console.log('[APP] Restore operation completed, updating UI state immediately...');
       
-      console.log(`成功恢复 ${chainIds.length} 条链条，UI状态已更新`);
+      // CRITICAL FIX: Force immediate state update to ensure UI reflects changes without refresh
+      setState(prev => {
+        const newState = {
+          ...prev,
+          chains: updatedChains,
+        };
+        console.log('[APP] State updated with', updatedChains.length, 'chains');
+        return newState;
+      });
+      
+      // ENHANCED: Force a complete refresh to ensure consistency
+      console.log('[APP] Forcing complete data refresh after restore...');
+      await realTimeSyncService.forceRefresh();
+      
+      // ADDITIONAL: Reload data to ensure absolute consistency
+      setTimeout(async () => {
+        try {
+          const latestChains = await storage.getActiveChains();
+          setState(prev => ({
+            ...prev,
+            chains: latestChains,
+          }));
+          console.log('[APP] Final state verification completed with', latestChains.length, 'chains');
+        } catch (verificationError) {
+          console.warn('[APP] State verification failed:', verificationError);
+        }
+      }, 100);
+      
+      console.log(`[APP] Successfully restored ${chainIds.length} chains, UI state updated immediately`);
     } catch (error) {
-      console.error('恢复链条失败:', error);
-      alert('恢复失败，请重试');
+      console.error('[APP] Restore operation failed:', error);
+      
+      // ENHANCED: Provide more detailed error information
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      
+      // ENHANCED: Better error handling with partial failure support
+      if (errorMessage.includes('Partial restore failure') || errorMessage.includes('failed to restore')) {
+        // Handle partial failures more gracefully
+        console.warn('[APP] Some chains may have been restored despite errors, refreshing state...');
+        
+        try {
+          const currentChains = await storage.getActiveChains();
+          setState(prev => ({
+            ...prev,
+            chains: currentChains,
+          }));
+          
+          alert('部分链条恢复可能失败，请检查回收箱确认结果。如果问题持续，请刷新页面。');
+        } catch (refreshError) {
+          console.error('[APP] Failed to refresh state after partial restore failure:', refreshError);
+          alert('恢复操作遇到问题，请刷新页面查看最新状态。');
+        }
+      } else {
+        // Complete failure
+        alert(`恢复失败: ${errorMessage}\n\n如果问题持续，请刷新页面重试。`);
+      }
     }
   };
 

@@ -124,23 +124,87 @@ export const RecycleBinModal: React.FC<RecycleBinModalProps> = ({
     try {
       console.log(`[RECYCLE_BIN] Starting ${showConfirmDialog.type} operation for chains:`, showConfirmDialog.chainIds);
       
+      const startTime = Date.now();
+      let operationResult: { success: boolean; message: string; details?: any } = { success: false, message: '' };
+      
       if (showConfirmDialog.type === 'restore') {
-        await onRestore(showConfirmDialog.chainIds);
-        console.log(`[RECYCLE_BIN] Restore operation completed for ${showConfirmDialog.chainIds.length} chains`);
+        try {
+          await onRestore(showConfirmDialog.chainIds);
+          const duration = Date.now() - startTime;
+          operationResult = {
+            success: true,
+            message: `成功恢复 ${showConfirmDialog.chainIds.length} 个链条（耗时 ${duration}ms）`,
+            details: { count: showConfirmDialog.chainIds.length, duration }
+          };
+          console.log(`[RECYCLE_BIN] Restore operation completed successfully:`, operationResult);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : '未知错误';
+          operationResult = {
+            success: false,
+            message: `恢复操作失败: ${errorMessage}`,
+            details: { error: errorMessage, chainIds: showConfirmDialog.chainIds }
+          };
+          console.error(`[RECYCLE_BIN] Restore operation failed:`, error);
+          
+          // ENHANCED: Handle partial failures more gracefully
+          if (errorMessage.includes('Partial restore failure') || errorMessage.includes('部分链条恢复可能失败')) {
+            operationResult.message = `部分链条恢复可能失败，请检查主界面确认结果。如有问题请刷新页面。`;
+            alert(operationResult.message);
+          } else {
+            alert(`恢复失败: ${errorMessage}\n\n请检查网络连接或刷新页面重试。`);
+          }
+        }
       } else {
-        await onPermanentDelete(showConfirmDialog.chainIds);
-        console.log(`[RECYCLE_BIN] Permanent delete operation completed for ${showConfirmDialog.chainIds.length} chains`);
+        try {
+          await onPermanentDelete(showConfirmDialog.chainIds);
+          const duration = Date.now() - startTime;
+          operationResult = {
+            success: true,
+            message: `成功永久删除 ${showConfirmDialog.chainIds.length} 个链条（耗时 ${duration}ms）`,
+            details: { count: showConfirmDialog.chainIds.length, duration }
+          };
+          console.log(`[RECYCLE_BIN] Permanent delete operation completed successfully:`, operationResult);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : '未知错误';
+          operationResult = {
+            success: false,
+            message: `永久删除操作失败: ${errorMessage}`,
+            details: { error: errorMessage, chainIds: showConfirmDialog.chainIds }
+          };
+          console.error(`[RECYCLE_BIN] Permanent delete operation failed:`, error);
+          alert(`永久删除失败: ${errorMessage}\n\n请检查网络连接或刷新页面重试。`);
+        }
       }
       
-      // Force reload local data after parent callbacks complete
+      // ENHANCED: Force reload local data after parent callbacks complete
+      console.log(`[RECYCLE_BIN] Refreshing local recycle bin data after ${showConfirmDialog.type} operation...`);
       await loadDeletedChains();
-      console.log(`[RECYCLE_BIN] Local data refreshed after ${showConfirmDialog.type} operation`);
+      console.log(`[RECYCLE_BIN] Local data refreshed successfully after ${showConfirmDialog.type} operation`);
+      
+      // ENHANCED: Show success message for successful operations
+      if (operationResult.success) {
+        console.log(`[RECYCLE_BIN] Operation completed successfully:`, operationResult.message);
+        
+        // Optional: Show a brief success toast or notification
+        // This could be implemented with a toast notification system
+        if (showConfirmDialog.type === 'restore') {
+          console.log(`✅ 恢复成功: ${showConfirmDialog.chainNames.join(', ')}`);
+        } else {
+          console.log(`✅ 永久删除成功: ${showConfirmDialog.chainNames.join(', ')}`);
+        }
+      }
+      
     } catch (error) {
-      console.error(`[RECYCLE_BIN] ${showConfirmDialog.type} operation failed:`, error);
-      alert('操作失败，请重试');
+      console.error(`[RECYCLE_BIN] ${showConfirmDialog.type} operation failed with unexpected error:`, error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      alert(`操作失败: ${errorMessage}\n\n请刷新页面重试，如果问题持续请检查网络连接。`);
     } finally {
       setIsLoading(false);
       setShowConfirmDialog(null);
+      
+      // ENHANCED: Clear selections after operation
+      setSelectedChains(new Set());
+      console.log(`[RECYCLE_BIN] Operation cleanup completed, selections cleared`);
     }
   };
 

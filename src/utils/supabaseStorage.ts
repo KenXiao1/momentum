@@ -59,12 +59,21 @@ export class SupabaseStorage {
    * Clear schema cache to force re-verification
    */
   clearSchemaCache(): void {
+    console.log('[SUPABASE_STORAGE] Clearing schema cache');
     this.schemaCache.clear();
     this.lastSchemaCheck = null;
     this.sessionSchemaVerified.clear();
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Schema cache cleared - will re-verify database schema');
-    }
+    console.log('[SUPABASE_STORAGE] Schema cache cleared - will re-verify database schema');
+  }
+
+  /**
+   * Clear all caches (schema cache and any other caches)
+   */
+  clearCache(): void {
+    console.log('[SUPABASE_STORAGE] Clearing all storage-level caches');
+    this.clearSchemaCache();
+    // Add any other cache clearing here in the future
+    console.log('[SUPABASE_STORAGE] All storage-level caches cleared');
   }
 
   /**
@@ -346,27 +355,59 @@ export class SupabaseStorage {
       throw new Error('用户未认证，无法恢复链条');
     }
 
+    console.log(`[SUPABASE_STORAGE] Starting restore operation for chain: ${chainId}`);
+
     try {
       // 获取所有链条以找到子链条
+      console.log(`[SUPABASE_STORAGE] Fetching all chains to find children of chain: ${chainId}`);
       const allChains = await this.getChains();
       const chainsToRestore = this.findChainAndChildren(chainId, allChains);
       
-      // 批量恢复
-      const { error } = await supabase
-        .from('chains')
-        .update({ deleted_at: null })
-        .in('id', chainsToRestore.map(c => c.id))
-        .eq('user_id', user.id);
+      console.log(`[SUPABASE_STORAGE] Found ${chainsToRestore.length} chains to restore:`, chainsToRestore.map(c => ({ id: c.id, name: c.name })));
+      
+      // Enhanced batch restore with retry mechanism
+      const restoreOperation = async () => {
+        const { data, error } = await supabase
+          .from('chains')
+          .update({ deleted_at: null })
+          .in('id', chainsToRestore.map(c => c.id))
+          .eq('user_id', user.id)
+          .select('id, name'); // Select to verify successful updates
 
-      if (error) {
-        // 如果数据库不支持 deleted_at 字段，说明链条已经被永久删除，无法恢复
-        if (error.code === '42703' || error.message?.includes('deleted_at') || error.code === 'PGRST204') {
-          throw new Error('Database does not support soft delete, cannot restore deleted chains');
+        if (error) {
+          console.error(`[SUPABASE_STORAGE] Database restore error for chain ${chainId}:`, error);
+          
+          // 如果数据库不支持 deleted_at 字段，说明链条已经被永久删除，无法恢复
+          if (error.code === '42703' || error.message?.includes('deleted_at') || error.code === 'PGRST204') {
+            throw new Error('Database does not support soft delete, cannot restore deleted chains');
+          }
+          logger.error('Restore chain failed', { chainId, error, chainsToRestore: chainsToRestore.map(c => c.id) });
+          throw new Error(`Restore chain failed: ${error.message}`);
         }
-        logger.error('Restore chain failed', { error });
-        throw new Error(`Restore chain failed: ${error.message}`);
-      }
+
+        // Verify restoration was successful
+        const restoredCount = data?.length || 0;
+        console.log(`[SUPABASE_STORAGE] Successfully restored ${restoredCount} of ${chainsToRestore.length} chains`);
+        
+        if (restoredCount !== chainsToRestore.length) {
+          console.warn(`[SUPABASE_STORAGE] Partial restore - expected ${chainsToRestore.length} chains but only restored ${restoredCount}`);
+        }
+
+        return data;
+      };
+
+      // Use retry mechanism for database operation
+      const restoredData = await this.retryOperation(restoreOperation, 2, 500);
+      
+      // ENHANCED: Clear any cached data after successful restore
+      this.clearSchemaCache();
+      queryOptimizer.onDataChange('chains');
+      
+      console.log(`[SUPABASE_STORAGE] Chain ${chainId} restore operation completed successfully`);
+      
     } catch (error) {
+      console.error(`[SUPABASE_STORAGE] Failed to restore chain ${chainId}:`, error);
+      
       if (error instanceof Error && (error.message.includes('deleted_at') || error.message.includes('PGRST204'))) {
         throw new Error('Database does not support soft delete, cannot restore deleted chains');
       }
