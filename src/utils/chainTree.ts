@@ -265,6 +265,7 @@ export const resetGroupTaskProgress = (chains: Chain[], groupId: string): Chain[
   const groupNode = chainTree.find(node => node.id === groupId);
   
   if (!groupNode || groupNode.type !== 'group') {
+    console.warn(`resetGroupTaskProgress: 群组节点未找到或类型不正确`, { groupId, nodeFound: !!groupNode, nodeType: groupNode?.type });
     return chains;
   }
   
@@ -272,7 +273,7 @@ export const resetGroupTaskProgress = (chains: Chain[], groupId: string): Chain[
   const getAllChildIds = (node: ChainTreeNode): string[] => {
     let ids: string[] = [];
     node.children.forEach(child => {
-      if (child.type === 'unit') {
+      if (child.type !== 'group') { // 非群组类型都算作可执行单元
         ids.push(child.id);
       } else {
         ids = ids.concat(getAllChildIds(child));
@@ -282,10 +283,21 @@ export const resetGroupTaskProgress = (chains: Chain[], groupId: string): Chain[
   };
   
   const childIds = getAllChildIds(groupNode);
+  console.log(`resetGroupTaskProgress: 群组 ${groupNode.name} 将重置 ${childIds.length} 个子任务的进度`, {
+    groupId,
+    childIds,
+    childDetails: groupNode.children.map(child => ({
+      id: child.id,
+      name: child.name,
+      type: child.type,
+      currentStreak: child.currentStreak
+    }))
+  });
   
   // 重置所有子单元的完成进度
-  return chains.map(chain => {
+  const resetChains = chains.map(chain => {
     if (childIds.includes(chain.id)) {
+      console.log(`重置任务进度: ${chain.name} (${chain.id}) currentStreak: ${chain.currentStreak} -> 0`);
       return {
         ...chain,
         currentStreak: 0, // 重置当前连续完成数
@@ -293,6 +305,8 @@ export const resetGroupTaskProgress = (chains: Chain[], groupId: string): Chain[
     }
     return chain;
   });
+  
+  return resetChains;
 };
 
 /**

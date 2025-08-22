@@ -731,6 +731,8 @@ function App() {
           return;
         } else {
           // 所有子任务都已完成：增加任务群完成计数并重置子任务进度，然后从头开始
+          console.log(`任务群 ${chain.name} 所有子任务已完成，开始新一轮循环`);
+          
           const updatedChains = incrementGroupCompletionCount(state.chains, chainId);
           const updatedGroup = updatedChains.find(c => c.id === chainId);
           
@@ -744,21 +746,47 @@ function App() {
           }
           
           try {
+            // 首先保存数据并更新状态
             await safelySaveChains(updatedChains);
             queryOptimizer.onDataChange('chains');
             setState(prev => ({ ...prev, chains: updatedChains }));
+            
+            // 等待状态更新后再尝试找到下一个单元
+            setTimeout(async () => {
+              // 使用最新的链数据重新构建树
+              const freshChains = await storage.getActiveChains();
+              const newTree = queryOptimizer.memoizedBuildChainTree(freshChains);
+              const newGroupNode = newTree.find(n => n.id === chainId);
+              
+              console.log(`调试信息 - 群组 ${chain.name}:`, {
+                找到群组节点: !!newGroupNode,
+                子节点数量: newGroupNode?.children.length || 0,
+                子节点详情: newGroupNode?.children.map(child => ({
+                  id: child.id,
+                  name: child.name,
+                  currentStreak: child.currentStreak,
+                  taskRepeatCount: child.taskRepeatCount || 1,
+                  type: child.type
+                })) || []
+              });
+              
+              const firstUnit = newGroupNode ? getNextUnitInGroup(newGroupNode) : null;
+              if (firstUnit) {
+                console.log(`任务群 ${chain.name} 开始新一轮（第${updatedGroup?.totalCompletions + 1}轮），从 ${firstUnit.name} 开始`);
+                await handleStartChain(firstUnit.id);
+              } else {
+                console.log(`任务群 ${chain.name} 没有子任务可执行 - 可能的原因:`, {
+                  群组存在: !!newGroupNode,
+                  子任务数量: newGroupNode?.children.length || 0,
+                  所有子任务都已完成: newGroupNode?.children.every(child => {
+                    const requiredRepeats = child.taskRepeatCount || 1;
+                    return child.currentStreak >= requiredRepeats;
+                  }) || false
+                });
+              }
+            }, 100);
           } catch (e) {
             console.error('保存任务群完成计数失败:', e);
-          }
-          // 重新构建树并从第一个未完成单元开始（此时都会被重置为未完成）
-          const newTree = queryOptimizer.memoizedBuildChainTree(updatedChains);
-          const newGroupNode = newTree.find(n => n.id === chainId);
-          const firstUnit = newGroupNode ? getNextUnitInGroup(newGroupNode) : null;
-          if (firstUnit) {
-            console.log(`任务群 ${chain.name} 开始新一轮（第${updatedGroup?.totalCompletions + 1}轮），从 ${firstUnit.name} 开始`);
-            await handleStartChain(firstUnit.id);
-          } else {
-            console.log(`任务群 ${chain.name} 没有子任务可执行`);
           }
           return;
         }
