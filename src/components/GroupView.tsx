@@ -257,15 +257,13 @@ export const GroupView: React.FC<GroupViewProps> = ({
               <span>编辑任务群</span>
             </button>
 
-            {nextUnit && (
-              <button
-                onClick={() => onStartChain(nextUnit.id)}
-                className="gradient-primary hover:shadow-xl text-white px-6 py-3 rounded-2xl font-medium transition-all duration-300 flex items-center space-x-2 hover:scale-105 shadow-lg font-chinese"
-              >
-                <Play size={16} />
-                <span>开始下一个</span>
-              </button>
-            )}
+            <button
+              onClick={() => onStartChain(group.id)}
+              className="gradient-primary hover:shadow-xl text-white px-6 py-3 rounded-2xl font-medium transition-all duration-300 flex items-center space-x-2 hover:scale-105 shadow-lg font-chinese"
+            >
+              <Play size={16} />
+              <span>开始下一个</span>
+            </button>
           </div>
         </header>
 
