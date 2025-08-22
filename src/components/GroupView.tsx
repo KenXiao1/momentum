@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChainTreeNode, ScheduledSession } from '../types';
-import { ArrowLeft, Play, Plus, Users, Target, Import, Pencil, X } from 'lucide-react';
+import { ArrowLeft, Play, Plus, Users, Target, Import, Pencil, X, Hash } from 'lucide-react';
 import { getGroupProgress, getGroupUnitProgress, getNextUnitInGroup, getChainTypeConfig } from '../utils/chainTree';
 import { formatTime } from '../utils/time';
 import { getGroupTimeStatus } from '../utils/timeLimit';
@@ -221,11 +221,25 @@ export const GroupView: React.FC<GroupViewProps> = ({
                 <i className={`${typeConfig.icon} ${typeConfig.color} text-2xl`}></i>
               </div>
               <div>
-                <h1 className="text-4xl md:text-5xl font-bold font-chinese text-[#161615] dark:text-slate-100 mb-2">
-                  {group.name}
-                </h1>
+                <div className="flex items-center space-x-3 mb-2">
+                  <h1 className="text-4xl md:text-5xl font-bold font-chinese text-[#161615] dark:text-slate-100">
+                    {group.name}
+                  </h1>
+                  {/* Cycle Counter Display */}
+                  {group.totalCompletions > 0 && (
+                    <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-2xl shadow-lg">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg font-bold">#{group.totalCompletions}</span>
+                        <span className="text-sm">轮</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <p className="text-sm font-mono text-gray-500 tracking-wider uppercase">
                   {typeConfig.name} • {unitProgress.completed}/{unitProgress.total} 已完成
+                  {group.totalCompletions > 0 && (
+                    <span className="ml-2 text-amber-600 dark:text-amber-400">• 第{group.totalCompletions + 1}轮进行中</span>
+                  )}
                 </p>
               </div>
             </div>
@@ -262,7 +276,9 @@ export const GroupView: React.FC<GroupViewProps> = ({
               className="gradient-primary hover:shadow-xl text-white px-6 py-3 rounded-2xl font-medium transition-all duration-300 flex items-center space-x-2 hover:scale-105 shadow-lg font-chinese"
             >
               <Play size={16} />
-              <span>开始下一个</span>
+              <span>
+                {nextUnit ? '开始下一个' : '开始新一轮'}
+              </span>
             </button>
           </div>
         </header>
@@ -280,6 +296,12 @@ export const GroupView: React.FC<GroupViewProps> = ({
                 <Target size={16} />
                 <span>{unitProgress.completed}/{unitProgress.total} 已完成</span>
               </div>
+              {group.totalCompletions > 0 && (
+                <div className="flex items-center space-x-2 text-amber-600 dark:text-amber-400 font-medium">
+                  <Hash size={16} />
+                  <span>已完成 {group.totalCompletions} 轮</span>
+                </div>
+              )}
               {progress.total !== unitProgress.total && (
                 <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-slate-500">
                   <span>({progress.completed}/{progress.total} 重复次数)</span>

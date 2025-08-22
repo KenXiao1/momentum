@@ -136,12 +136,23 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(({
               <div className={`w-10 h-10 rounded-2xl ${typeConfig.bgColor} flex items-center justify-center`}>
                 <i className={`${typeConfig.icon} ${typeConfig.color} text-lg`}></i>
               </div>
-              <div>
-                <h3 className="text-2xl font-bold font-chinese text-gray-900 dark:text-slate-100 group-hover:text-primary-500 transition-colors">
-                  {group.name}
-                </h3>
+              <div className="flex-1">
+                <div className="flex items-center space-x-3">
+                  <h3 className="text-2xl font-bold font-chinese text-gray-900 dark:text-slate-100 group-hover:text-primary-500 transition-colors">
+                    {group.name}
+                  </h3>
+                  {/* Cycle Counter Badge */}
+                  {group.totalCompletions > 0 && (
+                    <div className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-lg text-sm font-bold">
+                      #{group.totalCompletions}轮
+                    </div>
+                  )}
+                </div>
                 <p className="text-xs font-mono text-gray-500 tracking-wide uppercase">
                   {typeConfig.name}
+                  {group.totalCompletions > 0 && (
+                    <span className="ml-2 text-amber-600 dark:text-amber-400">• 第{group.totalCompletions + 1}轮进行中</span>
+                  )}
                 </p>
               </div>
             </div>

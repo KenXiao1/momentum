@@ -731,7 +731,18 @@ function App() {
           return;
         } else {
           // 所有子任务都已完成：增加任务群完成计数并重置子任务进度，然后从头开始
-          let updatedChains = incrementGroupCompletionCount(state.chains, chainId);
+          const updatedChains = incrementGroupCompletionCount(state.chains, chainId);
+          const updatedGroup = updatedChains.find(c => c.id === chainId);
+          
+          // 显示新轮次开始通知
+          if (updatedGroup) {
+            notificationManager.notifyTaskCompleted(
+              `${updatedGroup.name} (任务群)`, 
+              updatedGroup.totalCompletions, 
+              `第${updatedGroup.totalCompletions}轮已完成，正在开始第${updatedGroup.totalCompletions + 1}轮`
+            );
+          }
+          
           try {
             await safelySaveChains(updatedChains);
             queryOptimizer.onDataChange('chains');
@@ -744,6 +755,7 @@ function App() {
           const newGroupNode = newTree.find(n => n.id === chainId);
           const firstUnit = newGroupNode ? getNextUnitInGroup(newGroupNode) : null;
           if (firstUnit) {
+            console.log(`任务群 ${chain.name} 开始新一轮（第${updatedGroup?.totalCompletions + 1}轮），从 ${firstUnit.name} 开始`);
             await handleStartChain(firstUnit.id);
           } else {
             console.log(`任务群 ${chain.name} 没有子任务可执行`);
