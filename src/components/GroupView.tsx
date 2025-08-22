@@ -18,6 +18,7 @@ interface GroupViewProps {
   onAddUnit: () => void;
   onImportUnits: (unitIds: string[], groupId: string, mode?: 'move' | 'copy') => void;
   onUpdateTaskRepeatCount?: (chainId: string, repeatCount: number) => void;
+  onReorderUnit?: (groupId: string, unitId: string, direction: 'up' | 'down') => void;
 }
 
 export const GroupView: React.FC<GroupViewProps> = ({
@@ -32,6 +33,7 @@ export const GroupView: React.FC<GroupViewProps> = ({
   onAddUnit,
   onImportUnits,
   onUpdateTaskRepeatCount,
+  onReorderUnit,
 }) => {
   const progress = getGroupProgress(group);
   const unitProgress = getGroupUnitProgress(group);
@@ -127,7 +129,27 @@ export const GroupView: React.FC<GroupViewProps> = ({
                   已预约
                 </span>
               )}
-              
+
+              {/* 排序按钮 */}
+              <div className="flex items-center">
+                <button
+                  onClick={() => onReorderUnit && onReorderUnit(group.id, unit.id, 'up')}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
+                  title="上移"
+                  disabled={index === 0}
+                >
+                  <i className="fas fa-arrow-up text-sm"></i>
+                </button>
+                <button
+                  onClick={() => onReorderUnit && onReorderUnit(group.id, unit.id, 'down')}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
+                  title="下移"
+                  disabled={index === (group.children.length - 1)}
+                >
+                  <i className="fas fa-arrow-down text-sm"></i>
+                </button>
+              </div>
+
               <button
                 onClick={() => onEditChain(unit.id)}
                 className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"

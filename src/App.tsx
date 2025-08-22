@@ -235,6 +235,26 @@ function App() {
               onAddUnit={() => handleCreateChain(state.viewingChainId!)}
              onImportUnits={handleImportUnits}
               onUpdateTaskRepeatCount={handleUpdateTaskRepeatCount}
+              onReorderUnit={async (groupId, unitId, direction) => {
+                // 计算相邻项并交换 sortOrder
+                const chainTree = queryOptimizer.memoizedBuildChainTree(state.chains);
+                const groupNode = chainTree.find(n => n.id === groupId);
+                if (!groupNode) return;
+                const idx = groupNode.children.findIndex(c => c.id === unitId);
+                if (idx < 0) return;
+                const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+                if (targetIdx < 0 || targetIdx >= groupNode.children.length) return;
+                const a = groupNode.children[idx];
+                const b = groupNode.children[targetIdx];
+                const updated = state.chains.map(ch => {
+                  if (ch.id === a.id) return { ...ch, sortOrder: b.sortOrder };
+                  if (ch.id === b.id) return { ...ch, sortOrder: a.sortOrder };
+                  return ch;
+                });
+                await safelySaveChains(updated);
+                queryOptimizer.onDataChange('chains');
+                setState(prev => ({ ...prev, chains: updated }));
+              }}
             />
             {showAuxiliaryJudgment && (
               <AuxiliaryJudgment
