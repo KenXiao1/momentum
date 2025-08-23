@@ -1224,6 +1224,28 @@ function App() {
         };
       });
       
+      // CRITICAL FIX: 删除后立即刷新回收箱状态，确保数据同步
+      // 这避免了后续保存操作时的"ON CONFLICT DO UPDATE command cannot affect row a second time"错误
+      try {
+        console.log('正在刷新回收箱状态以确保数据同步...');
+        
+        // 强制清除查询缓存
+        queryOptimizer.clearCache();
+        
+        // 如果存储支持清除缓存，也执行清除
+        if (storage.clearCache && typeof storage.clearCache === 'function') {
+          storage.clearCache();
+        }
+        
+        // 预获取已删除链条以刷新缓存状态
+        await storage.getDeletedChains();
+        
+        console.log('回收箱状态刷新完成');
+      } catch (refreshError) {
+        console.warn('刷新回收箱状态时出现警告（不影响删除操作）:', refreshError);
+        // 不抛出错误，因为删除操作本身已成功
+      }
+      
       console.log(`链条 ${chainId} 已移动到回收箱`);
     } catch (error) {
       console.error('删除链条失败:', error);
@@ -1270,6 +1292,19 @@ function App() {
       }, 100);
       
       console.log(`[APP] Successfully restored ${chainIds.length} chains, UI state updated immediately`);
+      
+      // CRITICAL FIX: 恢复后立即刷新回收箱状态，确保数据同步
+      try {
+        console.log('正在刷新回收箱状态以确保恢复操作后的数据同步...');
+        
+        // 预获取已删除链条以刷新缓存状态
+        await storage.getDeletedChains();
+        
+        console.log('恢复操作后的回收箱状态刷新完成');
+      } catch (refreshError) {
+        console.warn('恢复操作后刷新回收箱状态时出现警告（不影响恢复操作）:', refreshError);
+        // 不抛出错误，因为恢复操作本身已成功
+      }
     } catch (error) {
       console.error('[APP] Restore operation failed:', error);
       
@@ -1312,6 +1347,27 @@ function App() {
         ...prev,
         chains: updatedChains,
       }));
+      
+      // CRITICAL FIX: 永久删除后立即刷新回收箱状态，确保数据同步
+      try {
+        console.log('正在刷新回收箱状态以确保永久删除操作后的数据同步...');
+        
+        // 强制清除查询缓存
+        queryOptimizer.clearCache();
+        
+        // 如果存储支持清除缓存，也执行清除
+        if (storage.clearCache && typeof storage.clearCache === 'function') {
+          storage.clearCache();
+        }
+        
+        // 预获取已删除链条以刷新缓存状态
+        await storage.getDeletedChains();
+        
+        console.log('永久删除操作后的回收箱状态刷新完成');
+      } catch (refreshError) {
+        console.warn('永久删除操作后刷新回收箱状态时出现警告（不影响删除操作）:', refreshError);
+        // 不抛出错误，因为删除操作本身已成功
+      }
       
       console.log(`成功永久删除 ${chainIds.length} 条链条，UI状态已更新`);
     } catch (error) {
