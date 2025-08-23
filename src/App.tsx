@@ -1237,8 +1237,15 @@ function App() {
           storage.clearCache();
         }
         
-        // 预获取已删除链条以刷新缓存状态
+        // ENHANCED FIX: 预获取已删除链条以刷新缓存状态，并强制触发状态更新
         await storage.getDeletedChains();
+        
+        // CRITICAL: 强制触发组件状态更新，确保UI立即反映删除操作
+        // 通过微调chains数组引用来触发useEffect依赖更新
+        setState(prev => ({
+          ...prev,
+          chains: [...prev.chains] // 创建新数组引用，强制触发依赖更新
+        }));
         
         console.log('回收箱状态刷新完成');
       } catch (refreshError) {
