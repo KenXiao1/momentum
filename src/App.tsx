@@ -51,6 +51,7 @@ function App() {
   const [showAuxiliaryJudgment, setShowAuxiliaryJudgment] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [recycleBinRefreshTrigger, setRecycleBinRefreshTrigger] = useState<number>(0);
 
   // Determine storage source immediately based on Supabase configuration
   const storage = isSupabaseConfigured ? supabaseStorage : localStorageUtils;
@@ -307,6 +308,7 @@ function App() {
               history={state.completionHistory}
               rsipNodes={state.rsipNodes}
               rsipMeta={state.rsipMeta}
+              recycleBinRefreshTrigger={recycleBinRefreshTrigger}
             />
             {showAuxiliaryJudgment && (
               <AuxiliaryJudgment
@@ -510,25 +512,47 @@ function App() {
   };
 
   // 辅助函数：安全保存链条数据，保持回收箱完整
-  const safelySaveChains = async (updatedActiveChains: Chain[]) => {
+  const safelySaveChains = async (updatedActiveChains: Chain[], retryCount: number = 0): Promise<void> => {
+    const maxRetries = 3;
     try {
-      // 获取所有现有链条（包括已删除的）
+      console.log(`[APP] Starting safe save operation for chains (attempt ${retryCount + 1})...`);
+      
+      // CRITICAL FIX: Get all existing chains (including deleted ones) to avoid overwriting recycle bin data
       const allExistingChains = await storage.getChains();
       const deletedChains = allExistingChains.filter(chain => chain.deletedAt != null);
       
-      // 合并活跃链条和已删除链条
+      // Merge active chains with deleted chains to preserve recycle bin
       const allUpdatedChains = [...updatedActiveChains, ...deletedChains];
       
-      // 保存合并后的数据
-      await storage.saveChains(allUpdatedChains);
+      // ENHANCED FIX: Use real-time sync service for consistent and reliable saves
+      await realTimeSyncService.saveWithSync(storage, allUpdatedChains);
       
-      // CRITICAL FIX: Clear cache immediately after save operation
-      queryOptimizer.onDataChange('chains');
-      
-      console.log('✅ Safe save completed, recycle bin data preserved');
+      console.log('[APP] Safe save completed successfully with enhanced synchronization');
     } catch (error) {
-      console.error('❌ Safe save failed:', error);
-      throw error;
+      console.error(`[APP] Safe save failed (attempt ${retryCount + 1}):`, error);
+      
+      // ENHANCED: Implement retry mechanism for transient failures
+      if (retryCount < maxRetries) {
+        const retryDelay = Math.pow(2, retryCount) * 1000; // Exponential backoff
+        console.log(`[APP] Retrying safe save in ${retryDelay}ms...`);
+        
+        // Clear all caches before retry to ensure clean state
+        await realTimeSyncService.clearAllCaches(storage);
+        
+        return new Promise((resolve, reject) => {
+          setTimeout(async () => {
+            try {
+              await safelySaveChains(updatedActiveChains, retryCount + 1);
+              resolve();
+            } catch (retryError) {
+              reject(retryError);
+            }
+          }, retryDelay);
+        });
+      } else {
+        // All retries exhausted, throw the error
+        throw error;
+      }
     }
   };
 
@@ -1194,9 +1218,12 @@ function App() {
 
   const handleDeleteChain = async (chainId: string) => {
     try {
+      console.log(`[APP] Starting delete operation for chain: ${chainId}`);
+      
       // ENHANCED: Use real-time sync service for immediate and reliable updates
       const updatedChains = await realTimeSyncService.deleteWithSync(storage, chainId);
       
+      // CRITICAL FIX: Update state immediately with fresh data
       setState(prev => {
         // Remove any scheduled sessions for this chain
         const updatedScheduledSessions = prev.scheduledSessions.filter(
@@ -1224,39 +1251,56 @@ function App() {
         };
       });
       
-      // CRITICAL FIX: 删除后立即刷新回收箱状态，确保数据同步
-      // 这避免了后续保存操作时的"ON CONFLICT DO UPDATE command cannot affect row a second time"错误
+      // CRITICAL FIX: Trigger RecycleBin refresh immediately after delete
+      setRecycleBinRefreshTrigger(prev => prev + 1);
+      
+      // ENHANCED FIX: Force RecycleBin state refresh with multiple layers of cache clearing
       try {
-        console.log('正在刷新回收箱状态以确保数据同步...');
+        console.log('[APP] Forcing comprehensive RecycleBin state refresh after delete...');
         
-        // 强制清除查询缓存
-        queryOptimizer.clearCache();
+        // Layer 1: Clear all application-level caches
+        await realTimeSyncService.clearAllCaches(storage);
         
-        // 如果存储支持清除缓存，也执行清除
-        if (storage.clearCache && typeof storage.clearCache === 'function') {
-          storage.clearCache();
-        }
-        
-        // ENHANCED FIX: 预获取已删除链条以刷新缓存状态，并强制触发状态更新
+        // Layer 2: Force refresh of RecycleBin data to ensure it's updated
         await storage.getDeletedChains();
         
-        // CRITICAL: 强制触发组件状态更新，确保UI立即反映删除操作
-        // 通过微调chains数组引用来触发useEffect依赖更新
-        setState(prev => ({
-          ...prev,
-          chains: [...prev.chains] // 创建新数组引用，强制触发依赖更新
-        }));
+        // Layer 3: Additional state sync to ensure UI consistency
+        setTimeout(() => {
+          setState(prev => ({
+            ...prev,
+            chains: [...prev.chains] // Force array reference update
+          }));
+        }, 50);
         
-        console.log('回收箱状态刷新完成');
+        console.log('[APP] RecycleBin state refresh completed successfully');
       } catch (refreshError) {
-        console.warn('刷新回收箱状态时出现警告（不影响删除操作）:', refreshError);
-        // 不抛出错误，因为删除操作本身已成功
+        console.warn('[APP] RecycleBin state refresh warning (delete operation still successful):', refreshError);
+        // Don't throw error since delete operation succeeded
       }
       
-      console.log(`链条 ${chainId} 已移动到回收箱`);
+      console.log(`[APP] Chain ${chainId} successfully moved to recycle bin with full state synchronization`);
     } catch (error) {
-      console.error('删除链条失败:', error);
-      alert('删除失败，请重试');
+      console.error('[APP] Delete operation failed:', error);
+      
+      // ENHANCED: Provide better error messaging
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      
+      // Show user-friendly error message
+      alert(`删除失败: ${errorMessage}\n\n请检查网络连接并重试。如果问题持续，请刷新页面。`);
+      
+      // ENHANCED: Attempt to recover by reloading current state
+      try {
+        console.log('[APP] Attempting state recovery after delete failure...');
+        const currentChains = await storage.getActiveChains();
+        setState(prev => ({
+          ...prev,
+          chains: currentChains,
+        }));
+        console.log('[APP] State recovery completed');
+      } catch (recoveryError) {
+        console.error('[APP] State recovery also failed:', recoveryError);
+        alert('发生错误后无法恢复状态，建议刷新页面。');
+      }
     }
   };
 

@@ -128,6 +128,46 @@ class RealTimeSyncService {
   }
   
   /**
+   * Clear all cache layers immediately - critical for delete operations
+   */
+  async clearAllCaches(storage?: any): Promise<void> {
+    console.log('[REALTIME_SYNC] Clearing all cache layers immediately');
+    
+    // Clear query optimizer cache
+    queryOptimizer.clearCache();
+    
+    // Clear storage-level cache if available
+    if (storage && storage.clearCache && typeof storage.clearCache === 'function') {
+      try {
+        storage.clearCache();
+        console.log('[REALTIME_SYNC] Storage cache cleared');
+      } catch (error) {
+        console.warn('[REALTIME_SYNC] Failed to clear storage cache:', error);
+      }
+    }
+    
+    // Force trigger data change events for all data types
+    this.triggerCacheInvalidation();
+    
+    console.log('[REALTIME_SYNC] All cache layers cleared successfully');
+  }
+  
+  /**
+   * Trigger cache invalidation for all data types
+   */
+  private triggerCacheInvalidation(): void {
+    console.log('[REALTIME_SYNC] Triggering cache invalidation for all data types');
+    
+    // Invalidate all cache types
+    queryOptimizer.onDataChange('chains');
+    queryOptimizer.onDataChange('sessions');
+    queryOptimizer.onDataChange('history');
+    
+    // Reset sync timestamp to force fresh data
+    this.lastSyncTimestamp = Date.now();
+  }
+  
+  /**
    * Get sync statistics
    */
   getStats() {
@@ -145,14 +185,29 @@ class RealTimeSyncService {
   async deleteWithSync(storage: any, chainId: string): Promise<any[]> {
     console.log(`[REALTIME_SYNC] Starting delete operation for chain: ${chainId}`);
     
+    // CRITICAL FIX: Clear all caches BEFORE operation to prevent stale data issues
+    await this.clearAllCaches(storage);
+    
     // Perform database operation
     await storage.softDeleteChain(chainId);
     
-    // Get fresh data immediately
+    // CRITICAL FIX: Clear caches again immediately after delete
+    await this.clearAllCaches(storage);
+    
+    // Get fresh data with forced cache bypass
     const freshChains = await storage.getActiveChains();
     
-    // Trigger real-time sync
+    // Trigger real-time sync with additional cache clearing
     await this.syncAfterOperation('chains', 'delete', freshChains);
+    
+    // ADDITIONAL FIX: Force refresh RecycleBin data to sync state
+    try {
+      console.log('[REALTIME_SYNC] Forcing RecycleBin data refresh after delete...');
+      await storage.getDeletedChains();
+      console.log('[REALTIME_SYNC] RecycleBin data refresh completed');
+    } catch (error) {
+      console.warn('[REALTIME_SYNC] RecycleBin refresh failed (non-critical):', error);
+    }
     
     return freshChains;
   }
@@ -162,6 +217,9 @@ class RealTimeSyncService {
    */
   async restoreWithSync(storage: any, chainIds: string[]): Promise<any[]> {
     console.log(`[REALTIME_SYNC] Starting restore operation for chains:`, chainIds);
+    
+    // CRITICAL FIX: Clear all caches BEFORE operation
+    await this.clearAllCaches(storage);
     
     const results = {
       successful: [] as string[],
@@ -182,24 +240,24 @@ class RealTimeSyncService {
       }
     }
 
-    // CRITICAL FIX: Force clear all caches immediately before fetching fresh data
-    console.log(`[REALTIME_SYNC] Clearing all caches before fetching fresh data`);
-    queryOptimizer.clearCache();
-    
-    // ENHANCED: Clear any storage-level caches if available
-    if (storage.clearCache && typeof storage.clearCache === 'function') {
-      storage.clearCache();
-    }
+    // CRITICAL FIX: Force clear all caches immediately after operations
+    await this.clearAllCaches(storage);
     
     // Get fresh data immediately with forced cache bypass
     console.log(`[REALTIME_SYNC] Fetching fresh chains data after restore operation`);
     const freshChains = await storage.getActiveChains();
     
-    // ENHANCED: Force cache invalidation again after fresh data fetch
-    queryOptimizer.onDataChange('chains');
-    
     // Trigger real-time sync with fresh data
     await this.syncAfterOperation('chains', 'restore', freshChains);
+    
+    // ADDITIONAL FIX: Force refresh RecycleBin data to sync state
+    try {
+      console.log('[REALTIME_SYNC] Forcing RecycleBin data refresh after restore...');
+      await storage.getDeletedChains();
+      console.log('[REALTIME_SYNC] RecycleBin data refresh completed');
+    } catch (error) {
+      console.warn('[REALTIME_SYNC] RecycleBin refresh failed (non-critical):', error);
+    }
     
     // Log operation summary
     console.log(`[REALTIME_SYNC] Restore operation completed:`, {
@@ -228,16 +286,31 @@ class RealTimeSyncService {
   async permanentDeleteWithSync(storage: any, chainIds: string[]): Promise<any[]> {
     console.log(`[REALTIME_SYNC] Starting permanent delete operation for chains:`, chainIds);
     
+    // CRITICAL FIX: Clear all caches BEFORE operation
+    await this.clearAllCaches(storage);
+    
     // Perform database operations
     for (const chainId of chainIds) {
       await storage.permanentlyDeleteChain(chainId);
     }
+    
+    // CRITICAL FIX: Clear caches again immediately after operations
+    await this.clearAllCaches(storage);
     
     // Get fresh data immediately
     const freshChains = await storage.getActiveChains();
     
     // Trigger real-time sync
     await this.syncAfterOperation('chains', 'delete', freshChains);
+    
+    // ADDITIONAL FIX: Force refresh RecycleBin data to sync state
+    try {
+      console.log('[REALTIME_SYNC] Forcing RecycleBin data refresh after permanent delete...');
+      await storage.getDeletedChains();
+      console.log('[REALTIME_SYNC] RecycleBin data refresh completed');
+    } catch (error) {
+      console.warn('[REALTIME_SYNC] RecycleBin refresh failed (non-critical):', error);
+    }
     
     return freshChains;
   }
@@ -248,8 +321,14 @@ class RealTimeSyncService {
   async saveWithSync(storage: any, chains: any[]): Promise<any[]> {
     console.log(`[REALTIME_SYNC] Starting save operation for ${chains.length} chains`);
     
+    // CRITICAL FIX: Clear all caches BEFORE save to prevent conflicts
+    await this.clearAllCaches(storage);
+    
     // Perform database operation
     await storage.saveChains(chains);
+    
+    // CRITICAL FIX: Clear caches again after save to ensure fresh data
+    await this.clearAllCaches(storage);
     
     // Get fresh active chains
     const freshChains = await storage.getActiveChains();

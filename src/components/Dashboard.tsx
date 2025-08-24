@@ -36,6 +36,7 @@ interface DashboardProps {
   history?: CompletionHistory[];
   rsipNodes?: any[];
   rsipMeta?: any;
+  recycleBinRefreshTrigger?: number; // New prop to trigger RecycleBin refreshes
 }
 
 // Performance optimized Dashboard component with React.memo and proper memoization
@@ -58,6 +59,7 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
   rsipNodes,
   rsipMeta,
   onOpenRSIP,
+  recycleBinRefreshTrigger,
 }) => {
   const [showImportExport, setShowImportExport] = useState(false);
   const [showRecycleBin, setShowRecycleBin] = useState(false);
@@ -320,6 +322,7 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
           onClose={handleHideRecycleBin}
           onRestore={handleRestore}
           onPermanentDelete={handlePermanentDelete}
+          refreshTrigger={recycleBinRefreshTrigger}
         />
       )}
 

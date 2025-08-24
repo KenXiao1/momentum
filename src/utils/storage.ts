@@ -249,6 +249,15 @@ export const storage = {
       storage.saveCompletionHistory(updatedHistory);
     }
   },
+
+  /**
+   * Clear all caches (localStorage doesn't have caches, but provides interface compatibility)
+   */
+  clearCache: (): void => {
+    console.log('[LOCAL_STORAGE] Clear cache called (no-op for localStorage)');
+    // localStorage doesn't maintain internal caches like Supabase, 
+    // but we provide this method for interface compatibility
+  },
 };
 
 // 辅助函数：检查链条是否是指定链条的子链条

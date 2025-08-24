@@ -229,6 +229,9 @@ class QueryOptimizer {
     this.pendingQueries.clear();
     this.lastChainHash = '';
     
+    // ENHANCED: Also clear any stored structural hashes to force complete rebuild
+    this.setCachedData(`${this.TREE_CACHE_KEY}_structural`, '');
+    
     const postStats = this.getCacheStats();
     console.log(`[QUERY_OPTIMIZER] All caches cleared successfully:`, postStats);
     performanceLogger.debug('[QUERY_OPTIMIZER] Cache cleared');
