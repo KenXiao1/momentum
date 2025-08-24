@@ -127,9 +127,16 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
         // 将新ID添加到已存在的ID集合中，避免导入数据内部冲突
         existingChainIds.add(chainId);
         
-        return {
-          ...chain,
+        // 清理导入的链数据，移除用户相关的字段，确保不会违反RLS策略
+        const cleanedChain = {
           id: chainId, // 使用可能替换后的ID
+          name: chain.name,
+          parentId: chain.parentId || chain.parent_id || undefined,
+          type: chain.type || 'unit',
+          sortOrder: chain.sortOrder || chain.sort_order || Math.floor(Date.now() / 1000),
+          trigger: chain.trigger,
+          duration: chain.duration,
+          description: chain.description,
           // 保留导入前的统计与历史指标
           currentStreak: Number(chain.currentStreak) || 0,
           auxiliaryStreak: Number(chain.auxiliaryStreak) || 0,
@@ -143,7 +150,31 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
           auxiliaryCompletionTrigger: chain.auxiliaryCompletionTrigger,
           createdAt: chain.createdAt ? new Date(chain.createdAt) : new Date(),
           lastCompletedAt: chain.lastCompletedAt ? new Date(chain.lastCompletedAt) : undefined,
+          // 新字段支持（任务群相关）
+          isDurationless: chain.isDurationless ?? chain.is_durationless ?? false,
+          timeLimitHours: chain.timeLimitHours ?? chain.time_limit_hours ?? undefined,
+          timeLimitExceptions: Array.isArray(chain.timeLimitExceptions || chain.time_limit_exceptions) 
+            ? (chain.timeLimitExceptions || chain.time_limit_exceptions) : [],
+          groupStartedAt: (chain.groupStartedAt || chain.group_started_at) 
+            ? new Date(chain.groupStartedAt || chain.group_started_at) : undefined,
+          groupExpiresAt: (chain.groupExpiresAt || chain.group_expires_at) 
+            ? new Date(chain.groupExpiresAt || chain.group_expires_at) : undefined,
+          deletedAt: null, // 导入的数据都设为未删除状态
+          // 显式排除用户相关字段，让saveChains方法处理user_id的设置
         };
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('清理后的链数据:', {
+            id: cleanedChain.id,
+            name: cleanedChain.name,
+            type: cleanedChain.type,
+            isDurationless: cleanedChain.isDurationless,
+            timeLimitHours: cleanedChain.timeLimitHours,
+            hasGroupTiming: !!(cleanedChain.groupStartedAt || cleanedChain.groupExpiresAt)
+          });
+        }
+        
+        return cleanedChain;
       });
       
       // 创建ID映射表，用于更新历史数据中的链ID引用
@@ -235,7 +266,22 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
       
     } catch (error) {
       console.error('导入失败:', error);
-      setImportError(error instanceof Error ? error.message : '导入数据格式错误');
+      
+      // 提供更具体的错误信息
+      let errorMessage = '导入数据格式错误';
+      if (error instanceof Error) {
+        if (error.message.includes('violates row-level security policy') || error.message.includes('RLS') || error.message.includes('42501')) {
+          errorMessage = '数据导入失败：权限验证错误。请确保您已正确登录并有权限导入数据。';
+        } else if (error.message.includes('duplicate') || error.message.includes('unique constraint')) {
+          errorMessage = '数据导入失败：检测到重复的数据。请检查导入的数据是否已存在。';
+        } else if (error.message.includes('column') && error.message.includes('does not exist')) {
+          errorMessage = '数据导入失败：数据库结构不匹配。请联系管理员更新数据库结构。';
+        } else {
+          errorMessage = `导入失败：${error.message}`;
+        }
+      }
+      
+      setImportError(errorMessage);
       setImportStatus('error');
     }
   };
