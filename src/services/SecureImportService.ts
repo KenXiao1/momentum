@@ -96,7 +96,7 @@ export class SecureImportService {
 
       // 调用安全导入函数
       const { data, error } = await supabase.rpc('secure_import_chains', {
-        session_token: this.currentSession.session_token,
+        p_session_token: this.currentSession.session_token,
         chains_data: processedChains
       });
 
@@ -239,7 +239,7 @@ export class SecureImportService {
 
     try {
       const { error } = await supabase.rpc('complete_import_session', {
-        session_token: this.currentSession.session_token
+        p_session_token: this.currentSession.session_token
       });
 
       if (error) {
