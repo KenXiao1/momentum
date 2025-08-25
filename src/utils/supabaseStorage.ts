@@ -140,13 +140,12 @@ export class SupabaseStorage {
 
   /**
    * Verify that required columns exist in the database schema
-   * Uses per-session caching to avoid repeated verification during same session
+   * FIXED: Always assume columns exist to avoid information_schema access issues
    */
   async verifySchemaColumns(tableName: string, requiredColumns: string[]): Promise<SchemaVerificationResult> {
     const cacheKey = `${tableName}:${requiredColumns.join(',')}`;
-    const now = new Date();
     
-    // Skip verification if already verified this session for critical operations
+    // Skip verification if already done this session
     if (this.sessionSchemaVerified.has(cacheKey)) {
       const cached = this.schemaCache.get(cacheKey);
       if (cached) {
@@ -154,71 +153,25 @@ export class SupabaseStorage {
       }
     }
     
-    // Use cached result if it's less than 10 minutes old
-    if (this.lastSchemaCheck && (now.getTime() - this.lastSchemaCheck.getTime()) < this.CACHE_DURATION) {
-      const cached = this.schemaCache.get(cacheKey);
-      if (cached && process.env.NODE_ENV === 'development') {
-        console.log('Using cached schema verification result');
-        return cached;
-      }
+    // CRITICAL FIX: Skip information_schema query entirely
+    // This prevents the 404 error that's causing import failures
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Skipping schema verification to avoid information_schema access issues');
     }
     
-    try {
-      // Query information_schema to check column existence
-      // Note: This may fail in some Supabase configurations due to RLS or permissions
-      const { data, error } = await supabase
-        .from('information_schema.columns')
-        .select('column_name')
-        .eq('table_name', tableName)
-        .in('column_name', requiredColumns);
-        
-      if (error) {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('Schema verification failed, assuming all columns exist:', error);
-        }
-        // When information_schema is not accessible, assume all columns exist
-        // This prevents import failures due to schema verification issues
-        const result: SchemaVerificationResult = {
-          hasAllColumns: true,
-          missingColumns: [],
-          error: error.message
-        };
-        this.schemaCache.set(cacheKey, result);
-        this.lastSchemaCheck = now;
-        this.sessionSchemaVerified.add(cacheKey);
-        return result;
-      }
-      
-      const existingColumns = (data || []).map(row => row.column_name);
-      const missingColumns = requiredColumns.filter(col => !existingColumns.includes(col));
-      
-      const result: SchemaVerificationResult = {
-        hasAllColumns: missingColumns.length === 0,
-        missingColumns,
-      };
-      
-      // Cache the result
-      this.schemaCache.set(cacheKey, result);
-      this.lastSchemaCheck = now;
-      this.sessionSchemaVerified.add(cacheKey); // Mark as verified for this session
-      
-      return result;
-    } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Schema verification error, assuming all columns exist:', error);
-      }
-      // When schema verification fails completely, assume all columns exist
-      // This prevents import failures due to database permission issues
-      const result: SchemaVerificationResult = { 
-        hasAllColumns: true, 
-        missingColumns: [], 
-        error: error instanceof Error ? error.message : 'Schema verification unavailable' 
-      };
-      this.schemaCache.set(cacheKey, result);
-      this.lastSchemaCheck = now;
-      this.sessionSchemaVerified.add(cacheKey);
-      return result;
-    }
+    // Always assume all columns exist - let the actual insert/update operations handle missing columns
+    const result: SchemaVerificationResult = {
+      hasAllColumns: true,
+      missingColumns: [],
+      error: 'Schema verification skipped to prevent import failures'
+    };
+    
+    // Cache the result
+    this.schemaCache.set(cacheKey, result);
+    this.lastSchemaCheck = new Date();
+    this.sessionSchemaVerified.add(cacheKey);
+    
+    return result;
   }
 
   // Chains
@@ -638,23 +591,16 @@ export class SupabaseStorage {
       }
     }
 
-    // Only verify schema once per session, not on every saveChains call
-    const newColumns = ['is_durationless', 'time_limit_hours', 'time_limit_exceptions', 'group_started_at', 'group_expires_at', 'deleted_at'];
-    const schemaVerificationKey = `chains:${newColumns.join(',')}`;
+    // SIMPLIFIED: Skip complex schema verification and assume all columns exist
+    // This prevents the information_schema query that was causing 404 errors
+    const schemaCheck: SchemaVerificationResult = {
+      hasAllColumns: true,
+      missingColumns: [],
+      error: 'Schema verification simplified for reliable imports'
+    };
     
-    let schemaCheck: SchemaVerificationResult;
-    if (!this.sessionSchemaVerified.has(schemaVerificationKey)) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Performing one-time schema verification for this session');
-      }
-      schemaCheck = await this.verifySchemaColumns('chains', newColumns);
-      
-      if (!schemaCheck.hasAllColumns && process.env.NODE_ENV === 'development') {
-        console.warn('Database schema check found missing columns:', schemaCheck.missingColumns);
-      }
-    } else {
-      // Use cached result to avoid repeated schema checks
-      schemaCheck = this.schemaCache.get(schemaVerificationKey) || { hasAllColumns: false, missingColumns: newColumns };
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Using simplified schema verification for reliable imports');
     }
 
     // 生成两套数据：完整字段集（包含新列）与基础字段集（兼容旧后端）
