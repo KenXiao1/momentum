@@ -555,6 +555,18 @@ export class SupabaseStorage {
       })));
     }
 
+    // 检查是否有重复的ID，防止"ON CONFLICT DO UPDATE command cannot affect row a second time"错误
+    const idCounts = new Map<string, number>();
+    for (const chain of chains) {
+      const count = idCounts.get(chain.id) || 0;
+      idCounts.set(chain.id, count + 1);
+      if (count > 0) {
+        console.error('检测到重复的链ID:', chain.id, '重复次数:', count + 1);
+        console.error('重复的链:', chains.filter(c => c.id === chain.id).map(c => ({ id: c.id, name: c.name })));
+        throw new Error(`保存数据失败: 检测到重复的链ID "${chain.id}"，这会导致数据库冲突。请检查数据完整性。`);
+      }
+    }
+
     // Only verify schema once per session, not on every saveChains call
     const newColumns = ['is_durationless', 'time_limit_hours', 'time_limit_exceptions', 'group_started_at', 'group_expires_at', 'deleted_at'];
     const schemaVerificationKey = `chains:${newColumns.join(',')}`;

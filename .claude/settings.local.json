@@ -22,4 +22,27 @@
     ],
     "defaultMode": "acceptEdits"
   }
+"hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|Read|Grep|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"%CLAUDE_PROJECT_DIR%\\.claude\\hooks\\diagnostics_parser.py\" --debug"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"%CLAUDE_PROJECT_DIR%\\.claude\\hooks\\diagnostics_parser.py\" --debug"
+          }
+        ]
+      }
+    ]
+  }
 }

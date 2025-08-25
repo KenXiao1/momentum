@@ -89,12 +89,15 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
   };
 
   // 生成唯一ID的辅助函数
+  let idCounter = 0;
   const generateUniqueId = () => {
-    return `chain_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    idCounter++;
+    return `chain_${Date.now()}_${idCounter}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
   const generateUniqueRsipId = () => {
-    return `rsip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    idCounter++;
+    return `rsip_${Date.now()}_${idCounter}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
   // 检查ID是否重复的函数
@@ -117,9 +120,18 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
       const importedChains = (parsedData.chains || []).map((chain: any) => {
         let chainId = chain.id;
         
-        // 检查ID冲突，如果重复则生成新ID
+        // 检查ID冲突，如果重复则生成新ID（带重试机制）
         if (checkIdConflict(chainId, existingChainIds)) {
-          const newId = generateUniqueId();
+          let attempts = 0;
+          let newId: string;
+          do {
+            newId = generateUniqueId();
+            attempts++;
+            if (attempts > 10) {
+              throw new Error(`生成唯一ID失败，尝试次数过多: ${chainId}`);
+            }
+          } while (existingChainIds.has(newId));
+          
           console.log(`检测到链ID冲突: ${chainId} -> ${newId}`);
           chainId = newId;
         }
@@ -208,9 +220,18 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
       const importedRsipNodes = (parsedData.rsipNodes || []).map((node: any) => {
         let nodeId = node.id;
         
-        // 检查ID冲突，如果重复则生成新ID
+        // 检查ID冲突，如果重复则生成新ID（带重试机制）
         if (checkIdConflict(nodeId, existingRsipIds)) {
-          const newId = generateUniqueRsipId();
+          let attempts = 0;
+          let newId: string;
+          do {
+            newId = generateUniqueRsipId();
+            attempts++;
+            if (attempts > 10) {
+              throw new Error(`生成唯一RSIP节点ID失败，尝试次数过多: ${nodeId}`);
+            }
+          } while (existingRsipIds.has(newId));
+          
           console.log(`检测到RSIP节点ID冲突: ${nodeId} -> ${newId}`);
           nodeId = newId;
         }
