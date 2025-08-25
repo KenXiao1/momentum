@@ -1,4 +1,4 @@
-import { supabase, getCurrentUser } from '../lib/supabase';
+import { supabase, getCurrentUser, waitForAuthentication, isUserAuthenticated } from '../lib/supabase';
 import { queryOptimizer } from './queryOptimizer';
 import { Chain, DeletedChain, ScheduledSession, ActiveSession, CompletionHistory, RSIPNode, RSIPMeta } from '../types';
 import { logger, measurePerformance } from './logger';
@@ -48,6 +48,68 @@ export class SupabaseStorage {
         if (process.env.NODE_ENV === 'development') {
           console.warn(`Operation failed, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries}):`, lastError.message);
         }
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    
+    throw lastError!;
+  }
+  
+  /**
+   * Enhanced retry for authentication-sensitive operations
+   */
+  private async retryWithAuth<T>(
+    operation: () => Promise<T>,
+    maxRetries: number = 3,
+    baseDelay: number = 1000
+  ): Promise<T> {
+    let lastError: Error;
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        // Check authentication before each attempt
+        const isAuth = await isUserAuthenticated();
+        if (!isAuth && attempt > 0) {
+          // Wait for authentication if not the first attempt
+          console.log(`Attempt ${attempt + 1}: Authentication not ready, waiting...`);
+          const { user, isAuthenticated } = await waitForAuthentication(5000);
+          if (!isAuthenticated || !user) {
+            throw new Error('Authentication failed after waiting');
+          }
+        }
+        
+        return await operation();
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        
+        // Check if this is an authentication error
+        const isAuthError = lastError.message.includes('violates row-level security policy') ||
+                           lastError.message.includes('RLS') ||
+                           lastError.message.includes('authentication') ||
+                           lastError.message.includes('auth');
+        
+        // Don't retry for certain types of errors unless they're auth-related
+        if (!isAuthError && error && typeof error === 'object' && 'code' in error) {
+          const errorCode = (error as any).code;
+          if (['PGRST204', 'PGRST116', '42703', '42P01'].includes(errorCode)) {
+            throw lastError;
+          }
+        }
+        
+        if (attempt === maxRetries) {
+          logger.error('Database operation failed after retries with auth', { 
+            maxRetries, 
+            error: lastError.message,
+            isAuthError 
+          });
+          throw lastError;
+        }
+        
+        const delay = baseDelay * Math.pow(2, attempt);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`Auth-aware retry in ${delay}ms (attempt ${attempt + 1}/${maxRetries}):`, lastError.message);
+        }
+        
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
@@ -537,12 +599,21 @@ export class SupabaseStorage {
   }
 
   async saveChains(chains: Chain[]): Promise<void> {
-    const user = await getCurrentUser();
-    if (!user) {
-      const error = new Error('User not authenticated, cannot save data');
-      logger.error('No authenticated user found when trying to save chains');
+    // Enhanced authentication check with retry mechanism
+    console.log('Checking authentication before saving chains...');
+    const { user, isAuthenticated } = await waitForAuthentication(10000);
+    
+    if (!isAuthenticated || !user) {
+      const error = new Error('User authentication failed or timed out. Please ensure you are logged in before importing data.');
+      logger.error('Authentication check failed during saveChains', { 
+        isAuthenticated, 
+        hasUser: !!user,
+        chainCount: chains.length 
+      });
       throw error;
     }
+    
+    console.log('Authentication confirmed. Proceeding with chain save for user:', user.id);
 
     if (process.env.NODE_ENV === 'development') {
       console.log('Saving chains for user:', user.id, 'Chain count:', chains.length);
@@ -674,14 +745,31 @@ export class SupabaseStorage {
     // 先尝试使用包含新列的 upsert；若后端缺列，则回退到基础列
     let upsertResultIds: string[] = [];
     const tryUpsert = async (rows: any[]) => {
-      const { data, error } = await supabase
-        .from('chains')
-        .upsert(rows, { onConflict: 'id' })
-        .select('id');
-      return { data, error } as { data: { id: string }[] | null, error: any };
+      // Use enhanced retry with authentication awareness
+      return await this.retryWithAuth(async () => {
+        const { data, error } = await supabase
+          .from('chains')
+          .upsert(rows, { onConflict: 'id' })
+          .select('id');
+        
+        if (error) {
+          throw error;
+        }
+        
+        return { data, error } as { data: { id: string }[] | null, error: any };
+      });
     };
 
-    let { data: upsertData1, error: upsertErr1 } = await tryUpsert(rowsWithNew);
+    let upsertData1: any = null;
+    let upsertErr1: any = null;
+    
+    try {
+      const result = await tryUpsert(rowsWithNew);
+      upsertData1 = result.data;
+    } catch (error) {
+      upsertErr1 = error;
+    }
+    
     if (upsertErr1 && isMissingColumnError(upsertErr1)) {
       console.warn('检测到后端缺少新列，回退到基础字段保存。错误信息:', {
         code: upsertErr1.code,
@@ -690,33 +778,23 @@ export class SupabaseStorage {
         timestamp: new Date().toISOString()
       });
       
-      // Implement retry with exponential backoff for fallback
-      let retryCount = 0;
-      const maxRetries = 3;
-      let fallbackSuccess = false;
-      
-      while (retryCount < maxRetries && !fallbackSuccess) {
-        try {
-          const { data: upsertData2, error: upsertErr2 } = await tryUpsert(rowsBase);
-          if (upsertErr2) {
-            retryCount++;
-            if (retryCount >= maxRetries) {
-              console.error('回退保存在重试后仍失败:', upsertErr2);
-              throw new Error(`保存数据失败 (重试 ${maxRetries} 次后): ${upsertErr2.message}`);
-            }
-            // Wait before retry (exponential backoff)
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
-          } else {
-            upsertResultIds = (upsertData2 || []).map(r => r.id);
-            fallbackSuccess = true;
-            console.log('回退保存成功，使用基础字段集');
-          }
-        } catch (retryError) {
-          retryCount++;
-          if (retryCount >= maxRetries) {
-            throw retryError;
-          }
+      // Use enhanced retry for fallback operation as well
+      try {
+        const result = await tryUpsert(rowsBase);
+        upsertResultIds = (result.data || []).map(r => r.id);
+        this.sessionSchemaVerified.add(schemaVerificationKey);
+        
+        console.log('回退保存成功，已保存 IDs:', upsertResultIds);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('回退保存数据详情:', {
+            savedCount: upsertResultIds.length,
+            requestedCount: chains.length,
+            missingColumns: schemaCheck.missingColumns.join(', ')
+          });
         }
+      } catch (fallbackError) {
+        console.error('回退保存失败:', fallbackError);
+        throw new Error(`保存数据失败 (包括回退方案): ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`);
       }
     } else if (upsertErr1) {
       console.error('保存失败:', {

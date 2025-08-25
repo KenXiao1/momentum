@@ -1436,6 +1436,22 @@ function App() {
     console.log('开始导入数据...', { chains: importedChains.length, options });
     
     try {
+      // CRITICAL FIX: Additional authentication check as a safety net
+      console.log('Double-checking authentication state before import operations...');
+      const { isUserAuthenticated, waitForAuthentication } = await import('../lib/supabase');
+      const isAuth = await isUserAuthenticated();
+      
+      if (!isAuth) {
+        console.log('Authentication not ready, waiting...');
+        const { user, isAuthenticated } = await waitForAuthentication(10000);
+        
+        if (!isAuthenticated || !user) {
+          throw new Error('Authentication failed during import. Please ensure you are logged in and try again.');
+        }
+        
+        console.log('Authentication confirmed after wait. User ID:', user.id);
+      }
+      
       console.log('准备保存导入的数据到存储...');
       
       // 验证导入的链条数据

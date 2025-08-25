@@ -3,6 +3,7 @@ import { Chain, CompletionHistory, RSIPNode, RSIPMeta } from '../types';
 import { Download, Upload, X, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { exceptionRuleManager } from '../services/ExceptionRuleManager';
 import { storage } from '../utils/storage';
+import { isUserAuthenticated, waitForAuthentication } from '../lib/supabase';
 
 interface ExportData {
   version: string;
@@ -36,7 +37,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'export' | 'import'>(chains.length === 0 ? 'import' : 'export');
   const [importData, setImportData] = useState('');
-  const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [importStatus, setImportStatus] = useState<'idle' | 'checking-auth' | 'importing' | 'success' | 'error'>('idle');
   const [importError, setImportError] = useState('');
 
   const handleExport = async () => {
@@ -107,8 +108,20 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
 
   const handleImport = async () => {
     try {
-      setImportStatus('idle');
+      setImportStatus('checking-auth');
       setImportError('');
+      
+      // CRITICAL FIX: Verify authentication before starting import
+      console.log('Verifying authentication before import...');
+      const { user, isAuthenticated } = await waitForAuthentication(10000);
+      
+      if (!isAuthenticated || !user) {
+        throw new Error('用户身份验证失败。请确保您已正确登录，然后重试导入操作。');
+      }
+      
+      console.log('Authentication verified for import. User ID:', user.id);
+      
+      setImportStatus('importing');
       
       const parsedData = JSON.parse(importData);
       
@@ -318,12 +331,16 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
       // 提供更具体的错误信息
       let errorMessage = '导入数据格式错误';
       if (error instanceof Error) {
-        if (error.message.includes('violates row-level security policy') || error.message.includes('RLS') || error.message.includes('42501')) {
-          errorMessage = '数据导入失败：权限验证错误。请确保您已正确登录并有权限导入数据。';
+        if (error.message.includes('身份验证失败') || error.message.includes('Authentication failed') || error.message.includes('用户身份验证失败')) {
+          errorMessage = '用户身份验证失败：请确保您已正确登录，然后重试导入操作。如果问题持续存在，请刷新页面后重试。';
+        } else if (error.message.includes('violates row-level security policy') || error.message.includes('RLS') || error.message.includes('42501')) {
+          errorMessage = '数据导入失败：权限验证错误。请确保您已正确登录并有权限导入数据。建议刷新页面后重试。';
         } else if (error.message.includes('duplicate') || error.message.includes('unique constraint')) {
           errorMessage = '数据导入失败：检测到重复的数据。请检查导入的数据是否已存在。';
         } else if (error.message.includes('column') && error.message.includes('does not exist')) {
           errorMessage = '数据导入失败：数据库结构不匹配。请联系管理员更新数据库结构。';
+        } else if (error.message.includes('authentication') || error.message.includes('auth')) {
+          errorMessage = `身份验证问题：${error.message}。请刷新页面并重新登录。`;
         } else {
           errorMessage = `导入失败：${error.message}`;
         }
@@ -506,6 +523,24 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
             </div>
 
             {/* Import Status */}
+            {importStatus === 'checking-auth' && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-2xl p-4">
+                <div className="flex items-center space-x-3 text-blue-700 dark:text-blue-300">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                  <span className="font-chinese font-medium">正在验证用户身份...</span>
+                </div>
+              </div>
+            )}
+            
+            {importStatus === 'importing' && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-2xl p-4">
+                <div className="flex items-center space-x-3 text-blue-700 dark:text-blue-300">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                  <span className="font-chinese font-medium">正在导入数据，请稍候...</span>
+                </div>
+              </div>
+            )}
+            
             {importStatus === 'success' && (
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/50 rounded-2xl p-4">
                 <div className="flex items-center space-x-3 text-green-700 dark:text-green-300">
@@ -531,11 +566,22 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
             <div className="text-center">
               <button
                 onClick={handleImport}
-                disabled={!importData.trim() || importStatus === 'success'}
+                disabled={!importData.trim() || importStatus === 'success' || importStatus === 'checking-auth' || importStatus === 'importing'}
                 className="gradient-primary hover:shadow-xl text-white px-8 py-4 rounded-2xl font-medium transition-all duration-300 flex items-center space-x-3 mx-auto hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-chinese"
               >
-                <Upload size={20} />
-                <span>导入数据</span>
+                {(importStatus === 'checking-auth' || importStatus === 'importing') ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                ) : (
+                  <Upload size={20} />
+                )}
+                <span>
+                  {importStatus === 'checking-auth' 
+                    ? '验证身份中...' 
+                    : importStatus === 'importing' 
+                      ? '导入中...' 
+                      : '导入数据'
+                  }
+                </span>
               </button>
             </div>
           </div>
