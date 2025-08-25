@@ -1436,17 +1436,37 @@ function App() {
     console.log('开始导入数据...', { chains: importedChains.length, options });
     
     try {
-      // 合并导入的链条到现有链条中
-      const updatedChains = [...state.chains, ...importedChains];
+      console.log('准备保存导入的数据到存储...');
+      
+      // 验证导入的链条数据
+      if (!Array.isArray(importedChains) || importedChains.length === 0) {
+        throw new Error('没有有效的链条数据可导入');
+      }
+      
+      // 获取当前最新的链条数据（避免使用可能过期的state.chains）
+      const currentChains = await storage.getChains();
+      console.log('当前数据库中的链条数量:', currentChains.length);
+      console.log('准备导入的链条数量:', importedChains.length);
+      
+      // 检查ID冲突（双重保险）
+      const existingIds = new Set(currentChains.map(c => c.id));
+      const conflictingChains = importedChains.filter(c => existingIds.has(c.id));
+      if (conflictingChains.length > 0) {
+        console.error('发现ID冲突的链条:', conflictingChains.map(c => c.id));
+        throw new Error(`导入失败：发现${conflictingChains.length}个ID冲突的链条`);
+      }
+      
+      // 创建合并后的链条列表（但只保存导入的部分）
+      const updatedChains = [...currentChains, ...importedChains];
+      
+      // 仅保存合并后的完整链条列表（让saveChains处理用户权限）
+      await safelySaveChains(updatedChains);
+      queryOptimizer.onDataChange('chains');
+      
+      // 获取导入的其他数据
       const importedHistory = options?.history || [];
       const importedRsipNodes = options?.rsipNodes || [];
       const importedRsipMeta = options?.rsipMeta;
-      
-      console.log('准备保存导入的数据到存储...');
-      
-      // 保存链条数据
-      await safelySaveChains(updatedChains);
-      queryOptimizer.onDataChange('chains');
       
       // 保存完成历史
       if (Array.isArray(importedHistory) && importedHistory.length > 0) {

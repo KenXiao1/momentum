@@ -139,40 +139,52 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
         // 将新ID添加到已存在的ID集合中，避免导入数据内部冲突
         existingChainIds.add(chainId);
         
-        // 清理导入的链数据，移除用户相关的字段，确保不会违反RLS策略
-        const cleanedChain = {
+        // 清理导入的链数据，严格控制字段以避免RLS策略违反
+        const cleanedChain: Chain = {
+          // 基础必需字段
           id: chainId, // 使用可能替换后的ID
-          name: chain.name,
+          name: String(chain.name || '未命名链条'),
           parentId: chain.parentId || chain.parent_id || undefined,
-          type: chain.type || 'unit',
-          sortOrder: chain.sortOrder || chain.sort_order || Math.floor(Date.now() / 1000),
-          trigger: chain.trigger,
-          duration: chain.duration,
-          description: chain.description,
-          // 保留导入前的统计与历史指标
-          currentStreak: Number(chain.currentStreak) || 0,
-          auxiliaryStreak: Number(chain.auxiliaryStreak) || 0,
-          totalCompletions: Number(chain.totalCompletions) || 0,
-          totalFailures: Number(chain.totalFailures) || 0,
-          auxiliaryFailures: Number(chain.auxiliaryFailures) || 0,
+          type: (chain.type === 'unit' || chain.type === 'group') ? chain.type : 'unit',
+          sortOrder: Number(chain.sortOrder || chain.sort_order) || Math.floor(Date.now() / 1000),
+          
+          // 任务配置字段
+          trigger: String(chain.trigger || ''),
+          duration: Number(chain.duration) || 0,
+          description: String(chain.description || ''),
+          
+          // 统计字段（重置为安全值）
+          currentStreak: 0, // 导入时重置统计，避免数据不一致
+          auxiliaryStreak: 0,
+          totalCompletions: 0,
+          totalFailures: 0,
+          auxiliaryFailures: 0,
+          
+          // 例外规则字段
           exceptions: Array.isArray(chain.exceptions) ? chain.exceptions : [],
           auxiliaryExceptions: Array.isArray(chain.auxiliaryExceptions) ? chain.auxiliaryExceptions : [],
-          auxiliarySignal: chain.auxiliarySignal,
+          
+          // 辅助任务字段
+          auxiliarySignal: chain.auxiliarySignal || undefined,
           auxiliaryDuration: Number(chain.auxiliaryDuration) || 15,
-          auxiliaryCompletionTrigger: chain.auxiliaryCompletionTrigger,
-          createdAt: chain.createdAt ? new Date(chain.createdAt) : new Date(),
-          lastCompletedAt: chain.lastCompletedAt ? new Date(chain.lastCompletedAt) : undefined,
-          // 新字段支持（任务群相关）
-          isDurationless: chain.isDurationless ?? chain.is_durationless ?? false,
+          auxiliaryCompletionTrigger: chain.auxiliaryCompletionTrigger || undefined,
+          
+          // 时间字段（使用当前时间以确保与用户上下文一致）
+          createdAt: new Date(), // 使用当前时间作为导入时间
+          lastCompletedAt: undefined, // 重置最后完成时间
+          
+          // 任务群相关字段（安全值）
+          isDurationless: Boolean(chain.isDurationless ?? chain.is_durationless ?? false),
           timeLimitHours: chain.timeLimitHours ?? chain.time_limit_hours ?? undefined,
           timeLimitExceptions: Array.isArray(chain.timeLimitExceptions || chain.time_limit_exceptions) 
             ? (chain.timeLimitExceptions || chain.time_limit_exceptions) : [],
-          groupStartedAt: (chain.groupStartedAt || chain.group_started_at) 
-            ? new Date(chain.groupStartedAt || chain.group_started_at) : undefined,
-          groupExpiresAt: (chain.groupExpiresAt || chain.group_expires_at) 
-            ? new Date(chain.groupExpiresAt || chain.group_expires_at) : undefined,
-          deletedAt: null, // 导入的数据都设为未删除状态
-          // 显式排除用户相关字段，让saveChains方法处理user_id的设置
+          groupStartedAt: undefined, // 重置群组时间，避免与用户当前状态冲突
+          groupExpiresAt: undefined,
+          
+          // 软删除字段（确保导入的链条为活跃状态）
+          deletedAt: null,
+          
+          // 注意：不包含user_id等用户相关字段，让saveChains方法处理
         };
         
         if (process.env.NODE_ENV === 'development') {
@@ -198,23 +210,38 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
         }
       });
       
-      // 处理历史数据，更新链ID引用
-      const importedHistory = (parsedData.completionHistory || []).map((h: any) => {
-        let chainId = h.chainId;
-        
-        // 如果历史记录引用的链ID被替换了，更新引用
-        if (chainIdMapping.has(chainId)) {
-          chainId = chainIdMapping.get(chainId);
-          console.log(`更新历史记录中的链ID引用: ${h.chainId} -> ${chainId}`);
-        }
-        
-        return {
-          ...h,
-          chainId, // 使用可能更新后的链ID
-          completedAt: new Date(h.completedAt),
-          duration: Number(h.duration) || 0,
-        };
-      });
+      // 处理历史数据，严格清理以避免RLS违规
+      const importedHistory = (parsedData.completionHistory || [])
+        .filter((h: any) => h && h.chainId) // 过滤掉无效记录
+        .map((h: any): CompletionHistory => {
+          let chainId = h.chainId;
+          
+          // 如果历史记录引用的链ID被替换了，更新引用
+          if (chainIdMapping.has(chainId)) {
+            chainId = chainIdMapping.get(chainId);
+            console.log(`更新历史记录中的链ID引用: ${h.chainId} -> ${chainId}`);
+          }
+          
+          // 只保留当前导入的链条的历史记录，避免引用不存在的链条
+          const isValidChainRef = importedChains.some(chain => chain.id === chainId);
+          if (!isValidChainRef) {
+            return null; // 将被过滤掉
+          }
+          
+          // 清理历史记录数据
+          return {
+            chainId, // 使用可能更新后的链ID
+            completedAt: new Date(h.completedAt || Date.now()),
+            duration: Math.max(0, Number(h.duration) || 0), // 确保为正数
+            wasSuccessful: Boolean(h.wasSuccessful),
+            reasonForFailure: h.reasonForFailure ? String(h.reasonForFailure) : undefined,
+            actualDuration: Math.max(0, Number(h.actualDuration || h.duration) || 0),
+            isForwardTimed: Boolean(h.isForwardTimed || false),
+            description: h.description ? String(h.description) : undefined,
+            notes: h.notes ? String(h.notes) : undefined,
+          };
+        })
+        .filter(Boolean) as CompletionHistory[]; // 过滤掉null值
       
       // 处理 RSIP 节点数据
       const importedRsipNodes = (parsedData.rsipNodes || []).map((node: any) => {
