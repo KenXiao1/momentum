@@ -11,7 +11,7 @@ import { TaskGroupEditor } from './components/TaskGroupEditor';
 import { AuxiliaryJudgment } from './components/AuxiliaryJudgment';
 import { storage as localStorageUtils } from './utils/storage';
 import { supabaseStorage } from './utils/supabaseStorage';
-import { isSupabaseConfigured } from './lib/supabase';
+import { isSupabaseConfigured, isUserAuthenticated, waitForAuthentication } from './lib/supabase';
 import { isSessionExpired } from './utils/time';
 import { buildChainTree, getNextUnitInGroup, updateGroupCompletions, isGroupFullyCompleted, incrementGroupCompletionCount, resetGroupCompletionCount } from './utils/chainTree';
 import { queryOptimizer } from './utils/queryOptimizer';
@@ -1438,7 +1438,6 @@ function App() {
     try {
       // CRITICAL FIX: Additional authentication check as a safety net
       console.log('Double-checking authentication state before import operations...');
-      const { isUserAuthenticated, waitForAuthentication } = await import('../lib/supabase');
       const isAuth = await isUserAuthenticated();
       
       if (!isAuth) {
