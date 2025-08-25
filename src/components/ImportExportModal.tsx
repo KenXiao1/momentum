@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Chain, CompletionHistory, RSIPNode, RSIPMeta } from '../types';
-import { Download, Upload, X, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { Download, Upload, X, FileText, AlertCircle, CheckCircle, Clock, Shield } from 'lucide-react';
 import { exceptionRuleManager } from '../services/ExceptionRuleManager';
 import { storage } from '../utils/storage';
 import { isUserAuthenticated, waitForAuthentication } from '../lib/supabase';
+import { secureImportService, SecureImportOptions } from '../services/SecureImportService';
 
 interface ExportData {
   version: string;
@@ -37,8 +38,13 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'export' | 'import'>(chains.length === 0 ? 'import' : 'export');
   const [importData, setImportData] = useState('');
-  const [importStatus, setImportStatus] = useState<'idle' | 'checking-auth' | 'importing' | 'success' | 'error'>('idle');
+  const [importStatus, setImportStatus] = useState<'idle' | 'checking-auth' | 'creating-session' | 'importing' | 'success' | 'error'>('idle');
   const [importError, setImportError] = useState('');
+  const [importOptions, setImportOptions] = useState<SecureImportOptions>({
+    preserveStatistics: false,
+    preserveTimestamps: false,
+    importCompletionHistory: true
+  });
 
   const handleExport = async () => {
     try {
@@ -111,7 +117,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
       setImportStatus('checking-auth');
       setImportError('');
       
-      // CRITICAL FIX: Verify authentication before starting import
+      // 验证用户身份
       console.log('Verifying authentication before import...');
       const { user, isAuthenticated } = await waitForAuthentication(10000);
       
@@ -121,179 +127,128 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
       
       console.log('Authentication verified for import. User ID:', user.id);
       
-      setImportStatus('importing');
+      setImportStatus('creating-session');
       
+      // 解析导入数据
       const parsedData = JSON.parse(importData);
       
-      // 收集现有的ID
-      const existingChainIds = new Set(chains.map(chain => chain.id));
-      const existingRsipIds = new Set((rsipNodes || []).map(node => node.id));
+      if (!parsedData.chains || !Array.isArray(parsedData.chains)) {
+        throw new Error('导入数据格式错误：未找到有效的链条数据');
+      }
+
+      // 创建导入会话
+      console.log('[SECURE_IMPORT] Creating import session...');
+      await secureImportService.createImportSession();
       
-      // 处理链数据
-      const importedChains = (parsedData.chains || []).map((chain: any) => {
-        let chainId = chain.id;
-        
-        // 检查ID冲突，如果重复则生成新ID（带重试机制）
-        if (checkIdConflict(chainId, existingChainIds)) {
-          let attempts = 0;
-          let newId: string;
-          do {
-            newId = generateUniqueId();
-            attempts++;
-            if (attempts > 10) {
-              throw new Error(`生成唯一ID失败，尝试次数过多: ${chainId}`);
-            }
-          } while (existingChainIds.has(newId));
-          
-          console.log(`检测到链ID冲突: ${chainId} -> ${newId}`);
-          chainId = newId;
-        }
-        
-        // 将新ID添加到已存在的ID集合中，避免导入数据内部冲突
-        existingChainIds.add(chainId);
-        
-        // 清理导入的链数据，严格控制字段以避免RLS策略违反
-        const cleanedChain: Chain = {
-          // 基础必需字段
-          id: chainId, // 使用可能替换后的ID
-          name: String(chain.name || '未命名链条'),
-          parentId: chain.parentId || chain.parent_id || undefined,
-          type: (chain.type === 'unit' || chain.type === 'group') ? chain.type : 'unit',
-          sortOrder: Number(chain.sortOrder || chain.sort_order) || Math.floor(Date.now() / 1000),
-          
-          // 任务配置字段
-          trigger: String(chain.trigger || ''),
-          duration: Number(chain.duration) || 0,
-          description: String(chain.description || ''),
-          
-          // 统计字段（重置为安全值）
-          currentStreak: 0, // 导入时重置统计，避免数据不一致
-          auxiliaryStreak: 0,
-          totalCompletions: 0,
-          totalFailures: 0,
-          auxiliaryFailures: 0,
-          
-          // 例外规则字段
-          exceptions: Array.isArray(chain.exceptions) ? chain.exceptions : [],
-          auxiliaryExceptions: Array.isArray(chain.auxiliaryExceptions) ? chain.auxiliaryExceptions : [],
-          
-          // 辅助任务字段
-          auxiliarySignal: chain.auxiliarySignal || undefined,
-          auxiliaryDuration: Number(chain.auxiliaryDuration) || 15,
-          auxiliaryCompletionTrigger: chain.auxiliaryCompletionTrigger || undefined,
-          
-          // 时间字段（使用当前时间以确保与用户上下文一致）
-          createdAt: new Date(), // 使用当前时间作为导入时间
-          lastCompletedAt: undefined, // 重置最后完成时间
-          
-          // 任务群相关字段（安全值）
-          isDurationless: Boolean(chain.isDurationless ?? chain.is_durationless ?? false),
-          timeLimitHours: chain.timeLimitHours ?? chain.time_limit_hours ?? undefined,
-          timeLimitExceptions: Array.isArray(chain.timeLimitExceptions || chain.time_limit_exceptions) 
-            ? (chain.timeLimitExceptions || chain.time_limit_exceptions) : [],
-          groupStartedAt: undefined, // 重置群组时间，避免与用户当前状态冲突
-          groupExpiresAt: undefined,
-          
-          // 软删除字段（确保导入的链条为活跃状态）
-          deletedAt: null,
-          
-          // 注意：不包含user_id等用户相关字段，让saveChains方法处理
-        };
-        
-        if (process.env.NODE_ENV === 'development') {
-          console.log('清理后的链数据:', {
-            id: cleanedChain.id,
-            name: cleanedChain.name,
-            type: cleanedChain.type,
-            isDurationless: cleanedChain.isDurationless,
-            timeLimitHours: cleanedChain.timeLimitHours,
-            hasGroupTiming: !!(cleanedChain.groupStartedAt || cleanedChain.groupExpiresAt)
-          });
-        }
-        
-        return cleanedChain;
-      });
+      setImportStatus('importing');
       
-      // 创建ID映射表，用于更新历史数据中的链ID引用
-      const chainIdMapping = new Map<string, string>();
-      (parsedData.chains || []).forEach((originalChain: any, index: number) => {
-        const newChain = importedChains[index];
-        if (originalChain.id !== newChain.id) {
-          chainIdMapping.set(originalChain.id, newChain.id);
-        }
-      });
+      // 处理导入数据，转换为Chain格式
+      const importChains: Chain[] = (parsedData.chains || []).map((chain: any) => ({
+        id: chain.id || crypto.randomUUID(),
+        name: String(chain.name || '未命名链条'),
+        parentId: chain.parentId || chain.parent_id || undefined,
+        type: (chain.type === 'unit' || chain.type === 'group') ? chain.type : 'unit',
+        sortOrder: Number(chain.sortOrder || chain.sort_order) || Math.floor(Date.now() / 1000),
+        trigger: String(chain.trigger || ''),
+        duration: Number(chain.duration) || 45,
+        description: String(chain.description || ''),
+        
+        // 统计数据（导入时可选择是否保留）
+        currentStreak: chain.currentStreak || 0,
+        auxiliaryStreak: chain.auxiliaryStreak || 0,
+        totalCompletions: chain.totalCompletions || 0,
+        totalFailures: chain.totalFailures || 0,
+        auxiliaryFailures: chain.auxiliaryFailures || 0,
+        
+        // 例外规则
+        exceptions: Array.isArray(chain.exceptions) ? chain.exceptions : [],
+        auxiliaryExceptions: Array.isArray(chain.auxiliaryExceptions) ? chain.auxiliaryExceptions : [],
+        
+        // 辅助任务字段
+        auxiliarySignal: chain.auxiliarySignal || undefined,
+        auxiliaryDuration: Number(chain.auxiliaryDuration) || 15,
+        auxiliaryCompletionTrigger: chain.auxiliaryCompletionTrigger || undefined,
+        
+        // 时间字段
+        createdAt: chain.createdAt ? new Date(chain.createdAt) : new Date(),
+        lastCompletedAt: chain.lastCompletedAt ? new Date(chain.lastCompletedAt) : undefined,
+        
+        // 高级字段
+        isDurationless: Boolean(chain.isDurationless ?? chain.is_durationless ?? false),
+        timeLimitHours: chain.timeLimitHours ?? chain.time_limit_hours ?? undefined,
+        timeLimitExceptions: Array.isArray(chain.timeLimitExceptions || chain.time_limit_exceptions) 
+          ? (chain.timeLimitExceptions || chain.time_limit_exceptions) : [],
+        groupStartedAt: chain.groupStartedAt ? new Date(chain.groupStartedAt) : undefined,
+        groupExpiresAt: chain.groupExpiresAt ? new Date(chain.groupExpiresAt) : undefined,
+        
+        // 确保导入的链条为活跃状态
+        deletedAt: null
+      }));
+
+      console.log(`[SECURE_IMPORT] Processing ${importChains.length} chains for import`);
+
+      // 执行安全导入
+      const importResult = await secureImportService.importChains(importChains, importOptions);
       
-      // 处理历史数据，严格清理以避免RLS违规
-      const importedHistory = (parsedData.completionHistory || [])
-        .filter((h: any) => h && h.chainId) // 过滤掉无效记录
-        .map((h: any): CompletionHistory => {
-          let chainId = h.chainId;
-          
-          // 如果历史记录引用的链ID被替换了，更新引用
-          if (chainIdMapping.has(chainId)) {
-            chainId = chainIdMapping.get(chainId);
-            console.log(`更新历史记录中的链ID引用: ${h.chainId} -> ${chainId}`);
-          }
-          
-          // 只保留当前导入的链条的历史记录，避免引用不存在的链条
-          const isValidChainRef = importedChains.some(chain => chain.id === chainId);
-          if (!isValidChainRef) {
-            return null; // 将被过滤掉
-          }
-          
-          // 清理历史记录数据
-          return {
-            chainId, // 使用可能更新后的链ID
+      if (!importResult.success) {
+        throw new Error(importResult.error || '导入失败');
+      }
+
+      console.log(`[SECURE_IMPORT] Successfully imported ${importResult.imported_count} chains`);
+
+      // 处理完成历史记录（如果需要）
+      if (importOptions.importCompletionHistory && parsedData.completionHistory) {
+        console.log('[SECURE_IMPORT] Importing completion history...');
+        
+        const importHistory: CompletionHistory[] = (parsedData.completionHistory || [])
+          .filter((h: any) => h && h.chainId) // 过滤无效记录
+          .map((h: any): CompletionHistory => ({
+            chainId: h.chainId, // 原始chainId，会被secureImportService更新
             completedAt: new Date(h.completedAt || Date.now()),
-            duration: Math.max(0, Number(h.duration) || 0), // 确保为正数
+            duration: Math.max(0, Number(h.duration) || 0),
             wasSuccessful: Boolean(h.wasSuccessful),
             reasonForFailure: h.reasonForFailure ? String(h.reasonForFailure) : undefined,
             actualDuration: Math.max(0, Number(h.actualDuration || h.duration) || 0),
             isForwardTimed: Boolean(h.isForwardTimed || false),
             description: h.description ? String(h.description) : undefined,
             notes: h.notes ? String(h.notes) : undefined,
-          };
-        })
-        .filter(Boolean) as CompletionHistory[]; // 过滤掉null值
-      
-      // 处理 RSIP 节点数据
-      const importedRsipNodes = (parsedData.rsipNodes || []).map((node: any) => {
-        let nodeId = node.id;
+          }));
+
+        await secureImportService.importCompletionHistory(importHistory, importResult.id_mapping);
+      }
+
+      // 处理RSIP节点（保持原有逻辑，因为量较小且复杂度较低）
+      let importedRsipNodes: RSIPNode[] = [];
+      if (parsedData.rsipNodes) {
+        const existingRsipIds = new Set((rsipNodes || []).map(node => node.id));
         
-        // 检查ID冲突，如果重复则生成新ID（带重试机制）
-        if (checkIdConflict(nodeId, existingRsipIds)) {
-          let attempts = 0;
-          let newId: string;
-          do {
-            newId = generateUniqueRsipId();
-            attempts++;
-            if (attempts > 10) {
-              throw new Error(`生成唯一RSIP节点ID失败，尝试次数过多: ${nodeId}`);
-            }
-          } while (existingRsipIds.has(newId));
+        importedRsipNodes = (parsedData.rsipNodes || []).map((node: any) => {
+          let nodeId = node.id;
           
-          console.log(`检测到RSIP节点ID冲突: ${nodeId} -> ${newId}`);
-          nodeId = newId;
-        }
-        
-        // 将新ID添加到已存在的ID集合中，避免导入数据内部冲突
-        existingRsipIds.add(nodeId);
-        
-        return {
-          ...node,
-          id: nodeId, // 使用可能替换后的ID
-          createdAt: node.createdAt ? new Date(node.createdAt) : new Date(),
-          lastScheduledAt: node.lastScheduledAt ? new Date(node.lastScheduledAt) : undefined,
-        };
-      });
-      
-      // 处理 RSIP 元数据
+          // 简单的ID冲突处理
+          if (existingRsipIds.has(nodeId)) {
+            nodeId = crypto.randomUUID ? crypto.randomUUID() : `rsip_${Date.now()}_${Math.random()}`;
+            console.log(`RSIP节点ID冲突，生成新ID: ${node.id} -> ${nodeId}`);
+          }
+          
+          existingRsipIds.add(nodeId);
+          
+          return {
+            ...node,
+            id: nodeId,
+            createdAt: node.createdAt ? new Date(node.createdAt) : new Date(),
+            lastScheduledAt: node.lastScheduledAt ? new Date(node.lastScheduledAt) : undefined,
+          };
+        });
+      }
+
+      // 处理RSIP元数据
       const importedRsipMeta = parsedData.rsipMeta ? {
         ...parsedData.rsipMeta,
         lastAddedAt: parsedData.rsipMeta.lastAddedAt ? new Date(parsedData.rsipMeta.lastAddedAt) : undefined,
       } : undefined;
-      
-      // 处理例外规则数据
+
+      // 处理例外规则
       let importedExceptionRules: any[] = [];
       if (parsedData.exceptionRules && parsedData.exceptionRules.rules) {
         const rulesToImport = parsedData.exceptionRules.rules.map((rule: any) => ({
@@ -309,10 +264,34 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
         
         importedExceptionRules = importResult.imported;
       }
-      
-      // 将所有数据传递给上层组件
-      onImport(importedChains, { 
-        history: importedHistory,
+
+      // 完成导入会话
+      await secureImportService.completeSession();
+
+      // 由于使用了安全导入，需要重新获取数据以显示导入结果
+      // 这里我们构造一个虚拟的链条数组来触发UI更新，实际数据会通过正常的数据加载流程获取
+      const virtualChains: Chain[] = Array.from({ length: importResult.imported_count }, (_, index) => ({
+        id: `imported_${index}`,
+        name: `导入的链条 ${index + 1}`,
+        type: 'unit',
+        sortOrder: 0,
+        trigger: '',
+        duration: 45,
+        description: '',
+        currentStreak: 0,
+        auxiliaryStreak: 0,
+        totalCompletions: 0,
+        totalFailures: 0,
+        auxiliaryFailures: 0,
+        exceptions: [],
+        auxiliaryExceptions: [],
+        auxiliaryDuration: 15,
+        createdAt: new Date(),
+        deletedAt: null
+      }));
+
+      // 调用上层组件的导入回调
+      onImport(virtualChains, {
         rsipNodes: importedRsipNodes,
         rsipMeta: importedRsipMeta,
         exceptionRules: importedExceptionRules
@@ -326,21 +305,22 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
       }, 3000);
       
     } catch (error) {
-      console.error('导入失败:', error);
+      console.error('安全导入失败:', error);
       
-      // 提供更具体的错误信息
+      // 清理导入会话
+      secureImportService.clearSession();
+      
+      // 提供具体的错误信息
       let errorMessage = '导入数据格式错误';
       if (error instanceof Error) {
         if (error.message.includes('身份验证失败') || error.message.includes('Authentication failed') || error.message.includes('用户身份验证失败')) {
           errorMessage = '用户身份验证失败：请确保您已正确登录，然后重试导入操作。如果问题持续存在，请刷新页面后重试。';
-        } else if (error.message.includes('violates row-level security policy') || error.message.includes('RLS') || error.message.includes('42501')) {
-          errorMessage = '数据导入失败：权限验证错误。请确保您已正确登录并有权限导入数据。建议刷新页面后重试。';
-        } else if (error.message.includes('duplicate') || error.message.includes('unique constraint')) {
-          errorMessage = '数据导入失败：检测到重复的数据。请检查导入的数据是否已存在。';
-        } else if (error.message.includes('column') && error.message.includes('does not exist')) {
-          errorMessage = '数据导入失败：数据库结构不匹配。请联系管理员更新数据库结构。';
-        } else if (error.message.includes('authentication') || error.message.includes('auth')) {
-          errorMessage = `身份验证问题：${error.message}。请刷新页面并重新登录。`;
+        } else if (error.message.includes('session') || error.message.includes('会话')) {
+          errorMessage = '导入会话创建失败：请刷新页面后重试。如果问题持续存在，请检查网络连接。';
+        } else if (error.message.includes('JSON')) {
+          errorMessage = '导入数据格式错误：请确保上传的是有效的JSON格式文件。';
+        } else if (error.message.includes('导入数据格式错误')) {
+          errorMessage = '导入数据格式错误：文件中未找到有效的链条数据。请确保文件是从Momentum导出的有效数据。';
         } else {
           errorMessage = `导入失败：${error.message}`;
         }
@@ -522,6 +502,81 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
               />
             </div>
 
+            {/* Import Options */}
+            <div className="space-y-4">
+              <h4 className="text-gray-700 dark:text-slate-300 text-sm font-medium font-chinese">
+                导入选项
+              </h4>
+              
+              <div className="space-y-3 bg-gray-50 dark:bg-slate-700/50 rounded-2xl p-4">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={importOptions.preserveStatistics}
+                    onChange={(e) => setImportOptions(prev => ({
+                      ...prev,
+                      preserveStatistics: e.target.checked
+                    }))}
+                    className="form-checkbox h-4 w-4 text-primary-500 rounded focus:ring-primary-500"
+                  />
+                  <div className="flex items-center space-x-2">
+                    <Shield size={16} className="text-gray-500" />
+                    <span className="text-sm font-chinese text-gray-700 dark:text-slate-300">
+                      保留统计数据（连击数、完成次数等）
+                    </span>
+                  </div>
+                </label>
+                
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={importOptions.preserveTimestamps}
+                    onChange={(e) => setImportOptions(prev => ({
+                      ...prev,
+                      preserveTimestamps: e.target.checked
+                    }))}
+                    className="form-checkbox h-4 w-4 text-primary-500 rounded focus:ring-primary-500"
+                  />
+                  <div className="flex items-center space-x-2">
+                    <Clock size={16} className="text-gray-500" />
+                    <span className="text-sm font-chinese text-gray-700 dark:text-slate-300">
+                      保留原始时间戳（创建时间、完成时间等）
+                    </span>
+                  </div>
+                </label>
+                
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={importOptions.importCompletionHistory}
+                    onChange={(e) => setImportOptions(prev => ({
+                      ...prev,
+                      importCompletionHistory: e.target.checked
+                    }))}
+                    className="form-checkbox h-4 w-4 text-primary-500 rounded focus:ring-primary-500"
+                  />
+                  <div className="flex items-center space-x-2">
+                    <FileText size={16} className="text-gray-500" />
+                    <span className="text-sm font-chinese text-gray-700 dark:text-slate-300">
+                      导入完成历史记录
+                    </span>
+                  </div>
+                </label>
+              </div>
+              
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-xl p-3">
+                <div className="flex items-start space-x-2">
+                  <Shield size={16} className="text-blue-600 dark:text-blue-400 mt-0.5" />
+                  <div className="text-xs font-chinese text-blue-700 dark:text-blue-300">
+                    <p className="font-medium mb-1">安全导入机制</p>
+                    <p>• 所有导入数据将自动归属到您的账户</p>
+                    <p>• ID冲突将自动解决，生成新的唯一标识</p>
+                    <p>• 导入会话30分钟后自动过期</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Import Status */}
             {importStatus === 'checking-auth' && (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-2xl p-4">
@@ -532,11 +587,20 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
               </div>
             )}
             
+            {importStatus === 'creating-session' && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-2xl p-4">
+                <div className="flex items-center space-x-3 text-blue-700 dark:text-blue-300">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                  <span className="font-chinese font-medium">正在创建安全导入会话...</span>
+                </div>
+              </div>
+            )}
+            
             {importStatus === 'importing' && (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-2xl p-4">
                 <div className="flex items-center space-x-3 text-blue-700 dark:text-blue-300">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                  <span className="font-chinese font-medium">正在导入数据，请稍候...</span>
+                  <span className="font-chinese font-medium">正在安全导入数据，请稍候...</span>
                 </div>
               </div>
             )}
@@ -566,10 +630,10 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
             <div className="text-center">
               <button
                 onClick={handleImport}
-                disabled={!importData.trim() || importStatus === 'success' || importStatus === 'checking-auth' || importStatus === 'importing'}
+                disabled={!importData.trim() || importStatus === 'success' || importStatus === 'checking-auth' || importStatus === 'creating-session' || importStatus === 'importing'}
                 className="gradient-primary hover:shadow-xl text-white px-8 py-4 rounded-2xl font-medium transition-all duration-300 flex items-center space-x-3 mx-auto hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-chinese"
               >
-                {(importStatus === 'checking-auth' || importStatus === 'importing') ? (
+                {(importStatus === 'checking-auth' || importStatus === 'creating-session' || importStatus === 'importing') ? (
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                 ) : (
                   <Upload size={20} />
@@ -577,9 +641,11 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                 <span>
                   {importStatus === 'checking-auth' 
                     ? '验证身份中...' 
-                    : importStatus === 'importing' 
-                      ? '导入中...' 
-                      : '导入数据'
+                    : importStatus === 'creating-session'
+                      ? '创建会话中...'
+                      : importStatus === 'importing' 
+                        ? '安全导入中...' 
+                        : '安全导入数据'
                   }
                 </span>
               </button>
