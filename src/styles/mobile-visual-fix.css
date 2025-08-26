@@ -16,20 +16,20 @@
     will-change: transform;
   }
 
-  /* 防止渲染断层的关键设置 */
+  /* 防止渲染断层但保持滚动 */
   .bento-card {
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
-    contain: layout style paint;
+    contain: layout style;
     isolation: isolate;
-    will-change: transform, opacity;
+    will-change: auto;
   }
 
   /* 设置区域容器优化 */
   .setting-section {
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
-    contain: layout style paint;
+    contain: layout;
     isolation: isolate;
   }
 
@@ -37,7 +37,7 @@
   form {
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
-    contain: layout style;
+    contain: layout;
     isolation: isolate;
   }
 
@@ -45,8 +45,8 @@
   .responsive-container {
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
-    contain: layout style paint;
-    overflow: hidden;
+    contain: layout style;
+    overflow-x: hidden;
     isolation: isolate;
   }
 }
@@ -145,7 +145,7 @@
     overflow-x: hidden;
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
-    contain: size layout style paint;
+    contain: size layout style;
   }
 
   /* 输入框聚焦时防止布局跳动 */
@@ -184,9 +184,9 @@
 
 /* 内存和性能优化 */
 @media (max-width: 768px) {
-  /* 减少重绘区域 */
+  /* 减少重绘区域但保持滚动 */
   .performance-layer {
-    contain: layout style paint;
+    contain: layout style;
     isolation: isolate;
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
@@ -212,7 +212,7 @@
 @media (max-width: 480px) {
   /* 小屏设备的额外优化 */
   .chain-editor-container {
-    contain: size layout style;
+    contain: layout;
   }
 
   /* 进一步简化动画 */
@@ -241,23 +241,21 @@
       min-height: calc(var(--vh, 1vh) * 100);
     }
 
-    /* 防止Safari的弹性滚动 */
+    /* 优化Safari滚动但保持滚动功能 */
     body {
-      position: fixed;
-      overflow: hidden;
+      overflow-x: hidden;
       width: 100%;
-      height: calc(var(--vh, 1vh) * 100);
+      min-height: calc(var(--vh, 1vh) * 100);
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
     }
 
     .chain-editor-scroll-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      overflow-y: scroll;
+      overflow-y: auto;
+      overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
-      height: calc(var(--vh, 1vh) * 100);
+      min-height: calc(var(--vh, 1vh) * 100);
+      overscroll-behavior: contain;
     }
 
     /* 修复Safari的输入框缩放 */

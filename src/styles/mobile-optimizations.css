@@ -161,6 +161,8 @@
   select:focus {
     transform: none; /* 防止缩放动画 */
     transition: border-color 0.2s ease;
+    /* 确保输入框聚焦不影响页面滚动 */
+    scroll-behavior: auto;
   }
 
   /* 滚动优化 */
