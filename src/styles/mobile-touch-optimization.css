@@ -134,9 +134,242 @@ input, textarea, select {
   opacity: 0.8;
 }
 
+/* 移动端优化滑块样式 */
+.mobile-optimized-slider {
+  position: relative;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: transparent;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  outline: none;
+}
+
+/* WebKit浏览器滑块轨道 */
+.mobile-optimized-slider::-webkit-slider-track {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 9999px;
+  border: none;
+  transition: background-color 0.15s ease;
+}
+
+.dark .mobile-optimized-slider::-webkit-slider-track {
+  background: #4b5563;
+}
+
+/* WebKit浏览器滑块滑块 */
+.mobile-optimized-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border: 2px solid #3b82f6;
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.15s ease;
+  position: relative;
+  z-index: 10;
+}
+
+.dark .mobile-optimized-slider::-webkit-slider-thumb {
+  background: #1e293b;
+  border-color: #60a5fa;
+}
+
+.mobile-optimized-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-optimized-slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.2);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Firefox浏览器滑块样式 */
+.mobile-optimized-slider::-moz-range-track {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 9999px;
+  border: none;
+  transition: background-color 0.15s ease;
+}
+
+.dark .mobile-optimized-slider::-moz-range-track {
+  background: #4b5563;
+}
+
+.mobile-optimized-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border: 2px solid #3b82f6;
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.15s ease;
+  -moz-appearance: none;
+}
+
+.dark .mobile-optimized-slider::-moz-range-thumb {
+  background: #1e293b;
+  border-color: #60a5fa;
+}
+
+.mobile-optimized-slider::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-optimized-slider::-moz-range-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.2);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
 /* 手势优化 */
 .swipe-container {
   touch-action: pan-x pan-y;
+}
+
+/* 移动端滑块特殊优化 */
+@media (max-width: 768px) {
+  .mobile-optimized-slider {
+    min-height: 44px;
+    padding: 16px 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .mobile-optimized-slider::-webkit-slider-track {
+    height: 12px;
+  }
+
+  .mobile-optimized-slider::-webkit-slider-thumb {
+    width: 28px;
+    height: 28px;
+    border-width: 3px;
+    margin-top: -10px; /* 中心对齐 */
+  }
+
+  .mobile-optimized-slider::-moz-range-track {
+    height: 12px;
+  }
+
+  .mobile-optimized-slider::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+    border-width: 3px;
+  }
+
+  .mobile-optimized-slider::-webkit-slider-thumb:active {
+    transform: scale(1.3);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+  }
+
+  .mobile-optimized-slider::-moz-range-thumb:active {
+    transform: scale(1.3);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* 小屏幕手机进一步优化 */
+@media (max-width: 480px) {
+  .mobile-optimized-slider {
+    min-height: 48px;
+    padding: 20px 0;
+  }
+
+  .mobile-optimized-slider::-webkit-slider-track {
+    height: 16px;
+  }
+
+  .mobile-optimized-slider::-webkit-slider-thumb {
+    width: 32px;
+    height: 32px;
+    border-width: 4px;
+    margin-top: -12px;
+  }
+
+  .mobile-optimized-slider::-moz-range-track {
+    height: 16px;
+  }
+
+  .mobile-optimized-slider::-moz-range-thumb {
+    width: 32px;
+    height: 32px;
+    border-width: 4px;
+  }
+}
+
+/* 触摸设备专属优化 */
+@media (hover: none) and (pointer: coarse) {
+  .mobile-optimized-slider {
+    min-height: 44px;
+    padding: 12px 0;
+  }
+
+  /* 确保触摸区域足够大 */
+  .mobile-optimized-slider::-webkit-slider-thumb {
+    min-width: 44px;
+    min-height: 44px;
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+  }
+
+  .mobile-optimized-slider::-moz-range-thumb {
+    min-width: 44px;
+    min-height: 44px;
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+  }
+
+  /* 移除hover效果，增强active效果 */
+  .mobile-optimized-slider::-webkit-slider-thumb:hover {
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .mobile-optimized-slider::-moz-range-thumb:hover {
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .mobile-optimized-slider::-webkit-slider-thumb:active {
+    transform: scale(1.15);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+  }
+
+  .mobile-optimized-slider::-moz-range-thumb:active {
+    transform: scale(1.15);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+  }
+
+  /* 添加触摸反馈动画 */
+  .mobile-optimized-slider:active {
+    transform: scale(0.98);
+  }
+}
+
+/* 触摸区域扩展 */
+.touch-target {
+  position: absolute;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .no-select {

@@ -55,6 +55,35 @@ export const useMobileOptimization = () => {
     });
   }, []);
 
+  // 添加iOS Safari特定修复
+  useEffect(() => {
+    // 修复iOS Safari的视窗问题
+    const fixIOSViewport = () => {
+      if (typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+          viewport.setAttribute('content', 
+            'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover'
+          );
+        }
+        
+        // 修复iOS Safari的100vh问题
+        const setVH = () => {
+          const vh = window.innerHeight * 0.01;
+          document.documentElement.style.setProperty('--vh', `${vh}px`);
+        };
+        
+        setVH();
+        window.addEventListener('resize', setVH);
+        window.addEventListener('orientationchange', () => {
+          setTimeout(setVH, 100);
+        });
+      }
+    };
+
+    fixIOSViewport();
+  }, []);
+
   useEffect(() => {
     // 初始检测
     updateMobileInfo();

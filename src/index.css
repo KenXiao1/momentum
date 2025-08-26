@@ -53,6 +53,21 @@
   .bento-card {
     @apply bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-gray-200/60 dark:border-slate-600/60 rounded-2xl p-6 shadow-lg dark:shadow-2xl hover:shadow-xl dark:hover:shadow-slate-900/50 transition-all duration-500 hover:scale-[1.02] hover:bg-white dark:hover:bg-slate-700/90;
   }
+
+  /* Mobile optimizations for bento-card */
+  @media (max-width: 768px) {
+    .bento-card {
+      @apply transition-shadow duration-300;
+      /* Remove scale transforms on mobile to prevent visual tearing */
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+    }
+    
+    .bento-card:hover {
+      transform: translateZ(0) !important;
+      -webkit-transform: translateZ(0) !important;
+    }
+  }
   
   .bento-card-dark {
     @apply bg-slate-900 dark:bg-slate-900/95 text-white border border-slate-700 dark:border-slate-600 rounded-2xl p-6 shadow-xl dark:shadow-2xl hover:shadow-2xl dark:hover:shadow-slate-900/80 transition-all duration-500 hover:scale-[1.02];
@@ -180,5 +195,47 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Mobile-optimized animations */
+@media (max-width: 768px) {
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateZ(0) translateY(10px);
+      -webkit-transform: translateZ(0) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateZ(0) translateY(0);
+      -webkit-transform: translateZ(0) translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateZ(0) translateY(20px);
+      -webkit-transform: translateZ(0) translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateZ(0) translateY(0);
+      -webkit-transform: translateZ(0) translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: translateZ(0) scale(0.95);
+      -webkit-transform: translateZ(0) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateZ(0) scale(1);
+      -webkit-transform: translateZ(0) scale(1);
+    }
   }
 }

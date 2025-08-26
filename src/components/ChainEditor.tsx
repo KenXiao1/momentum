@@ -151,12 +151,12 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
 
   return (
     <div 
-      className={`min-h-screen bg-background overflow-x-hidden ${isKeyboardVisible ? 'keyboard-active' : ''}`}
+      className={`chain-editor-container min-h-screen bg-background overflow-x-hidden performance-layer ${isKeyboardVisible ? 'keyboard-active' : ''}`}
       style={{ paddingBottom: isKeyboardVisible ? `${keyboardHeight}px` : '0' }}
     >
       <ResponsiveContainer 
         maxWidth="4xl" 
-        className={`py-4 md:py-6 ${mobileInfo.isMobile ? 'px-4' : ''}`}
+        className={`chain-editor-scroll-container py-4 md:py-6 ${mobileInfo.isMobile ? 'px-4' : ''}`}
       >
         {/* Header */}
         <header className="flex items-center space-x-4 mb-12 animate-fade-in">
@@ -176,7 +176,7 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
           </div>
         </header>
 
-        <form onSubmit={handleSubmit} className="space-y-8 animate-slide-up">
+        <form onSubmit={handleSubmit} className="space-y-8 animate-slide-up performance-layer">
           {/* 基础信息区 */}
           <SettingSection
             title="基础信息"
@@ -608,6 +608,9 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
             </button>
           </div>
         </form>
+        
+        {/* Virtual keyboard buffer */}
+        {isKeyboardVisible && <div className="keyboard-buffer"></div>}
       </ResponsiveContainer>
     </div>
   );

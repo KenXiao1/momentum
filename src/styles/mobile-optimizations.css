@@ -3,6 +3,9 @@
  * 确保ChainEditor在移动设备上的良好体验
  */
 
+/* 导入视觉断层修复样式 */
+@import './mobile-visual-fix.css';
+
 /* 基础移动端适配 */
 @media (max-width: 768px) {
   /* 确保最小触摸目标44px */

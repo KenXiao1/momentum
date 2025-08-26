@@ -1,0 +1,305 @@
+/**
+ * 移动端视觉断层修复样式
+ * 解决ChainEditor在移动设备上的渲染断层问题
+ */
+
+/* 强制GPU硬件加速，防止视觉断层 */
+@media (max-width: 768px) {
+  /* 为主要容器启用硬件加速 */
+  .chain-editor-container {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    perspective: 1000px;
+    -webkit-perspective: 1000px;
+    will-change: transform;
+  }
+
+  /* 防止渲染断层的关键设置 */
+  .bento-card {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    contain: layout style paint;
+    isolation: isolate;
+    will-change: transform, opacity;
+  }
+
+  /* 设置区域容器优化 */
+  .setting-section {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    contain: layout style paint;
+    isolation: isolate;
+  }
+
+  /* 表单容器优化 */
+  form {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    contain: layout style;
+    isolation: isolate;
+  }
+
+  /* 响应式容器优化 */
+  .responsive-container {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    contain: layout style paint;
+    overflow: hidden;
+    isolation: isolate;
+  }
+}
+
+/* 动画优化 - 防止动画引起的视觉断层 */
+@media (max-width: 768px) {
+  /* 优化淡入动画 */
+  .animate-fade-in {
+    animation: mobileFadeIn 0.4s ease-out forwards;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: opacity, transform;
+  }
+
+  /* 优化滑入动画 */
+  .animate-slide-up {
+    animation: mobileSlideUp 0.5s ease-out forwards;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: opacity, transform;
+  }
+
+  /* 优化缩放动画 */
+  .animate-scale-in {
+    animation: mobileScaleIn 0.3s ease-out forwards;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: opacity, transform;
+  }
+
+  /* 移除可能导致断层的hover效果 */
+  .bento-card:hover {
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+  }
+
+  /* 简化transition效果 */
+  .bento-card {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease !important;
+  }
+}
+
+/* 移动端专用动画关键帧 */
+@keyframes mobileFadeIn {
+  from {
+    opacity: 0;
+    transform: translateZ(0) translateY(10px);
+    -webkit-transform: translateZ(0) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateZ(0) translateY(0);
+    -webkit-transform: translateZ(0) translateY(0);
+  }
+}
+
+@keyframes mobileSlideUp {
+  from {
+    opacity: 0;
+    transform: translateZ(0) translateY(20px);
+    -webkit-transform: translateZ(0) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateZ(0) translateY(0);
+    -webkit-transform: translateZ(0) translateY(0);
+  }
+}
+
+@keyframes mobileScaleIn {
+  from {
+    opacity: 0;
+    transform: translateZ(0) scale(0.95);
+    -webkit-transform: translateZ(0) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateZ(0) scale(1);
+    -webkit-transform: translateZ(0) scale(1);
+  }
+}
+
+/* 滚动优化 - 防止滚动时的视觉断层 */
+@media (max-width: 768px) {
+  /* 优化滚动性能 */
+  html, body {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
+  }
+
+  /* 防止滚动时的重绘问题 */
+  .chain-editor-scroll-container {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    contain: size layout style paint;
+  }
+
+  /* 输入框聚焦时防止布局跳动 */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+}
+
+/* 虚拟键盘适配优化 */
+@media (max-width: 768px) {
+  /* 键盘出现时的布局稳定性 */
+  .keyboard-active .chain-editor-container {
+    position: relative;
+    min-height: 100vh;
+    padding-bottom: env(keyboard-inset-height, 0px);
+  }
+
+  /* 防止键盘引起的重排 */
+  .keyboard-active form {
+    contain: layout style;
+    isolation: isolate;
+  }
+
+  /* 键盘区域的缓冲 */
+  .keyboard-buffer {
+    height: env(keyboard-inset-height, 0px);
+    min-height: 0;
+    flex-shrink: 0;
+  }
+}
+
+/* 内存和性能优化 */
+@media (max-width: 768px) {
+  /* 减少重绘区域 */
+  .performance-layer {
+    contain: layout style paint;
+    isolation: isolate;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+
+  /* 优化阴影渲染 */
+  .bento-card {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .dark .bento-card {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* 减少backdrop-blur的使用 */
+  .bento-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* 特定设备优化 */
+@media (max-width: 480px) {
+  /* 小屏设备的额外优化 */
+  .chain-editor-container {
+    contain: size layout style;
+  }
+
+  /* 进一步简化动画 */
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-scale-in {
+    animation-duration: 0.2s !important;
+  }
+
+  /* 减少变换操作 */
+  .bento-card:hover,
+  .bento-card:focus {
+    transform: none !important;
+    -webkit-transform: none !important;
+  }
+}
+
+/* iOS Safari特定修复 */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 768px) {
+    /* Safari的渲染优化 */
+    .chain-editor-container {
+      -webkit-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
+      /* 使用CSS变量修复100vh问题 */
+      min-height: calc(var(--vh, 1vh) * 100);
+    }
+
+    /* 防止Safari的弹性滚动 */
+    body {
+      position: fixed;
+      overflow: hidden;
+      width: 100%;
+      height: calc(var(--vh, 1vh) * 100);
+    }
+
+    .chain-editor-scroll-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow-y: scroll;
+      -webkit-overflow-scrolling: touch;
+      height: calc(var(--vh, 1vh) * 100);
+    }
+
+    /* 修复Safari的输入框缩放 */
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    textarea,
+    select {
+      font-size: 16px !important;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+    }
+  }
+}
+
+/* 高DPI屏幕优化 */
+@media (max-width: 768px) and (-webkit-min-device-pixel-ratio: 2) {
+  /* 高分辨率屏幕的渲染优化 */
+  .bento-card {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* 边框渲染优化 */
+  .bento-card {
+    border-width: 0.5px;
+  }
+}
+
+/* 低端设备优化 */
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  /* 完全禁用动画和变换 */
+  * {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+  }
+
+  /* 简化视觉效果 */
+  .bento-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    border-radius: 8px !important;
+  }
+}
