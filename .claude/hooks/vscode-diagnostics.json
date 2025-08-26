@@ -1,1 +1,112 @@
-[]
+[
+  {
+    "file": "c:\\Users\\xfc05\\Downloads\\momentum\\momentum-new-feature-branch\\src\\utils\\chainTree.ts",
+    "diagnostics": [
+      {
+        "message": "应为“,”。",
+        "severity": 0,
+        "level": "Error",
+        "source": "ts",
+        "code": 1005,
+        "start": {
+          "line": 335,
+          "character": 27
+        },
+        "end": {
+          "line": 335,
+          "character": 28
+        }
+      },
+      {
+        "message": "应为声明或语句。",
+        "severity": 0,
+        "level": "Error",
+        "source": "ts",
+        "code": 1128,
+        "start": {
+          "line": 346,
+          "character": 0
+        },
+        "end": {
+          "line": 346,
+          "character": 1
+        }
+      },
+      {
+        "message": "变量“resetGroupComp”隐式具有“any”类型。",
+        "severity": 0,
+        "level": "Error",
+        "source": "ts",
+        "code": 7005,
+        "start": {
+          "line": 335,
+          "character": 13
+        },
+        "end": {
+          "line": 335,
+          "character": 27
+        }
+      },
+      {
+        "message": "找不到名称“chains”。你是否指的是“chai”?",
+        "severity": 0,
+        "level": "Error",
+        "source": "ts",
+        "code": 2552,
+        "start": {
+          "line": 336,
+          "character": 9
+        },
+        "end": {
+          "line": 336,
+          "character": 15
+        }
+      },
+      {
+        "message": "参数“chain”隐式具有“any”类型。",
+        "severity": 0,
+        "level": "Error",
+        "source": "ts",
+        "code": 7006,
+        "start": {
+          "line": 336,
+          "character": 20
+        },
+        "end": {
+          "line": 336,
+          "character": 25
+        }
+      },
+      {
+        "message": "找不到名称“groupId”。",
+        "severity": 0,
+        "level": "Error",
+        "source": "ts",
+        "code": 2304,
+        "start": {
+          "line": 337,
+          "character": 21
+        },
+        "end": {
+          "line": 337,
+          "character": 28
+        }
+      },
+      {
+        "message": "检测到无法访问的代码。",
+        "severity": 3,
+        "level": "Hint",
+        "source": "ts",
+        "code": 7027,
+        "start": {
+          "line": 351,
+          "character": 0
+        },
+        "end": {
+          "line": 385,
+          "character": 2
+        }
+      }
+    ]
+  }
+]
