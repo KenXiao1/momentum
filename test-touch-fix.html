@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>触摸修复测试 - Touch Fix Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 200vh; /* 确保页面可以滚动 */
+      touch-action: pan-y pinch-zoom;
+    }
+    
+    .test-container {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      touch-action: pan-y pinch-zoom;
+    }
+    
+    .test-slider {
+      width: 100%;
+      min-height: 44px;
+      padding: 12px 0;
+      background: transparent;
+      -webkit-appearance: none;
+      touch-action: pan-y pinch-zoom;
+      cursor: pointer;
+    }
+    
+    .test-slider::-webkit-slider-track {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+    }
+    
+    .test-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #3b82f6;
+      border-radius: 50%;
+      cursor: grab;
+    }
+    
+    .test-slider::-webkit-slider-thumb:active {
+      cursor: grabbing;
+      transform: scale(1.2);
+    }
+    
+    .scroll-test {
+      height: 200px;
+      overflow-y: auto;
+      background: #f3f4f6;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+      touch-action: pan-y pinch-zoom;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .test-button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 8px;
+      min-height: 44px;
+      touch-action: manipulation;
+    }
+    
+    .test-button:active {
+      transform: scale(0.98);
+      background: #2563eb;
+    }
+    
+    .status {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      z-index: 1000;
+    }
+    
+    .test-info {
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="status" id="status">测试页面已加载</div>
+  
+  <h1>触摸修复测试页面</h1>
+  <p>本页面用于测试ChainEditor滑动不跟手问题的修复效果</p>
+  
+  <div class="test-info">
+    <strong>测试说明：</strong>
+    <ul>
+      <li>✅ 页面应该可以正常垂直滚动</li>
+      <li>✅ 滑块可以正常拖拽，不影响页面滚动</li>
+      <li>✅ 按钮点击正常响应</li>
+      <li>✅ 滚动区域内容可以独立滚动</li>
+    </ul>
+  </div>
+  
+  <div class="test-container">
+    <h2>滑块测试</h2>
+    <p>拖拽下方滑块时，页面不应该被阻止滚动：</p>
+    <input type="range" class="test-slider" min="0" max="100" value="50" id="slider1">
+    <p>当前值: <span id="slider1-value">50</span></p>
+  </div>
+  
+  <div class="test-container">
+    <h2>按钮测试</h2>
+    <p>点击按钮应该正常响应：</p>
+    <button class="test-button" onclick="alert('按钮1点击成功！')">测试按钮 1</button>
+    <button class="test-button" onclick="alert('按钮2点击成功！')">测试按钮 2</button>
+  </div>
+  
+  <div class="test-container">
+    <h2>滚动区域测试</h2>
+    <p>下方区域应该可以独立滚动：</p>
+    <div class="scroll-test">
+      <p>这是一个可滚动的测试区域...</p>
+      <p>内容行 1</p>
+      <p>内容行 2</p>
+      <p>内容行 3</p>
+      <p>内容行 4</p>
+      <p>内容行 5</p>
+      <p>内容行 6</p>
+      <p>内容行 7</p>
+      <p>内容行 8</p>
+      <p>内容行 9</p>
+      <p>内容行 10</p>
+      <p>内容行 11</p>
+      <p>内容行 12</p>
+      <p>内容行 13</p>
+      <p>内容行 14</p>
+      <p>内容行 15</p>
+      <p>滚动到这里说明滚动正常工作</p>
+    </div>
+  </div>
+  
+  <div class="test-container">
+    <h2>更多滑块测试</h2>
+    <p>多个滑块测试，确保每个都能正常工作：</p>
+    <input type="range" class="test-slider" min="0" max="100" value="25" id="slider2">
+    <p>滑块2值: <span id="slider2-value">25</span></p>
+    <input type="range" class="test-slider" min="0" max="100" value="75" id="slider3">
+    <p>滑块3值: <span id="slider3-value">75</span></p>
+  </div>
+  
+  <!-- 增加更多内容以确保页面足够长，可以滚动 -->
+  <div class="test-container">
+    <h2>页面滚动测试</h2>
+    <p>向下滚动页面测试...</p>
+    <p>如果你能看到这些内容，说明页面滚动正常工作。</p>
+    <p style="height: 100px; background: linear-gradient(45deg, #ff6b6b, #4ecdc4); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; border-radius: 8px;">
+      页面滚动测试区域
+    </p>
+  </div>
+  
+  <div class="test-container">
+    <h2>最终测试区域</h2>
+    <p>如果你能滑动到这里，说明页面滚动完全正常！</p>
+    <button class="test-button" onclick="document.getElementById('status').textContent = '所有测试完成 ✅'">测试完成</button>
+  </div>
+
+  <script>
+    // 滑块值更新
+    ['slider1', 'slider2', 'slider3'].forEach(id => {
+      const slider = document.getElementById(id);
+      const valueSpan = document.getElementById(id + '-value');
+      
+      slider.addEventListener('input', (e) => {
+        valueSpan.textContent = e.target.value;
+        document.getElementById('status').textContent = `${id}值: ${e.target.value}`;
+      });
+    });
+    
+    // 触摸事件监听 - 用于调试
+    let touchStartY = 0;
+    let touchStartX = 0;
+    
+    document.addEventListener('touchstart', (e) => {
+      touchStartY = e.touches[0].clientY;
+      touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    
+    document.addEventListener('touchmove', (e) => {
+      const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
+      const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
+      
+      if (deltaY > 10) {
+        document.getElementById('status').textContent = '垂直滚动检测 ✅';
+      } else if (deltaX > 10) {
+        document.getElementById('status').textContent = '水平滑动检测 ↔️';
+      }
+    }, { passive: true });
+  </script>
+</body>
+</html>

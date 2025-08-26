@@ -3,84 +3,88 @@
  * 解决ChainEditor在移动设备上的渲染断层问题
  */
 
-/* 强制GPU硬件加速，防止视觉断层 */
+/**
+ * 移动端视觉断层修复样式
+ * 解决ChainEditor在移动设备上的渲染断层问题
+ * 优化GPU加速策略，减少不必要的合成层
+ */
+
+/* 智能GPU加速：只为必要元素启用 */
 @media (max-width: 768px) {
-  /* 为主要容器启用硬件加速 */
+  /* 主容器：仅在必要时启用GPU加速 */
   .chain-editor-container {
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    perspective: 1000px;
-    -webkit-perspective: 1000px;
-    will-change: transform;
+    /* 使用contain代替will-change，减少内存占用 */
+    contain: layout;
+    /* 只在有动画时才启用GPU加速 */
+    transform: none;
   }
 
-  /* 防止渲染断层但保持滚动 */
+  /* 卡片元素：去除过度GPU加速 */
   .bento-card {
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    contain: layout style;
+    /* 使用isolation保证层叠，但不创建合成层 */
     isolation: isolate;
+    /* 移除不必要的transform */
+    transform: none;
     will-change: auto;
-  }
-
-  /* 设置区域容器优化 */
-  .setting-section {
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    contain: layout;
-    isolation: isolate;
-  }
-
-  /* 表单容器优化 */
-  form {
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    contain: layout;
-    isolation: isolate;
-  }
-
-  /* 响应式容器优化 */
-  .responsive-container {
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
+    /* 使用contain优化渲染 */
     contain: layout style;
+  }
+
+  /* 设置区域：轻量化GPU使用 */
+  .setting-section {
+    contain: layout;
+    isolation: isolate;
+    transform: none;
+  }
+
+  /* 表单容器：只保留必要的优化 */
+  form {
+    contain: layout;
+    isolation: isolate;
+    transform: none;
+  }
+
+  /* 响应式容器：优化滚动性能 */
+  .responsive-container {
+    contain: layout;
     overflow-x: hidden;
     isolation: isolate;
+    transform: none;
   }
 }
 
-/* 动画优化 - 防止动画引起的视觉断层 */
+/* 动画优化 - 只在必要时使用GPU加速 */
 @media (max-width: 768px) {
   /* 优化淡入动画 */
   .animate-fade-in {
     animation: mobileFadeIn 0.4s ease-out forwards;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    will-change: opacity, transform;
+    /* 只在动画期间启用GPU加速 */
+    will-change: opacity;
   }
 
   /* 优化滑入动画 */
   .animate-slide-up {
     animation: mobileSlideUp 0.5s ease-out forwards;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
     will-change: opacity, transform;
   }
 
   /* 优化缩放动画 */
   .animate-scale-in {
     animation: mobileScaleIn 0.3s ease-out forwards;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
     will-change: opacity, transform;
   }
 
-  /* 移除可能导致断层的hover效果 */
+  /* 动画结束后清除GPU加速 */
+  .animate-fade-in.animation-complete,
+  .animate-slide-up.animation-complete,
+  .animate-scale-in.animation-complete {
+    will-change: auto;
+  }
+
+  /* 简化hover效果，避免不必要的重绘 */
   .bento-card:hover {
-    transform: translateZ(0) !important;
-    -webkit-transform: translateZ(0) !important;
+    /* 只使用box-shadow和border变化 */
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
   }
 
   /* 简化transition效果 */
@@ -89,73 +93,68 @@
   }
 }
 
-/* 移动端专用动画关键帧 */
+/* 移动端专用动画关键帧 - 优化GPU使用 */
 @keyframes mobileFadeIn {
   from {
     opacity: 0;
-    transform: translateZ(0) translateY(10px);
-    -webkit-transform: translateZ(0) translateY(10px);
+    /* 减少transform使用 */
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
-    transform: translateZ(0) translateY(0);
-    -webkit-transform: translateZ(0) translateY(0);
+    transform: translateY(0);
   }
 }
 
 @keyframes mobileSlideUp {
   from {
     opacity: 0;
-    transform: translateZ(0) translateY(20px);
-    -webkit-transform: translateZ(0) translateY(20px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateZ(0) translateY(0);
-    -webkit-transform: translateZ(0) translateY(0);
+    transform: translateY(0);
   }
 }
 
 @keyframes mobileScaleIn {
   from {
     opacity: 0;
-    transform: translateZ(0) scale(0.95);
-    -webkit-transform: translateZ(0) scale(0.95);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateZ(0) scale(1);
-    -webkit-transform: translateZ(0) scale(1);
+    transform: scale(1);
   }
 }
 
-/* 滚动优化 - 防止滚动时的视觉断层 */
+/* 滚动优化 - 保证滚动性能优先 */
 @media (max-width: 768px) {
-  /* 优化滚动性能 */
+  /* 基础滚动优化 */
   html, body {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
     overscroll-behavior: contain;
   }
 
-  /* 防止滚动时的重绘问题 */
+  /* ChainEditor专用滚动优化 */
   .chain-editor-scroll-container {
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
     overflow-x: hidden;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    contain: size layout style;
+    /* 优先保证滚动性能 */
+    contain: size layout;
+    /* 只在必要时启用GPU */
+    transform: none;
   }
 
-  /* 输入框聚焦时防止布局跳动 */
+  /* 输入框聚焦时的优化 */
   input:focus,
   textarea:focus,
   select:focus {
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
+    /* 减少不必要的GPU加速 */
+    backface-visibility: visible;
+    transform: none;
   }
 }
 

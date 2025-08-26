@@ -1,9 +1,64 @@
 /**
  * 移动端触摸优化样式
- * 确保所有交互元素都有足够的触摸区域
+ * 确保所有交互元素都有足够的触摸区域，并精确控制touch-action
  */
 
-/* 基础触摸区域优化 */
+/* 全局触摸行为策略 */
+html {
+  /* 默认允许所有手势 */
+  touch-action: manipulation;
+}
+
+body {
+  /* 主体区域允许滚动和缩放 */
+  touch-action: pan-x pan-y pinch-zoom;
+}
+
+/* 页面容器：优先保证滚动 */
+.chain-editor-container,
+.chain-editor-scroll-container {
+  /* 允许垂直滚动，禁止水平滚动 */
+  touch-action: pan-y pinch-zoom;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* 交互元素的精确touch-action控制 */
+button, .btn, [role="button"] {
+  /* 按钮只允许点击，禁止滚动 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 滑块特殊控制：允许垂直滚动，控制水平操作 */
+.mobile-optimized-slider {
+  /* 关键修复：允许垂直滚动，只在水平方向操作时阻止 */
+  touch-action: pan-y pinch-zoom;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* 输入框：允许所有操作 */
+input, textarea, select {
+  touch-action: manipulation;
+  font-size: 16px; /* 防止iOS缩放 */
+}
+
+/* 文本和静态元素：允许滚动，禁止选择 */
+.bento-card, .setting-section {
+  touch-action: pan-y pinch-zoom;
+}
+
+/* 滚动容器明确标识 */
+[data-scrollable="true"],
+.overflow-y-auto,
+.overflow-auto {
+  touch-action: pan-y pinch-zoom;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* 基础触摸区域优化（保持原有功能） */
 .touch-target {
   min-height: 44px;
   min-width: 44px;
@@ -13,11 +68,9 @@
 }
 
 /* 按钮触摸优化 */
-button, .btn {
+button:not(.mobile-optimized-slider), .btn {
   min-height: 44px;
   padding: 12px 16px;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
 }
 
 /* 小按钮的触摸区域扩展 */
@@ -39,13 +92,10 @@ button, .btn {
 }
 
 /* 输入框触摸优化 */
-input, textarea, select {
+input:not([type="range"]), textarea, select {
   min-height: 44px;
   padding: 12px 16px;
-  font-size: 16px; /* 防止iOS缩放 */
 }
-
-/* 移动端间距优化 */
 @media (max-width: 768px) {
   .mobile-spacing {
     padding: 16px;

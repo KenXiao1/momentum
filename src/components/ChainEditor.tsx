@@ -153,10 +153,12 @@ export const ChainEditor: React.FC<ChainEditorProps> = ({
     <div 
       className={`chain-editor-container min-h-screen bg-background overflow-x-hidden performance-layer ${isKeyboardVisible ? 'keyboard-active' : ''}`}
       style={{ paddingBottom: isKeyboardVisible ? `${keyboardHeight}px` : '0' }}
+      data-scrollable="true"
     >
       <ResponsiveContainer 
         maxWidth="4xl" 
         className={`chain-editor-scroll-container py-4 md:py-6 ${mobileInfo.isMobile ? 'px-4' : ''}`}
+        data-scrollable="true"
       >
         {/* Header */}
         <header className="flex items-center space-x-4 mb-12 animate-fade-in">

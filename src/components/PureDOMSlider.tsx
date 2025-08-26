@@ -70,9 +70,27 @@ export const PureDOMSlider: React.FC<PureDOMSliderProps> = ({
 
   const handleTouchStart = useCallback((event: React.TouchEvent) => {
     if (disabled) return;
-    setIsDragging(true);
-    // 防止页面滚动
-    event.preventDefault();
+    
+    // 智能触摸检测：只在真正的滑块交互时阻止默认行为
+    const touch = event.touches[0];
+    const slider = event.currentTarget;
+    const rect = slider.getBoundingClientRect();
+    
+    // 检查触摸点是否在滑块的有效交互区域内
+    const isInSliderArea = (
+      touch.clientY >= rect.top - 10 && 
+      touch.clientY <= rect.bottom + 10 &&
+      touch.clientX >= rect.left && 
+      touch.clientX <= rect.right
+    );
+    
+    if (isInSliderArea) {
+      setIsDragging(true);
+      // 只阻止水平滚动，允许垂直滚动
+      if (Math.abs(touch.clientX - rect.left) > 10) {
+        event.preventDefault();
+      }
+    }
   }, [disabled]);
 
   const handleTouchEnd = useCallback(() => {
@@ -133,7 +151,8 @@ export const PureDOMSlider: React.FC<PureDOMSliderProps> = ({
           disabled={disabled}
           className={sliderClassName}
           style={{
-            touchAction: 'manipulation',
+            // 精确的touch-action控制：允许垂直滚动，控制水平操作
+            touchAction: 'pan-y pinch-zoom',
             WebkitTapHighlightColor: 'transparent',
             // 移动端滑块样式优化
             ...(isTouchDevice && {

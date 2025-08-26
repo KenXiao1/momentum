@@ -147,7 +147,7 @@ export const useMobileOptimization = () => {
 
 /**
  * 移动端触摸优化Hook
- * 优化触摸交互体验
+ * 优化触摸交互体验，精确控制事件阻止
  */
 export const useTouchOptimization = () => {
   useEffect(() => {
@@ -163,21 +163,52 @@ export const useTouchOptimization = () => {
 
     document.addEventListener('touchend', preventZoom, { passive: false });
 
-    // 防止长按选择文本（在某些情况下）
-    const preventLongPress = (e: TouchEvent) => {
+    // 精确的长按控制：只阻止非交互元素的长按，允许滚动
+    const preventSelectiveLongPress = (e: TouchEvent) => {
       if (e.target instanceof HTMLElement) {
-        const isInteractive = e.target.matches('input, textarea, select, button, [role="button"], [tabindex]');
-        if (!isInteractive) {
-          e.preventDefault();
+        // 检查是否为交互元素或滚动容器
+        const isInteractive = e.target.matches(
+          'input, textarea, select, button, [role="button"], [tabindex], a, .mobile-optimized-slider'
+        );
+        
+        const isScrollable = e.target.closest(
+          '.overflow-y-auto, .overflow-auto, .chain-editor-scroll-container, [data-scrollable="true"]'
+        );
+        
+        // 只在非交互且非滚动元素上阻止长按
+        if (!isInteractive && !isScrollable) {
+          // 检查是否为垂直滑动手势
+          const touch = e.touches[0];
+          if (touch) {
+            // 记录初始触摸位置，用于后续判断
+            (e.target as any)._initialTouch = {
+              x: touch.clientX,
+              y: touch.clientY,
+              time: Date.now()
+            };
+            
+            // 延迟阻止，给滚动手势一个机会
+            setTimeout(() => {
+              const initialTouch = (e.target as any)._initialTouch;
+              if (initialTouch && Date.now() - initialTouch.time > 150) {
+                // 检查是否为静止状态或非滚动手势
+                if (Math.abs(touch.clientX - initialTouch.x) < 10 && 
+                    Math.abs(touch.clientY - initialTouch.y) < 10) {
+                  // 只在静止状态下阻止长按
+                  e.preventDefault();
+                }
+              }
+            }, 200);
+          }
         }
       }
     };
 
-    document.addEventListener('touchstart', preventLongPress, { passive: false });
+    document.addEventListener('touchstart', preventSelectiveLongPress, { passive: false });
 
     return () => {
       document.removeEventListener('touchend', preventZoom);
-      document.removeEventListener('touchstart', preventLongPress);
+      document.removeEventListener('touchstart', preventSelectiveLongPress);
     };
   }, []);
 };
