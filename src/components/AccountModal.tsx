@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, LogOut, AlertCircle } from 'lucide-react';
+import { X, User, LogOut, AlertCircle, Dices, Loader2 } from 'lucide-react';
 import { getCurrentUser, signOut } from '../lib/supabase';
 import { User as SupabaseUser } from '@supabase/supabase-js';
+import { UserSettingsService, GamblingSettings } from '../services/UserSettingsService';
 
 interface AccountModalProps {
   isOpen: boolean;
@@ -13,10 +14,21 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // 狂赌模式相关状态
+  const [gamblingSettings, setGamblingSettings] = useState<GamblingSettings>({
+    gambling_mode_enabled: false,
+    daily_bet_limit: null,
+    max_single_bet: null
+  });
+  const [gamblingLoading, setGamblingLoading] = useState(false);
+  const [gamblingError, setGamblingError] = useState<string | null>(null);
+  const [gamblingSuccess, setGamblingSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       loadUser();
+      loadGamblingSettings();
     }
   }, [isOpen]);
 
@@ -31,6 +43,47 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
       setError('获取用户信息失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 加载狂赌模式设置
+  const loadGamblingSettings = async () => {
+    try {
+      setGamblingError(null);
+      const settings = await UserSettingsService.getGamblingSettings();
+      setGamblingSettings(settings);
+    } catch (err) {
+      console.error('Failed to load gambling settings:', err);
+      setGamblingError('获取设置失败');
+    }
+  };
+
+  // 切换狂赌模式
+  const handleGamblingToggle = async () => {
+    setGamblingLoading(true);
+    setGamblingError(null);
+    setGamblingSuccess(null);
+    
+    try {
+      const result = await UserSettingsService.toggleGamblingMode();
+      
+      if (result.success) {
+        setGamblingSettings(prev => ({
+          ...prev,
+          gambling_mode_enabled: !prev.gambling_mode_enabled
+        }));
+        setGamblingSuccess(result.message);
+        
+        // 3秒后清除成功消息
+        setTimeout(() => setGamblingSuccess(null), 3000);
+      } else {
+        setGamblingError(result.message || '设置更新失败');
+      }
+    } catch (err) {
+      console.error('Failed to toggle gambling mode:', err);
+      setGamblingError(err instanceof Error ? err.message : '设置更新失败');
+    } finally {
+      setGamblingLoading(false);
     }
   };
 
@@ -140,6 +193,92 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
                     }
                   </span>
                 </div>
+              </div>
+
+              {/* 狂赌模式设置 */}
+              <div className="space-y-4 p-4 bg-gray-50 dark:bg-slate-700 rounded-2xl border border-gray-200 dark:border-slate-600">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
+                      <Dices className="text-white" size={16} />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-medium font-chinese text-gray-900 dark:text-slate-100">
+                        狂赌模式
+                      </h4>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">
+                        在任务上押注积分以获得额外奖励
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* 切换开关 */}
+                  <button
+                    onClick={handleGamblingToggle}
+                    disabled={gamblingLoading}
+                    className={`
+                      relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out
+                      ${gamblingSettings.gambling_mode_enabled 
+                        ? 'bg-gradient-to-r from-red-500 to-orange-500' 
+                        : 'bg-gray-300 dark:bg-slate-600'
+                      }
+                      ${gamblingLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                    `}
+                  >
+                    <span
+                      className={`
+                        inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out
+                        ${gamblingSettings.gambling_mode_enabled ? 'translate-x-6' : 'translate-x-1'}
+                      `}
+                    />
+                    {gamblingLoading && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Loader2 className="w-3 h-3 animate-spin text-white" />
+                      </div>
+                    )}
+                  </button>
+                </div>
+                
+                {/* 状态说明 */}
+                <div className="text-xs text-gray-600 dark:text-slate-400">
+                  {gamblingSettings.gambling_mode_enabled ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span>已启用 - 可在任务开始时进行押注</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                      <span>已禁用 - 无法进行任务押注</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 成功消息 */}
+                {gamblingSuccess && (
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+                    <p className="text-sm text-green-700 dark:text-green-300 font-medium">
+                      {gamblingSuccess}
+                    </p>
+                  </div>
+                )}
+
+                {/* 错误消息 */}
+                {gamblingError && (
+                  <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-red-700 dark:text-red-300">
+                        {gamblingError}
+                      </p>
+                      <button 
+                        onClick={() => setGamblingError(null)}
+                        className="text-red-400 hover:text-red-600 dark:hover:text-red-300"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Sign Out Button */}

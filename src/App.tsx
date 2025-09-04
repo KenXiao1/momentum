@@ -9,6 +9,9 @@ import { ChainDetail } from './components/ChainDetail';
 import { GroupView } from './components/GroupView';
 import { TaskGroupEditor } from './components/TaskGroupEditor';
 import { AuxiliaryJudgment } from './components/AuxiliaryJudgment';
+import { BettingModal } from './components/BettingModal';
+import { UserSettingsService } from './services/UserSettingsService';
+import { BetPlacementResult } from './services/BettingService';
 import { storage as localStorageUtils } from './utils/storage';
 import { supabaseStorage } from './utils/supabaseStorage';
 import { isSupabaseConfigured, isUserAuthenticated, waitForAuthentication } from './lib/supabase';
@@ -52,6 +55,11 @@ function App() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [recycleBinRefreshTrigger, setRecycleBinRefreshTrigger] = useState<number>(0);
+
+  // 押注相关状态
+  const [showBettingModal, setShowBettingModal] = useState(false);
+  const [pendingChainId, setPendingChainId] = useState<string | null>(null);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
   // Determine storage source immediately based on Supabase configuration
   const storage = isSupabaseConfigured ? supabaseStorage : localStorageUtils;
@@ -706,6 +714,27 @@ function App() {
   };
 
   const handleStartChain = async (chainId: string) => {
+    // 检查是否启用狂赌模式并且需要押注（仅在配置了Supabase时）
+    if (isSupabaseConfigured && !pendingChainId) { // 防止递归调用
+      try {
+        const isGamblingEnabled = await UserSettingsService.isGamblingModeEnabled();
+        if (isGamblingEnabled) {
+          // 生成会话ID（押注需要在会话创建之前完成）
+          const sessionId = `${chainId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          
+          // 保存待开始的链条ID和会话ID
+          setPendingChainId(chainId);
+          setCurrentSessionId(sessionId);
+          setShowBettingModal(true);
+          return; // 等待用户完成押注或取消
+        }
+      } catch (error) {
+        console.error('Failed to check gambling mode:', error);
+        // 如果检查失败，继续正常启动任务
+      }
+    }
+
+    // 原有的任务启动逻辑
     const chain = state.chains.find(c => c.id === chainId);
     if (!chain) return;
 
@@ -866,6 +895,29 @@ function App() {
         currentView: 'focus',
       };
     });
+  };
+
+  // 处理押注完成后的任务启动
+  const handleBetPlaced = async (betResult: BetPlacementResult) => {
+    console.log('Bet placed successfully:', betResult);
+    
+    if (pendingChainId) {
+      // 押注成功，继续启动任务
+      await handleStartChain(pendingChainId);
+    }
+    
+    // 清理临时状态
+    setPendingChainId(null);
+    setCurrentSessionId(null);
+    setShowBettingModal(false);
+  };
+
+  // 处理押注取消
+  const handleBetCancelled = () => {
+    // 清理临时状态，不启动任务
+    setPendingChainId(null);
+    setCurrentSessionId(null);
+    setShowBettingModal(false);
   };
 
   const handleCompleteSession = (description?: string, notes?: string) => {
@@ -1657,7 +1709,23 @@ function App() {
     }
   };
 
-  return renderContent();
+  return (
+    <>
+      {renderContent()}
+      
+      {/* Betting Modal */}
+      {showBettingModal && pendingChainId && currentSessionId && (
+        <BettingModal
+          isOpen={showBettingModal}
+          onClose={handleBetCancelled}
+          onBetPlaced={handleBetPlaced}
+          sessionId={currentSessionId}
+          chainName={state.chains.find(c => c.id === pendingChainId)?.name || 'Unknown Task'}
+          taskDuration={state.chains.find(c => c.id === pendingChainId)?.duration || 0}
+        />
+      )}
+    </>
+  );
 }
 
 export default App;
