@@ -249,12 +249,112 @@ export interface Database {
           allow_multiple_per_day?: boolean
         }
       }
+      user_points: {
+        Row: {
+          user_id: string
+          total_points: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          total_points?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          total_points?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      daily_checkins: {
+        Row: {
+          id: string
+          user_id: string
+          checkin_date: string
+          points_earned: number
+          consecutive_days: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          checkin_date?: string
+          points_earned?: number
+          consecutive_days?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          checkin_date?: string
+          points_earned?: number
+          consecutive_days?: number
+          created_at?: string
+        }
+      }
+      point_transactions: {
+        Row: {
+          id: string
+          user_id: string
+          transaction_type: string
+          points_change: number
+          points_before: number
+          points_after: number
+          description: string | null
+          reference_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          transaction_type: string
+          points_change: number
+          points_before: number
+          points_after: number
+          description?: string | null
+          reference_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          transaction_type?: string
+          points_change?: number
+          points_before?: number
+          points_after?: number
+          description?: string | null
+          reference_id?: string | null
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      perform_daily_checkin: {
+        Args: {
+          target_user_id: string
+        }
+        Returns: Json
+      }
+      get_user_checkin_stats: {
+        Args: {
+          target_user_id: string
+        }
+        Returns: Json
+      }
+      get_user_checkin_history: {
+        Args: {
+          target_user_id: string
+          page_size?: number
+          page_offset?: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

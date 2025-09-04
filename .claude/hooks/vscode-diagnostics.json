@@ -48,6 +48,51 @@
         }
       },
       {
+        "message": "找不到名称“chains”。你是否指的是“chai”?",
+        "severity": 0,
+        "level": "Error",
+        "source": "ts",
+        "code": 2552,
+        "start": {
+          "line": 336,
+          "character": 9
+        },
+        "end": {
+          "line": 336,
+          "character": 15
+        }
+      },
+      {
+        "message": "参数“chain”隐式具有“any”类型。",
+        "severity": 0,
+        "level": "Error",
+        "source": "ts",
+        "code": 7006,
+        "start": {
+          "line": 336,
+          "character": 20
+        },
+        "end": {
+          "line": 336,
+          "character": 25
+        }
+      },
+      {
+        "message": "找不到名称“groupId”。",
+        "severity": 0,
+        "level": "Error",
+        "source": "ts",
+        "code": 2304,
+        "start": {
+          "line": 337,
+          "character": 21
+        },
+        "end": {
+          "line": 337,
+          "character": 28
+        }
+      },
+      {
         "message": "检测到无法访问的代码。",
         "severity": 3,
         "level": "Hint",

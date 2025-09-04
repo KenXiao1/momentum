@@ -16,6 +16,8 @@ import { AccountModal } from './AccountModal';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { User } from 'lucide-react';
 import { PerformanceMonitor } from './PerformanceMonitor';
+import { DailyCheckin } from './DailyCheckin';
+import { DailyCheckinDemo } from './DailyCheckinDemo';
 
 interface DashboardProps {
   chains: Chain[];
@@ -184,6 +186,15 @@ export const Dashboard: React.FC<DashboardProps> = React.memo(({
             帮助你建立强大的习惯链条
           </p>
         </header>
+
+        {/* Daily Check-in Section */}
+        <div className="mb-12 animate-fade-in">
+          {isSupabaseConfigured ? (
+            <DailyCheckin className="max-w-2xl mx-auto" />
+          ) : (
+            <DailyCheckinDemo className="max-w-2xl mx-auto" />
+          )}
+        </div>
 
         {isLoading ? (
           <div className="text-center py-20 animate-slide-up">
