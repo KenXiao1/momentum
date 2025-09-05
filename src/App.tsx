@@ -1019,19 +1019,24 @@ function App() {
         console.error('完成任务时保存链条数据失败:', error);
       });
       storage.saveActiveSession(null);
-      storage.saveCompletionHistory(updatedHistory);
       
-      // 清理数据库中的session记录（如果有的话）
-      if (activeSessionId && isSupabaseConfigured) {
-        SessionService.deleteActiveSession(activeSessionId)
-          .then(() => {
-            console.log('任务完成，已删除数据库session记录:', activeSessionId);
-            setActiveSessionId(null);
-          })
-          .catch(error => {
-            console.error('删除完成任务的session记录失败:', error);
-          });
-      }
+      // 先保存完成历史到数据库（这会触发押注结算）
+      storage.saveCompletionHistory(updatedHistory).then(() => {
+        // 在押注结算完成后，延迟删除session记录
+        if (activeSessionId && isSupabaseConfigured) {
+          // 等待一段时间确保触发器处理完成，然后删除session记录
+          setTimeout(() => {
+            SessionService.deleteActiveSession(activeSessionId)
+              .then(() => {
+                console.log('任务完成，押注结算后已删除数据库session记录:', activeSessionId);
+                setActiveSessionId(null);
+              })
+              .catch(error => {
+                console.error('删除完成任务的session记录失败:', error);
+              });
+          }, 1000); // 等待1秒让触发器完成
+        }
+      });
       
       // 更新用时统计（仅对成功完成的任务）
       if (completionRecord.actualDuration) {
@@ -1095,19 +1100,24 @@ function App() {
         console.error('中断任务时保存链条数据失败:', error);
       });
       storage.saveActiveSession(null);
-      storage.saveCompletionHistory(updatedHistory);
-
-      // 清理数据库中的session记录（如果有的话）
-      if (activeSessionId && isSupabaseConfigured) {
-        SessionService.deleteActiveSession(activeSessionId)
-          .then(() => {
-            console.log('任务中断，已删除数据库session记录:', activeSessionId);
-            setActiveSessionId(null);
-          })
-          .catch(error => {
-            console.error('删除中断任务的session记录失败:', error);
-          });
-      }
+      
+      // 先保存完成历史到数据库（这会触发押注结算）
+      storage.saveCompletionHistory(updatedHistory).then(() => {
+        // 在押注结算完成后，延迟删除session记录
+        if (activeSessionId && isSupabaseConfigured) {
+          // 等待一段时间确保触发器处理完成，然后删除session记录
+          setTimeout(() => {
+            SessionService.deleteActiveSession(activeSessionId)
+              .then(() => {
+                console.log('任务中断，押注结算后已删除数据库session记录:', activeSessionId);
+                setActiveSessionId(null);
+              })
+              .catch(error => {
+                console.error('删除中断任务的session记录失败:', error);
+              });
+          }, 1000); // 等待1秒让触发器完成
+        }
+      });
 
       return {
         ...prev,
