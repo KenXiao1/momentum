@@ -26,6 +26,39 @@
   - Functions use SECURITY DEFINER for controlled access
 */
 
+-- Enable necessary extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Create audit logs table for security and compliance
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  action TEXT NOT NULL,
+  details JSONB DEFAULT '{}',
+  ip_address INET,
+  user_agent TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create indexes for audit logs performance
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id_created_at ON audit_logs (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs (action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs (created_at DESC);
+
+-- Enable RLS on audit logs
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for audit logs (users can only see their own logs)
+CREATE POLICY "Users can view own audit logs" ON audit_logs
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- Service role can insert audit logs
+CREATE POLICY "Service can insert audit logs" ON audit_logs
+  FOR INSERT WITH CHECK (true);
+
+-- Add comment
+COMMENT ON TABLE audit_logs IS 'Security audit trail for all gambling and sensitive operations';
+
 -- Create user_settings table for storing user preferences
 CREATE TABLE IF NOT EXISTS user_settings (
   user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -111,6 +144,11 @@ CREATE INDEX IF NOT EXISTS idx_task_bets_status ON task_bets(bet_status);
 CREATE INDEX IF NOT EXISTS idx_task_bets_user_created ON task_bets(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_task_bets_user_status ON task_bets(user_id, bet_status);
 CREATE INDEX IF NOT EXISTS idx_task_bets_settled_at ON task_bets(settled_at DESC) WHERE settled_at IS NOT NULL;
+
+-- Additional performance indexes for statistics and streak calculations  
+CREATE INDEX IF NOT EXISTS idx_task_bets_user_settled_status ON task_bets(user_id, settled_at DESC, bet_status) WHERE settled_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_task_bets_session_status_settled ON task_bets(session_id, bet_status, settled_at);
+CREATE INDEX IF NOT EXISTS idx_task_bets_session_pending ON task_bets(session_id) WHERE bet_status = 'pending';
 
 -- Function to place a bet on a task session
 CREATE OR REPLACE FUNCTION place_task_bet(
@@ -642,36 +680,90 @@ CREATE TRIGGER trigger_update_user_settings_timestamp
 CREATE OR REPLACE FUNCTION auto_settle_session_bets()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SECURITY DEFINER
 AS $$
 DECLARE
   bet_record record;
   settlement_result jsonb;
+  session_record record;
 BEGIN
   -- This trigger fires when completion_history is inserted
-  -- Find any pending bets for this session and settle them
+  -- First, find the specific session that just completed
+  SELECT * INTO session_record
+  FROM active_sessions 
+  WHERE chain_id = NEW.chain_id 
+    AND user_id = NEW.user_id
+    AND started_at = (
+      -- Get the most recent session for this user and chain
+      SELECT MAX(started_at) 
+      FROM active_sessions 
+      WHERE chain_id = NEW.chain_id AND user_id = NEW.user_id
+    );
   
-  FOR bet_record IN 
-    SELECT tb.id
-    FROM task_bets tb
-    INNER JOIN active_sessions asess ON tb.session_id = asess.id
-    WHERE tb.chain_id = NEW.chain_id 
-      AND tb.user_id = NEW.user_id
-      AND tb.bet_status = 'pending'
-      -- Additional safety: make sure the session ended recently
-      AND asess.started_at >= (NEW.completed_at - INTERVAL '24 hours')
-  LOOP
-    -- Settle the bet
-    SELECT settle_task_bet(
-      bet_record.id, 
-      NEW.was_successful,
-      CASE WHEN NEW.reason_for_failure IS NOT NULL 
-           THEN 'Task failed: ' || NEW.reason_for_failure 
-           ELSE 'Task completed successfully' END
-    ) INTO settlement_result;
-    
-    -- Log the settlement (optional, for debugging)
-    RAISE NOTICE 'Auto-settled bet % with result: %', bet_record.id, settlement_result;
-  END LOOP;
+  -- If we found the session, settle bets for this specific session
+  IF FOUND THEN
+    FOR bet_record IN 
+      SELECT tb.id, tb.user_id, tb.bet_amount
+      FROM task_bets tb
+      WHERE tb.session_id = session_record.id  -- 精确匹配session_id，避免竞态条件
+        AND tb.bet_status = 'pending'
+    LOOP
+      BEGIN
+        -- Settle the bet with proper error handling
+        SELECT settle_task_bet(
+          bet_record.id, 
+          NEW.was_successful,
+          CASE WHEN NEW.reason_for_failure IS NOT NULL 
+               THEN 'Task failed: ' || NEW.reason_for_failure 
+               ELSE 'Task completed successfully' END
+        ) INTO settlement_result;
+        
+        -- Create audit trail entry
+        INSERT INTO audit_logs (user_id, action, details, created_at)
+        VALUES (
+          bet_record.user_id,
+          'auto_bet_settlement',
+          jsonb_build_object(
+            'bet_id', bet_record.id,
+            'session_id', session_record.id,
+            'chain_id', NEW.chain_id,
+            'bet_amount', bet_record.bet_amount,
+            'task_success', NEW.was_successful,
+            'settlement_result', settlement_result,
+            'settlement_method', 'automatic_trigger'
+          ),
+          NOW()
+        );
+        
+        -- Log success for debugging
+        RAISE NOTICE 'Auto-settled bet % for session % with result: %', 
+          bet_record.id, session_record.id, settlement_result;
+          
+      EXCEPTION
+        WHEN OTHERS THEN
+          -- Log error but continue with other bets
+          INSERT INTO audit_logs (user_id, action, details, created_at)
+          VALUES (
+            bet_record.user_id,
+            'bet_settlement_error',
+            jsonb_build_object(
+              'bet_id', bet_record.id,
+              'session_id', session_record.id,
+              'error_message', SQLERRM,
+              'error_state', SQLSTATE,
+              'settlement_method', 'automatic_trigger'
+            ),
+            NOW()
+          );
+          
+          RAISE WARNING 'Failed to settle bet %: %', bet_record.id, SQLERRM;
+      END;
+    END LOOP;
+  ELSE
+    -- Log warning if no session found
+    RAISE WARNING 'No active session found for chain % user % when settling bets', 
+      NEW.chain_id, NEW.user_id;
+  END IF;
   
   RETURN NEW;
 END;
@@ -696,12 +788,18 @@ COMMENT ON FUNCTION get_user_betting_history(uuid, integer, integer) IS 'Returns
 GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON user_settings TO authenticated;
 GRANT SELECT, INSERT ON task_bets TO authenticated;
+GRANT SELECT ON audit_logs TO authenticated; -- Users can see their own audit logs via RLS
 GRANT EXECUTE ON FUNCTION place_task_bet(uuid, uuid, integer) TO authenticated;
 GRANT EXECUTE ON FUNCTION get_user_gambling_stats(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION get_user_betting_history(uuid, integer, integer) TO authenticated;
 
--- Note: settle_task_bet should only be called by system processes, not directly by users
--- GRANT EXECUTE ON FUNCTION settle_task_bet(uuid, boolean, text) TO authenticated;
+-- SECURITY: settle_task_bet is intentionally NOT granted to regular users
+-- This function runs with SECURITY DEFINER and includes proper authorization checks
+-- It should only be called by:
+-- 1. System triggers (automatic settlement)
+-- 2. Admin operations (manual intervention)
+-- 3. Service accounts (batch processing)
+-- Regular users cannot manually settle bets to prevent fraud and manipulation
 
 -- Log completion
 DO $$

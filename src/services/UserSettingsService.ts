@@ -32,7 +32,8 @@ export class UserSettingsService {
    */
   private static ensureSupabaseConfigured(): void {
     if (!isSupabaseConfigured || !supabase) {
-      throw new Error('Supabase not configured. Check your environment variables.');
+      console.warn('[UserSettingsService] Supabase not configured, operating in demo mode');
+      // Don't throw error, allow demo mode
     }
   }
 
@@ -44,6 +45,12 @@ export class UserSettingsService {
     try {
       console.log('[UserSettingsService] 获取用户设置...');
       this.ensureSupabaseConfigured();
+
+      // Demo mode: return null when Supabase is not configured
+      if (!isSupabaseConfigured || !supabase) {
+        console.log('[UserSettingsService] Demo mode: returning null settings');
+        return null;
+      }
 
       // 获取当前用户
       const user = await getCurrentUser();
@@ -87,6 +94,21 @@ export class UserSettingsService {
     try {
       console.log('[UserSettingsService] 创建默认用户设置...');
       this.ensureSupabaseConfigured();
+
+      // Demo mode: return mock default settings when Supabase is not configured
+      if (!isSupabaseConfigured || !supabase) {
+        console.log('[UserSettingsService] Demo mode: returning mock default settings');
+        const mockSettings: UserSettings = {
+          user_id: 'demo-user',
+          gambling_mode_enabled: false,
+          daily_bet_limit: null,
+          max_single_bet: null,
+          settings_data: {},
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        return mockSettings;
+      }
 
       // 获取当前用户
       const user = await getCurrentUser();

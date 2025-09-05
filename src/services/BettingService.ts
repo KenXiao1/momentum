@@ -379,6 +379,41 @@ export class BettingService {
   }
 
   /**
+   * 获取指定时间内的下注次数（用于速率限制）
+   * @param userId 用户ID
+   * @param timeWindowSeconds 时间窗口（秒）
+   * @returns Promise<number> 指定时间内的下注次数
+   */
+  static async getRecentBetsCount(userId: string, timeWindowSeconds: number): Promise<number> {
+    try {
+      console.log(`[BettingService] 获取用户 ${userId} 最近 ${timeWindowSeconds} 秒内的下注次数...`);
+      this.ensureSupabaseConfigured();
+
+      const timeThreshold = new Date(Date.now() - timeWindowSeconds * 1000).toISOString();
+      
+      const { data, error } = await supabase!
+        .from('task_bets')
+        .select('id', { count: 'exact' })
+        .eq('user_id', userId)
+        .gte('created_at', timeThreshold);
+
+      if (error) {
+        console.error('[BettingService] 获取最近下注次数失败:', error);
+        return 0;
+      }
+
+      const count = data?.length || 0;
+      console.log(`[BettingService] 用户 ${userId} 最近 ${timeWindowSeconds} 秒内下注次数: ${count}`);
+      
+      return count;
+
+    } catch (error) {
+      console.error('[BettingService] 获取最近下注次数过程中发生错误:', error);
+      return 0;
+    }
+  }
+
+  /**
    * 验证下注金额是否合法
    * @param betAmount 下注金额
    * @param sessionId 会话ID
@@ -390,90 +425,183 @@ export class BettingService {
     details?: any 
   }> {
     try {
-      console.log(`[BettingService] 验证下注金额 ${betAmount} 对会话 ${sessionId}`);
+      console.log(`[BettingService] 开始全面验证下注金额 ${betAmount} 对会话 ${sessionId}`);
 
-      // 基本验证
-      if (betAmount <= 0) {
+      // SECURITY: 基本输入验证和清理
+      const sanitizedBetAmount = Math.floor(Math.abs(betAmount)); // 确保为正整数
+      if (sanitizedBetAmount <= 0 || sanitizedBetAmount !== betAmount) {
         return {
           isValid: false,
-          reason: 'Bet amount must be greater than 0'
+          reason: 'Invalid bet amount: must be a positive integer'
         };
       }
 
-      // 检查用户可用积分
-      const availablePoints = await this.getUserAvailablePoints();
-      if (betAmount > availablePoints) {
+      // SECURITY: 最大单次下注限制（防止异常大额下注）
+      const MAX_SINGLE_BET = 10000; // 硬编码最大值作为安全边界
+      if (sanitizedBetAmount > MAX_SINGLE_BET) {
         return {
           isValid: false,
-          reason: 'Insufficient points for bet',
-          details: {
-            available_points: availablePoints,
-            required_points: betAmount
-          }
+          reason: `Bet amount exceeds absolute maximum limit (${MAX_SINGLE_BET})`,
+          details: { max_absolute_limit: MAX_SINGLE_BET }
         };
       }
 
-      // 检查是否可以下注（包括重复下注检查）
-      const eligibility = await this.canPlaceBet(sessionId);
-      if (!eligibility.canBet) {
-        return {
-          isValid: false,
-          reason: eligibility.reason,
-          details: eligibility.existingBet
-        };
-      }
-
-      // 获取用户设置以检查限制
+      // SECURITY: 用户认证验证
       const user = await getCurrentUser();
       if (!user) {
         return {
           isValid: false,
-          reason: 'User not authenticated'
+          reason: 'User authentication required'
         };
       }
 
-      const { data: settings } = await supabase!
-        .from('user_settings')
-        .select('max_single_bet, daily_bet_limit')
+      // SECURITY: 速率限制检查（防止快速连续下注攻击）
+      const recentBetsCount = await this.getRecentBetsCount(user.id, 60); // 最近1分钟
+      if (recentBetsCount >= 10) { // 每分钟最多10次下注
+        return {
+          isValid: false,
+          reason: 'Rate limit exceeded: too many bets in short time',
+          details: { rate_limit: '10 bets per minute' }
+        };
+      }
+
+      // SECURITY: 服务器端余额验证（关键安全检查）
+      const { data: balanceData } = await supabase!
+        .from('user_points')
+        .select('total_points')
         .eq('user_id', user.id)
         .single();
 
-      // 检查单次下注限制
-      if (settings?.max_single_bet && betAmount > settings.max_single_bet) {
+      const serverBalance = balanceData?.total_points || 0;
+      if (sanitizedBetAmount > serverBalance) {
         return {
           isValid: false,
-          reason: 'Bet amount exceeds maximum single bet limit',
+          reason: 'Insufficient balance verified on server',
           details: {
-            max_bet: settings.max_single_bet
+            server_balance: serverBalance,
+            requested_amount: sanitizedBetAmount
           }
         };
       }
 
-      // 检查日限制
+      // SECURITY: 检查是否为有效会话（防止伪造会话ID）
+      const { data: sessionExists } = await supabase!
+        .from('active_sessions')
+        .select('id, user_id')
+        .eq('id', sessionId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (!sessionExists) {
+        return {
+          isValid: false,
+          reason: 'Invalid or unauthorized session'
+        };
+      }
+
+      // SECURITY: 检查重复下注（防止同一会话多次下注）
+      const { data: existingBet } = await supabase!
+        .from('task_bets')
+        .select('id, bet_amount')
+        .eq('user_id', user.id)
+        .eq('session_id', sessionId)
+        .single();
+
+      if (existingBet) {
+        return {
+          isValid: false,
+          reason: 'Bet already exists for this session',
+          details: {
+            existing_bet_id: existingBet.id,
+            existing_amount: existingBet.bet_amount
+          }
+        };
+      }
+
+      // SECURITY: 获取用户设置验证权限和限制
+      const { data: settings, error: settingsError } = await supabase!
+        .from('user_settings')
+        .select('gambling_mode_enabled, max_single_bet, daily_bet_limit')
+        .eq('user_id', user.id)
+        .single();
+
+      if (settingsError && settingsError.code !== 'PGRST116') {
+        return {
+          isValid: false,
+          reason: 'Unable to verify user gambling settings'
+        };
+      }
+
+      // SECURITY: 验证狂赌模式已启用
+      if (!settings?.gambling_mode_enabled) {
+        return {
+          isValid: false,
+          reason: 'Gambling mode is not enabled for this user'
+        };
+      }
+
+      // SECURITY: 单次下注限制验证
+      if (settings?.max_single_bet && sanitizedBetAmount > settings.max_single_bet) {
+        return {
+          isValid: false,
+          reason: 'Bet amount exceeds user maximum single bet limit',
+          details: {
+            user_max_bet: settings.max_single_bet,
+            requested_amount: sanitizedBetAmount
+          }
+        };
+      }
+
+      // SECURITY: 每日限制验证（关键防欺诈检查）
       if (settings?.daily_bet_limit) {
-        const todayBetAmount = await this.getTodayBetAmount();
-        if (todayBetAmount + betAmount > settings.daily_bet_limit) {
+        const { data: dailyTotal } = await supabase!
+          .from('task_bets')
+          .select('bet_amount')
+          .eq('user_id', user.id)
+          .gte('created_at', new Date().toISOString().split('T')[0] + 'T00:00:00Z')
+          .neq('bet_status', 'cancelled')
+          .neq('bet_status', 'refunded');
+
+        const todaySpent = dailyTotal?.reduce((sum, bet) => sum + bet.bet_amount, 0) || 0;
+        
+        if (todaySpent + sanitizedBetAmount > settings.daily_bet_limit) {
           return {
             isValid: false,
             reason: 'Daily betting limit would be exceeded',
             details: {
               daily_limit: settings.daily_bet_limit,
-              daily_spent: todayBetAmount
+              daily_spent: todaySpent,
+              requested_amount: sanitizedBetAmount
             }
           };
         }
       }
 
-      console.log('[BettingService] 下注金额验证通过');
+      console.log('[BettingService] 全面验证通过 - 所有安全检查都已完成');
       return {
-        isValid: true
+        isValid: true,
+        details: {
+          validated_amount: sanitizedBetAmount,
+          server_balance: serverBalance,
+          security_checks_passed: [
+            'input_sanitization',
+            'authentication',
+            'rate_limiting',
+            'balance_verification',
+            'session_validation',
+            'duplicate_prevention',
+            'gambling_permission',
+            'amount_limits',
+            'daily_limits'
+          ]
+        }
       };
 
     } catch (error) {
-      console.error('[BettingService] 验证下注金额时发生错误:', error);
+      console.error('[BettingService] 验证过程中发生安全错误:', error);
       return {
         isValid: false,
-        reason: 'Error validating bet amount'
+        reason: 'Security validation failed'
       };
     }
   }

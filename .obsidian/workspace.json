@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "for-beginners.md",
+                "file": "README.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "for-beginners"
+              "title": "README"
             }
           }
         ]
@@ -78,8 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "e5cc40cbc44f62fa",
@@ -171,5 +170,7 @@
     }
   },
   "active": "2a91c94ea7947b7a",
-  "lastOpenFiles": []
+  "lastOpenFiles": [
+    "for-beginners.md"
+  ]
 }
