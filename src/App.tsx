@@ -12,6 +12,7 @@ import { AuxiliaryJudgment } from './components/AuxiliaryJudgment';
 import { BettingModal } from './components/BettingModal';
 import { UserSettingsService } from './services/UserSettingsService';
 import { BetPlacementResult } from './services/BettingService';
+import { SessionService } from './services/SessionService';
 import { storage as localStorageUtils } from './utils/storage';
 import { supabaseStorage } from './utils/supabaseStorage';
 import { isSupabaseConfigured, isUserAuthenticated, waitForAuthentication } from './lib/supabase';
@@ -60,6 +61,7 @@ function App() {
   const [showBettingModal, setShowBettingModal] = useState(false);
   const [pendingChainId, setPendingChainId] = useState<string | null>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null); // 跟踪数据库中的活动session UUID
 
   // Determine storage source immediately based on Supabase configuration
   const storage = isSupabaseConfigured ? supabaseStorage : localStorageUtils;
@@ -719,8 +721,12 @@ function App() {
       try {
         const isGamblingEnabled = await UserSettingsService.isGamblingModeEnabled();
         if (isGamblingEnabled) {
-          // 生成会话ID（押注需要在会话创建之前完成）
-          const sessionId = `${chainId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          // 获取链条信息以获得任务持续时间
+          const chain = state.chains.find(c => c.id === chainId);
+          if (!chain) return;
+          
+          // 在数据库中创建真正的会话记录，获取UUID
+          const sessionId = await SessionService.createActiveSession(chainId, chain.duration);
           
           // 保存待开始的链条ID和会话ID
           setPendingChainId(chainId);
@@ -902,6 +908,9 @@ function App() {
     console.log('Bet placed successfully:', betResult);
     
     if (pendingChainId) {
+      // 保存数据库session ID，用于后续清理
+      setActiveSessionId(currentSessionId);
+      
       // 押注成功，继续启动任务
       await handleStartChain(pendingChainId);
     }
@@ -913,10 +922,22 @@ function App() {
   };
 
   // 处理押注取消
-  const handleBetCancelled = () => {
+  const handleBetCancelled = async () => {
+    // 如果有创建的会话记录，需要删除它
+    if (currentSessionId && isSupabaseConfigured) {
+      try {
+        await SessionService.deleteActiveSession(currentSessionId);
+        console.log('已删除取消的会话记录:', currentSessionId);
+      } catch (error) {
+        console.error('删除取消的会话记录失败:', error);
+        // 继续清理状态，即使删除失败
+      }
+    }
+    
     // 清理临时状态，不启动任务
     setPendingChainId(null);
     setCurrentSessionId(null);
+    setActiveSessionId(null);
     setShowBettingModal(false);
   };
 
@@ -1000,6 +1021,18 @@ function App() {
       storage.saveActiveSession(null);
       storage.saveCompletionHistory(updatedHistory);
       
+      // 清理数据库中的session记录（如果有的话）
+      if (activeSessionId && isSupabaseConfigured) {
+        SessionService.deleteActiveSession(activeSessionId)
+          .then(() => {
+            console.log('任务完成，已删除数据库session记录:', activeSessionId);
+            setActiveSessionId(null);
+          })
+          .catch(error => {
+            console.error('删除完成任务的session记录失败:', error);
+          });
+      }
+      
       // 更新用时统计（仅对成功完成的任务）
       if (completionRecord.actualDuration) {
         storage.updateTaskTimeStats(chain.id, completionRecord.actualDuration);
@@ -1063,6 +1096,18 @@ function App() {
       });
       storage.saveActiveSession(null);
       storage.saveCompletionHistory(updatedHistory);
+
+      // 清理数据库中的session记录（如果有的话）
+      if (activeSessionId && isSupabaseConfigured) {
+        SessionService.deleteActiveSession(activeSessionId)
+          .then(() => {
+            console.log('任务中断，已删除数据库session记录:', activeSessionId);
+            setActiveSessionId(null);
+          })
+          .catch(error => {
+            console.error('删除中断任务的session记录失败:', error);
+          });
+      }
 
       return {
         ...prev,
