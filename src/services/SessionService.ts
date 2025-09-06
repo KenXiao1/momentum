@@ -240,6 +240,49 @@ export class SessionService {
   }
 
   /**
+   * 完成任务并处理押注
+   * @param sessionId 会话ID
+   * @param wasSuccessful 任务是否成功完成
+   * @param completionNotes 完成备注
+   * @returns Promise<any> 完成结果
+   */
+  static async completeTaskWithBetting(
+    sessionId: string,
+    wasSuccessful: boolean = true,
+    completionNotes?: string
+  ): Promise<any> {
+    try {
+      console.log('[SessionService] 完成任务并处理押注...', { sessionId, wasSuccessful, completionNotes });
+      this.ensureSupabaseConfigured();
+
+      // 获取当前用户
+      const user = await getCurrentUser();
+      if (!user) {
+        throw new Error('User not authenticated.');
+      }
+
+      // 调用数据库函数来完成任务并结算押注
+      const { data, error } = await supabase!.rpc('complete_task_with_betting', {
+        p_session_id: sessionId,
+        p_was_successful: wasSuccessful,
+        p_completion_notes: completionNotes || null
+      });
+
+      if (error) {
+        console.error('[SessionService] 完成任务失败:', error);
+        throw new Error(`Failed to complete task: ${error.message}`);
+      }
+
+      console.log('[SessionService] 任务完成和押注处理成功:', data);
+      return data;
+
+    } catch (error) {
+      console.error('[SessionService] 完成任务过程中发生错误:', error);
+      throw error;
+    }
+  }
+
+  /**
    * 清理过期的会话记录（可选的维护功能）
    * @param olderThanHours 清理多少小时前的会话，默认24小时
    * @returns Promise<number> 清理的会话数量

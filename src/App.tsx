@@ -923,11 +923,12 @@ function App() {
 
   // 处理押注取消
   const handleBetCancelled = async () => {
-    // 如果有创建的会话记录，需要删除它
+    // 如果有创建的会话记录，删除它将触发押注退款（通过数据库触发器）
     if (currentSessionId && isSupabaseConfigured) {
       try {
+        // 直接删除会话，数据库触发器会自动将押注退款给用户
         await SessionService.deleteActiveSession(currentSessionId);
-        console.log('已删除取消的会话记录:', currentSessionId);
+        console.log('已删除取消的会话记录，押注已通过触发器退款:', currentSessionId);
       } catch (error) {
         console.error('删除取消的会话记录失败:', error);
         // 继续清理状态，即使删除失败
@@ -1020,23 +1021,24 @@ function App() {
       });
       storage.saveActiveSession(null);
       
-      // 先保存完成历史到数据库（这会触发押注结算）
-      storage.saveCompletionHistory(updatedHistory).then(() => {
-        // 在押注结算完成后，延迟删除session记录
-        if (activeSessionId && isSupabaseConfigured) {
-          // 等待一段时间确保触发器处理完成，然后删除session记录
-          setTimeout(() => {
-            SessionService.deleteActiveSession(activeSessionId)
-              .then(() => {
-                console.log('任务完成，押注结算后已删除数据库session记录:', activeSessionId);
-                setActiveSessionId(null);
-              })
-              .catch(error => {
-                console.error('删除完成任务的session记录失败:', error);
-              });
-          }, 1000); // 等待1秒让触发器完成
-        }
-      });
+      // 使用新的完成任务方法来处理押注结算和会话结束
+      if (activeSessionId && isSupabaseConfigured) {
+        SessionService.completeTaskWithBetting(
+          activeSessionId,
+          true, // 任务成功完成
+          '任务完成'
+        ).then((result) => {
+          console.log('任务完成和押注结算成功:', result);
+          setActiveSessionId(null);
+        }).catch(error => {
+          console.error('完成任务和押注结算失败:', error);
+          // 如果新方法失败，仍然保存历史记录作为fallback
+          storage.saveCompletionHistory(updatedHistory);
+        });
+      } else {
+        // 如果没有活动会话或未配置Supabase，直接保存历史记录
+        storage.saveCompletionHistory(updatedHistory);
+      }
       
       // 更新用时统计（仅对成功完成的任务）
       if (completionRecord.actualDuration) {
@@ -1101,23 +1103,24 @@ function App() {
       });
       storage.saveActiveSession(null);
       
-      // 先保存完成历史到数据库（这会触发押注结算）
-      storage.saveCompletionHistory(updatedHistory).then(() => {
-        // 在押注结算完成后，延迟删除session记录
-        if (activeSessionId && isSupabaseConfigured) {
-          // 等待一段时间确保触发器处理完成，然后删除session记录
-          setTimeout(() => {
-            SessionService.deleteActiveSession(activeSessionId)
-              .then(() => {
-                console.log('任务中断，押注结算后已删除数据库session记录:', activeSessionId);
-                setActiveSessionId(null);
-              })
-              .catch(error => {
-                console.error('删除中断任务的session记录失败:', error);
-              });
-          }, 1000); // 等待1秒让触发器完成
-        }
-      });
+      // 使用新的完成任务方法来处理押注结算和会话结束（任务失败）
+      if (activeSessionId && isSupabaseConfigured) {
+        SessionService.completeTaskWithBetting(
+          activeSessionId,
+          false, // 任务失败/中断
+          '任务中断或失败'
+        ).then((result) => {
+          console.log('任务中断/失败和押注结算成功:', result);
+          setActiveSessionId(null);
+        }).catch(error => {
+          console.error('中断任务和押注结算失败:', error);
+          // 如果新方法失败，仍然保存历史记录作为fallback
+          storage.saveCompletionHistory(updatedHistory);
+        });
+      } else {
+        // 如果没有活动会话或未配置Supabase，直接保存历史记录
+        storage.saveCompletionHistory(updatedHistory);
+      }
 
       return {
         ...prev,
