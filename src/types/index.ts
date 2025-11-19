@@ -80,3 +80,89 @@ export interface AppState {
   viewingChainId: string | null;
   completionHistory: CompletionHistory[];
 }
+
+// Minimal RSIP types (added to satisfy components importing RSIPNode/RSIPTreeNode/RSIPMeta)
+export type RSIPNode = {
+  id: string;
+  parentId?: string;
+  title: string;
+  rule: string;
+  sortOrder: number;
+  createdAt: Date;
+  useTimer?: boolean;
+  timerMinutes?: number;
+  // allow small, opt-in metadata used by RSIPView (type/emoji)
+  type?: string;
+  emoji?: string;
+};
+
+export interface RSIPTreeNode extends RSIPNode {
+  children: RSIPTreeNode[];
+  depth: number;
+}
+
+export interface RSIPMeta {
+  allowMultiplePerDay?: boolean;
+  lastAddedAt?: Date | string;
+  // persisted custom type presets
+  typePresets?: Array<{ type: string; emoji: string }>;
+}
+
+// Exception rule types used across services (enum-like)
+export enum ExceptionRuleType {
+  PAUSE_ONLY = 'PAUSE_ONLY',
+  EARLY_COMPLETION_ONLY = 'EARLY_COMPLETION_ONLY',
+}
+
+export interface ExceptionRule {
+  id: string;
+  type: ExceptionRuleType | string;
+  name: string;
+  isActive?: boolean;
+  usageCount?: number;
+  lastUsedAt?: Date | null;
+  createdAt?: Date;
+  message?: string;
+}
+
+// Error codes used by exception services
+export enum ExceptionRuleError {
+  RULE_NOT_FOUND = 'RULE_NOT_FOUND',
+  INVALID_RULE_TYPE = 'INVALID_RULE_TYPE',
+  RULE_TYPE_MISMATCH = 'RULE_TYPE_MISMATCH',
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+}
+
+// Lightweight enhanced exception with chainable helpers used in services/tests
+export class EnhancedExceptionRuleException extends Error {
+  public code?: ExceptionRuleError;
+  public detail?: string;
+  public meta?: any;
+  public suggestions: string[] = [];
+
+  constructor(message?: string) {
+    super(message);
+    this.name = 'EnhancedExceptionRuleException';
+  }
+
+  static createUserFriendly(code: ExceptionRuleError, userMessage?: string, detail?: string, meta?: any) {
+    const e = new EnhancedExceptionRuleException(userMessage || String(code));
+    e.code = code;
+    e.detail = detail;
+    e.meta = meta;
+    return e;
+  }
+
+  addSuggestedAction(action: string) {
+    this.suggestions.push(action);
+    return this;
+  }
+}
+
+// Backwards-compatible lightweight exception class for places that import ExceptionRuleException
+export class ExceptionRuleException extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = 'ExceptionRuleException';
+  }
+}
