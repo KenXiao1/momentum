@@ -1,7 +1,7 @@
 import React from 'react';
 import { Chain, CompletionHistory } from '../types';
 import { ArrowLeft, Flame, CheckCircle, XCircle, Calendar, Clock, AlertCircle, Trash2, Edit } from 'lucide-react';
-import { formatTime, formatActualDuration } from '../utils/time';
+import { formatTime } from '../utils/time';
 
 interface ChainDetailProps {
   chain: Chain;
@@ -217,78 +217,37 @@ export const ChainDetail: React.FC<ChainDetailProps> = ({
               ) : (
                 <div className="space-y-4">
                   {recentHistory.map((record, index) => (
-                    <div key={index} className="bg-gray-50 dark:bg-slate-700/50 rounded-2xl p-6 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors duration-200">
-                      {/* Main record info */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center space-x-4">
-                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                            record.wasSuccessful 
-                              ? 'bg-green-500/10 text-green-500' 
-                              : 'bg-red-500/10 text-red-500'
-                          }`}>
-                            {record.wasSuccessful ? (
-                              <CheckCircle size={24} />
-                            ) : (
-                              <XCircle size={24} />
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-[#161615] dark:text-slate-100 font-medium font-chinese text-lg">
-                              {record.wasSuccessful ? '任务完成' : '任务失败'}
-                            </p>
-                            {!record.wasSuccessful && record.reasonForFailure && (
-                              <p className="text-red-500 dark:text-red-400 text-sm font-chinese mt-1">{record.reasonForFailure}</p>
-                            )}
-                          </div>
+                    <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-slate-700/50 rounded-2xl p-6 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors duration-200">
+                      <div className="flex items-center space-x-4">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                          record.wasSuccessful 
+                            ? 'bg-green-500/10 text-green-500' 
+                            : 'bg-red-500/10 text-red-500'
+                        }`}>
+                          {record.wasSuccessful ? (
+                            <CheckCircle size={24} />
+                          ) : (
+                            <XCircle size={24} />
+                          )}
                         </div>
-                        <div className="text-right">
-                          <p className="text-gray-500 dark:text-slate-400 text-sm font-mono mb-1">
-                            {record.completedAt.toLocaleDateString('zh-CN')}
+                        <div>
+                          <p className="text-[#161615] dark:text-slate-100 font-medium font-chinese text-lg">
+                            {record.wasSuccessful ? '任务完成' : '任务失败'}
                           </p>
-                          <div className="flex items-center space-x-2 text-gray-400 dark:text-slate-500 text-sm">
-                            <Clock size={14} />
-                            <span className="font-mono">
-                              {record.actualDuration 
-                                ? formatActualDuration(record.actualDuration, record.isForwardTimed)
-                                : formatTime(record.duration)
-                              }
-                            </span>
-                          </div>
+                          {!record.wasSuccessful && record.reasonForFailure && (
+                            <p className="text-red-500 dark:text-red-400 text-sm font-chinese mt-1">{record.reasonForFailure}</p>
+                          )}
                         </div>
                       </div>
-                      
-                      {/* Task description and notes */}
-                      {(record.description || record.notes) && (
-                        <div className="space-y-3">
-                          {record.description && (
-                            <div className="bg-white dark:bg-slate-600/30 rounded-xl p-4 border border-gray-200/50 dark:border-slate-500/30">
-                              <div className="flex items-center space-x-2 mb-2">
-                                <div className="w-6 h-6 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center">
-                                  <i className="fas fa-tasks text-blue-500 text-xs"></i>
-                                </div>
-                                <span className="text-xs font-medium text-blue-600 dark:text-blue-400 font-chinese">任务描述</span>
-                              </div>
-                              <p className="text-gray-700 dark:text-slate-200 text-sm font-chinese leading-relaxed">
-                                {record.description}
-                              </p>
-                            </div>
-                          )}
-                          
-                          {record.notes && (
-                            <div className="bg-white dark:bg-slate-600/30 rounded-xl p-4 border border-gray-200/50 dark:border-slate-500/30">
-                              <div className="flex items-center space-x-2 mb-2">
-                                <div className="w-6 h-6 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center">
-                                  <i className="fas fa-sticky-note text-amber-500 text-xs"></i>
-                                </div>
-                                <span className="text-xs font-medium text-amber-600 dark:text-amber-400 font-chinese">备注</span>
-                              </div>
-                              <p className="text-gray-700 dark:text-slate-200 text-sm font-chinese leading-relaxed">
-                                {record.notes}
-                              </p>
-                            </div>
-                          )}
+                      <div className="text-right">
+                        <p className="text-gray-500 dark:text-slate-400 text-sm font-mono mb-1">
+                          {record.completedAt.toLocaleDateString('zh-CN')}
+                        </p>
+                        <div className="flex items-center space-x-2 text-gray-400 dark:text-slate-500 text-sm">
+                          <Clock size={14} />
+                          <span className="font-mono">{formatTime(record.duration)}</span>
                         </div>
-                      )}
+                      </div>
                     </div>
                   ))}
                 </div>

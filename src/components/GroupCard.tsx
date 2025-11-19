@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState } from 'react';
 import { ChainTreeNode, ScheduledSession } from '../types';
-import { Play, Users } from 'lucide-react';
-import { getTimeRemaining, formatDuration } from '../utils/time';
-import { getGroupProgress, getChainTypeConfig, getNextUnitInGroup } from '../utils/chainTree';
+import { Play, Clock, Users } from 'lucide-react';
+import { formatTime, getTimeRemaining, formatDuration } from '../utils/time';
+import { getGroupProgress, getChainTypeConfig } from '../utils/chainTree';
 import { notificationManager } from '../utils/notifications';
 
 interface GroupCardProps {
@@ -12,19 +12,16 @@ interface GroupCardProps {
   onScheduleChain: (chainId: string) => void;
   onViewDetail: (chainId: string) => void;
   onCancelScheduledSession?: (chainId: string) => void;
-  onCompleteBooking?: (chainId: string) => void;
   onDelete: (chainId: string) => void;
 }
 
-// Performance optimized GroupCard component with React.memo
-export const GroupCard: React.FC<GroupCardProps> = React.memo(({
+export const GroupCard: React.FC<GroupCardProps> = ({
   group,
   scheduledSession,
   onStartChain,
   onScheduleChain,
   onViewDetail,
   onCancelScheduledSession,
-  onCompleteBooking,
   onDelete,
 }) => {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
@@ -32,11 +29,9 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(({
   const [showMenu, setShowMenu] = useState(false);
   const [hasShownWarning, setHasShownWarning] = useState(false);
 
-  // Memoize expensive calculations to prevent recalculation on every render
-  const progress = useMemo(() => getGroupProgress(group), [group]);
-  const nextUnit = useMemo(() => getNextUnitInGroup(group), [group]);
-  const typeConfig = useMemo(() => getChainTypeConfig(group.type), [group.type]);
-  const isScheduled = useMemo(() => !!scheduledSession && timeRemaining > 0, [scheduledSession, timeRemaining]);
+  const progress = getGroupProgress(group);
+  const typeConfig = getChainTypeConfig(group.type);
+  const isScheduled = scheduledSession && timeRemaining > 0;
 
   // 计算通知时机
   const getNotificationThreshold = (durationMinutes: number) => {
@@ -47,9 +42,7 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(({
   React.useEffect(() => {
     if (!scheduledSession) return;
 
-    // 预约应以“下一个单元”的设置为准
-    const durationForWarning = nextUnit ? nextUnit.auxiliaryDuration : group.auxiliaryDuration;
-    const notificationThreshold = getNotificationThreshold(durationForWarning);
+    const notificationThreshold = getNotificationThreshold(group.auxiliaryDuration);
 
     const updateTimer = () => {
       const remaining = getTimeRemaining(scheduledSession.expiresAt);
@@ -74,7 +67,7 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(({
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [scheduledSession, hasShownWarning, group.name, group.auxiliaryDuration, nextUnit]);
+  }, [scheduledSession, hasShownWarning, group.name, group.auxiliaryDuration]);
 
   // 重置警告状态当预约会话改变时
   React.useEffect(() => {
@@ -136,23 +129,12 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(({
               <div className={`w-10 h-10 rounded-2xl ${typeConfig.bgColor} flex items-center justify-center`}>
                 <i className={`${typeConfig.icon} ${typeConfig.color} text-lg`}></i>
               </div>
-              <div className="flex-1">
-                <div className="flex items-center space-x-3">
-                  <h3 className="text-2xl font-bold font-chinese text-gray-900 dark:text-slate-100 group-hover:text-primary-500 transition-colors">
-                    {group.name}
-                  </h3>
-                  {/* Cycle Counter Badge */}
-                  {group.totalCompletions > 0 && (
-                    <div className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-lg text-sm font-bold">
-                      #{group.totalCompletions}轮
-                    </div>
-                  )}
-                </div>
+              <div>
+                <h3 className="text-2xl font-bold font-chinese text-gray-900 dark:text-slate-100 group-hover:text-primary-500 transition-colors">
+                  {group.name}
+                </h3>
                 <p className="text-xs font-mono text-gray-500 tracking-wide uppercase">
                   {typeConfig.name}
-                  {group.totalCompletions > 0 && (
-                    <span className="ml-2 text-amber-600 dark:text-amber-400">• 第{group.totalCompletions + 1}轮进行中</span>
-                  )}
                 </p>
               </div>
             </div>
@@ -191,11 +173,6 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(({
             <div className="flex items-center justify-center space-x-2 text-primary-500 mb-2">
               <i className="fas fa-fire text-lg"></i>
               <span className="text-2xl font-bold font-mono">#{group.currentStreak}</span>
-              {(group.groupRepeatCount && group.groupRepeatCount > 1) && (
-                <span className="text-sm text-gray-500 dark:text-slate-400 font-mono">
-                  ×{group.groupRepeatCount}
-                </span>
-              )}
             </div>
             <div className="text-xs font-chinese text-gray-600 dark:text-slate-400 font-medium">群组记录</div>
           </div>
@@ -205,49 +182,31 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(({
         {isScheduled && (
           <div className="bg-gradient-to-r from-blue-500/10 to-blue-600/5 dark:from-blue-500/20 dark:to-blue-600/10 rounded-2xl p-4 mb-6 border border-blue-200/50 dark:border-blue-400/30">
             <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-2 text-blue-600">
+              <div className="flex items-center space-x-2 text-blue-600">
                 <i className="fas fa-bell text-sm"></i>
-              <span className="text-sm font-chinese font-medium">预约信号: {scheduledSession.auxiliarySignal}</span>
+                <span className="text-sm font-chinese font-medium">预约信号: {scheduledSession.auxiliarySignal}</span>
               </div>
               <div className="text-blue-700 dark:text-blue-400 font-mono font-bold text-lg">
                 {formatDuration(timeRemaining)}
               </div>
             </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // 对于任务群，完成预约使用实际的预约会话ID
-                  if (scheduledSession) {
-                    onCompleteBooking?.(scheduledSession.chainId);
-                  }
-                }}
-                className="flex-1 bg-green-500/10 hover:bg-green-500/20 dark:bg-green-500/20 dark:hover:bg-green-500/30 text-green-600 dark:text-green-400 px-3 py-3 rounded-xl text-sm transition-colors duration-200 flex items-center justify-center space-x-2 border border-green-200/50 dark:border-green-400/30"
-              >
-                <i className="fas fa-check"></i>
-                <span className="font-chinese font-medium">完成预约</span>
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // 取消的是具体已预约的单元
-                  if (scheduledSession) {
-                    onCancelScheduledSession?.(scheduledSession.chainId);
-                  }
-                }}
-                className="flex-1 bg-red-500/10 hover:bg-red-500/20 dark:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 px-3 py-3 rounded-xl text-sm transition-colors duration-200 flex items-center justify-center space-x-2 border border-red-200/50 dark:border-red-400/30"
-              >
-                <i className="fas fa-exclamation-triangle"></i>
-                <span className="font-chinese font-medium">中断/规则判定</span>
-              </button>
-            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCancelScheduledSession?.(group.id);
+              }}
+              className="w-full bg-red-500/10 hover:bg-red-500/20 dark:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 px-3 py-3 rounded-xl text-sm transition-colors duration-200 flex items-center justify-center space-x-2 border border-red-200/50 dark:border-red-400/30"
+            >
+              <i className="fas fa-exclamation-triangle"></i>
+              <span className="font-chinese font-medium">中断/规则判定</span>
+            </button>
           </div>
         )}
 
         {/* Action buttons */}
         <div className="flex space-x-3" onClick={(e) => e.stopPropagation()}>
           <button
-            onClick={() => onStartChain(nextUnit ? nextUnit.id : group.id)}
+            onClick={() => onStartChain(group.id)}
             className="flex-1 gradient-primary hover:shadow-xl text-white px-4 py-3 rounded-2xl font-medium transition-all duration-300 flex items-center justify-center space-x-2 hover:scale-105 shadow-lg"
           >
             <Play size={16} />
@@ -256,7 +215,7 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(({
           
           {!isScheduled && (
             <button
-              onClick={() => onScheduleChain(nextUnit ? nextUnit.id : group.id)}
+              onClick={() => onScheduleChain(group.id)}
               className="flex-1 gradient-dark hover:shadow-xl text-white px-4 py-3 rounded-2xl font-medium transition-all duration-300 flex items-center justify-center space-x-2 hover:scale-105 shadow-lg"
             >
               <i className="fas fa-clock"></i>
@@ -287,7 +246,7 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(({
                 </p>
               </div>
               <div className="space-y-2 max-h-32 overflow-y-auto">
-                {group.children.map((child) => (
+                {group.children.map((child, index) => (
                   <div key={child.id} className="text-red-600 dark:text-red-400 text-sm flex items-center space-x-2">
                     <i className="fas fa-minus text-xs"></i>
                     <span className="font-chinese">{child.name}</span>
@@ -316,7 +275,4 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(({
       )}
     </div>
   );
-});
-
-// Add display name for better debugging
-GroupCard.displayName = 'GroupCard';
+};

@@ -1,6 +1,0 @@
-export const Dashboard: React.FC<DashboardProps> = React.memo(({
-  chains,
-  scheduledSessions,
-  isLoading = false,
-  onCreateChain,
-  onCreateTaskGroup,

@@ -7,7 +7,7 @@ import { formatTime } from '../utils/time';
 interface ImportUnitsModalProps {
   availableUnits: ChainTreeNode[];
   groupId: string;
-  onImport: (unitIds: string[], groupId: string, mode?: 'move' | 'copy') => void;
+  onImport: (unitIds: string[], groupId: string) => void;
   onClose: () => void;
 }
 

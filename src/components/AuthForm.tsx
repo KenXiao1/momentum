@@ -23,7 +23,7 @@ export const AuthForm: React.FC = () => {
       if (error) {
         setError(error.message);
       }
-  } catch {
+    } catch (err) {
       setError('发生未知错误，请重试');
     } finally {
       setLoading(false);

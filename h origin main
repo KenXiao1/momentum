@@ -1,3 +1,0 @@
-[33m6623756[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Merge branch 'new-feature-branch'
-[33m3ed8084[m[33m ([m[1;31morigin/new-feature-branch[m[33m, [m[1;32mnew-feature-branch[m[33m)[m 准备推送更新
-[33m064c34d[m feat: 支持无时长任务\n\n- Chain 增加 isDurationless 字段\n- 编辑器新增无时长开关\n- 专注模式支持手动结束与无限计时UI\n- 启动会话允许 duration=0\n- Supabase 映射与迁移新增 is_durationless 列
