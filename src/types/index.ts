@@ -80,3 +80,68 @@ export interface AppState {
   viewingChainId: string | null;
   completionHistory: CompletionHistory[];
 }
+
+// Exception rules related types (added to resolve missing exports after merge)
+export enum ExceptionRuleType {
+  PAUSE_ONLY = 'PAUSE_ONLY',
+  EARLY_COMPLETION_ONLY = 'EARLY_COMPLETION_ONLY',
+}
+
+export enum ExceptionRuleError {
+  STORAGE_ERROR = 'STORAGE_ERROR',
+  DUPLICATE_RULE_NAME = 'DUPLICATE_RULE_NAME',
+  RULE_NOT_FOUND = 'RULE_NOT_FOUND',
+  RULE_TYPE_MISMATCH = 'RULE_TYPE_MISMATCH',
+  INVALID_RULE_TYPE = 'INVALID_RULE_TYPE',
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+}
+
+export interface ExceptionRule {
+  id: string;
+  name: string;
+  type: ExceptionRuleType;
+  description?: string;
+  chainId?: string; // 当为链专属规则时关联链
+  scope: 'chain' | 'global';
+  isActive: boolean;
+  isArchived?: boolean;
+  usageCount: number;
+  createdAt: Date;
+  lastUsedAt?: Date;
+}
+
+export interface RuleUsageRecord {
+  id: string;
+  ruleId: string;
+  chainId?: string;
+  sessionId?: string;
+  usedAt: Date;
+  pauseDuration?: number; // seconds
+  autoResume?: boolean;
+  ruleScope?: 'chain' | 'global';
+}
+
+export interface ExceptionRuleStorage {
+  rules: ExceptionRule[];
+  usageRecords: RuleUsageRecord[];
+  lastSyncAt?: Date;
+}
+
+// Minimal exception wrapper class types exported for instanceof checks
+export class ExceptionRuleException extends Error {
+  public type: ExceptionRuleError;
+  public original?: any;
+  constructor(type: ExceptionRuleError, message?: string, original?: any) {
+    super(message || String(type));
+    this.name = 'ExceptionRuleException';
+    this.type = type;
+    this.original = original;
+  }
+}
+
+export class EnhancedExceptionRuleException extends ExceptionRuleException {
+  public errorCode?: string;
+  static createUserFriendly(type: ExceptionRuleError, message?: string, original?: any) {
+    return new EnhancedExceptionRuleException(type, message, original);
+  }
+}
