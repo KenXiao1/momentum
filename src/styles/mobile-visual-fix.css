@@ -130,10 +130,15 @@
   }
 }
 
-/* 滚动优化 - 保证滚动性能优先 */
+/* 滚动优化 - 保证滚动性能优先
+ * 注意：overscroll-behavior 不再设在 html 上。
+ * 原因：在 Android Edge mobile 上，html 同时带 overscroll-behavior + 隐式 overflow
+ * 会让浏览器把 html 当作非默认 viewport scroller，叠加 body 也带 contain 时
+ * 整页 pan-y 手势会被完全吞掉（手指拖拽 + 地址栏均无响应）。
+ * iOS Safari / Android 系统浏览器 / 桌面 Chromium 走 legacy heuristic 不踩这坑。
+ * 仅在 body 保留 contain 足以阻止滚动链/反弹外泄。 */
 @media (max-width: 768px) {
   /* 基础滚动优化 */
-  html,
   body {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;

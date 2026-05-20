@@ -170,10 +170,18 @@
     scroll-behavior: smooth;
   }
 
-  /* 防止水平滚动 */
+  /* 防止水平滚动：用 overflow-x: clip 而不是 hidden
+   * 原因：hidden 会让 body 和 html 隐式变成 scroll container（CSS 规范下
+   * overflow-x: hidden + overflow-y: visible 不合法，浏览器会把 overflow-y
+   * 算成 auto）。在 Android Edge mobile 上，body+html 双 scroll container
+   * 会让合成器分不清 viewport scroller，导致整页无法滑动；横屏触发重排时
+   * 偶发恢复。iOS Safari / 桌面 Chromium / Android 系统浏览器走 legacy
+   * 启发式不踩这个坑，所以只 Edge mobile 复现。
+   * overflow-x: clip 同样裁切横向溢出但不创建 scroll container（CSS
+   * overflow level 3，Edge 90+ 支持）。 */
   body,
   html {
-    overflow-x: hidden;
+    overflow-x: clip;
     width: 100%;
   }
 }
