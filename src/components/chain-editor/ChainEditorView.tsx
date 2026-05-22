@@ -47,7 +47,7 @@ export function ChainEditorView({
 
   return (
     <div
-      className={`chain-editor-container bg-background performance-layer min-h-screen overflow-x-hidden ${
+      className={`chain-editor-container bg-background performance-layer min-h-screen overflow-x-clip ${
         isKeyboardVisible ? 'keyboard-active' : ''
       }`}
       style={{ paddingBottom: isKeyboardVisible ? `${keyboardHeight}px` : '0' }}

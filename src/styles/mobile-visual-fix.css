@@ -145,13 +145,36 @@
     overscroll-behavior: contain;
   }
 
-  /* ChainEditor专用滚动优化 */
+  /* ChainEditor专用滚动优化
+   * 设计原则：移动端通用浏览器走 html 文档级滚动（body 已是 overflow-x: clip
+   * 非 scroll container），不在这层再造一个 scroll container。
+   *
+   * 历史踩坑：
+   * 1) contain: size + overflow-y: auto + 无显式高度 ⇒ Edge mobile 上整个
+   *    元素塌缩到 0 高度，表单不可见（c2dfe3e 引入 ⇒ d8fe710 暴露）
+   * 2) overflow-y: auto + overflow-x: hidden 让该元素成为 scroll container；
+   *    叠加 min-height: 100dvh 使其等于内容高度无内部 overflow；再叠
+   *    overscroll-behavior: contain（mobile-touch-optimization.css 全局规则）
+   *    ⇒ Edge mobile 把 pan-y 路由给它但它没东西可滚，contain 又阻断了
+   *    向 html 的 scroll chain ⇒ 整屏不能滑动
+   * 3) overflow-x: hidden + 默认 overflow-y: visible 会被规范隐式提升为
+   *    overflow-y: auto（不合法组合规则），同样产生 scroll container；
+   *    必须用 overflow-x: clip 才能既裁切横溢出又不创建 scroll container
+   *
+   * 当前方案：
+   * - 移除 overflow-y: auto / overflow-x: hidden，改用 overflow-x: clip
+   * - 保留 contain: layout（仅 layout，不带 size，否则会重蹈 #1）
+   * - 保留 min-height: 100vh/100dvh 作为最小高度兜底
+   * - iOS Safari 仍需要内层 scroll container（body scroll 老 bug），
+   *   走下方 @supports (-webkit-touch-callout: none) 分支单独覆盖 */
   .chain-editor-scroll-container {
     -webkit-overflow-scrolling: touch;
-    overflow-y: auto;
-    overflow-x: hidden;
-    /* 优先保证滚动性能 */
-    contain: size layout;
+    overflow-x: clip;
+    contain: layout;
+    /* progressive enhancement: 100vh 兜旧浏览器（Edge/Chrome 108- 不识别 dvh），
+     * 100dvh 给新浏览器吃，处理移动端地址栏动态高度更准 */
+    min-height: 100vh;
+    min-height: 100dvh;
     /* 只在必要时启用GPU */
     transform: none;
   }
