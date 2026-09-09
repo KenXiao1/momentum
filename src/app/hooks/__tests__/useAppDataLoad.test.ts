@@ -82,7 +82,7 @@ describe('useAppDataLoad', () => {
     expect(storage.getActiveChains).not.toHaveBeenCalled();
   });
 
-  it('should load local data, filter expired schedules, and update app state', async () => {
+  it('should load local data, retain expired schedules for judgment, and update app state', async () => {
     const chain = createUnitChain({ id: 'chain-1', name: 'Chain 1' });
     const expiredSession = {
       chainId: chain.id,
@@ -160,7 +160,7 @@ describe('useAppDataLoad', () => {
     expect(runWhenIdle).toHaveBeenCalled();
     expect(fireAndForget).toHaveBeenCalled();
     expect(storage.cleanupExpiredDeletedChains).toHaveBeenCalledWith(30);
-    expect(storage.removeScheduledSession).toHaveBeenCalledWith(chain.id);
+    expect(storage.removeScheduledSession).not.toHaveBeenCalled();
     expect(storage.saveCompletionHistory).toHaveBeenCalledWith(migratedHistory);
 
     const stateUpdater = setState.mock.calls.at(-1)?.[0] as (
@@ -168,7 +168,10 @@ describe('useAppDataLoad', () => {
     ) => ReturnType<typeof createAppState>;
     const next = stateUpdater(createAppState());
     expect(next.chains).toEqual([chain]);
-    expect(next.scheduledSessions).toEqual([activeSessionBooking]);
+    expect(next.scheduledSessions).toEqual([
+      expiredSession,
+      activeSessionBooking,
+    ]);
     expect(next.activeSession).toEqual(activeSession);
     expect(next.completionHistory).toEqual(migratedHistory);
     expect(navigationStore.getState().currentView).toBe('focus');

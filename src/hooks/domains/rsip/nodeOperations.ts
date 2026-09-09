@@ -4,8 +4,10 @@ import type {
   RSIPNode,
   RSIPStabilityPhase,
 } from '../../../types';
-import { getDescendantCount, getDescendantIds } from '../../../utils/rsipTree';
+import { getDescendantCount } from '../../../utils/rsipTree';
 import { buildExecutionRecord } from './helpers';
+import { hasExecutedToday, nextExecutionStreak } from './dailyRules';
+import { planRSIPViolation } from './violationPlan';
 import type {
   MarkExecutionOptions,
   MarkViolationOptions,
@@ -17,7 +19,7 @@ interface CreateNodeOperationsParams {
   readState: ReadState;
   saveFns: Pick<
     SaveFns,
-    'appendExecutionRecord' | 'removeNodes' | 'upsertNode'
+    'appendExecutionRecord' | 'removeNodes' | 'upsertNode' | 'saveGroups'
   >;
   archiveToLibrary: (
     node: RSIPNode,
@@ -86,12 +88,14 @@ export function createNodeOperations({
     options?: MarkExecutionOptions,
   ): Promise<RSIPNode[]> => {
     const now = new Date();
+    const target = nodes.find((node) => node.id === nodeId);
+    if (!target || hasExecutedToday(target, now)) return nodes;
     const updatedNodes = nodes.map((node) => {
       if (node.id !== nodeId) {
         return node;
       }
 
-      const consecutiveExecutions = (node.consecutiveExecutions ?? 0) + 1;
+      const consecutiveExecutions = nextExecutionStreak(node, now);
       const totalExecutions = (node.totalExecutions ?? 0) + 1;
       const cumulativeExecutionDays = (node.cumulativeExecutionDays ?? 0) + 1;
 
@@ -185,35 +189,12 @@ export function createNodeOperations({
     }
 
     const groups = state?.rsipGroups ?? [];
-    const group = targetNode.groupId
-      ? groups.find((item) => item.id === targetNode.groupId)
-      : undefined;
-
-    const removedIds = new Set<string>();
-    const addSubtree = (rootId: string) => {
-      removedIds.add(rootId);
-      for (const descendantId of getDescendantIds(nodes, rootId)) {
-        removedIds.add(descendantId);
-      }
-    };
-
-    let triggeredGroupCollapse = false;
-    if (group) {
-      const groupNodes = nodes.filter((node) => node.groupId === group.id);
-      const survivorsAfterLoss = groupNodes.length - 1;
-      const minAlive = Math.max(0, groupNodes.length - group.faultTolerance);
-
-      if (survivorsAfterLoss >= minAlive) {
-        addSubtree(nodeId);
-      } else {
-        triggeredGroupCollapse = true;
-        for (const groupNode of groupNodes) {
-          addSubtree(groupNode.id);
-        }
-      }
-    } else {
-      addSubtree(nodeId);
-    }
+    const { removedIds, collapsedGroupIds, updatedGroups } = planRSIPViolation(
+      nodeId,
+      nodes,
+      groups,
+    );
+    const triggeredGroupCollapse = collapsedGroupIds.size > 0;
 
     const removedNodeIds = [...removedIds];
     const removedNodes = nodes.filter((node) => removedIds.has(node.id));
@@ -224,7 +205,16 @@ export function createNodeOperations({
       updatedLibrary = await archiveToLibrary(removedNode, updatedLibrary);
     }
 
-    await saveFns.removeNodes(removedNodeIds, updatedNodes);
+    const groupsChanged = updatedGroups.some(
+      (group, index) => group !== groups[index],
+    );
+    if (groupsChanged) await saveFns.saveGroups(updatedGroups);
+    try {
+      await saveFns.removeNodes(removedNodeIds, updatedNodes);
+    } catch (error) {
+      if (groupsChanged) await saveFns.saveGroups(groups);
+      throw error;
+    }
     await ignoreLoggedPostCommitFailure(
       saveFns.appendExecutionRecord(
         buildExecutionRecord(nodeId, 'violated', notes, options),

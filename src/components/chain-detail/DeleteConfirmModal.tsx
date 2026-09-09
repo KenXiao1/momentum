@@ -42,7 +42,10 @@ const DeleteDataSummary: React.FC<DeleteDataSummaryProps> = ({
   <div className="mb-8 rounded-2xl border border-red-200/60 bg-red-50/80 p-6 dark:border-red-800/40 dark:bg-red-900/20">
     <div className="mb-6 text-center">
       <p className="font-chinese text-sm font-medium text-red-600 dark:text-red-400">
-        {tr('此操作将永久删除以下数据：', 'This will permanently delete:')}
+        {tr(
+          '链条将移入回收箱，以下数据将保留，30 天内可恢复：',
+          'The chain will move to the recycle bin. These data will be kept and can be restored within 30 days:',
+        )}
       </p>
     </div>
     <div className="grid grid-cols-2 gap-4 text-sm text-red-600 dark:text-red-400">

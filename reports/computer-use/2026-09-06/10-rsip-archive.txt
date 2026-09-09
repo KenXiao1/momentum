@@ -1,0 +1,38 @@
+Browser tab: 1, Title: "Momentum - 心理学驱动的专注力应用", URL: "http://127.0.0.1:5174/?view=rsip".
+1 AXWebArea Momentum - 心理学驱动的专注力应用, URL: 127.0.0.1:5174/?view=rsip
+	2 container root
+		3 link Description: 跳转到主要内容, Value: 127.0.0.1:5174/?view=rsip#main
+		4 container
+			5 button 返回
+			6 heading 国策树 · RSIP, Value: 1
+				7 text 国策树 · RSIP
+			8 text RSIP 流程协同
+			9 button 国策树
+			10 button 国策库
+			11 button 轮次历史
+			12 button 高级分析
+			13 heading 国策库, Value: 2
+				14 text 国策库
+			15 text 归档条目会保留内化进度，恢复时可选择挂接到任意父节点。
+			16 text 📜
+			17 heading CUA-子节点, Value: 3
+				18 text CUA-子节点
+			19 text 整理后记录结果 内化进度 0% · 累计执行 0 天 · 使用 1 次
+			20 pop up button (collapsed, settable) Value: 恢复为新根节点, Secondary Actions: Expand
+				21 menu
+					22 (selected) 恢复为新根节点
+					23 23:00 前入睡
+					24 睡前断屏
+			25 button 恢复
+			26 text 📜
+			27 heading CUA-根节点, Value: 3
+				28 text CUA-根节点
+			29 text 每天整理一件物品 内化进度 0% · 累计执行 0 天 · 使用 1 次
+			30 pop up button (collapsed, settable) Value: 恢复为新根节点, Secondary Actions: Expand
+				31 menu
+					32 (selected) 恢复为新根节点
+					33 23:00 前入睡
+					34 睡前断屏
+			35 button 恢复
+
+The focused UI element is 10 button 国策库

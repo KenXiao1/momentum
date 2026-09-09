@@ -4,6 +4,7 @@ export const TEST_SUPABASE_URL = 'https://test.supabase.co';
 export const TEST_SUPABASE_USER_ID = 'test-user-123';
 
 type TableName =
+  | 'rsip_groups'
   | 'chains'
   | 'scheduled_sessions'
   | 'active_sessions'
@@ -26,6 +27,7 @@ const mockUser = {
 };
 
 const tables: Record<TableName, Map<string, JsonRow>> = {
+  rsip_groups: new Map(),
   chains: new Map(),
   scheduled_sessions: new Map(),
   active_sessions: new Map(),
@@ -81,7 +83,11 @@ function asRows(body: unknown): JsonRow[] {
 }
 
 function tableKey(table: TableName, row: JsonRow): string {
-  if (table === 'chains' || table === 'active_sessions') {
+  if (
+    table === 'chains' ||
+    table === 'active_sessions' ||
+    table === 'rsip_groups'
+  ) {
     return String(row.id ?? `generated-${generatedId++}`);
   }
   if (table === 'scheduled_sessions') {
@@ -227,6 +233,7 @@ export const supabaseMockHandlers = [
     authenticated = false;
     return new HttpResponse(null, { status: 204 });
   }),
+  ...createTableHandlers('rsip_groups'),
   ...createTableHandlers('chains'),
   ...createTableHandlers('scheduled_sessions'),
   ...createTableHandlers('active_sessions'),

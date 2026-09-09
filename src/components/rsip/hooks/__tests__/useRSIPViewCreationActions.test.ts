@@ -762,4 +762,17 @@ describe('useRSIPViewCreationActions', () => {
     expect(onCreateGroup).not.toHaveBeenCalled();
     expect(onSaveGroups).not.toHaveBeenCalled();
   });
+  it('B05 refuses a strict-mode template batch without saving any nodes', async () => {
+    const { result, props } = renderCreationActions({
+      meta: { allowMultiplePerDay: false },
+      canAddToday: true,
+      splitItems: [
+        { id: 'a', title: 'A', rule: 'Rule A', isPassive: false },
+        { id: 'b', title: 'B', rule: 'Rule B', isPassive: false },
+      ],
+    });
+    await act(() => result.current.handleSubmitSplit());
+    expect(props.onSaveNodes).not.toHaveBeenCalled();
+    expect(props.onSaveMeta).not.toHaveBeenCalled();
+  });
 });

@@ -1,0 +1,360 @@
+{
+  "version": "3.0",
+  "exportedAt": "2026-09-06T21:59:35.994Z",
+  "chains": [
+    {
+      "id": "2f3b7957-f447-48e9-9c94-932d43422fc1",
+      "name": "CUA-最少30分钟",
+      "sortOrder": 1788731470,
+      "trigger": "打开编程软件",
+      "duration": 0,
+      "description": "验证30分钟最低时长",
+      "currentStreak": 2,
+      "auxiliaryStreak": 1,
+      "totalCompletions": 2,
+      "totalFailures": 0,
+      "auxiliaryFailures": 1,
+      "exceptions": [],
+      "auxiliaryExceptions": [],
+      "auxiliarySignal": "打响指",
+      "auxiliaryDuration": 1,
+      "auxiliaryCompletionTrigger": "打开测试页面",
+      "timeLimitExceptions": [],
+      "isDurationless": true,
+      "minimumDuration": 30,
+      "type": "unit",
+      "createdAt": "2026-09-06T21:51:41.182Z",
+      "lastCompletedAt": "2026-09-06T21:56:30.678Z",
+      "deletedAt": null
+    },
+    {
+      "id": "876b24e4-d9fb-4e7d-ac6a-8ddcde4e82b2",
+      "currentStreak": 1,
+      "auxiliaryStreak": 0,
+      "totalCompletions": 1,
+      "totalFailures": 0,
+      "auxiliaryFailures": 0,
+      "name": "CUA-任务群",
+      "type": "group",
+      "sortOrder": 1788731801,
+      "trigger": "任务群容器",
+      "duration": 0,
+      "isDurationless": true,
+      "description": "验证复制、重复和群进度",
+      "auxiliarySignal": "打响指",
+      "auxiliaryDuration": 15,
+      "auxiliaryCompletionTrigger": "开始第一个子任务",
+      "exceptions": [],
+      "auxiliaryExceptions": [],
+      "isTaskGroup": true,
+      "groupRepeatCount": 0,
+      "taskRepeatCount": 1,
+      "timeLimitHours": 24,
+      "timeLimitExceptions": [],
+      "createdAt": "2026-09-06T21:56:41.213Z",
+      "lastCompletedAt": "2026-09-06T21:57:27.794Z",
+      "groupStartedAt": "2026-09-06T21:57:38.986Z",
+      "groupExpiresAt": "2026-09-07T21:57:38.986Z"
+    },
+    {
+      "id": "8291b2bb-76cf-483c-b931-0053ce271938",
+      "name": "CUA-最少30分钟 (副本)",
+      "parentId": "876b24e4-d9fb-4e7d-ac6a-8ddcde4e82b2",
+      "sortOrder": 1788731470,
+      "trigger": "打开编程软件",
+      "duration": 0,
+      "description": "验证30分钟最低时长",
+      "currentStreak": 1,
+      "auxiliaryStreak": 0,
+      "totalCompletions": 3,
+      "totalFailures": 0,
+      "auxiliaryFailures": 0,
+      "exceptions": [],
+      "auxiliaryExceptions": [],
+      "auxiliarySignal": "打响指",
+      "auxiliaryDuration": 1,
+      "auxiliaryCompletionTrigger": "打开测试页面",
+      "timeLimitExceptions": [],
+      "isDurationless": true,
+      "minimumDuration": 30,
+      "taskRepeatCount": 2,
+      "type": "unit",
+      "createdAt": "2026-09-06T21:56:53.861Z",
+      "lastCompletedAt": "2026-09-06T21:57:58.210Z",
+      "deletedAt": null
+    }
+  ],
+  "completionHistory": [
+    {
+      "chainId": "2f3b7957-f447-48e9-9c94-932d43422fc1",
+      "duration": 0,
+      "wasSuccessful": true,
+      "actualDuration": 1,
+      "isForwardTimed": true,
+      "description": "中文完成记录测试：不足30分钟",
+      "notes": "CUA测试数据，仅验证流程。",
+      "completedAt": "2026-09-06T21:52:20.854Z"
+    },
+    {
+      "chainId": "2f3b7957-f447-48e9-9c94-932d43422fc1",
+      "duration": 0,
+      "wasSuccessful": true,
+      "actualDuration": 1,
+      "isForwardTimed": true,
+      "description": "暂停与自动恢复验证",
+      "completedAt": "2026-09-06T21:56:30.678Z"
+    },
+    {
+      "chainId": "8291b2bb-76cf-483c-b931-0053ce271938",
+      "duration": 0,
+      "wasSuccessful": true,
+      "actualDuration": 1,
+      "isForwardTimed": true,
+      "description": "群内第1次",
+      "completedAt": "2026-09-06T21:57:14.885Z"
+    },
+    {
+      "chainId": "8291b2bb-76cf-483c-b931-0053ce271938",
+      "duration": 0,
+      "wasSuccessful": true,
+      "actualDuration": 1,
+      "isForwardTimed": true,
+      "description": "群内第2次",
+      "completedAt": "2026-09-06T21:57:27.794Z"
+    },
+    {
+      "chainId": "8291b2bb-76cf-483c-b931-0053ce271938",
+      "duration": 0,
+      "wasSuccessful": true,
+      "actualDuration": 1,
+      "isForwardTimed": true,
+      "description": "新一轮流程验证",
+      "completedAt": "2026-09-06T21:57:58.210Z"
+    }
+  ],
+  "rsipNodes": [
+    {
+      "id": "d337a9a0-f9b4-4048-bebf-d828f565d496",
+      "title": "23:00 前入睡",
+      "rule": "22:45 开始睡前流程，23:00 前上床。",
+      "sortOrder": 1788731422,
+      "emoji": "📜",
+      "type": "policy",
+      "reinforcementLevel": 0,
+      "maxReinforcementLevel": 0,
+      "cumulativeExecutionDays": 2,
+      "isPassive": false,
+      "splitFromGoal": "早睡早起",
+      "stabilityPhase": "E0",
+      "consecutiveExecutions": 2,
+      "consecutiveViolations": 0,
+      "totalExecutions": 2,
+      "createdAt": "2026-09-06T21:50:22.472Z",
+      "lastExecutedAt": "2026-09-06T21:50:35.621Z"
+    },
+    {
+      "id": "901b2cf9-4199-4475-bebd-d91187abf6fd",
+      "title": "睡前断屏",
+      "rule": "22:30 后手机仅保留闹钟功能。",
+      "sortOrder": 1788731423,
+      "emoji": "📜",
+      "type": "policy",
+      "reinforcementLevel": 0,
+      "maxReinforcementLevel": 0,
+      "cumulativeExecutionDays": 2,
+      "isPassive": true,
+      "splitFromGoal": "早睡早起",
+      "stabilityPhase": "E0",
+      "consecutiveExecutions": 2,
+      "consecutiveViolations": 0,
+      "totalExecutions": 2,
+      "createdAt": "2026-09-06T21:50:22.472Z",
+      "lastExecutedAt": "2026-09-06T21:56:30.684Z"
+    },
+    {
+      "id": "7a4fa8d8-423e-4708-ad60-bf9754a42d99",
+      "title": "CUA-根节点",
+      "rule": "每天整理一件物品",
+      "sortOrder": 1788731956,
+      "useTimer": false,
+      "type": "policy",
+      "emoji": "📜",
+      "isPassive": false,
+      "cumulativeExecutionDays": 0,
+      "stabilityPhase": "E0",
+      "consecutiveExecutions": 0,
+      "consecutiveViolations": 0,
+      "totalExecutions": 0,
+      "totalViolations": 0,
+      "createdAt": "2026-09-06T21:59:16.100Z"
+    }
+  ],
+  "rsipMeta": {
+    "allowMultiplePerDay": false,
+    "dailyTreeOpenRequired": false,
+    "treeOpenStreak": 0,
+    "currentRunNumber": 2,
+    "lastAddedAt": "2026-09-06T21:58:56.022Z",
+    "currentRunStartedAt": "2026-09-06T21:59:04.246Z"
+  },
+  "rsipGroups": [],
+  "rsipPolicyLibrary": [
+    {
+      "id": "912989b9-bbfb-4aef-85af-97c6db60d72f",
+      "title": "CUA-根节点",
+      "rule": "每天整理一件物品",
+      "type": "policy",
+      "emoji": "📜",
+      "useTimer": false,
+      "isPassive": false,
+      "cumulativeExecutionDays": 0,
+      "internalizationProgress": 0,
+      "lastActiveAt": "2026-09-06T21:59:16.100Z",
+      "timesUsed": 2
+    },
+    {
+      "id": "6a0c8f39-f30e-493d-be54-73e65199bdd8",
+      "title": "CUA-子节点",
+      "rule": "整理后记录结果",
+      "type": "policy",
+      "emoji": "📜",
+      "useTimer": false,
+      "isPassive": false,
+      "cumulativeExecutionDays": 0,
+      "internalizationProgress": 0,
+      "lastActiveAt": "2026-09-06T21:59:04.238Z",
+      "timesUsed": 1
+    }
+  ],
+  "rsipRunHistory": [
+    {
+      "runNumber": 1,
+      "startedAt": "2026-09-06T21:50:22.481Z",
+      "endedAt": "2026-09-06T21:59:04.246Z",
+      "maxNodeCount": 4,
+      "durationDays": 1,
+      "collapseReason": "CUA验证父子回退",
+      "collapseNodeTitle": "CUA-根节点"
+    }
+  ],
+  "rsipExecutionRecords": [
+    {
+      "id": "cf930720-cb6b-4a8e-ada0-b42ea909fdb9",
+      "nodeId": "d337a9a0-f9b4-4048-bebf-d828f565d496",
+      "status": "executed",
+      "executedAt": "2026-09-06T21:50:31.399Z"
+    },
+    {
+      "id": "0fff908d-5cfa-4ffe-b59d-f69dac42d47b",
+      "nodeId": "d337a9a0-f9b4-4048-bebf-d828f565d496",
+      "status": "executed",
+      "executedAt": "2026-09-06T21:50:35.624Z"
+    },
+    {
+      "id": "90da5174-270c-4449-bcf1-0f55f51b089c",
+      "nodeId": "901b2cf9-4199-4475-bebd-d91187abf6fd",
+      "status": "executed",
+      "reasonCode": "integration_task_completed",
+      "sourceChainId": "2f3b7957-f447-48e9-9c94-932d43422fc1",
+      "sourceEvent": "task_completed",
+      "executedAt": "2026-09-06T21:52:20.865Z"
+    },
+    {
+      "id": "40eb3a3c-e8d2-49e0-92f6-68923ccda0b9",
+      "nodeId": "901b2cf9-4199-4475-bebd-d91187abf6fd",
+      "status": "executed",
+      "reasonCode": "integration_task_completed",
+      "sourceChainId": "2f3b7957-f447-48e9-9c94-932d43422fc1",
+      "sourceEvent": "task_completed",
+      "executedAt": "2026-09-06T21:56:30.688Z"
+    },
+    {
+      "id": "9d97ccbb-447b-4beb-bdba-37b075d550a1",
+      "nodeId": "912989b9-bbfb-4aef-85af-97c6db60d72f",
+      "status": "violated",
+      "reasonCode": "CUA验证父子回退",
+      "executedAt": "2026-09-06T21:59:04.244Z"
+    }
+  ],
+  "rsipTaskLinks": [
+    {
+      "id": "91cdfb1d-182c-4eca-9f46-0c05a9758675",
+      "rsipNodeId": "901b2cf9-4199-4475-bebd-d91187abf6fd",
+      "chainId": "2f3b7957-f447-48e9-9c94-932d43422fc1",
+      "chainKind": "unit",
+      "triggerEvent": "task_completed",
+      "effect": "mark_rsip_executed",
+      "automation": "confirm",
+      "isActive": true,
+      "updatedAt": "2026-09-06T21:51:51.829Z"
+    }
+  ],
+  "petState": {
+    "name": "CUA测试宠物",
+    "hunger": 18.6,
+    "happiness": 99.9,
+    "health": 100,
+    "level": 1,
+    "experience": 50,
+    "stage": "baby",
+    "lastFedAt": "2026-09-06T21:51:06.247Z",
+    "lastInteractedAt": "2026-09-06T21:57:58.211Z",
+    "lastDecayCalculatedAt": "2026-09-06T21:54:47.348Z",
+    "isVisible": true,
+    "isMinimized": true,
+    "position": {
+      "x": 80,
+      "y": 80
+    },
+    "minimizedPosition": {
+      "x": 80,
+      "y": 80
+    },
+    "id": "ce880014-d816-4393-abe3-75b3adb24c3a",
+    "createdAt": "2026-09-06T21:51:02.863Z"
+  },
+  "exceptionRules": {
+    "rules": [
+      {
+        "name": "Bathroom break",
+        "type": "pause_only",
+        "scope": "chain",
+        "chainId": "2f3b7957-f447-48e9-9c94-932d43422fc1",
+        "id": "rule_9ef23929-df6e-49ba-bbde-002268cf8067",
+        "createdAt": "2026-09-06T21:54:55.611Z",
+        "usageCount": 1,
+        "isActive": true,
+        "lastUsedAt": "2026-09-06T21:55:00.004Z"
+      },
+      {
+        "name": "Phone call",
+        "type": "pause_only",
+        "scope": "chain",
+        "chainId": "2f3b7957-f447-48e9-9c94-932d43422fc1",
+        "id": "rule_cc83dcae-1147-4bd5-87dc-02a89cfe43f2",
+        "createdAt": "2026-09-06T21:54:55.611Z",
+        "usageCount": 0,
+        "isActive": true
+      }
+    ],
+    "usageRecords": [
+      {
+        "ruleId": "rule_9ef23929-df6e-49ba-bbde-002268cf8067",
+        "chainId": "2f3b7957-f447-48e9-9c94-932d43422fc1",
+        "sessionId": "2f3b7957-f447-48e9-9c94-932d43422fc1_1788731692487",
+        "actionType": "pause",
+        "taskElapsedTime": 7,
+        "pauseDuration": 60,
+        "autoResume": true,
+        "ruleScope": "chain",
+        "id": "rule_f05d8c76-13d7-49e7-b967-26fe45d15f8c",
+        "usedAt": "2026-09-06T21:55:00.004Z"
+      }
+    ],
+    "exportedAt": "2026-09-06T21:59:35.993Z",
+    "summary": {
+      "totalRules": 2,
+      "totalUsageRecords": 1
+    }
+  }
+}

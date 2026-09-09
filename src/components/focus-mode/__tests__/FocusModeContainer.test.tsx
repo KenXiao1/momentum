@@ -183,4 +183,32 @@ describe('FocusModeContainer', () => {
     expect(flowActions.openEarlyCompletionSelection).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('completion-open').textContent).toBe('false');
   });
+  it.each([false, true])(
+    'B01 gates durationless completion on the minimum: reached=%s',
+    (reached) => {
+      useFocusTimersMock.mockReturnValue({
+        timeRemaining: 0,
+        forwardElapsedSeconds: reached ? 1800 : 18,
+        hasReachedMinimum: reached,
+        minimumCountdown: reached ? 0 : 1782,
+      });
+      render(
+        <FocusMode
+          session={createSession({ duration: 0 })}
+          chain={createChain({ isDurationless: true, minimumDuration: 30 })}
+          onComplete={vi.fn()}
+          onInterrupt={vi.fn()}
+          onPause={vi.fn()}
+          onResume={vi.fn()}
+        />,
+      );
+      fireEvent.click(screen.getByText('early-complete'));
+      expect(screen.getByTestId('completion-open')).toHaveTextContent(
+        String(reached),
+      );
+      expect(flowActions.openEarlyCompletionSelection).toHaveBeenCalledTimes(
+        reached ? 0 : 1,
+      );
+    },
+  );
 });

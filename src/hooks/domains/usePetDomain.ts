@@ -43,6 +43,7 @@ export interface UsePetDomainReturn {
   mood: PetMood;
   isLoading: boolean;
   hasPet: boolean;
+  reloadPet: () => Promise<void>;
 
   createPet: (name: string) => Promise<PetState>;
   feedPet: () => Promise<FeedResult | null>;
@@ -77,6 +78,9 @@ export function usePetDomain(): UsePetDomainReturn {
         setPet(updatedPet);
         setMood(calculateMood(updatedPet));
         await storage.savePetState(updatedPet);
+      } else {
+        setPet(null);
+        setMood('neutral');
       }
     } catch (error) {
       logger.error(
@@ -294,6 +298,7 @@ export function usePetDomain(): UsePetDomainReturn {
     mood,
     isLoading,
     hasPet: !!pet,
+    reloadPet: loadPet,
 
     createPet,
     feedPet,

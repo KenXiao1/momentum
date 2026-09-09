@@ -384,6 +384,7 @@ export interface Database {
           user_id: string;
           title: string;
           fault_tolerance: number;
+          fault_tolerance_used: number;
           emoji: string | null;
           created_at: string;
           updated_at: string;
@@ -393,6 +394,7 @@ export interface Database {
           user_id: string;
           title: string;
           fault_tolerance?: number;
+          fault_tolerance_used?: number;
           emoji?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -402,6 +404,7 @@ export interface Database {
           user_id?: string;
           title?: string;
           fault_tolerance?: number;
+          fault_tolerance_used?: number;
           emoji?: string | null;
           created_at?: string;
           updated_at?: string;

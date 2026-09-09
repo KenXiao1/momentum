@@ -12,7 +12,8 @@ import {
   X,
 } from 'lucide-react';
 import { getChainTypeConfig } from '../../utils/chainTree';
-import { formatTime, getTimeRemaining } from '../../utils/time';
+import { getTimeRemaining } from '../../utils/time';
+import { formatChainDuration } from '../../utils/formatChainDuration';
 import { soundManager } from '../../utils/soundManager';
 
 interface UnitCardProps {
@@ -148,7 +149,7 @@ export const UnitCard: React.FC<UnitCardProps> = ({
             <div className="mt-2 flex items-center space-x-4 text-xs text-gray-500 dark:text-slate-400">
               <span className="flex items-center space-x-1">
                 <Clock size={12} />
-                <span>{formatTime(unit.duration, language)}</span>
+                <span>{formatChainDuration(unit, language)}</span>
               </span>
               <span
                 className="flex items-center space-x-1"

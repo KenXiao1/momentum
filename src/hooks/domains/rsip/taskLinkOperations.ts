@@ -9,6 +9,7 @@ import type { ReadState, SaveFns } from './types';
 interface CreateTaskLinkOperationsParams {
   readState: ReadState;
   saveFns: Pick<SaveFns, 'saveTaskLinks'>;
+  confirmTaskLink?: (link: RSIPTaskLink, node: RSIPNode) => Promise<boolean>;
   markExecuted: (
     nodeId: string,
     nodes: RSIPNode[],
@@ -40,6 +41,7 @@ export function createTaskLinkOperations({
   saveFns,
   markExecuted,
   markViolated,
+  confirmTaskLink,
 }: CreateTaskLinkOperationsParams) {
   const upsertTaskLinks = async (links: RSIPTaskLink[]) => {
     const state = readState();
@@ -70,10 +72,10 @@ export function createTaskLinkOperations({
         continue;
       }
 
-      const nodeExists = latestNodes.some(
+      const targetNode = latestNodes.find(
         (node) => node.id === match.link.rsipNodeId,
       );
-      if (!nodeExists) {
+      if (!targetNode) {
         logger.warn('RSIP', 'RSIP integration skipped: target node missing', {
           event: payload.event,
           rsipNodeId: match.link.rsipNodeId,
@@ -81,6 +83,14 @@ export function createTaskLinkOperations({
         });
         continue;
       }
+
+      if (
+        match.link.automation !== 'auto' &&
+        !(await confirmTaskLink?.(match.link, targetNode))
+      )
+        continue;
+      latestNodes = readState()?.rsipNodes ?? latestNodes;
+      if (!latestNodes.some((node) => node.id === targetNode.id)) continue;
 
       if (match.link.effect === 'mark_rsip_executed') {
         latestNodes = await markExecuted(

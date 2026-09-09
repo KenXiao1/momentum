@@ -4,6 +4,7 @@ import { useI18n } from '../../../i18n';
 import type { RSIPMode, RSIPTreeNode } from '../../../types';
 import { buildRSIPTree } from '../../../utils/rsipTree';
 import { buildRSIPInsights } from '../../../services/rsip-insights/RSIPInsightsService';
+import { canCreateRSIPNodes } from '../../../hooks/domains/rsip/dailyRules';
 import { getSplitTemplates } from '../rsipViewHelpers';
 import type { RSIPViewStateSlice } from './useRSIPViewModel.types';
 
@@ -68,17 +69,10 @@ export function useRSIPViewState({
     );
   }, [meta.lastTreeOpenedAt]);
 
-  const canAddToday = useMemo(() => {
-    if (meta.allowMultiplePerDay) {
-      return true;
-    }
-    if (!meta.lastAddedAt) {
-      return true;
-    }
-
-    const last = new Date(meta.lastAddedAt);
-    return last.toDateString() !== new Date().toDateString();
-  }, [meta.allowMultiplePerDay, meta.lastAddedAt]);
+  const canAddToday = useMemo(
+    () => canCreateRSIPNodes(meta, nodes, 1),
+    [meta, nodes],
+  );
 
   const insights = useMemo(
     () =>

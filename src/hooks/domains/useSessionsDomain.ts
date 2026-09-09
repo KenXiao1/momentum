@@ -99,6 +99,7 @@ export function useSessionsDomain({
     currentSessionId,
     setCurrentSessionId,
     setShowBettingModal,
+    setShowAuxiliaryJudgment,
     onNavigateToFocus,
     taskLifecycleEvents,
     tr,

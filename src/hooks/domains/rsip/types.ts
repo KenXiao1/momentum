@@ -35,6 +35,7 @@ export interface UseRsipDomainParams {
   storage: MomentumStorage;
   getState?: () => AppState;
   onNavigateToRSIP?: () => void;
+  confirmTaskLink?: (link: RSIPTaskLink, node: RSIPNode) => Promise<boolean>;
 }
 
 export interface SaveFns {

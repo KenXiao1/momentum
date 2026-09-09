@@ -204,4 +204,27 @@ describe('SupabaseStorage HTTP boundary', () => {
     ).rejects.toThrow('Failed to query existing chains');
     await expect(storage.getChains()).resolves.toEqual([]);
   });
+  it('B06 round-trips group tolerance usage and preserves existing groups when an update fails', async () => {
+    await authenticate();
+    const group = {
+      id: 'group-a',
+      title: 'Group A',
+      faultTolerance: 1,
+      createdAt: new Date('2026-09-06T12:00:00Z'),
+    };
+    const other = { ...group, id: 'group-b', title: 'Group B' };
+    await storage.saveRSIPGroups([group, other]);
+    await storage.saveRSIPGroups([{ ...group, faultToleranceUsed: 1 }, other]);
+    expect(await storage.getRSIPGroups()).toEqual([
+      { ...group, faultToleranceUsed: 1 },
+      { ...other, faultToleranceUsed: 0 },
+    ]);
+    failSupabaseTransportRequests('POST', 'rsip_groups', 10);
+    await expect(
+      storage.saveRSIPGroups([{ ...group, faultToleranceUsed: 2 }]),
+    ).rejects.toThrow();
+    expect(await storage.getRSIPGroups()).toHaveLength(2);
+    await storage.saveRSIPGroups([]);
+    expect(await storage.getRSIPGroups()).toEqual([]);
+  });
 });

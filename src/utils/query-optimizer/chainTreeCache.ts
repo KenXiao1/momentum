@@ -8,6 +8,7 @@ export class ChainTreeCache {
   private readonly treeCacheKey = 'chainTree';
   private lastChainHash: string = '';
   private lastChainsRevision: number | null = null;
+  private lastChains: Chain[] | null = null;
 
   constructor(
     private readonly cache: CacheMap,
@@ -19,6 +20,7 @@ export class ChainTreeCache {
     this.cache.delete(`${this.treeCacheKey}_structural`);
     this.lastChainHash = '';
     this.lastChainsRevision = null;
+    this.lastChains = null;
   }
 
   memoizedBuildChainTree(chains: Chain[], revision?: number): ChainTreeNode[] {
@@ -28,7 +30,11 @@ export class ChainTreeCache {
         this.getCacheTtlMs(),
         this.treeCacheKey,
       );
-      if (cached && this.lastChainsRevision === revision) {
+      if (
+        cached &&
+        this.lastChainsRevision === revision &&
+        this.lastChains === chains
+      ) {
         reactPerformanceMonitor.trackCacheHit();
         performanceLogger.debug(
           '[QUERY_OPTIMIZER] Using cached chain tree (revision match)',
@@ -44,12 +50,14 @@ export class ChainTreeCache {
       return this.buildChainTreeWithMonitoring(chains, (tree) => {
         setCachedData(this.cache, this.treeCacheKey, tree);
         this.lastChainsRevision = revision;
+        this.lastChains = chains;
+        this.lastChainHash = '';
       });
     }
 
     const currentHash = this.generateChainHash(chains);
 
-    if (currentHash === this.lastChainHash) {
+    if (currentHash === this.lastChainHash && this.lastChains === chains) {
       const cached = getCachedData<ChainTreeNode[]>(
         this.cache,
         this.getCacheTtlMs(),
@@ -90,6 +98,8 @@ export class ChainTreeCache {
         structuralHash,
       );
       this.lastChainHash = currentHash;
+      this.lastChainsRevision = null;
+      this.lastChains = chains;
     });
   }
 

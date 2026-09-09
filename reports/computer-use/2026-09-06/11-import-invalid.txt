@@ -1,0 +1,42 @@
+Browser tab: 1, Title: "Momentum - 心理学驱动的专注力应用", URL: "http://127.0.0.1:5174/".
+1 AXWebArea Momentum - 心理学驱动的专注力应用, URL: 127.0.0.1:5174/
+	2 container 数据管理
+		3 heading 数据管理, Value: 2, ID: import-export-modal-title
+			4 text 数据管理
+		5 text 数据管理
+		6 button 关闭
+		7 button 导出数据
+		8 button 导入数据
+		9 heading 导入任务链数据, Value: 3
+			10 text 导入任务链数据
+		11 text 导入功能将添加新的数据到您的系统中，包括任务链、国策树扩展数据、宠物状态和例外规则。导入的链条将生成新的ID，不会覆盖现有数据。
+		12 text 任务链数据（生成新ID）
+		13 text 国策树节点与扩展记录
+		14 text 宠物状态（覆盖导入）
+		15 text 例外规则（跳过重复）
+		16 text 请确保导入的是从 Momentum 导出的有效 JSON 文件
+		17 text 选择文件导入
+		18 button 选择要导入的文件
+		19 button 使用系统文件选择器
+		20 text 或手动粘贴 JSON 数据
+		21 text entry area (settable) Description: JSON 数据, Value: {"invalid":
+		22 heading 导入选项, Value: 4
+			23 text 导入选项
+		24 container
+			25 checkbox (settable, integer) Description: 保留统计数据, Value: 0
+			26 text 保留统计数据（连击数、完成次数等）
+		27 container
+			28 checkbox (settable, integer) Description: 保留原始时间戳, Value: 0
+			29 text 保留原始时间戳（创建时间、完成时间等）
+		30 container
+			31 checkbox (settable, integer) Description: 导入完成历史记录, Value: 1
+			32 text 导入完成历史记录
+		33 text 安全导入机制
+		34 text • 所有导入数据将自动归属到您的账户
+		35 text • ID 冲突将自动解决，生成新的唯一标识
+		36 text • 导入会话 30 分钟后自动过期
+		38 text 导入失败
+		39 text 导入数据格式错误：请确保上传的是有效的JSON格式文件。
+		37 button 导入数据
+
+The focused UI element is 37 button 导入数据

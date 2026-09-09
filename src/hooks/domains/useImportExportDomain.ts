@@ -33,12 +33,14 @@ interface UseImportExportDomainParams {
   storage: MomentumStorage;
   safelySaveChains: SafelySaveChains;
   setState: Dispatch<SetStateAction<AppState>>;
+  onPetImported?: () => Promise<void>;
 }
 
 export function useImportExportDomain({
   storage,
   safelySaveChains,
   setState,
+  onPetImported,
 }: UseImportExportDomainParams) {
   const { tr } = useI18n();
   const canUseAuth = hasStorageCapability(storage, 'auth');
@@ -82,8 +84,19 @@ export function useImportExportDomain({
     });
   }
 
-  function assertValidImportedChains(importedChains: Chain[]): void {
-    if (!Array.isArray(importedChains) || importedChains.length === 0) {
+  function assertValidImportedChains(
+    importedChains: Chain[],
+    options?: ImportChainsOptions,
+  ): void {
+    const hasOtherData =
+      options &&
+      Object.values(options).some((value) =>
+        Array.isArray(value) ? value.length > 0 : value != null,
+      );
+    if (
+      !Array.isArray(importedChains) ||
+      (importedChains.length === 0 && !hasOtherData)
+    ) {
       throw new Error(
         tr('没有有效的链条数据可导入', 'No valid chains found to import'),
       );
@@ -121,7 +134,7 @@ export function useImportExportDomain({
 
     try {
       await ensureAuthenticatedForImport();
-      assertValidImportedChains(importedChains);
+      assertValidImportedChains(importedChains, options);
 
       logger.debug('APP_SHELL', '准备保存导入的数据到存储');
 
@@ -140,6 +153,7 @@ export function useImportExportDomain({
       queryOptimizer.onDataChange('chains');
 
       await persistImportedData({ storage, canUseAuth, options });
+      if (options?.petState) await onPetImported?.();
 
       logger.info('APP_SHELL', '导入数据保存成功，更新 UI 状态');
 

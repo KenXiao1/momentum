@@ -1,0 +1,39 @@
+Browser tab: 1, Title: "Momentum - 心理学驱动的专注力应用", URL: "http://127.0.0.1:5174/?view=group&chain=876b24e4-d9fb-4e7d-ac6a-8ddcde4e82b2".
+1 AXWebArea Momentum - 心理学驱动的专注力应用, URL: 127.0.0.1:5174/?view=group&chain=876b24e4-d9fb-4e7d-ac6a-8ddcde4e82b2
+	2 container root
+		3 link Description: 跳转到主要内容, Value: 127.0.0.1:5174/?view=group&chain=876b24e4-d9fb-4e7d-ac6a-8ddcde4e82b2#main
+		4 container main
+			5 container
+				6 button 返回
+				7 heading CUA-任务群, Value: 1
+					8 text CUA-任务群
+				9 text 任务群  ·  1 / 1 已完成
+				10 button 添加单元
+				11 button 导入单元
+				12 button 编辑任务群
+				13 button 开始新一轮
+			14 container
+				15 heading 任务群概览, Value: 2
+					16 text 任务群概览
+				17 text 1 个单元 1 / 1 已完成 (2/2 重复次数) 100 % 验证复制、重复和群进度
+				18 heading 时间限制, Value: 4
+					19 text 时间限制
+				20 text 无时间限制 0 %
+			21 heading 任务单元, Value: 2
+				22 text 任务单元
+			23 button 查看任务：CUA-最少30分钟 (副本)
+				24 heading CUA-最少30分钟 (副本), Value: 4
+					25 text CUA-最少30分钟 (副本)
+				26 text 验证30分钟最低时长
+				27 text 0分钟
+				28 container 完成次数
+					29 text # 2
+				30 text 0
+				31 text 基础单元
+				32 button (disabled) 上移
+				33 button (disabled) 下移
+				34 button 编辑单元
+				35 button 删除单元
+				36 button 2, Help: 设置重复次数 (当前: 2)
+
+The focused UI element is 1 AXWebArea Momentum - 心理学驱动的专注力应用, URL: 127.0.0.1:5174/?view=group&chain=876b24e4-d9fb-4e7d-ac6a-8ddcde4e82b2

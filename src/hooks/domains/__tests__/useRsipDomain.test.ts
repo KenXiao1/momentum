@@ -1427,6 +1427,7 @@ describe('useRsipDomain', () => {
     const domain = useRsipDomain({
       setState: stateRef.setState,
       storage,
+      confirmTaskLink: async () => true,
       getState: stateRef.getState,
     });
 
@@ -1526,6 +1527,7 @@ describe('useRsipDomain', () => {
     const domain = useRsipDomain({
       setState: stateRef.setState,
       storage,
+      confirmTaskLink: async () => true,
       getState: stateRef.getState,
     });
 

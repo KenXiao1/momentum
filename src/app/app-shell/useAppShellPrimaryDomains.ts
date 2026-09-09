@@ -7,6 +7,7 @@ import type { MomentumStorage } from '../../storage/MomentumStorage';
 import { getAppStateSnapshot } from '../../stores/appShellStore';
 import { navigationStore } from '../../stores/navigationStore';
 import { useTaskLifecycleIntegration } from '../hooks/useTaskLifecycleIntegration';
+import { useTaskLinkConfirmation } from '../hooks/useTaskLinkConfirmation';
 import type { AppShellStateController } from './useAppShellState';
 
 export function useAppShellPrimaryDomains(
@@ -14,6 +15,7 @@ export function useAppShellPrimaryDomains(
   state: AppShellStateController,
 ) {
   const safelySaveChains = useSafeSaveChains(storage);
+  const taskLinkConfirmation = useTaskLinkConfirmation();
   const chainsDomain = useChainsDomain({
     getState: getAppStateSnapshot,
     setState: state.setState,
@@ -47,6 +49,7 @@ export function useAppShellPrimaryDomains(
     setState: state.setState,
     storage,
     getState: getAppStateSnapshot,
+    confirmTaskLink: taskLinkConfirmation.confirmTaskLink,
     onNavigateToRSIP: () => navigationStore.getState().navigateToView('rsip'),
   });
   useTaskLifecycleIntegration(rsipDomain.handleTaskEventIntegration);
@@ -82,6 +85,7 @@ export function useAppShellPrimaryDomains(
     ...sessionsDomain,
     petDomain,
     safelySaveChains,
+    taskLinkConfirmation,
   };
 }
 

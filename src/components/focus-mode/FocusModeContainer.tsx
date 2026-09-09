@@ -108,7 +108,7 @@ export function FocusMode({
   const { isFullscreen, enterFullscreen, exitFullscreen } = useFullscreen();
 
   const handleEarlyCompleteClick = () => {
-    if (isDurationless) {
+    if (isDurationless && (!chain.minimumDuration || hasReachedMinimum)) {
       setShowCompletionDialog(true);
       return;
     }

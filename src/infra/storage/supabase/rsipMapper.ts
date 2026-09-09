@@ -67,6 +67,7 @@ export function mapRSIPGroupRow(row: Record<string, unknown>): RSIPNodeGroup {
     id: String(row.id),
     title: String(row.title ?? ''),
     faultTolerance: Number(row.fault_tolerance ?? 0),
+    faultToleranceUsed: row.fault_tolerance_used,
     emoji: row.emoji,
     createdAt: row.created_at,
   });

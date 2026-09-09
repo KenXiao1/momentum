@@ -69,14 +69,9 @@ export const ImportExportModalView: React.FC<ImportExportModalViewProps> = ({
       className="w-full max-w-2xl animate-scale-in overflow-y-auto rounded-3xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-slate-600 dark:bg-slate-800 sm:p-6"
     >
       <ModalHeader onClose={onClose} tr={tr} />
-      <TabNavigation
-        activeTab={activeTab}
-        chainsCount={chainsCount}
-        onTabChange={onTabChange}
-        tr={tr}
-      />
+      <TabNavigation activeTab={activeTab} onTabChange={onTabChange} tr={tr} />
 
-      {activeTab === 'export' && chainsCount > 0 && (
+      {activeTab === 'export' && (
         <ExportTab
           chainsCount={chainsCount}
           onExport={onExport}
@@ -85,7 +80,7 @@ export const ImportExportModalView: React.FC<ImportExportModalViewProps> = ({
         />
       )}
 
-      {(activeTab === 'import' || chainsCount === 0) && (
+      {activeTab === 'import' && (
         <ImportTab
           importData={importData}
           importStatus={importStatus}
@@ -139,36 +134,32 @@ const ModalHeader: React.FC<{
 
 interface TabNavigationProps {
   activeTab: 'export' | 'import';
-  chainsCount: number;
   onTabChange: (tab: 'export' | 'import') => void;
   tr: (zh: string, en: string) => string;
 }
 
 const TabNavigation: React.FC<TabNavigationProps> = ({
   activeTab,
-  chainsCount,
   onTabChange,
   tr,
 }) => (
   <div className="mb-8 flex rounded-2xl bg-gray-100 p-1 dark:bg-slate-700">
-    {chainsCount > 0 && (
-      <button
-        type="button"
-        onClick={() => onTabChange('export')}
-        className={`flex flex-1 items-center justify-center space-x-2 rounded-xl px-4 py-3 font-chinese font-medium transition duration-300 ${
-          activeTab === 'export'
-            ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-600 dark:text-slate-100'
-            : 'text-gray-600 hover:text-gray-900 dark:text-slate-400 dark:hover:text-slate-200'
-        }`}
-      >
-        <Download size={16} />
-        <span>{tr('导出数据', 'Export')}</span>
-      </button>
-    )}
+    <button
+      type="button"
+      onClick={() => onTabChange('export')}
+      className={`flex flex-1 items-center justify-center space-x-2 rounded-xl px-4 py-3 font-chinese font-medium transition duration-300 ${
+        activeTab === 'export'
+          ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-600 dark:text-slate-100'
+          : 'text-gray-600 hover:text-gray-900 dark:text-slate-400 dark:hover:text-slate-200'
+      }`}
+    >
+      <Download size={16} />
+      <span>{tr('导出数据', 'Export')}</span>
+    </button>
     <button
       type="button"
       onClick={() => onTabChange('import')}
-      className={`${chainsCount > 0 ? 'flex-1' : 'w-full'} flex items-center justify-center space-x-2 rounded-xl px-4 py-3 font-chinese font-medium transition duration-300 ${
+      className={`flex flex-1 items-center justify-center space-x-2 rounded-xl px-4 py-3 font-chinese font-medium transition duration-300 ${
         activeTab === 'import'
           ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-600 dark:text-slate-100'
           : 'text-gray-600 hover:text-gray-900 dark:text-slate-400 dark:hover:text-slate-200'

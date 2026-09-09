@@ -57,6 +57,7 @@ export function useAppShellSecondaryDomains(
     storage,
     safelySaveChains: primary.safelySaveChains,
     setState: state.setState,
+    onPetImported: primary.petDomain.reloadPet,
   });
   const groupDomain = useGroupDomain({
     getState: getAppStateSnapshot,

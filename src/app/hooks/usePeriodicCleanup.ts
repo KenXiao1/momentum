@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { AppState } from '../../types';
 import type { MomentumStorage } from '../../storage/MomentumStorage';
@@ -36,16 +36,12 @@ export function usePeriodicCleanup({
     () => resolveAppStateReader({ state, getState }),
     [getState, state],
   );
-  const stateRef = useRef<AppState>(readState());
-  useEffect(() => {
-    stateRef.current = readState();
-  }, [readState]);
 
   useEffect(() => {
     if (!isInitialized) return;
 
     const checkExpiredGroups = () => {
-      const current = stateRef.current;
+      const current = readState();
       let hasChanges = false;
       const resetChains: AppState['chains'] = [];
 
@@ -81,22 +77,19 @@ export function usePeriodicCleanup({
 
     const interval = setInterval(checkExpiredGroups, 60000);
     return () => clearInterval(interval);
-  }, [storage, isInitialized, setState]);
+  }, [storage, isInitialized, setState, readState]);
 
   useEffect(() => {
     if (!isInitialized) return;
 
     const interval = setInterval(() => {
-      const current = stateRef.current;
+      const current = readState();
+      if (navigationStore.getState().showAuxiliaryJudgment) return;
 
       const expiredSessions = current.scheduledSessions.filter((session) =>
         isSessionExpired(session.expiresAt),
       );
       if (expiredSessions.length === 0) return;
-
-      const activeScheduledSessions = current.scheduledSessions.filter(
-        (session) => !isSessionExpired(session.expiresAt),
-      );
 
       soundManager.playTimerFinished();
 
@@ -113,26 +106,8 @@ export function usePeriodicCleanup({
       navigationStore
         .getState()
         .setShowAuxiliaryJudgment(expiredSessions[0].chainId);
-
-      Promise.all(
-        expiredSessions.map((session) =>
-          storage.removeScheduledSession(session.chainId),
-        ),
-      ).catch((error) => {
-        logger.error(
-          'PERIODIC_CLEANUP',
-          'Failed to persist scheduled session cleanup',
-          undefined,
-          toError(error),
-        );
-      });
-
-      setState((prev) => ({
-        ...prev,
-        scheduledSessions: activeScheduledSessions,
-      }));
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [storage, isInitialized, setState]);
+  }, [isInitialized, readState]);
 }

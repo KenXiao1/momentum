@@ -1,0 +1,153 @@
+Browser tab: 1, Title: "Momentum - 心理学驱动的专注力应用", URL: "http://127.0.0.1:5174/?view=rsip".
+0 AXWebArea Momentum - 心理学驱动的专注力应用, URL: 127.0.0.1:5174/?view=rsip
+	1 container root
+		2 link Description: 跳转到主要内容, Value: 127.0.0.1:5174/?view=rsip#main
+		3 container
+			4 button 返回
+			5 heading 国策树 · RSIP, Value: 1
+				6 text 国策树 · RSIP
+			7 text RSIP 流程协同
+			8 button 国策树
+			9 button 国策库
+			10 button 轮次历史
+			11 button 高级分析
+			12 text RSIP 模式
+			13 button 自由
+			14 button 严格
+			15 text 今日尚未查看国策树 连续  0  天打卡
+			16 button 立即打卡
+			17 text 父节点（可空，表示新分支）
+			18 pop up button (collapsed, settable) Value: （无父节点，建立新根）, Secondary Actions: Expand
+				19 menu
+					20 (selected) （无父节点，建立新根）
+					109 23:00 前入睡
+					110 睡前断屏
+			21 text 国策标题
+			22 text field (settable)
+			23 text 精准规则
+			24 text field (settable)
+			25 text 启用计时
+			26 container 启用计时
+				27 checkbox (settable, integer) Description: 启用计时, Value: 0
+			28 text 计时分钟数
+			29 stepper (disabled, settable, integer) 15
+			30 text 节点类型
+			31 pop up button (collapsed, settable) Value: 📝 国策 (policy), Secondary Actions: Expand
+				32 menu
+					33 (selected) 📝 国策 (policy)
+					34 🔄 习惯 (habit)
+					35 🌟 奖励 (reward)
+					36 ❌ 惩罚 (penalty)
+					37 🧘 仪式 (ritual)
+					38 🏁 目标 (goal)
+					39 ➡️ 触发器 (trigger)
+					40 ⏰ 提醒 (reminder)
+			41 text 所属国策组
+			42 pop up button (collapsed, settable) Value: 不分组, Secondary Actions: Expand
+				43 menu
+					44 (selected) 不分组
+			45 button 新建组
+			46 text 被动国策
+			47 container 被动国策
+				48 checkbox (settable, integer) Description: 被动国策, Value: 0
+			49 container
+				50 text 每天最多新增一个国策。 今日已新增，明日继续。
+			51 button (disabled) 新增国策
+			52 heading 拆分模式（零散牛皮糖）, Value: 3
+				53 text 拆分模式（零散牛皮糖）
+			54 checkbox (settable, integer) Description: 启用, Value: 1
+			103 text field (settable)
+			104 button 作息模板
+			105 button 运动模板
+			106 button 饮食模板
+			107 button 新增子国策
+			108 button (disabled) 批量创建拆分国策
+			55 text 按类型筛选：
+			56 pop up button (collapsed, settable) Value: 全部, Secondary Actions: Expand
+				57 menu
+					58 (selected) 全部
+					59 国策
+					60 习惯
+					61 奖励
+					62 惩罚
+					63 仪式
+					64 目标
+					65 触发器
+					66 提醒
+			67 button 清除
+			68 text 国策
+			69 text 习惯
+			70 text 奖励
+			71 text 惩罚
+			72 text 仪式
+			73 text 目标
+			74 text 触发器
+			75 text 提醒
+			111 container
+				112 image
+				113 button 📜 23:00 前入睡
+					114 heading 23:00 前入睡, Value: 4
+						115 text 23:00 前入睡
+					116 text 22:45 开始睡前流程，23:00 前上床。
+					117 button 更改继承关系
+					118 button Description: 判定失败, Help: 判定失败（删除此节点及其所有子节点）
+				119 button 📜 睡前断屏
+					120 heading 睡前断屏, Value: 4
+						121 text 睡前断屏
+					122 text 22:30 后手机仅保留闹钟功能。
+					123 button 更改继承关系
+					124 button Description: 判定失败, Help: 判定失败（删除此节点及其所有子节点）
+			125 container
+				126 button 放大
+				127 button 缩小
+				128 button 适应内容
+			129 heading 定式执行追踪, Value: 2
+				130 text 定式执行追踪
+			131 container
+				132 text 📜
+				133 heading 23:00 前入睡, Value: 3
+					134 text 23:00 前入睡
+			135 text E0 新建
+			136 text 22:45 开始睡前流程，23:00 前上床。
+			137 text → E1 0/7 天 0  子节点 代价  1
+			138 button 已执行
+			139 button 已违反
+			140 container
+				141 text 📜
+				142 heading 睡前断屏, Value: 3
+					143 text 睡前断屏
+			144 text E0 新建
+			145 text 22:30 后手机仅保留闹钟功能。
+			146 text → E1 0/7 天 0  子节点 代价  1
+			147 button 已执行
+			148 button 已违反
+			77 heading RSIP × 任务流程协同, Value: 2
+				78 text RSIP × 任务流程协同
+			79 text 任务事件可自动更新 RSIP；RSIP -> 任务动作默认需确认。冲突采用最后写入生效（LWW）。
+			80 button 任务 -> RSIP
+			81 button RSIP -> 任务
+			82 pop up button (collapsed, settable) Value: 选择 RSIP 节点, Secondary Actions: Expand
+				83 menu
+					84 (selected) 选择 RSIP 节点
+					149 📜 23:00 前入睡
+					150 📜 睡前断屏
+			85 pop up button (collapsed, settable) Value: 选择任务/任务组, Secondary Actions: Expand
+				86 menu
+					87 (selected) 选择任务/任务组
+			88 pop up button (collapsed, settable) Value: 任务完成 (task_completed), Secondary Actions: Expand
+				89 menu
+					90 (selected) 任务完成 (task_completed)
+					91 任务中断 (task_interrupted)
+					92 任务组周期完成 (group_cycle_completed)
+			93 pop up button (collapsed, settable) Value: 标记国策已执行 (mark_rsip_executed), Secondary Actions: Expand
+				94 menu
+					95 (selected) 标记国策已执行 (mark_rsip_executed)
+					96 标记国策已违反 (mark_rsip_violated)
+			97 pop up button (collapsed, settable) Value: 需确认, Secondary Actions: Expand
+				98 menu
+					99 自动
+					100 (selected) 需确认
+			101 button (disabled) 新增联动
+			102 text 尚未配置任何联动。
+
+The focused UI element is 0 AXWebArea Momentum - 心理学驱动的专注力应用, URL: 127.0.0.1:5174/?view=rsip

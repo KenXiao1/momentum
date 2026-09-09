@@ -184,7 +184,7 @@ describe('QueryOptimizer', () => {
 
     test('should use cached tree when revision matches (fast path)', () => {
       const chains1 = [createMockChain('1')];
-      const chains2 = [createMockChain('1'), createMockChain('2')];
+      const chains2 = chains1;
 
       const mockTree: ChainTreeNode[] = [
         { id: '1', name: 'Chain 1', children: [] } as ChainTreeNode,

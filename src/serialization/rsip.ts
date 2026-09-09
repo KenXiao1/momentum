@@ -69,6 +69,7 @@ export interface SerializedRSIPNodeGroup {
   id: string;
   title: string;
   faultTolerance: number;
+  faultToleranceUsed?: unknown;
   createdAt?: unknown;
   emoji?: unknown;
 }
@@ -185,6 +186,7 @@ export function decodeRSIPNodeGroup(
     id: raw.id,
     title: raw.title,
     faultTolerance: toNumber(raw.faultTolerance, 0),
+    faultToleranceUsed: toOptionalNumber(raw.faultToleranceUsed),
     createdAt: parseTruthyDateOrNow(raw.createdAt),
     emoji: toOptionalString(raw.emoji),
   };

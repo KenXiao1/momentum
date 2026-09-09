@@ -92,7 +92,7 @@ describe('usePeriodicCleanup', () => {
     expect(setState).toHaveBeenCalledWith(expect.any(Function));
   });
 
-  it('should clean expired scheduled sessions, notify, and persist active schedules', async () => {
+  it('keeps expired schedules pending while showing judgment', async () => {
     const expiredChain = createUnitChain({
       id: 'expired-chain',
       name: 'Expired Schedule Chain',
@@ -145,10 +145,10 @@ describe('usePeriodicCleanup', () => {
     expect(navigationStore.getState().showAuxiliaryJudgment).toBe(
       expiredChain.id,
     );
-    expect(storage.removeScheduledSession).toHaveBeenCalledWith(
-      expiredChain.id,
-    );
-    expect(setState).toHaveBeenCalledWith(expect.any(Function));
+    expect(storage.removeScheduledSession).not.toHaveBeenCalled();
+    expect(state.scheduledSessions).toEqual([expiredSession, activeSession]);
+    vi.advanceTimersByTime(10000);
+    expect(soundManager.playTimerFinished).toHaveBeenCalledTimes(1);
   });
 
   it('should not start periodic tasks before initialization', () => {
@@ -172,5 +172,43 @@ describe('usePeriodicCleanup', () => {
     expect(storage.upsertChain).not.toHaveBeenCalled();
     expect(storage.removeScheduledSession).not.toHaveBeenCalled();
     expect(setState).not.toHaveBeenCalled();
+  });
+  it('B03 reads schedules created after initialization and presents each expired booking for judgment', () => {
+    const chain = createUnitChain({ id: 'late' });
+    const otherChain = createUnitChain({ id: 'other-late' });
+    let current = createAppState({ chains: [chain, otherChain] });
+    const getState = () => current;
+    vi.mocked(isSessionExpired).mockImplementation(
+      (date) => date.getTime() <= Date.now(),
+    );
+    renderHook(() =>
+      usePeriodicCleanup({
+        getState,
+        setState: vi.fn(),
+        storage: createLocalStorageMock(),
+        isInitialized: true,
+      }),
+    );
+    current = {
+      ...current,
+      scheduledSessions: [chain, otherChain].map((item) => ({
+        chainId: item.id,
+        scheduledAt: new Date(),
+        expiresAt: new Date(Date.now() + 60000),
+        auxiliarySignal: 'test',
+      })),
+    };
+    vi.advanceTimersByTime(60000);
+    expect(navigationStore.getState().showAuxiliaryJudgment).toBe(chain.id);
+    expect(current.scheduledSessions).toHaveLength(2);
+    current = {
+      ...current,
+      scheduledSessions: current.scheduledSessions.slice(1),
+    };
+    navigationStore.getState().setShowAuxiliaryJudgment(null);
+    vi.advanceTimersByTime(10000);
+    expect(navigationStore.getState().showAuxiliaryJudgment).toBe(
+      otherChain.id,
+    );
   });
 });

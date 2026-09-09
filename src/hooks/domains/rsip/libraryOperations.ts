@@ -4,7 +4,7 @@ import type { ReadState, SaveFns } from './types';
 
 interface CreateLibraryOperationsParams {
   readState: ReadState;
-  saveFns: Pick<SaveFns, 'saveNodes' | 'upsertLibraryEntry'>;
+  saveFns: Pick<SaveFns, 'saveNodes' | 'saveMeta' | 'upsertLibraryEntry'>;
 }
 
 async function ignoreLoggedPostCommitFailure(
@@ -119,6 +119,12 @@ export function createLibraryOperations({
     };
 
     await saveFns.saveNodes([...state.rsipNodes, node]);
+    await ignoreLoggedPostCommitFailure(
+      saveFns.saveMeta({
+        ...(readState()?.rsipMeta ?? state.rsipMeta),
+        lastAddedAt: now,
+      }),
+    );
 
     const updatedEntry: RSIPLibraryEntry = {
       ...entry,

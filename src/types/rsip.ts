@@ -88,6 +88,7 @@ export interface RSIPNodeGroup {
   id: string;
   title: string;
   faultTolerance: number;
+  faultToleranceUsed?: number;
   createdAt: Date;
   emoji?: string;
 }

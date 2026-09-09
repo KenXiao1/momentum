@@ -1,0 +1,16 @@
+Browser tab: 1529937719, Title: "Momentum - 心理学驱动的专注力应用", URL: "http://127.0.0.1:5174/?view=focus&chain=b0e39c93-4bcb-40d7-88ff-6c7198cb8972".
+1 AXWebArea Momentum - 心理学驱动的专注力应用, URL: 127.0.0.1:5174/?view=focus&chain=b0e39c93-4bcb-40d7-88ff-6c7198cb8972
+	2 container 完成任务
+		3 heading 完成任务, Value: 2, ID: task-completion-dialog-title
+			4 text 完成任务
+		5 text CUA-定时1分钟
+		6 button 关闭
+		7 container
+			8 text 任务描述 （可选）
+		9 text field (settable) 任务描述
+		10 text 任务描述可选，按 Tab 添加备注，按 Enter 完成
+		11 button 添加备注
+		12 button 取消
+		13 button 完成任务
+
+The focused UI element is 9 text field (settable) 任务描述

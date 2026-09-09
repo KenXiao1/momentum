@@ -1,4 +1,4 @@
-﻿import type { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import type {
   ActiveSession,
   AppState,
@@ -14,6 +14,7 @@ import { toast } from '../../../utils/toast';
 import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
 import type { TaskLifecycleEventPublisher } from '../../../services/task-lifecycle/TaskLifecycleEventBus';
 import { notifyTaskCompleted } from './sessionNotifications';
+import { isSessionExpired } from '../../../utils/time';
 import { createGroupStartFlow } from './groupStartFlow';
 
 type Chain = AppState['chains'][number];
@@ -30,6 +31,7 @@ interface CreateStartChainHandlerParams {
   currentSessionId: string | null;
   setCurrentSessionId: (sessionId: string | null) => void;
   setShowBettingModal: (isOpen: boolean) => void;
+  setShowAuxiliaryJudgment?: (chainId: string | null) => void;
   onNavigateToFocus?: () => void;
   taskLifecycleEvents?: TaskLifecycleEventPublisher;
   tr: (zh: string, en: string) => string;
@@ -61,6 +63,7 @@ export function createStartChainHandler({
   currentSessionId,
   setCurrentSessionId,
   setShowBettingModal,
+  setShowAuxiliaryJudgment,
   onNavigateToFocus,
   taskLifecycleEvents,
   tr,
@@ -225,6 +228,11 @@ export function createStartChainHandler({
   });
 
   async function handleStartChain(chainId: string): Promise<void> {
+    const schedule = findScheduledSession(chainId);
+    if (schedule && isSessionExpired(schedule.expiresAt)) {
+      setShowAuxiliaryJudgment?.(chainId);
+      return;
+    }
     if (await maybeStartBettingSession(chainId)) return;
 
     const chain = findChain(chainId);

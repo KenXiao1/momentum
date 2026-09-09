@@ -3,6 +3,7 @@ import { logger } from '../../utils/logger';
 import { toError } from '../../utils/errorHandling';
 import { rsipTaskIntegrationService } from '../../services/rsip-integration/RSIPTaskIntegrationService';
 import { ensureDate } from './rsip/helpers';
+import { canCreateRSIPNodes } from './rsip/dailyRules';
 import { createGroupOperations } from './rsip/groupOperations';
 import { createLibraryOperations } from './rsip/libraryOperations';
 import { createNodeOperations } from './rsip/nodeOperations';
@@ -38,6 +39,7 @@ export function useRsipDomain({
   storage,
   getState,
   onNavigateToRSIP,
+  confirmTaskLink,
 }: UseRsipDomainParams) {
   const readState = (): AppState | null => getState?.() ?? null;
   let sliceWriteQueues = sliceWriteQueuesBySetter.get(setState);
@@ -263,6 +265,20 @@ export function useRsipDomain({
     try {
       await persistThenCommitSlice('rsipNodes', nodes, () => {
         writeContext.previousState = readState();
+        const previous = writeContext.previousState;
+        if (previous) {
+          const ids = new Set(previous.rsipNodes.map((node) => node.id));
+          const addedCount = nodes.filter((node) => !ids.has(node.id)).length;
+          if (
+            !canCreateRSIPNodes(
+              previous.rsipMeta,
+              previous.rsipNodes,
+              addedCount,
+            )
+          ) {
+            throw new Error('Strict mode allows only one new policy per day.');
+          }
+        }
         return storage.saveRSIPNodes(nodes);
       });
     } catch (error) {
@@ -322,6 +338,7 @@ export function useRsipDomain({
     saveFns,
     markExecuted: nodeOperations.markExecuted,
     markViolated: nodeOperations.markViolated,
+    confirmTaskLink,
   });
 
   return {

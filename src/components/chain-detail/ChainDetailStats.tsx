@@ -1,7 +1,7 @@
 import React from 'react';
 import { Flame, Calendar } from 'lucide-react';
 import { MainStatsProps, StatRowProps } from './types';
-import { formatTime } from '../../utils/time';
+import { formatChainDuration } from '../../utils/formatChainDuration';
 import {
   getAuxiliarySignalLabel,
   getTriggerLabel,
@@ -78,7 +78,7 @@ export const ChainDetailStats: React.FC<MainStatsProps> = ({
       />
       <StatRow
         label={tr('任务时长', 'Duration')}
-        value={formatTime(chain.duration, language)}
+        value={formatChainDuration(chain, language)}
         mono
       />
       <StatRow

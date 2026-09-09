@@ -1,0 +1,130 @@
+Browser tab: 1529937719, Title: "Momentum - 心理学驱动的专注力应用", URL: "http://127.0.0.1:5174/".
+1 AXWebArea Momentum - 心理学驱动的专注力应用, URL: 127.0.0.1:5174/
+	2 container
+		3 container root
+			4 link Description: 跳转到主要内容, Value: 127.0.0.1:5174/#main
+			5 container main
+				6 button 个人设置
+				7 text 系统通知
+				8 switch Description: 切换系统通知, Value: 0
+				9 button 切换主题
+				10 container
+					11 text CTDP 协议
+					12 heading Momentum, Value: 1
+						13 text Momentum
+					14 text 基于链式时延协议理论，通过 神圣座位原理 、 下必为例原理 和 线性时延原理 ，帮助你建立强大的习惯链条 选择一条任务链开始
+				15 text 🚀 演示模式
+				16 heading 每日签到, Value: 2
+					17 text 每日签到
+				18 button 刷新数据
+					19 image
+				20 text 总积分
+				21 text 120
+				22 text 连续天数
+				23 text 5
+				24 text 总签到
+				25 text 12
+				26 button 每日签到 +10 积分
+				27 text 每日签到获得 10 积分，连续签到获得更多奖励
+				28 text 演示模式说明
+				29 text 这是签到功能的演示版本。要使用真实功能，请配置 Supabase 环境变量并运行数据库迁移。配置完成后，此演示版本将被正式版本自动替换。
+				30 container 今日推荐
+					31 heading 今日推荐先做, Value: 2
+						32 text 今日推荐先做
+					33 button CUA-最少30分钟 保持势头 #2
+						34 text CUA-最少30分钟
+						35 text 保持势头
+						36 text #
+						37 text 2
+					38 button CUA-任务群 保持势头 #2
+						39 text CUA-任务群
+						40 text 保持势头
+						41 text #
+						42 text 2
+					43 button CUA-定时1分钟 保持势头 #1
+						44 text CUA-定时1分钟
+						45 text 保持势头
+						46 text #
+						47 text 1
+				48 heading 你的任务链, Value: 2
+					49 text 你的任务链
+				50 text 选择当前要推进的任务
+				51 button 新建链
+				52 button 新建任务群
+				53 button 回收箱
+				54 button 数据管理
+				55 button 国策树
+				56 content list 任务链列表
+					57 button 查看详情：CUA-最少30分钟
+						58 pop up button (collapsed) Description: 更多选项, Secondary Actions: Expand
+						59 heading CUA-最少30分钟, Value: 3
+							60 text CUA-最少30分钟
+						61 text 打开编程软件
+						62 text 验证30分钟最低时长
+						63 text #
+						64 text 2
+						65 text 主链记录
+						66 text #
+						67 text 1
+						68 text 预约链记录
+						69 text 上次：1分钟
+						70 text 2 次完成
+						71 button 开始任务
+						72 button 预约
+					73 button 查看详情：CUA-定时1分钟
+						74 pop up button (collapsed) Description: 更多选项, Secondary Actions: Expand
+						75 heading CUA-定时1分钟, Value: 3
+							76 text CUA-定时1分钟
+						77 text 打开编程软件
+						78 text 验证30分钟最低时长
+						79 text #
+						80 text 1
+						81 text 主链记录
+						82 text 尚无预约
+						83 text 预约链记录
+						84 text 1分钟
+						85 text 1 次完成
+						86 button 开始任务
+						87 button 预约
+					88 button 查看详情：CUA-任务群
+						89 pop up button (collapsed) Description: 更多选项, Secondary Actions: Expand
+						90 heading CUA-任务群, Value: 3
+							91 text CUA-任务群
+						92 text #2轮
+						93 container
+							94 text 任务群 • 第3轮进行中
+						95 text 验证复制、重复和群进度
+						96 text 任务进度
+						97 text 0
+						98 text /
+						99 text 2
+						100 text 1
+						101 text 子任务数
+						102 text #
+						103 text 2
+						104 text 0
+						105 text 群组记录
+						106 button 开始下一个
+						107 button 预约
+				108 container
+					109 heading Performance Monitor, Value: 3
+						110 text Performance Monitor
+					111 button Hide Performance Monitor
+					112 heading Real-time Sync, Value: 4
+						113 text Real-time Sync
+					114 text Status: Enabled Subscribers: 0
+					115 heading Query Cache, Value: 4
+						116 text Query Cache
+					117 text Cache Size: 1 Pending: 0 Cached: chainTree
+					118 heading React Performance, Value: 4
+						119 text React Performance
+					120 text Cache Hits: 6 Cache Misses: 6
+					121 button Clear Cache
+					122 button Force Refresh
+					123 text Updated:  18:12:45
+			124 button 展开宠物
+				125 container
+					126 text 🐣
+					127 text 🤩
+
+The focused UI element is 1 AXWebArea Momentum - 心理学驱动的专注力应用, URL: 127.0.0.1:5174/

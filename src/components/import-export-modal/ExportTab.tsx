@@ -10,7 +10,7 @@ export const ExportTab: React.FC<{
   <div className="space-y-6">
     <div className="rounded-2xl border border-blue-200 bg-blue-50 p-6 dark:border-blue-700/50 dark:bg-blue-900/20">
       <h3 className="mb-3 font-chinese text-lg font-bold text-blue-900 dark:text-blue-100">
-        {tr('导出任务链数据', 'Export your data')}
+        {tr('导出全部数据', 'Export your data')}
       </h3>
       <p className="mb-4 font-chinese text-sm leading-relaxed text-blue-700 dark:text-blue-300">
         {tr(
@@ -55,7 +55,6 @@ export const ExportTab: React.FC<{
       <button
         type="button"
         onClick={onExport}
-        disabled={chainsCount === 0}
         aria-label={tr('导出为 JSON 文件', 'Export as JSON')}
         className="gradient-primary mx-auto flex items-center space-x-3 rounded-2xl px-8 py-4 font-chinese font-medium text-white shadow-lg transition duration-300 hover:scale-105 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
       >

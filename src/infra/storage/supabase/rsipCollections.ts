@@ -31,18 +31,35 @@ export async function saveRSIPGroups(
 ): Promise<void> {
   const user = await ctx.getCurrentUser();
   if (!user) return;
-  await replaceUserScopedRows(
-    ctx,
-    'rsip_groups',
-    groups.map((group) => ({
-      id: group.id,
-      user_id: user.id,
-      title: group.title,
-      fault_tolerance: group.faultTolerance,
-      emoji: group.emoji ?? null,
-      created_at: group.createdAt.toISOString(),
-    })),
-  );
+  const client = ctx.getClient();
+  if (groups.length > 0) {
+    const { error } = await client.from('rsip_groups').upsert(
+      groups.map((group) => ({
+        id: group.id,
+        user_id: user.id,
+        title: group.title,
+        fault_tolerance: group.faultTolerance,
+        fault_tolerance_used: group.faultToleranceUsed ?? 0,
+        emoji: group.emoji ?? null,
+        created_at: group.createdAt.toISOString(),
+      })),
+    );
+    if (error) throw new Error(`Failed to save rsip groups: ${error.message}`);
+  }
+  const existing = await getRSIPGroups(ctx);
+  const retainedIds = new Set(groups.map((group) => group.id));
+  const removedIds = existing
+    .filter((group) => !retainedIds.has(group.id))
+    .map((group) => group.id);
+  if (removedIds.length > 0) {
+    const { error } = await client
+      .from('rsip_groups')
+      .delete()
+      .eq('user_id', user.id)
+      .in('id', removedIds);
+    if (error)
+      throw new Error(`Failed to remove rsip groups: ${error.message}`);
+  }
 }
 
 export async function getRSIPPolicyLibrary(

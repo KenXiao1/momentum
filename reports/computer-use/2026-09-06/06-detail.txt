@@ -1,0 +1,26 @@
+Browser tab: 1, Title: "Momentum - 心理学驱动的专注力应用", URL: "http://127.0.0.1:5174/?view=detail&chain=2f3b7957-f447-48e9-9c94-932d43422fc1".
+0 AXWebArea Momentum - 心理学驱动的专注力应用, URL: 127.0.0.1:5174/?view=detail&chain=2f3b7957-f447-48e9-9c94-932d43422fc1
+	1 container root
+		2 link Description: 跳转到主要内容, Value: 127.0.0.1:5174/?view=detail&chain=2f3b7957-f447-48e9-9c94-932d43422fc1#main
+		3 container main
+			4 container
+				5 button 返回
+				6 heading CUA-最少30分钟, Value: 1
+					7 text CUA-最少30分钟
+				8 text 链条详情
+				9 button 编辑链条
+				10 button 删除
+			11 container
+				12 text # 1 主链当前记录 # 2 预约链当前记录 触发动作 打开编程软件 任务时长 0分钟 总完成次数 1 失败次数 0 预约链失败 0 预约信号 打响指 预约时长 15分钟 预约完成条件 打开测试页面 成功率 100 %
+			13 container
+				14 heading 任务描述 任务描述, Value: 3
+					15 text 任务描述
+					16 text 任务描述
+				17 text 验证30分钟最低时长
+			18 container
+				19 heading 最近记录 最近记录, Value: 3
+					20 text 最近记录
+					21 text 最近记录
+				22 text 任务完成 2026/9/6 完成用时：1分钟 任务描述 中文完成记录测试：不足30分钟 备注 CUA测试数据，仅验证流程。
+
+The focused UI element is 0 AXWebArea Momentum - 心理学驱动的专注力应用, URL: 127.0.0.1:5174/?view=detail&chain=2f3b7957-f447-48e9-9c94-932d43422fc1

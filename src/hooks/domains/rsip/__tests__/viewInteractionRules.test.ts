@@ -240,7 +240,7 @@ describe('RSIP view interaction rules', () => {
         consecutiveExecutions: priorExecutions,
         consecutiveViolations: 4,
         totalExecutions: 20,
-        lastExecutedAt: createdAt,
+        lastExecutedAt: new Date('2026-07-10T12:00:00.000Z'),
       });
 
       const executed = markNodeExecutedFallback(

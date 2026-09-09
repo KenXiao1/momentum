@@ -3,15 +3,24 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createLocalStorageMock } from '../../../test/factories';
 import type { PetState, TaskCompletionReward } from '../../../types/pet';
 import { useStorage } from '../../../storage/useStorage';
+import { createAppState } from '../../../test/factories';
+import { localStorageAdapter } from '../../../storage/localStorageAdapter';
+import { importExportService } from '../../../services/ImportExportService';
+import { useImportExportDomain } from '../useImportExportDomain';
 import { usePetDomain } from '../usePetDomain';
 
 vi.mock('../../../storage/useStorage', () => ({
   useStorage: vi.fn(),
 }));
 
+vi.mock('../../../i18n', () => ({
+  useI18n: () => ({ tr: (_zh: string, en: string) => en }),
+}));
+
 vi.mock('../../../utils/logger', () => ({
   logger: {
     info: vi.fn(),
+    debug: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
   },
@@ -114,5 +123,48 @@ describe('usePetDomain real pet-logic composition', () => {
         stage: 'baby',
       }),
     );
+  });
+  it('B08/B10 restores a pet-only backup and updates the mounted UI state immediately', async () => {
+    localStorage.clear();
+    vi.mocked(useStorage).mockReturnValue(localStorageAdapter);
+    let appState = createAppState();
+    const { result } = renderHook(() => {
+      const petDomain = usePetDomain();
+      const importer = useImportExportDomain({
+        storage: localStorageAdapter,
+        safelySaveChains: (chains) => localStorageAdapter.saveChains(chains),
+        setState: (update) => {
+          appState = typeof update === 'function' ? update(appState) : update;
+        },
+        onPetImported: petDomain.reloadPet,
+      });
+      return { petDomain, importer };
+    });
+    await waitFor(() => expect(result.current.petDomain.isLoading).toBe(false));
+    expect(result.current.petDomain.hasPet).toBe(false);
+    const pet = createPetState({ name: 'Imported pet' });
+    const json = JSON.stringify(
+      importExportService.createExportData({ chains: [], petState: pet }),
+    );
+    const parsed = importExportService.parseImportData({
+      json,
+      options: {
+        preserveStatistics: true,
+        preserveTimestamps: true,
+        importCompletionHistory: true,
+      },
+      tr: (_zh, en) => en,
+    });
+    await act(() =>
+      result.current.importer.handleImportChains(parsed.chains, {
+        petState: parsed.petState,
+      }),
+    );
+    expect(result.current.petDomain.hasPet).toBe(true);
+    expect(result.current.petDomain.pet?.name).toBe('Imported pet');
+    expect((await localStorageAdapter.getPetState())?.name).toBe(
+      'Imported pet',
+    );
+    expect(appState.chains).toEqual([]);
   });
 });

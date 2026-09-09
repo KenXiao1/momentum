@@ -9,7 +9,6 @@ import { toError } from '../../utils/errorMessage';
 import { isDev } from '../../utils/env';
 import { logger } from '../../utils/logger';
 import { runWhenIdle } from '../../utils/runWhenIdle';
-import { isSessionExpired } from '../../utils/time';
 import {
   cleanupExpiredDeletedChains,
   persistCompletionHistoryTimingMigration,
@@ -69,7 +68,7 @@ export function useAppDataLoad({
 
         const {
           chains,
-          scheduledSessions: allScheduledSessions,
+          scheduledSessions,
           activeSession,
           completionHistory,
           rsipNodes,
@@ -81,10 +80,6 @@ export function useAppDataLoad({
           rsipExecutionRecords,
           taskTimeStats,
         } = await loadAppDataSnapshot(storage);
-
-        const scheduledSessions = allScheduledSessions.filter(
-          (session) => !isSessionExpired(session.expiresAt),
-        );
 
         // Check and fix circular reference data.
         const hasCircularReferences = chains.some(
@@ -179,19 +174,6 @@ export function useAppDataLoad({
         navigationStore
           .getState()
           .navigateToView(activeSession ? 'focus' : 'dashboard');
-
-        // Clean up expired sessions.
-        if (scheduledSessions.length !== allScheduledSessions.length) {
-          const expiredScheduledSessions = allScheduledSessions.filter(
-            (session) => isSessionExpired(session.expiresAt),
-          );
-
-          await Promise.all(
-            expiredScheduledSessions.map((session) =>
-              storage.removeScheduledSession(session.chainId),
-            ),
-          );
-        }
       } catch (error) {
         logger.error(
           'APP_SHELL',

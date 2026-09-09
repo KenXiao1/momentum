@@ -61,6 +61,8 @@ describe('createSchedulingHandlers', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-14T08:06:00.000Z'));
   });
 
   afterEach(() => {
@@ -124,15 +126,12 @@ describe('createSchedulingHandlers', () => {
       otherSchedule,
       expectedSession,
     ]);
-    expect(nextState.chains).toEqual([
-      otherChain,
-      { ...targetChain, auxiliaryStreak: 5 },
-    ]);
+    expect(nextState.chains).toEqual([otherChain, targetChain]);
     expect(nextState.chains[0]).toBe(otherChain);
-    expect(nextState.chainsRevision).toBe(10);
+    expect(nextState.chainsRevision).toBe(9);
     expect(storage.setScheduledSession).toHaveBeenCalledWith(expectedSession);
-    expect(safelySaveChains).toHaveBeenCalledWith(nextState.chains);
-    expect(queryOptimizer.onDataChange).toHaveBeenCalledWith('chains');
+    expect(safelySaveChains).not.toHaveBeenCalled();
+    expect(queryOptimizer.onDataChange).not.toHaveBeenCalled();
   });
 
   it('ignores a duplicate schedule for the requested chain', async () => {
@@ -259,7 +258,7 @@ describe('createSchedulingHandlers', () => {
       tr: completionTr,
     });
 
-    handleCompleteBooking(targetChain.id);
+    await handleCompleteBooking(targetChain.id);
     await flushPromises();
 
     const nextState = stateRef.getState();
@@ -313,7 +312,7 @@ describe('createSchedulingHandlers', () => {
     ).not.toHaveBeenCalled();
   });
 
-  it('reports both completion persistence failures without rolling back local state', async () => {
+  it('retains the pending booking and reports a failed completion save', async () => {
     const chain = createUnitChain({ id: 'chain-with-errors' });
     const stateRef = createStateContainer(
       createAppState({
@@ -346,23 +345,18 @@ describe('createSchedulingHandlers', () => {
       tr,
     });
 
-    handleCompleteBooking(chain.id);
+    await handleCompleteBooking(chain.id);
     await flushPromises();
 
-    expect(stateRef.getState().scheduledSessions).toEqual([]);
+    expect(stateRef.getState().scheduledSessions).toHaveLength(1);
+    expect(stateRef.getState().chains[0].auxiliaryStreak).toBe(0);
     expect(logger.error).toHaveBeenCalledWith(
       'SESSIONS',
-      'Failed to persist scheduled sessions after completing booking',
+      'Failed to complete booking',
       { chainId: chain.id },
-      expect.objectContaining({ message: 'remove failed' }),
-    );
-    expect(logger.error).toHaveBeenCalledWith(
-      'SESSIONS',
-      '完成预约时保存链条数据失败',
-      undefined,
       expect.objectContaining({ message: 'save failed' }),
     );
-    expect(queryOptimizer.onDataChange).toHaveBeenCalledWith('chains');
+    expect(toast.error).toHaveBeenCalled();
   });
 
   it('should show toast when schedule persistence fails', async () => {
@@ -370,7 +364,9 @@ describe('createSchedulingHandlers', () => {
     const chain = createUnitChain({ id: 'chain-5' });
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
     const storage = createLocalStorageMock({
-      setScheduledSession: vi.fn(async () => undefined),
+      setScheduledSession: vi.fn(async () => {
+        throw new Error('save failed');
+      }),
     });
     const safelySaveChains = vi.fn(async () => {
       throw new Error('save failed');
@@ -401,5 +397,44 @@ describe('createSchedulingHandlers', () => {
       { chainId: chain.id },
       expect.objectContaining({ message: 'save failed' }),
     );
+  });
+  it('B02 counts a fulfilled booking once and ignores duplicate completions', async () => {
+    const chain = createUnitChain({ id: 'once' });
+    const stateRef = createStateContainer(createAppState({ chains: [chain] }));
+    const handlers = createSchedulingHandlers({
+      ...stateRef,
+      storage: createLocalStorageMock(),
+      safelySaveChains: vi.fn(async () => undefined),
+      setShowAuxiliaryJudgment: vi.fn(),
+      tr,
+    });
+    await handlers.handleScheduleChain(chain.id);
+    expect(stateRef.getState().chains[0].auxiliaryStreak).toBe(0);
+    await Promise.all([
+      handlers.handleCompleteBooking(chain.id),
+      handlers.handleCompleteBooking(chain.id),
+    ]);
+    await handlers.handleCompleteBooking(chain.id);
+    expect(stateRef.getState().chains[0].auxiliaryStreak).toBe(1);
+    expect(stateRef.getState().scheduledSessions).toEqual([]);
+  });
+
+  it('B03 routes an expired booking to judgment instead of crediting it', async () => {
+    const chain = createUnitChain({ id: 'expired' });
+    const stateRef = createStateContainer(createAppState({ chains: [chain] }));
+    const judgment = vi.fn();
+    const handlers = createSchedulingHandlers({
+      ...stateRef,
+      storage: createLocalStorageMock(),
+      safelySaveChains: vi.fn(async () => undefined),
+      setShowAuxiliaryJudgment: judgment,
+      tr,
+    });
+    await handlers.handleScheduleChain(chain.id);
+    vi.advanceTimersByTime((chain.auxiliaryDuration + 1) * 60000);
+    await handlers.handleCompleteBooking(chain.id);
+    expect(judgment).toHaveBeenCalledWith(chain.id);
+    expect(stateRef.getState().chains[0].auxiliaryStreak).toBe(0);
+    expect(stateRef.getState().scheduledSessions).toHaveLength(1);
   });
 });

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import type { RSIPMeta, RSIPNode, RSIPNodeGroup } from '../../../types';
 import type { RSIPViewProps } from '../../RSIPView.types';
+import { toast } from '../../../utils/toast';
 import type {
   RSIPViewActionSlice,
   RSIPViewStateSlice,
@@ -265,6 +266,15 @@ export function useRSIPViewCreationActions({
     if (validItems.length === 0) {
       return;
     }
+    if (!meta.allowMultiplePerDay && validItems.length > 1) {
+      toast.error(
+        tr(
+          '严格模式每天最多新增一条国策，请只保留一条有效条目，或切换自由模式。',
+          'Strict mode allows one new policy per day. Keep one valid item or switch to free mode.',
+        ),
+      );
+      return;
+    }
 
     const baseSort = Math.floor(Date.now() / 1000);
     const createdAt = new Date();
@@ -296,6 +306,8 @@ export function useRSIPViewCreationActions({
     }
   }, [
     canAddToday,
+    meta.allowMultiplePerDay,
+    tr,
     createEmoji,
     createType,
     enqueueMetaUpdate,

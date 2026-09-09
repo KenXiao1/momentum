@@ -197,7 +197,7 @@ export function useRSIPViewInteractionActions({
     (node: RSIPNode) => {
       violationAttemptIdRef.current += 1;
       setViolationDialogNode(node);
-      const assessment = assessViolationGroup(node, groups);
+      const assessment = assessViolationGroup(node, groups, nodes);
       if (assessment.status === 'none') {
         setViolationGroupMessage(undefined);
         return;
@@ -216,7 +216,7 @@ export function useRSIPViewInteractionActions({
         );
       }
     },
-    [groups, language],
+    [groups, language, nodes],
   );
 
   const closeViolationDialog = useCallback(() => {

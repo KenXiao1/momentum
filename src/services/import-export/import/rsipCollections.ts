@@ -35,6 +35,7 @@ export function parseImportRsipGroups(
       ),
       title: String(raw.title ?? ''),
       faultTolerance: Math.max(0, toNumber(raw.faultTolerance, 0)),
+      faultToleranceUsed: toOptionalNumber(raw.faultToleranceUsed),
       createdAt: parseTruthyDateOrNow(raw.createdAt),
       emoji: toOptionalString(raw.emoji),
     }));

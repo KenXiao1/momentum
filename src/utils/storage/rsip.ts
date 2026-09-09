@@ -24,9 +24,11 @@ import {
   type SerializedRSIPRunRecord,
   type SerializedRSIPTaskLink,
 } from '../../serialization';
+import { recoverRSIPAtomicJournal } from './rsipAtomicJournal';
 import { STORAGE_KEYS } from './keys';
 
 export function getRSIPNodes(): RSIPNode[] {
+  recoverRSIPAtomicJournal();
   const data = localStorage.getItem(STORAGE_KEYS.RSIP_NODES);
   if (!data) return [];
 
@@ -54,27 +56,29 @@ export function removeRSIPNodes(nodeIds: string[]): void {
 }
 
 export function getRSIPMeta(): RSIPMeta {
+  recoverRSIPAtomicJournal();
   const data = localStorage.getItem(STORAGE_KEYS.RSIP_META);
   if (!data) return {};
 
   return decodeRSIPMeta(JSON.parse(data) as SerializedRSIPMeta);
 }
 
+export function serializeRSIPMeta(meta: RSIPMeta): string {
+  return JSON.stringify({
+    ...meta,
+    lastAddedAt: meta.lastAddedAt ? toIsoString(meta.lastAddedAt) : undefined,
+    lastTreeOpenedAt: meta.lastTreeOpenedAt
+      ? toIsoString(meta.lastTreeOpenedAt)
+      : undefined,
+    currentRunStartedAt: meta.currentRunStartedAt
+      ? toIsoString(meta.currentRunStartedAt)
+      : undefined,
+    allowMultiplePerDay: !!meta.allowMultiplePerDay,
+  });
+}
+
 export function saveRSIPMeta(meta: RSIPMeta): void {
-  localStorage.setItem(
-    STORAGE_KEYS.RSIP_META,
-    JSON.stringify({
-      ...meta,
-      lastAddedAt: meta.lastAddedAt ? toIsoString(meta.lastAddedAt) : undefined,
-      lastTreeOpenedAt: meta.lastTreeOpenedAt
-        ? toIsoString(meta.lastTreeOpenedAt)
-        : undefined,
-      currentRunStartedAt: meta.currentRunStartedAt
-        ? toIsoString(meta.currentRunStartedAt)
-        : undefined,
-      allowMultiplePerDay: !!meta.allowMultiplePerDay,
-    }),
-  );
+  localStorage.setItem(STORAGE_KEYS.RSIP_META, serializeRSIPMeta(meta));
 }
 
 export function getRSIPGroups(): RSIPNodeGroup[] {
@@ -91,6 +95,7 @@ export function saveRSIPGroups(groups: RSIPNodeGroup[]): void {
 }
 
 export function getRSIPPolicyLibrary(): RSIPLibraryEntry[] {
+  recoverRSIPAtomicJournal();
   const data = localStorage.getItem(STORAGE_KEYS.RSIP_POLICY_LIBRARY);
   if (!data) return [];
 

@@ -1,0 +1,18 @@
+Browser tab: 1, Title: "Momentum - 心理学驱动的专注力应用", URL: "http://127.0.0.1:5174/?view=focus&chain=2f3b7957-f447-48e9-9c94-932d43422fc1".
+0 AXWebArea Momentum - 心理学驱动的专注力应用, URL: 127.0.0.1:5174/?view=focus&chain=2f3b7957-f447-48e9-9c94-932d43422fc1
+	1 container root
+		2 link Description: 跳转到主要内容, Value: 127.0.0.1:5174/?view=focus&chain=2f3b7957-f447-48e9-9c94-932d43422fc1#main
+		3 container
+			4 button Description: 进入全屏, Help: 进入全屏 (F11)
+			5 container
+				6 heading CUA-最少30分钟, Value: 1
+					7 text CUA-最少30分钟
+				8 text 打开编程软件
+			9 container
+				10 text 00:08
+				11 text 已用时 1分钟 # 0 还需 29分52秒 达到最小时长
+			12 button 暂停
+			13 button 提前完成
+			14 button 长按中断
+
+The focused UI element is 0 AXWebArea Momentum - 心理学驱动的专注力应用, URL: 127.0.0.1:5174/?view=focus&chain=2f3b7957-f447-48e9-9c94-932d43422fc1

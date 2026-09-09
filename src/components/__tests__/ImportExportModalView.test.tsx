@@ -110,7 +110,7 @@ describe('ImportExportModalView', () => {
     expect(screen.getByRole('button', { name: 'Import data' })).toBeDisabled();
   });
 
-  it('forces import tab when there are no chains', () => {
+  it('allows exporting without any chains', () => {
     const props = createProps({
       activeTab: 'export',
       chainsCount: 0,
@@ -120,9 +120,7 @@ describe('ImportExportModalView', () => {
 
     expect(
       screen.queryByRole('button', { name: 'Export as JSON' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Import data' }),
-    ).toBeInTheDocument();
+    ).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Import' })).toBeInTheDocument();
   });
 });

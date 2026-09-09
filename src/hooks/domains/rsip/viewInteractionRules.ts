@@ -6,6 +6,8 @@ import type {
   RSIPTaskLink,
 } from '../../../types';
 import { getDescendantCount, getDescendantIds } from '../../../utils/rsipTree';
+import { planRSIPViolation } from './violationPlan';
+import { hasExecutedToday, nextExecutionStreak } from './dailyRules';
 
 type ViolationGroupAssessment =
   | { status: 'none' }
@@ -26,14 +28,19 @@ export function getActiveExecutionTaskLinks(
 export function assessViolationGroup(
   node: RSIPNode,
   groups: RSIPNodeGroup[],
+  nodes: RSIPNode[] = [node],
 ): ViolationGroupAssessment {
   const group = groups.find((item) => item.id === node.groupId);
-  if (!group) {
+  if (!group || (node.reinforcementLevel ?? 0) > 0) {
     return { status: 'none' };
   }
 
   return {
-    status: group.faultTolerance >= 1 ? 'tolerated' : 'collapse',
+    status: planRSIPViolation(node.id, nodes, groups).collapsedGroupIds.has(
+      group.id,
+    )
+      ? 'collapse'
+      : 'tolerated',
     groupTitle: group.title,
   };
 }
@@ -98,11 +105,11 @@ export function markNodeExecutedFallback(
   now = new Date(),
 ): RSIPNode[] {
   return nodes.map((node) => {
-    if (node.id !== nodeId) {
+    if (node.id !== nodeId || hasExecutedToday(node, now)) {
       return node;
     }
 
-    const consecutiveExecutions = (node.consecutiveExecutions ?? 0) + 1;
+    const consecutiveExecutions = nextExecutionStreak(node, now);
     const stabilityPhase = getNextStabilityPhase(
       node.stabilityPhase ?? 'E0',
       consecutiveExecutions,

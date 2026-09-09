@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import type { AppState } from '../../../../types';
 import {
   createAppState,
@@ -85,9 +85,12 @@ describe('createStartChainHandler', () => {
   const tr = (_zh: string, en: string) => en;
   const zhTr = (zh: string) => zh;
 
+  afterEach(() => vi.useRealTimers());
+
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-02-02T08:00:00.000Z'));
     vi.clearAllMocks();
-    vi.useRealTimers();
     vi.mocked(isGroupExpired).mockReturnValue(false);
   });
 

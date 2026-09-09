@@ -1,4 +1,4 @@
-﻿import type { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import type { AppState, ScheduledSession } from '../../../types';
 import type { MomentumStorage } from '../../../storage/MomentumStorage';
 import type { SafelySaveChains } from '../useChainsDomain';
@@ -7,6 +7,7 @@ import { queryOptimizer } from '../../../utils/queryOptimizer';
 import { logger } from '../../../utils/logger';
 import { toast } from '../../../utils/toast';
 import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
+import { isSessionExpired } from '../../../utils/time';
 import { notifyTaskCompleted } from './sessionNotifications';
 
 interface CreateSchedulingHandlersParams {
@@ -29,12 +30,13 @@ export function createSchedulingHandlers({
   tr,
 }: CreateSchedulingHandlersParams) {
   const readState = resolveAppStateReader({ state, getState });
+  const pendingSchedules = new Set<string>();
   const handleScheduleChain = (chainId: string) => {
     const currentState = readState();
     const existingSchedule = currentState.scheduledSessions.find(
       (s) => s.chainId === chainId,
     );
-    if (existingSchedule) return;
+    if (existingSchedule || pendingSchedules.has(chainId)) return;
 
     const chain = currentState.chains.find((c) => c.id === chainId);
     if (!chain) return;
@@ -54,23 +56,11 @@ export function createSchedulingHandlers({
           scheduledSession,
         ];
 
-        const updatedChains = latestState.chains.map((chain) =>
-          chain.id === chainId
-            ? { ...chain, auxiliaryStreak: chain.auxiliaryStreak + 1 }
-            : chain,
-        );
-
-        await Promise.all([
-          storage.setScheduledSession(scheduledSession),
-          safelySaveChains(updatedChains),
-        ]);
-        queryOptimizer.onDataChange('chains');
+        await storage.setScheduledSession(scheduledSession);
 
         setState((prev) => ({
           ...prev,
           scheduledSessions: updatedSessions,
-          chains: updatedChains,
-          chainsRevision: prev.chainsRevision + 1,
         }));
       } catch (error) {
         logger.error(
@@ -82,20 +72,30 @@ export function createSchedulingHandlers({
         toast.error(
           tr('预约失败，请重试', 'Failed to schedule. Please try again.'),
         );
+      } finally {
+        pendingSchedules.delete(chainId);
       }
     };
 
-    updateStateAndSave();
+    pendingSchedules.add(chainId);
+    return updateStateAndSave();
   };
 
   const handleCancelScheduledSession = (chainId: string) => {
     setShowAuxiliaryJudgment(chainId);
   };
 
-  const handleCompleteBooking = (chainId: string) => {
+  const handleCompleteBooking = async (chainId: string) => {
     const currentState = readState();
     const chain = currentState.chains.find((c) => c.id === chainId);
-    if (!chain) return;
+    const schedule = currentState.scheduledSessions.find(
+      (session) => session.chainId === chainId,
+    );
+    if (!chain || !schedule || pendingSchedules.has(chainId)) return;
+    if (isSessionExpired(schedule.expiresAt)) {
+      setShowAuxiliaryJudgment(chainId);
+      return;
+    }
 
     const updatedScheduledSessions = currentState.scheduledSessions.filter(
       (session) => session.chainId !== chainId,
@@ -104,36 +104,39 @@ export function createSchedulingHandlers({
       c.id === chainId ? { ...c, auxiliaryStreak: c.auxiliaryStreak + 1 } : c,
     );
 
-    storage.removeScheduledSession(chainId).catch((error) => {
+    pendingSchedules.add(chainId);
+    try {
+      await safelySaveChains(updatedChains);
+      await storage.removeScheduledSession(chainId);
+      queryOptimizer.onDataChange('chains');
+      setState((prev) => ({
+        ...prev,
+        scheduledSessions: updatedScheduledSessions,
+        chains: updatedChains,
+        chainsRevision: prev.chainsRevision + 1,
+      }));
+
+      notifyTaskCompleted(
+        chain.name,
+        chain.auxiliaryStreak + 1,
+        tr('预约已完成', 'Schedule completed'),
+      );
+    } catch (error) {
       logger.error(
         'SESSIONS',
-        'Failed to persist scheduled sessions after completing booking',
+        'Failed to complete booking',
         { chainId },
         normalizeUnknownError(error),
       );
-    });
-    safelySaveChains(updatedChains).catch((error) => {
-      queryOptimizer.onDataChange('chains');
-      logger.error(
-        'SESSIONS',
-        '完成预约时保存链条数据失败',
-        undefined,
-        normalizeUnknownError(error),
+      toast.error(
+        tr(
+          '完成预约失败，请重试',
+          'Failed to complete booking. Please try again.',
+        ),
       );
-    });
-
-    setState((prev) => ({
-      ...prev,
-      scheduledSessions: updatedScheduledSessions,
-      chains: updatedChains,
-      chainsRevision: prev.chainsRevision + 1,
-    }));
-
-    notifyTaskCompleted(
-      chain.name,
-      chain.auxiliaryStreak + 1,
-      tr('预约已完成', 'Schedule completed'),
-    );
+    } finally {
+      pendingSchedules.delete(chainId);
+    }
   };
 
   return {

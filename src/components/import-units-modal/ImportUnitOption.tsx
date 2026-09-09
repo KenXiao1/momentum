@@ -2,7 +2,7 @@ import { CheckCircle, Clock, Flame } from 'lucide-react';
 import type { Chain } from '../../types';
 import { getChainTypeConfig } from '../../utils/chainTree';
 import { Icon } from '../../utils/iconMap';
-import { formatTime } from '../../utils/time';
+import { formatChainDuration } from '../../utils/formatChainDuration';
 
 interface ImportUnitOptionProps {
   unit: Chain;
@@ -75,7 +75,7 @@ export function ImportUnitOption({
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-slate-400">
             <span className="flex items-center space-x-1">
               <Clock size={12} aria-hidden="true" />
-              <span>{formatTime(unit.duration, language)}</span>
+              <span>{formatChainDuration(unit, language)}</span>
             </span>
             <span className="flex items-center space-x-1">
               <Flame size={12} aria-hidden="true" />
