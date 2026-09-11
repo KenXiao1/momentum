@@ -1,5 +1,7 @@
 # Momentum 性能 + 坏味道优化战役计划（静态分析驱动，2–4 周）
 
+Historical plan; current development guidance is in [CONTRIBUTING.md](../../CONTRIBUTING.md).
+
 > 本文目标：用现有“静态分析 + 报告产物”工具链，把性能优化与屎山/坏味道治理变成可量化、可回归、可分 PR 推进的工程战役。
 >
 > 约束：
@@ -350,13 +352,13 @@ PR#11 DevTools traces（local-storage mode）：
 
 ## 附录 B：DevTools MCP（Runbook + Codex 自动采集）
 
-### B1. 场景定义（每次复测必须覆盖）
+### B1. 当时使用的复测场景
 
 1. **冷启动首屏**：`/` Dashboard 首次加载
 2. **树构建路径**：进入 GroupView 或 ChainDetail（触发 `memoizedBuildChainTree`）
 3. **规则搜索交互**：打开规则选择/搜索（触发 RuleSearchOptimizer）
 
-### B2. Codex 自动采集（MCP 操作步骤固定）
+### B2. 自动采集示例（历史 MCP 接口）
 
 **输入**：URL（优先 `http://127.0.0.1:4173/`），场景名（cold_start / tree_build / rule_search）
 

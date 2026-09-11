@@ -2,6 +2,12 @@
 module.exports = {
   forbidden: [
     {
+      name: 'no-circular',
+      severity: 'error',
+      from: {},
+      to: { circular: true },
+    },
+    {
       name: 'no-domain-to-ui',
       comment:
         'Pure domain logic must not depend on React components or the app shell.',

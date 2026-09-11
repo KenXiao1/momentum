@@ -57,7 +57,7 @@ async function ensureVitestReport(refreshReport) {
       vitestBin,
       'run',
       '--config',
-      'vitest.ci.config.ts',
+      'vitest.config.ts',
       '--reporter=json',
       '--outputFile',
       'coverage/vitest-ci-report.json',

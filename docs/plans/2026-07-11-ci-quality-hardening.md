@@ -1,6 +1,6 @@
 # CI Quality Hardening Implementation Plan
 
-> **For Codex:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+Historical plan; current development guidance is in [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 **Goal:** Make Momentum's required CI gates truthful again by enforcing architecture violations, removing the known circular dependency, and restoring formatting checks.
 

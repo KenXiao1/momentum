@@ -1,6 +1,6 @@
 # Momentum Smell Cleanup Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+Historical plan; current development guidance is in [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 **Goal:** Reduce Momentum’s “屎山” signals (dead code, unused exports, complex hotspots, risky async patterns) with measurable deltas and no behavior regressions.
 
@@ -374,12 +374,3 @@ Baseline numbers to beat:
 - Madge: still no cycles
 
 ---
-
-## Execution options
-
-Plan complete and saved to `docs/plans/2026-01-27-smell-cleanup.md`.
-
-Two execution options:
-
-1. Subagent-Driven (this session): use superpowers:subagent-driven-development per task
-2. Parallel Session: open a new session and execute with superpowers:executing-plans

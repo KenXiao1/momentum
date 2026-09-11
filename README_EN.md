@@ -1,5 +1,7 @@
 # Momentum - A Psychology-Driven Focus Application
 
+For development and verification, see [CONTRIBUTING.md](CONTRIBUTING.md); see the [documentation index](docs/README.md) for architecture and domain behavior.
+
 A self-control training tool based on the Chained Time-Delay Protocol (CTDP) theory, designed to help users build powerful habit chains through the "Sacred Seat Principle," the "Principle of Precedent," and the "Linear Time-Delay Principle."
 
 For more details, please see: https://www.zhihu.com/question/19888447/answer/1930799480401293785
@@ -211,7 +213,7 @@ Complete data management functionality.
 
 ### Prerequisites
 
-- Node.js 20.19+ (or 22.12+)
+- Node.js: see `.nvmrc` and `package.json` (`engines.node`)
 - npm or yarn
 - To enable Supabase cloud mode, configure:
   - `VITE_SUPABASE_URL`

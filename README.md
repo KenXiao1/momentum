@@ -2,7 +2,9 @@
 
 # Momentum - 心理学驱动的专注力应用
 
-基于链式时延协议（CTDP）理论的自控力训练工具，通过"神圣座位原理"、"下必为例原理"和"线性时延原理"帮助用户建立强大的习惯链条。支持 Web（PWA）、桌面端（Windows/macOS/Linux）和移动端（iOS/Android），由 Tauri v2 驱动原生体验。
+开发与验证流程见 [CONTRIBUTING.md](CONTRIBUTING.md)，架构和领域说明见 [文档索引](docs/README.md)。
+
+基于链式时延协议（CTDP）理论的自控力训练工具，通过"神圣座位原理"、"下必为例原理"和"线性时延原理"帮助用户建立强大的习惯链条。支持 Web（PWA）和 Tauri v2 桌面端（Windows/macOS/Linux）；移动端（iOS/Android）适配进行中。
 
 详情请见：https://www.zhihu.com/question/19888447/answer/1930799480401293785
 
@@ -212,7 +214,7 @@ https://momentumctdp.netlify.app/
 
 ### 环境要求
 
-- Node.js 20.19+ (or 22.12+)
+- Node.js: see `.nvmrc` and `package.json` (`engines.node`)
 - npm 或 yarn
 - **桌面/移动端构建额外需要**：Rust 工具链（[rustup.rs](https://rustup.rs/)）
 - 启用 Supabase 云端模式时需要配置：

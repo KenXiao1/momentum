@@ -13,7 +13,7 @@ export const MUTATION_MODES = Object.freeze({
   nightly: Object.freeze({
     mode: 'nightly',
     configFile: 'stryker.config.mjs',
-    configDependencies: ['stryker.config.mjs', 'vitest.ci.config.ts'],
+    configDependencies: ['stryker.config.mjs', 'vitest.config.ts'],
     reportFile: 'reports/mutation/mutation.json',
     metadataFile: 'reports/mutation/mutation-metadata.json',
     qualityReportFile: 'reports/quality/test-mutation-hotspots.json',
@@ -27,7 +27,7 @@ export const MUTATION_MODES = Object.freeze({
     configDependencies: [
       'stryker.critical.config.mjs',
       'stryker.config.mjs',
-      'vitest.ci.config.ts',
+      'vitest.config.ts',
     ],
     reportFile: 'reports/mutation/critical.json',
     metadataFile: 'reports/mutation/critical-metadata.json',

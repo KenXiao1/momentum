@@ -1,213 +1,60 @@
-# Momentum (Codex Agent Notes)
+# Momentum
 
-## Scope
+React/TypeScript focus and habit app implementing CTDP and RSIP, with local or
+Supabase persistence and a Tauri native shell.
 
-This file is the primary operating guide for coding agents working in this repository.
+## Navigation
 
-## Quick Start
+Read the documents relevant to the task; this is a map, not a reading checklist.
 
-- Install deps: `npm install`
-- Dev server (Web): `npm run dev`
-- Dev server (Tauri desktop): `npm run tauri dev`
-- Production build (Web): `npm run build`
-- Production build (Tauri): `npm run tauri build`
-- Preview build: `npm run preview`
-- Typecheck: `npm run typecheck`
-- Lint: `npm run lint`
+| Topic                                            | Source                                                                                   |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Development and verification                     | [CONTRIBUTING.md](CONTRIBUTING.md)                                                       |
+| Architecture, storage, lifecycle, platform/Tauri | [Architecture](docs/guides/ARCHITECTURE.md)                                              |
+| Product and domain behavior                      | [Documentation index](docs/README.md), [feature overview](docs/FEATURES_OVERVIEW.md)     |
+| Database schema and migrations                   | [Schema](docs/api/DATABASE_SCHEMA.md), [migration guide](docs/guides/apply-migration.md) |
+| Automated tests and manual scenarios             | [Testing guide](docs/guides/TESTING_GUIDE.md)                                            |
+| Web and native builds/releases                   | [Deployment](docs/guides/DEPLOYMENT.md)                                                  |
 
-## Architecture Overview
+## Boundaries worth knowing
 
-### Three-Layer Architecture
+- UI/AppShell containers and domain hooks use public storage hooks and
+  `src/storage/ports.ts`; views receive props. Concrete adapters belong below
+  that boundary. See `.dependency-cruiser.cjs` for enforced import rules.
+- Local and Supabase storage are both supported. Switching modes changes the
+  data source without merging data; pet state stays local even in cloud mode.
+- Existing missing-column fallbacks support databases with pending migrations.
+  Preserve that compatibility when changing persistence; details are in the
+  migration guide.
+- Database changes use new files in `supabase/migrations/`. Preserve user-scoped
+  RLS and explicit caller checks in `SECURITY DEFINER` RPCs; UI filtering is not
+  authorization. Keep RPC named arguments aligned with SQL signatures.
+- Native APIs are loaded through `src/utils/tauri-bridge.ts` and
+  `src/utils/platform-adapters/`. Shared code also runs in browsers; Tauri builds
+  intentionally disable the PWA service worker.
 
-1. UI Layer (`src/components/`, `src/app/`)
-   - Views and sections are pure presentational components.
-   - Never access Supabase directly.
-   - Containers, controllers, and domain hooks may use the public `useStorage()`, `useStorageMode()`, and `src/storage/ports.ts` APIs for data operations.
-   - Never import concrete adapters or other storage internals from UI/AppShell code.
-2. Domain Logic Layer (`src/hooks/domains/`)
-   - Business logic and state transitions.
-   - Key hooks include: `useChainsDomain`, `useSessionsDomain`, `useBettingDomain`, `useRulesDomain`, `useRecycleBinDomain`, `useRsipDomain`, `useGroupDomain`, `useImportExportDomain`, `useCheckinDomain`, `usePetDomain`, `useSafeSaveChains`.
-3. Infrastructure Layer (`src/storage/`, `src/infra/storage/supabase/`)
-   - `MomentumStorage` defines the storage contract.
-   - Implementations: `localStorageAdapter` (offline) and `SupabaseStorage` (cloud).
-   - Use `storage.kind` (`'local' | 'supabase'`) to branch behavior.
-4. Platform Abstraction Layer (`src/utils/platform.ts`, `src/utils/platform-adapters/`)
-   - Detects runtime: `web` / `tauri-desktop` / `tauri-mobile`.
-   - Adapters for notifications, window management, file I/O.
-   - Tauri APIs are lazy-loaded via `src/utils/tauri-bridge.ts` to avoid Web build issues.
-5. Tauri Backend (`src-tauri/`)
-   - Rust backend for desktop/mobile native features.
-   - Commands: `src-tauri/src/commands/` (notifications, window, file_ops).
-   - Config: `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`.
+## Useful commands
 
-### Container + View Pattern
+Use the Node version in `.nvmrc`; `package.json` owns the complete script list.
 
-Large UI modules should follow container/view separation:
+```sh
+npm ci
+npm run dev
+npm run tauri dev
+npm run typecheck
+npm run lint
+npm run test:all -- path/to/file.test.ts
+npm run test:integration -- path/to/file.integration.test.ts
+npm run quality:arch-gate
+```
 
-- `*Container.tsx`: state, side effects, orchestration
-- `*View.tsx`: pure presentation
+`npm test` and `test:all` run the same unit suite, excluding integration and
+performance tests. `test:coverage` combines unit and integration suites.
+`build` runs Vite, not the typechecker.
 
-Examples: `AppShell`, `FocusMode`, `ChainEditor`.
+Use targeted checks while iterating and verification appropriate to the final
+diff. Documentation-only changes need document checks, not application tests.
+The full CI lane and scheduled mutation tests are described in the testing guide.
 
-## Coding Discipline
-
-- Prioritize fixing concrete errors before proceeding to unrelated tasks.
-- Keep comments minimal; remove dead code instead of commenting it out.
-- Avoid `as any` assertions.
-- Keep function cognitive complexity <= 15 (SonarJS budget).
-- In `catch` blocks, prefer `normalizeUnknownError()` over `error as Error`.
-- Use `logger` from `src/utils/logger.ts`; do not use `console.*` in app code.
-- Use `src/utils/env.ts` (`isDev`, `isProd`, `isTest`, `isNonProd`) instead of direct `process.env.NODE_ENV` checks.
-- Use `toast` from `src/utils/toast.ts` instead of `alert()`.
-
-## Type System Notes
-
-Key types are in `src/types/index.ts`:
-
-- `Chain` is a discriminated union (`UnitChain | GroupChain`).
-- `ChainType` includes: `'unit' | 'group' | 'assault' | 'recon' | 'command' | 'special_ops' | 'engineering' | 'quartermaster'`.
-- `ChainDraft` uses `DistributiveOmit` for safe form handling.
-
-When changing chain logic, branch by `type` explicitly to preserve union safety.
-
-## Service Lifecycle
-
-Services with explicit lifecycle should be managed centrally (in `AppShellContainer.tsx`):
-
-- `forwardTimerManager`
-- `exceptionRuleCache`
-- `ruleStateManager`
-- `performanceDashboard`
-- `performanceMonitor`
-
-## Local Static Analysis (Dev-Friendly, No Hooks)
-
-All tooling is available via explicit `npm run ...` scripts (no pre-commit hooks). Run what you need while iterating.
-
-### Formatting
-
-- Format (write): `npm run format`
-- Format (check): `npm run format:check`
-
-### Code / Types
-
-- ESLint: `npm run lint`
-- ESLint (fix): `npm run lint:fix`
-- TypeScript: `npm run typecheck`
-
-### CSS / Docs
-
-- CSS (Stylelint): `npm run lint:css` / `npm run lint:css:fix`
-- Markdown (markdownlint-cli2): `npm run lint:md`
-- Spelling (code): `npm run lint:spell`
-- Spelling (docs): `npm run lint:spell:docs`
-
-### Smell / Dependency Hygiene
-
-- Knip (unused files/exports/deps): `npm run quality:knip`
-- ts-prune (unused exports): `npm run quality:ts-prune`
-- depcheck (unused/missing deps): `npm run quality:depcheck`
-- One-shot report bundle: `npm run quality:smell-audit` (writes to `reports/quality/`)
-- Licenses summary: `npm run quality:licenses`
-
-### Security / SQL (Optional Locally)
-
-These commands auto-skip if the underlying tool is not installed.
-
-- npm audit (high+): `npm run security:npm-audit`
-- Semgrep: `npm run security:semgrep` (recommended install: `pipx install semgrep`)
-- SQL lint (Supabase migrations): `npm run lint:sql` (recommended install: `pipx install sqlfluff`)
-
-## Testing (Vitest)
-
-### Commands
-
-- CI-smoke subset: `npm test` (uses `vitest.ci.config.ts`)
-- Unit suite: `npm run test:all` (uses `vitest.config.ts`)
-- Integration suite: `npm run test:integration` (uses `vitest.integration.config.ts`)
-- Performance suite: `npm run test:performance` (uses `vitest.performance.config.ts`)
-- Watch: `npm run test:watch` (CI subset) or `npm run test:all:watch`
-- Coverage: `npm run test:coverage` (unit + integration, all production TS/TSX)
-- Critical mutation gate: `npm run test:mutation:critical`
-
-### Test File Conventions
-
-- Unit: `src/**/*.{test,spec}.{js,ts,jsx,tsx}` and `src/**/__tests__/**/*.{js,ts,jsx,tsx}`
-  - Excludes `*.integration.test.*` and `*.performance.test.*`
-- Integration: `*.integration.test.*` or `src/**/__tests__/**/*.integration.*`
-- Performance: `*.performance.test.*` or `src/**/__tests__/**/*.performance.*`
-
-### Test Harness Notes
-
-- Shared setup: `src/test/setup.ts` (uses independent native JSDOM `localStorage` / `sessionStorage`, suppresses `console.*`)
-- Integration setup: `src/test/setup.integration.ts`
-  - Uses MSW handlers: `src/test/mocks/supabaseMocks.ts`
-  - Runs the real Supabase storage/API/mapper/SDK path; MSW is the external HTTP boundary
-  - Fake timers are opt-in per test and must be restored by that test
-
-### When Adding or Changing Tests
-
-- Prefer unit tests unless behavior depends on storage/network boundaries.
-- Never mock the module under test. Mock external I/O, time, browser, and platform boundaries instead.
-- A local core dependency may be mocked in a composition test only when it has direct behavior coverage of its own.
-- Mock call counts are supporting evidence, not the only behavioral assertion.
-- If you add a new Supabase REST/RPC call used in integration tests, update `src/test/mocks/supabaseMocks.ts`.
-- If you add or rename a storage method on `MomentumStorage`, update both implementations and add coverage in the relevant suite.
-
-## Backend / Database (Supabase)
-
-Momentum has no custom backend server: backend = Supabase (Postgres + RLS + SQL functions/RPC).
-
-### Where the Database Lives
-
-- Migrations: `supabase/migrations/*.sql` (PostgreSQL + RLS + functions)
-- Schema reference: `docs/api/DATABASE_SCHEMA.md`
-- Manual migration notes: `docs/guides/apply-migration.md` (Supabase Dashboard SQL Editor fallback)
-
-### Supabase Client + Types
-
-- Client wrapper: `src/lib/supabase.ts`
-  - Uses env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (see `.env.example`)
-  - Uses typed schema: `src/lib/database.types.ts` (`Database`)
-- Lightweight config check (no SDK import): `src/utils/supabaseConfig.ts`
-
-### App-Side Data Access Pattern (Must Follow)
-
-- Storage contract: `src/storage/MomentumStorage.ts`
-- Supabase implementation: `src/infra/storage/supabase/SupabaseStorage.ts`
-  - Table modules: `src/infra/storage/supabase/{auth,chains,sessions,history,rsip,betting,checkin,taskTimeStats,userSettings}.ts`
-  - Mapping layer: `src/infra/storage/supabase/mappers.ts`
-- Local/offline implementation: `src/storage/localStorageAdapter.ts`
-- UI must not talk to Supabase directly; go through `useStorage()` -> domain hooks (`src/hooks/domains/`) -> services (`src/services/`) -> `MomentumStorage`.
-
-### When You Change the Database (Checklist)
-
-1. Add a new migration in `supabase/migrations/` (do not edit old migrations in-place).
-2. Keep RLS consistent: user-scoped tables should enforce `auth.uid() = user_id` (or equivalent) and avoid widening access.
-3. Be careful with RPC functions:
-   - Avoid function overloading (Supabase RPC can resolve the wrong overload).
-   - Keep parameter names/types aligned with `.rpc()` calls (named args are used in the app).
-   - For `SECURITY DEFINER` functions, do explicit auth checks (for example `target_user_id = auth.uid()`).
-4. Update app code to match:
-   - `src/lib/database.types.ts` (regenerate/update to match schema)
-   - affected mappers + storage modules in `src/infra/storage/supabase/`
-   - the `MomentumStorage` interface + `src/storage/localStorageAdapter.ts` if the interface changes
-5. If a migration introduces new columns, keep Supabase storage resilient to older schemas when reasonable (many modules already include missing-column fallbacks).
-
-### Supabase CLI (Typical Workflow)
-
-- Apply migrations: `supabase db push` (or `supabase migration up`)
-- Regenerate types (example): `supabase gen types typescript --schema public > src/lib/database.types.ts`
-  - Adjust flags/project linkage to match your Supabase CLI setup.
-
-### DB RPC Functions Used by the App
-
-- Betting:
-  - `place_task_bet`, `complete_task_with_betting`
-  - Write sessions: `create_write_session`, `complete_write_session`
-  - Defined/updated across `supabase/migrations/20250905*.sql` and `supabase/migrations/20250906*.sql`
-  - Called from `src/infra/storage/supabase/betting.ts`
-- Check-in:
-  - `perform_daily_checkin`, `get_user_checkin_stats`
-  - Defined in `supabase/migrations/20250904000000_add_daily_checkin_system.sql`
-  - Called from `src/infra/storage/supabase/checkin.ts`
+Explicit task requirements take precedence over ordinary project guidance.
+Security, data-integrity, and external operational constraints still apply.

@@ -1,116 +1,65 @@
-# 应用数据库迁移
+# Database and persistence changes
 
-为了使回收箱功能正常工作，你需要在 Supabase 数据库中应用最新的迁移。
+Momentum's backend is Supabase (PostgreSQL, RLS, and RPCs), without a custom
+application server. [Schema reference](../api/DATABASE_SCHEMA.md) describes the
+tables; ordered SQL in [supabase/migrations](../../supabase/migrations/) defines
+the database. `sql/` contains manual diagnostic scripts, not migration history.
 
-## 2026-02-11 QA 热修复（Netlify 线上库 schema 漂移）
+## Changing persistence
 
-当你在线上看到以下报错时，先执行这组热修复：
+Add a new migration rather than editing an applied migration. Keep user-owned
+rows scoped with `auth.uid() = user_id` (or the equivalent ownership check).
+`SECURITY DEFINER` RPCs must reject unauthenticated or mismatched callers
+explicitly; client-side filtering does not authorize access. New SQL should
+handle a null `auth.uid()` as well as a different user ID.
 
-- `active_sessions.is_forward_timer does not exist`
-- `group_repeat_count` 缺失
-- `relation "public.rsip_groups" does not exist`
-- `completion_history` `ON CONFLICT` 缺少唯一索引
+Supabase RPC calls use named arguments. Keep names/types aligned with callers
+and avoid overloaded RPC names that make resolution ambiguous. Betting calls
+are in `src/infra/storage/supabase/betting.ts`; check-in calls are in `checkin.ts`.
 
-推荐执行顺序：
+Alongside schema changes, update `src/lib/database.types.ts`, the affected table
+modules and mappers under `src/infra/storage/supabase/`, and the schema reference
+when its description changes. The type file is a checked-in schema contract;
+there is no repository rule prohibiting reviewed manual updates. If regenerating
+with the Supabase CLI, generate from the intended migrated schema and review the
+diff rather than replacing it from an arbitrary linked database.
 
-1. 通过 CLI 推送迁移（推荐）
-   - `npx --yes supabase link --project-ref <your-project-ref>`
-   - `npx --yes supabase db push --linked --include-all`
-2. 验证修复结果
-   - 执行 `reports/qa/sql/momentumctdp_2026-02-11_verify.sql`
-3. 清理本次 QA 测试数据（可选）
-   - 执行 `reports/qa/sql/momentumctdp_2026-02-11_cleanup.sql`
+When a storage contract changes, update `src/storage/ports.ts` and its composition
+in `MomentumStorage.ts` as needed, both local/Supabase implementations, and their
+tests. The [integration harness](TESTING_GUIDE.md#automated-tests) runs the real
+adapter, mapper, and SDK against MSW; new REST/RPC requests need matching handlers
+in `src/test/mocks/supabaseMocks.ts`.
 
-如果 CLI 无法直连，可在 Dashboard SQL Editor 执行：
+Existing missing-column/table fallbacks support installations whose databases
+have pending migrations. Retain the relevant fallback behavior unless the task
+explicitly changes the supported schema range. Test a migrated schema and the
+affected compatibility path. MSW tests do not execute PostgreSQL or prove RLS;
+SQL changes also need database-level validation against the intended test database.
 
-- `reports/qa/sql/momentumctdp_2026-02-11_apply.sql`
-- `reports/qa/sql/momentumctdp_2026-02-11_verify.sql`
+## Applying migrations
 
-## 方法1: 使用 Supabase CLI（推荐）
+Use the Supabase CLI with the intended project or local database. The
+[CLI reference](https://supabase.com/docs/reference/cli/supabase-db-push) documents
+target flags; `migration up` applies pending local migrations by default,
+not one selected file.
 
-如果你已经安装了 Supabase CLI：
+```sh
+# Apply pending migrations to the local Supabase database
+supabase migration up --local
 
-```bash
-# 应用所有待处理的迁移
-supabase db push
+# Preview pending changes to the linked project, then apply when deploying
+supabase db push --linked --dry-run
+supabase db push --linked
 
-# 或者只应用特定的迁移
-supabase migration up
+# Generate the public schema types from a migrated local database for review
+supabase gen types typescript --local --schema public > /tmp/momentum-database.types.ts
 ```
 
-## 方法2: 手动在 Supabase Dashboard 中执行
+If using the Dashboard SQL Editor, apply the actual pending migration files in
+order and reconcile migration history with the CLI afterward. Avoid copying
+historical repair SQL from reports: it may omit later constraints or policies.
 
-1. 打开你的 Supabase 项目 Dashboard
-2. 进入 "SQL Editor"
-3. 复制并执行以下 SQL 代码：
-
-```sql
--- 添加软删除字段
-DO $
-BEGIN
-  -- 添加 deleted_at 字段（软删除时间戳）
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'chains' AND column_name = 'deleted_at'
-  ) THEN
-    ALTER TABLE chains ADD COLUMN deleted_at timestamp with time zone DEFAULT NULL;
-  END IF;
-END $;
-
--- 创建索引提升查询性能
-CREATE INDEX IF NOT EXISTS idx_chains_deleted_at ON chains(deleted_at);
-CREATE INDEX IF NOT EXISTS idx_chains_user_deleted ON chains(user_id, deleted_at);
-
--- 添加注释说明字段用途
-COMMENT ON COLUMN chains.deleted_at IS '软删除时间戳，NULL表示未删除，有值表示已删除';
-
--- 更新 RLS 策略以处理软删除
-DO $
-BEGIN
-  -- 允许用户查看自己已删除的链条（用于回收箱功能）
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE tablename = 'chains' AND policyname = 'Users can view their deleted chains'
-  ) THEN
-    CREATE POLICY "Users can view their deleted chains" ON chains
-      FOR SELECT USING (auth.uid() = user_id);
-  END IF;
-
-  -- 允许用户更新自己链条的 deleted_at 字段
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE tablename = 'chains' AND policyname = 'Users can soft delete their chains'
-  ) THEN
-    CREATE POLICY "Users can soft delete their chains" ON chains
-      FOR UPDATE USING (auth.uid() = user_id);
-  END IF;
-END $;
-```
-
-## 验证迁移是否成功
-
-执行以下查询来验证 `deleted_at` 字段是否已添加：
-
-```sql
-SELECT column_name, data_type, is_nullable
-FROM information_schema.columns
-WHERE table_name = 'chains' AND column_name = 'deleted_at';
-```
-
-如果返回结果显示 `deleted_at` 字段存在，说明迁移成功。
-
-## 注意事项
-
-- 应用迁移后，现有的链条会继续正常显示（因为它们的 `deleted_at` 字段为 NULL）
-- 新的删除操作会使用软删除功能
-- 回收箱功能将完全可用
-- 自动清理功能会在30天后永久删除回收箱中的链条
-
-## 如果遇到问题
-
-如果在应用迁移时遇到权限问题，请确保：
-
-1. 你有数据库的管理员权限
-2. 在 Supabase Dashboard 的 SQL Editor 中执行，而不是通过应用程序
-
-应用迁移后，重新加载应用程序，所有功能应该都能正常工作。
+Verify the changed columns, constraints, and RPC behavior, including authorized,
+unauthenticated, and cross-user requests where access rules changed. Deployment
+target selection and live data changes belong to the deployment task, not an
+ordinary code refactor.

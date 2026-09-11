@@ -1,6 +1,6 @@
 {
   "config": ".markdownlint.jsonc",
-  "globs": ["README*.md", "docs/**/*.md", "sql/**/*.md", "src/**/*.md"],
+  "globs": ["*.md", "docs/**/*.md", "sql/**/*.md", "src/**/*.md"],
   "ignores": [
     ".augment/**",
     ".claude/**",

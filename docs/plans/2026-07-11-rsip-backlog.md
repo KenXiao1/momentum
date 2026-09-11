@@ -1,6 +1,6 @@
 # RSIP Backlog Completion Implementation Plan
 
-> **For Codex:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+Historical plan; current development guidance is in [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 **Goal:** Complete the five RSIP follow-up items recorded in commit `f998428` without changing user-visible workflows.
 

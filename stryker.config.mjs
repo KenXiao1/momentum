@@ -17,7 +17,7 @@ export default {
     break: 84,
   },
   vitest: {
-    configFile: 'vitest.ci.config.ts',
+    configFile: 'vitest.config.ts',
   },
   timeoutMS: 60000,
   concurrency: 4,

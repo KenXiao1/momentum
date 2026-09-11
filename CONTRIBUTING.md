@@ -1,117 +1,60 @@
 # Contributing
 
-Thanks for contributing to Momentum.
+## Setup
 
-## Prerequisites
+Use `.nvmrc` for the development Node version (`package.json` defines supported
+versions), then `npm ci`. Start the web app with `npm run dev` or the desktop app
+with `npm run tauri dev`. Native development also requires Rust and the
+[platform dependencies](docs/guides/DEPLOYMENT.md).
 
-- Node.js: see `package.json` `engines.node` (or use `.nvmrc`)
-- **Tauri 桌面/移动端构建额外需要**：Rust stable 工具链（[rustup.rs](https://rustup.rs/)）
-- Install deps: `npm install`
+## Finding the implementation
 
-## Local Development
+- [Architecture](docs/guides/ARCHITECTURE.md): application, storage, lifecycle,
+  and browser/native boundaries.
+- [Domain and product documentation](docs/README.md): feature behavior.
+- [Testing](docs/guides/TESTING_GUIDE.md): suite selection, fixtures, and CI.
+- [Database migrations](docs/guides/apply-migration.md): schema and persistence changes.
+- [Deployment](docs/guides/DEPLOYMENT.md): web and native releases.
 
-```bash
-# Web 开发
-npm run dev
+## Local verification
 
-# Tauri 桌面应用开发
-npm run tauri dev
+Select checks for the diff. There are no pre-commit hooks or mandatory local
+full-pipeline runs. `package.json` is the command reference.
+
+| Change               | Useful checks                                                                |
+| -------------------- | ---------------------------------------------------------------------------- |
+| Documentation        | Prettier and Markdown lint on changed files                                  |
+| React/TypeScript     | Targeted tests, `npm run typecheck`, ESLint on changed files                 |
+| CSS                  | `npm run lint:css`, `npm run quality:css-structure`, inspect the affected UI |
+| Imports or dead code | `npm run quality:knip`, `npm run quality:arch-gate`                          |
+| Persistence          | Relevant unit and integration tests; migration guide for SQL                 |
+| Tauri                | `npm run quality:rust` for Rust; affected adapter tests and native build     |
+
+Examples (replace the file paths):
+
+```sh
+npx prettier --check docs/guides/ARCHITECTURE.md
+npx markdownlint-cli2 docs/guides/ARCHITECTURE.md
+npm run test:all -- path/to/file.test.ts
 ```
 
-## Before You Open a PR (local, low-friction)
+`npm run build` builds the web bundle; it does not typecheck. Full local CI parity
+is available through `npm run quality:ci:required` when the change warrants it.
 
-Run the checks that match what you touched:
+## Diagnostics
 
-```bash
-# Always safe
-npm run format:check
-npm run lint
-npm run typecheck
-npm test
+`npm run quality:smell-audit` collects Knip, duplication, and SonarJS findings.
+These are investigation inputs, not instructions to split files or create
+abstractions. Reports go under `reports/quality/` and `reports/jscpd/`.
 
-# If you touched CSS or docs
-npm run lint:css
-npm run lint:md
-npm run lint:spell
-npm run lint:spell:docs
-```
+For performance work, use [performance benchmarks](docs/guides/PERFORMANCE_BENCHMARKS.md)
+and capture measurements relevant to the reported problem. `docs/plans/` and
+`docs/history/` contain dated context, not current development requirements.
 
-Notes:
-
-- This repo intentionally avoids pre-commit hooks; all checks are explicit `npm run ...` commands.
-- ESLint forbids `console.*` in `src/` (use `logger` from `src/utils/logger.ts`).
-
-## PR Template (Perf + Smell Campaign)
-
-If your PR is driven by performance or static-analysis “smell” reports, include these 3 items in the PR description:
-
-1. Which hotspot you’re addressing (SonarJS / Madge / Knip / JSCPD / Lighthouse / DevTools trace)
-2. Before/after comparison (at least one number)
-3. Risk + rollback plan (how to confirm behavior didn’t change)
-
-## Deeper Quality Checks (optional)
-
-```bash
-npm run quality:type-coverage
-npm run quality:knip
-npm run quality:ts-prune
-npm run quality:depcheck
-npm run quality:circular
-npm run quality:sonar:report
-npm run quality:smell-audit
-```
-
-Most quality reports write to `reports/quality/`.
-
-## Performance Baseline / Retest (optional; not a CI gate)
-
-Reference runbook: `docs/plans/2026-02-04-perf-smell-campaign.md` (Appendix A/B).
-
-### Lighthouse (Desktop + Mobile)
-
-```bash
-npm run build
-npm run preview -- --host 127.0.0.1 --port 4173 --strictPort
-
-# Desktop (run1/run2/run3; take median)
-npx lighthouse http://127.0.0.1:4173/ --preset=desktop --only-categories=performance,accessibility,best-practices,seo --output=json --output-path=reports/lighthouse/YYYY-MM-DD_desktop_run1.json --chrome-flags="--headless=new"
-
-# Mobile
-npx lighthouse http://127.0.0.1:4173/ --only-categories=performance,accessibility,best-practices,seo --output=json --output-path=reports/lighthouse/YYYY-MM-DD_mobile_run1.json --chrome-flags="--headless=new"
-```
-
-Outputs under `reports/lighthouse/` are ignored by git.
-
-### DevTools Trace (Codex DevTools MCP)
-
-Traces are used for diagnosis and before/after comparison (not a gate). Save outputs under `reports/devtools/` (ignored by git).
-
-## Security Checks (optional locally; CI runs soft scans)
-
-```bash
-npm run security:npm-audit
-npm run security:semgrep   # requires semgrep installed (recommended: pipx install semgrep)
-npm run lint:sql           # requires sqlfluff installed (recommended: pipx install sqlfluff)
-```
-
-## Testing
-
-- Smoke subset (CI-safe): `npm test`
-- Full unit suite: `npm run test:all`
-- Integration suite: `npm run test:integration` (real storage/API/SDK path with HTTP mocked by MSW)
-- Full-source unit + integration coverage: `npm run test:coverage`
-- Critical mutation gate: `npm run test:mutation:critical`
-- Performance suite: `npm run test:performance`
-
-## Database / Supabase Changes
-
-If your change touches the database:
-
-1. Add a new migration in `supabase/migrations/` (don’t edit old migrations in-place).
-2. Keep RLS user-scoped and narrow (avoid widening access).
-3. If you change schema, update app-side types (`src/lib/database.types.ts`) and storage mapping code.
-4. Keep the UI layer isolated from Supabase: go through `useStorage()` → domain hooks → services → `MomentumStorage`.
+Security scans are available as `security:npm-audit`, `security:semgrep`, and
+`lint:sql`. The latter two require their external tools (and the PowerShell
+runner); they skip missing tools locally and fail for missing tools in CI.
 
 ## License
 
-By contributing, you agree your contributions are licensed under the repository license (see `LICENSE`).
+Contributions use the repository [license](LICENSE).

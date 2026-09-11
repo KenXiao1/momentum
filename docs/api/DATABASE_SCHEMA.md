@@ -1,6 +1,8 @@
 # Momentum 数据库 Schema 文档
 
 本文档描述 Momentum 应用的 Supabase/PostgreSQL 数据库结构。
+有序迁移文件 [supabase/migrations](../../supabase/migrations/) 是数据库定义的依据；
+变更、类型同步与兼容策略见 [迁移指南](../guides/apply-migration.md)。
 
 ---
 
@@ -500,26 +502,23 @@ CREATE POLICY "Users can manage their own [table]"
 
 ## 数据库函数
 
-### 签到系统
+应用当前使用的 RPC 入口如下；参数名称与类型以调用代码及最新迁移为准，
+避免在本文维护另一份容易过期的函数签名。
 
-| 函数                       | 参数                       | 返回  | 说明         |
-| -------------------------- | -------------------------- | ----- | ------------ |
-| `perform_daily_checkin`    | user_id uuid               | jsonb | 原子签到操作 |
-| `get_user_checkin_stats`   | user_id uuid               | jsonb | 获取签到统计 |
-| `get_user_checkin_history` | user_id, page_size, offset | jsonb | 分页签到历史 |
+| 模块     | 当前调用的函数                                    | 调用代码                                                  |
+| -------- | ------------------------------------------------- | --------------------------------------------------------- |
+| 签到     | `perform_daily_checkin`, `get_user_checkin_stats` | [checkin.ts](../../src/infra/storage/supabase/checkin.ts) |
+| 赌注     | `place_task_bet`, `complete_task_with_betting`    | [betting.ts](../../src/infra/storage/supabase/betting.ts) |
+| 写入会话 | `create_write_session`, `complete_write_session`  | [betting.ts](../../src/infra/storage/supabase/betting.ts) |
 
-### 赌注系统
-
-| 函数                       | 参数                            | 返回  | 说明         |
-| -------------------------- | ------------------------------- | ----- | ------------ |
-| `place_task_bet`           | user_id, session_id, bet_amount | jsonb | 原子下注     |
-| `settle_task_bet`          | bet_id, task_successful, notes  | jsonb | 结算押注     |
-| `get_user_gambling_stats`  | user_id                         | jsonb | 赌博统计     |
-| `get_user_betting_history` | user_id, page_size, offset      | jsonb | 分页押注历史 |
+数据库还包含供触发器或其他操作使用的函数；完整定义见迁移文件。
+RLS 与 `SECURITY DEFINER` 的调用者校验要求见迁移指南。
 
 ---
 
 ## 迁移历史
+
+以下为部分历史记录；完整顺序以 `supabase/migrations/` 为准。
 
 | 迁移文件                                                       | 日期       | 说明                                   |
 | -------------------------------------------------------------- | ---------- | -------------------------------------- |

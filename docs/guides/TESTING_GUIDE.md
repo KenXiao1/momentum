@@ -1,18 +1,78 @@
-# Momentum 人工测试指南
+# Momentum testing guide
 
-本指南帮助测试人员系统地验证 Momentum 应用的各项功能。
+## Automated tests
+
+Choose a suite for the behavior being changed. Append a test path or `-t` filter
+for focused runs; the config files own exact discovery patterns.
+
+| Command                          | Scope                                                       | Configuration                  |
+| -------------------------------- | ----------------------------------------------------------- | ------------------------------ |
+| `npm test` / `npm run test:all`  | Same unit suite; excludes integration and performance tests | `vitest.config.ts`             |
+| `npm run test:integration`       | Storage/API integration                                     | `vitest.integration.config.ts` |
+| `npm run test:performance`       | Timing and performance scenarios                            | `vitest.performance.config.ts` |
+| `npm run test:coverage`          | Unit + integration, all production TS/TSX                   | `vitest.coverage.config.ts`    |
+| `npm run test:mutation:critical` | Focused mutation checks                                     | `stryker.critical.config.mjs`  |
+| `npm run test:mutation`          | Broader mutation scope                                      | `stryker.config.mjs`           |
+| `npm run test:rust`              | Rust tests with the desktop feature                         | `src-tauri/Cargo.toml`         |
+
+Unit tests use `src/test/setup.ts` with independent native JSDOM local/session
+storage and suppressed console output. Tests live next to source or in
+`__tests__/`; integration and performance suites use their respective
+`.integration.test.*` / `.performance.test.*` suffixes.
+
+Integration setup in `src/test/setup.integration.ts` runs the real Supabase
+storage, API, mapper, and SDK against MSW HTTP handlers in
+`src/test/mocks/supabaseMocks.ts`. Unhandled requests fail. Extend the handlers
+for new REST/RPC calls; fake timers are opt-in and the setup restores real timers.
+These tests do not execute database SQL or validate deployed RLS policies.
+
+Mock external boundaries in behavior tests. A composition test can replace a
+local collaborator that has its own behavior coverage. Direct replacement of
+the subject under test and tautological assertions are checked by
+`quality:test:assertions`; test-runner and Testing Library rules live in
+`eslint.tests.config.js`.
+
+## CI and diagnostics
+
+[CI](../../.github/workflows/ci.yml) runs `quality:ci:required`: formatting,
+lint/type/import checks, Knip, test validation, unit + integration coverage,
+Rust checks, and the web build. The exact roster is in `package.json`;
+coverage thresholds live in `vitest.coverage.config.ts`.
+`quality:test:coverage-hotspots` verifies report freshness and reports source inclusion,
+then ranks uncovered behavior. It consumes the preceding coverage run.
+
+[Scheduled mutation CI](../../.github/workflows/mutation-nightly.yml) runs both
+critical and broader mutation checks, with report freshness validation. The
+critical scope and score requirement remain in `tools/quality/mutation-scope.mjs`.
+Mutation runs are also available on demand; they are not required for every local
+edit or every pull request.
+
+`quality:ci:info` collects optional diagnostics; `quality:smell-audit` collects
+Knip, duplication, and full SonarJS reports. Their summaries record failures
+without blocking the lane. Full SonarJS/duplication findings are advisory;
+production ESLint still enforces its configured errors. Cycle detection belongs
+to Dependency Cruiser. File length, import counts, comment counts, and cast totals
+are not architecture gates.
+
+Security scanning has separate Semgrep, CodeQL, and Gitleaks workflows.
+Local verification examples are in [CONTRIBUTING.md](../../CONTRIBUTING.md).
+
+## Manual testing
+
+The scenarios below help verify affected product flows; they are not a checklist
+for every change.
 
 ## 测试前准备
 
 ### 环境要求
 
-- Node.js 20+
+- Node.js：使用 `.nvmrc`，支持版本见 `package.json`
 - 现代浏览器（Chrome/Firefox/Edge）
 - 可选：Supabase 账户（测试云同步）
 
 ### 启动应用
 
-\*\*\*\*## P0–P3 Regression Checks (Manual)
+### P0–P3 Regression Checks (Manual)
 
 - Skip link: press `Tab` right after load, then `Enter` on “Skip to main content” → focus lands in main content (`main`).
 - URL reflects state: navigate between Dashboard / RSIP / Detail / Group / Editor, then use browser Back/Forward → view follows URL.
@@ -36,13 +96,13 @@ npm run dev
 
 ### 模块 1：用户认证
 
-| 测试项       | 操作步骤              | 预期结果         | 通过 |
-| ------------ | --------------------- | ---------------- | ---- |
-| 1.1 访客模式 | 不登录直接使用        | 数据存储在本地   | [ ]  |
-| 1.2 注册     | 点击登录 → 注册新账户 | 收到验证邮件     | [ ]  |
-| 1.3 登录     | 输入邮箱密码登录      | 成功进入主界面   | [ ]  |
-| 1.4 登出     | 点击设置 → 登出       | 返回登录页       | [ ]  |
-| 1.5 数据同步 | 登录后查看数据        | 云端数据正确加载 | [ ]  |
+| 测试项       | 操作步骤              | 预期结果                 | 通过 |
+| ------------ | --------------------- | ------------------------ | ---- |
+| 1.1 本地模式 | 选择本地模式后使用    | 无需登录，数据存储在本地 | [ ]  |
+| 1.2 注册     | 点击登录 → 注册新账户 | 收到验证邮件             | [ ]  |
+| 1.3 登录     | 输入邮箱密码登录      | 成功进入主界面           | [ ]  |
+| 1.4 登出     | 点击设置 → 登出       | 返回登录页               | [ ]  |
+| 1.5 数据同步 | 登录后查看数据        | 云端数据正确加载         | [ ]  |
 
 ---
 
@@ -228,14 +288,3 @@ npm run dev
 ```
 
 ---
-
-## 自动化测试命令
-
-```bash
-npm test              # CI 冒烟测试
-npm run test:all      # 全量单元测试
-npm run test:integration  # 集成测试
-npm run test:performance  # 性能测试
-npm run test:coverage # 单元 + 集成的全生产源码覆盖率
-npm run test:mutation:critical # 关键领域逻辑变异门禁
-```

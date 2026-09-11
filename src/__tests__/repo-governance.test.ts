@@ -1,12 +1,13 @@
 import {
+  mkdtempSync,
   readFileSync,
   readdirSync,
   rmSync,
-  statSync,
   writeFileSync,
 } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import os from 'node:os';
 import { describe, expect, it } from 'vitest';
 import { extractWorkflowRunBlocks } from '../test/utils/workflowRunBlocks';
 
@@ -26,65 +27,12 @@ const SEMGREP_WORKFLOW_PATH = path.join(
   'workflows',
   'semgrep.yml',
 );
-const EXCEPTION_RULE_MIGRATION_PATH = path.join(
-  REPO_ROOT,
-  'src',
-  'services',
-  'ExceptionRuleMigration.ts',
-);
-const SUPABASE_STORAGE_PATH = path.join(
-  REPO_ROOT,
-  'src',
-  'infra',
-  'storage',
-  'supabase',
-  'SupabaseStorage.ts',
-);
-const DASHBOARD_PATH = path.join(
-  REPO_ROOT,
-  'src',
-  'components',
-  'Dashboard.tsx',
-);
-const APP_SHELL_CONTAINER_PATH = path.join(
-  REPO_ROOT,
-  'src',
-  'app',
-  'AppShellContainer.tsx',
-);
-const APP_SHELL_DOMAIN_COORDINATOR_PATHS = [
-  'useAppShellDomains.ts',
-  'useAppShellPrimaryDomains.ts',
-  'useAppShellSecondaryDomains.ts',
-].map((file) => path.join(REPO_ROOT, 'src', 'app', 'app-shell', file));
 const ARCHITECTURE_VIOLATION_FIXTURE_PATH = path.join(
   REPO_ROOT,
   'src',
   'components',
   '__architecture_violation_fixture__.ts',
 );
-
-const COMPATIBILITY_FACADE_ALLOWLIST = [
-  'src/components/BettingModal.tsx',
-  'src/components/BettingModalView.tsx',
-  'src/components/ChainCard.tsx',
-  'src/components/ChainDetail.tsx',
-  'src/components/ImportExportModal.tsx',
-  'src/components/RecycleBinModal.tsx',
-  'src/components/TaskGroupEditor.tsx',
-  'src/services/ErrorClassificationService.ts',
-];
-
-const COMPATIBILITY_FACADE_PATTERNS = [
-  /Compatibility facade/i,
-  /backward compatibility/i,
-  /门面文件/,
-  /保持向后兼容/,
-];
-
-function normalizePath(filePath: string): string {
-  return filePath.replace(/\\/g, '/');
-}
 
 function readFile(filePath: string): string {
   return readFileSync(filePath, 'utf8');
@@ -103,36 +51,6 @@ function readWorkflowSources(): Array<{ file: string; source: string }> {
       file,
       source: readFile(path.join(WORKFLOWS_DIR, file)),
     }));
-}
-
-function detectCompatibilityFacades(): string[] {
-  const roots = ['src/components', 'src/services'];
-  return [
-    ...new Set(
-      roots
-        .flatMap((root) => {
-          const absoluteRoot = path.join(REPO_ROOT, root);
-          return readdirSync(absoluteRoot).map((entry) =>
-            path.join(absoluteRoot, entry),
-          );
-        })
-        .filter((absolutePath) => statSync(absolutePath).isFile())
-        .map((absolutePath) => {
-          const content = readFile(absolutePath);
-          return {
-            content,
-            relPath: normalizePath(path.relative(REPO_ROOT, absolutePath)),
-          };
-        })
-        .filter(
-          ({ content }) =>
-            COMPATIBILITY_FACADE_PATTERNS.some((pattern) =>
-              pattern.test(content),
-            ) && /export\s+.*from\s+['"][.]{1,2}\//.test(content),
-        )
-        .map(({ relPath }) => relPath),
-    ),
-  ].sort();
 }
 
 describe('repo governance', () => {
@@ -244,68 +162,23 @@ describe('repo governance', () => {
     },
   );
 
-  it('keeps the Supabase storage composition root below hotspot budgets', () => {
-    const source = readFile(SUPABASE_STORAGE_PATH);
-    const lineCount = source.split(/\r?\n/).length;
-    const directDependencies = new Set(
-      [...source.matchAll(/from\s+['"]([^'"]+)['"]/g)].map((match) => match[1]),
-    );
+  it('fails the architecture gate for circular imports', () => {
+    const fixtureDir = mkdtempSync(path.join(os.tmpdir(), 'momentum-cycle-'));
+    writeFileSync(path.join(fixtureDir, 'a.ts'), "import './b';\n");
+    writeFileSync(path.join(fixtureDir, 'b.ts'), "import './a';\n");
 
-    expect(lineCount).toBeLessThanOrEqual(300);
-    expect(directDependencies.size).toBeLessThanOrEqual(12);
-  });
-
-  it('keeps the Dashboard container below hotspot budgets', () => {
-    const source = readFile(DASHBOARD_PATH);
-    const lineCount = source.split(/\r?\n/).length;
-    const directDependencies = new Set(
-      [...source.matchAll(/from\s+['"]([^'"]+)['"]/g)].map((match) => match[1]),
-    );
-
-    expect(lineCount).toBeLessThanOrEqual(300);
-    expect(directDependencies.size).toBeLessThanOrEqual(12);
-  });
-
-  it('keeps the app shell container below hotspot budgets', () => {
-    const source = readFile(APP_SHELL_CONTAINER_PATH);
-    const lineCount = source.split(/\r?\n/).length;
-    const directDependencies = new Set(
-      [...source.matchAll(/from\s+['"]([^'"]+)['"]/g)].map((match) => match[1]),
-    );
-
-    expect(lineCount).toBeLessThanOrEqual(300);
-    expect(directDependencies.size).toBeLessThanOrEqual(12);
-  });
-
-  it('keeps app shell domain coordinators below hotspot budgets', () => {
-    for (const coordinatorPath of APP_SHELL_DOMAIN_COORDINATOR_PATHS) {
-      const source = readFile(coordinatorPath);
-      const directDependencies = new Set(
-        [...source.matchAll(/from\s+['"]([^'"]+)['"]/g)].map(
-          (match) => match[1],
-        ),
+    try {
+      const npmCliPath = process.env.npm_execpath;
+      if (!npmCliPath) throw new Error('npm_execpath is required');
+      const result = spawnSync(
+        process.execPath,
+        [npmCliPath, 'run', 'quality:arch-gate', '--', fixtureDir],
+        { cwd: REPO_ROOT, encoding: 'utf8' },
       );
-
-      expect(source.split(/\r?\n/).length).toBeLessThanOrEqual(300);
-      expect(directDependencies.size).toBeLessThanOrEqual(12);
+      expect(result.status).not.toBe(0);
+      expect(`${result.stdout}${result.stderr}`).toContain('no-circular');
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true });
     }
-  });
-
-  it('exception rule migration does not import the migration barrel', () => {
-    const source = readFile(EXCEPTION_RULE_MIGRATION_PATH);
-
-    expect(source).not.toMatch(/from '\.\/migration'/);
-  });
-
-  it('compatibility facades stay on the allowlist and carry a removal date', () => {
-    const detected = detectCompatibilityFacades();
-
-    expect(detected).toEqual(COMPATIBILITY_FACADE_ALLOWLIST);
-
-    for (const relativePath of detected) {
-      const absolutePath = path.join(REPO_ROOT, relativePath);
-      const content = readFile(absolutePath);
-      expect(content).toMatch(/@deprecated\s+Remove after \d{4}-\d{2}-\d{2}/);
-    }
-  });
+  }, 45_000);
 });

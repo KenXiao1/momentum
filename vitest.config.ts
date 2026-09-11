@@ -28,6 +28,7 @@ export default defineConfig({
       '**/__tests__/**/*.db.*',
       '**/__tests__/**/*.performance.*',
       '**/__tests__/**/*-performance.*',
+      '**/__tests__/**/helpers.ts',
       '**/__tests__/**/testHelpers.ts',
     ],
     coverage: {

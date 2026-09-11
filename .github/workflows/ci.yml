@@ -61,10 +61,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Security Tooling
+      - name: Install SQL Tooling
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --user semgrep sqlfluff
+          python -m pip install --user sqlfluff
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Informational Quality Lane
