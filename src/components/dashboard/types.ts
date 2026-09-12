@@ -28,7 +28,6 @@ interface DashboardImportOptions {
 
 export interface DashboardProps {
   chains: Chain[];
-  chainsRevision: number;
   scheduledSessions: ScheduledSession[];
   isLoading?: boolean;
   onCreateChain: () => void;

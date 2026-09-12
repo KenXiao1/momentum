@@ -1,6 +1,8 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AppShellContainer from '../AppShellContainer';
+import { createGroupChain, createUnitChain } from '../../test/factories';
+import type { ChainTreeNode } from '../../types';
 import {
   appShellStore,
   createInitialAppState,
@@ -21,7 +23,6 @@ const useRsipDomainMock = vi.hoisted(() => vi.fn());
 const useImportExportDomainMock = vi.hoisted(() => vi.fn());
 const useGroupDomainMock = vi.hoisted(() => vi.fn());
 const usePetDomainMock = vi.hoisted(() => vi.fn());
-const subscribeTaskLifecycleMock = vi.hoisted(() => vi.fn());
 
 const useAppDataLoadMock = vi.hoisted(() => vi.fn());
 const useAuthControllerMock = vi.hoisted(() => vi.fn());
@@ -113,12 +114,6 @@ vi.mock('../../hooks/domains/usePetDomain', () => ({
   usePetDomain: usePetDomainMock,
 }));
 
-vi.mock('../../services/task-lifecycle/TaskLifecycleEventBus', () => ({
-  taskLifecycleEventBus: {
-    subscribe: subscribeTaskLifecycleMock,
-  },
-}));
-
 vi.mock('../hooks/useAppDataLoad', () => ({
   useAppDataLoad: useAppDataLoadMock,
 }));
@@ -151,6 +146,7 @@ vi.mock('../AppShellView', () => ({
       currentView: string;
     };
     dashboard: {
+      viewingGroupNode: ChainTreeNode | null;
       handleCreateChain: () => void;
       handleDeleteChain: (id: string) => void;
       openRSIP: () => void;
@@ -160,6 +156,14 @@ vi.mock('../AppShellView', () => ({
       <div data-testid="initialized">{String(props.app.isInitialized)}</div>
       <div data-testid="loading">{String(props.app.isLoadingData)}</div>
       <div data-testid="view">{props.app.currentView}</div>
+      <div data-testid="group-progress">
+        {props.dashboard.viewingGroupNode?.children
+          .map(
+            (child) =>
+              `${child.name}:${child.currentStreak}/${child.taskRepeatCount}`,
+          )
+          .join(',')}
+      </div>
       <button onClick={props.dashboard.handleCreateChain}>create-chain</button>
       <button onClick={() => props.dashboard.handleDeleteChain('chain-1')}>
         delete-chain
@@ -174,7 +178,6 @@ describe('AppShellContainer', () => {
     vi.clearAllMocks();
     appShellStore.getState().resetAppState();
     navigationStore.setState(createInitialNavigationState());
-    subscribeTaskLifecycleMock.mockReturnValue(vi.fn());
 
     useStorageMock.mockReturnValue({ kind: 'local' });
     useSafeSaveChainsMock.mockReturnValue(vi.fn(async () => undefined));
@@ -278,9 +281,53 @@ describe('AppShellContainer', () => {
     expect(screen.getByTestId('view').textContent).toBe('rsip');
   });
 
-  it('adapts generic task lifecycle events to the RSIP domain subscriber', async () => {
+  it('renders fresh group progress and replacement data without cache invalidation', () => {
+    const group = createGroupChain({ id: 'group' });
+    const unit = createUnitChain({
+      id: 'unit',
+      parentId: group.id,
+      name: 'Local task',
+      taskRepeatCount: 2,
+      currentStreak: 0,
+    });
+    appShellStore.getState().updateAppState({
+      ...createInitialAppState(),
+      chains: [group, unit],
+    });
+    navigationStore.setState({
+      currentView: 'group',
+      viewingChainId: group.id,
+    });
     render(<AppShellContainer />);
-    const listener = subscribeTaskLifecycleMock.mock.calls[0]?.[0] as (event: {
+    expect(screen.getByTestId('group-progress')).toHaveTextContent(
+      'Local task:0/2',
+    );
+
+    act(() =>
+      appShellStore.getState().updateAppState((state) => ({
+        ...state,
+        chains: [group, { ...unit, currentStreak: 1 }],
+      })),
+    );
+    expect(screen.getByTestId('group-progress')).toHaveTextContent(
+      'Local task:1/2',
+    );
+
+    act(() =>
+      appShellStore.getState().replaceAppState({
+        ...createInitialAppState(),
+        chains: [group, { ...unit, name: 'Cloud task', taskRepeatCount: 3 }],
+      }),
+    );
+    expect(screen.getByTestId('group-progress')).toHaveTextContent(
+      'Cloud task:0/3',
+    );
+  });
+
+  it('connects the session callback to RSIP task integration', async () => {
+    render(<AppShellContainer />);
+    const listener = useSessionsDomainMock.mock.calls[0]?.[0]
+      .onTaskLifecycleEvent as (event: {
       type: 'task_completed';
       chainId: string;
       chainKind: 'unit';

@@ -1,4 +1,4 @@
-﻿import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppState } from '../../../types';
 import {
@@ -135,7 +135,6 @@ describe('useRecycleBinDomain', () => {
     expect(stateRef.getState().scheduledSessions).toEqual([
       expect.objectContaining({ chainId: otherChain.id }),
     ]);
-    expect(stateRef.getState().chainsRevision).toBe(1);
   });
 
   it('should keep active session and current view when deleting a different chain', async () => {
@@ -290,7 +289,6 @@ describe('useRecycleBinDomain', () => {
     expect(toast.error).toHaveBeenCalledWith('Delete failed: network down');
     expect(storage.getActiveChains).toHaveBeenCalledTimes(1);
     expect(stateRef.getState().chains).toEqual(fallback);
-    expect(stateRef.getState().chainsRevision).toBe(1);
     expect(logger.error).toHaveBeenCalledWith(
       'RECYCLE_BIN',
       'Delete failed',
@@ -363,7 +361,6 @@ describe('useRecycleBinDomain', () => {
 
     expect(storage.getActiveChains).toHaveBeenCalledTimes(1);
     expect(stateRef.getState().chains).toEqual(fallback);
-    expect(stateRef.getState().chainsRevision).toBe(1);
     expect(logger.error).toHaveBeenCalledWith(
       'RECYCLE_BIN',
       'Restore failed',
@@ -423,7 +420,6 @@ describe('useRecycleBinDomain', () => {
     });
 
     expect(stateRef.getState().chains).toEqual(restored);
-    expect(stateRef.getState().chainsRevision).toBe(1);
   });
 
   it('should log and propagate a permanent delete failure', async () => {
@@ -479,6 +475,5 @@ describe('useRecycleBinDomain', () => {
     });
 
     expect(stateRef.getState().chains).toEqual(updatedChains);
-    expect(stateRef.getState().chainsRevision).toBe(1);
   });
 });

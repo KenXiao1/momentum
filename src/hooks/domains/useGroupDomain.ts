@@ -19,7 +19,7 @@ import type { MomentumStorage } from '../../storage/MomentumStorage';
 import type { SafelySaveChains } from './useChainsDomain';
 import { logger } from '../../utils/logger';
 import { toast } from '../../utils/toast';
-import { queryOptimizer } from '../../utils/queryOptimizer';
+import { buildChainTree } from '../../utils/chainTree';
 import { useI18n } from '../../i18n';
 import { resolveAppStateReader } from './appStateAccess';
 import { getSafeErrorDetailFromUnknown } from '../../utils/errorMessage';
@@ -80,7 +80,6 @@ export function useGroupDomain({
       setState((prev) => ({
         ...prev,
         chains: currentChains,
-        chainsRevision: prev.chainsRevision + 1,
       }));
     } catch (reloadError) {
       logger.error(
@@ -142,13 +141,11 @@ export function useGroupDomain({
 
       logger.debug('APP_SHELL', '准备保存导入后的数据到存储');
       await safelySaveChains(updatedChains);
-      queryOptimizer.onDataChange('chains');
       logger.info('APP_SHELL', '导入数据保存成功，更新UI状态');
 
       setState((prev) => ({
         ...prev,
         chains: updatedChains,
-        chainsRevision: prev.chainsRevision + 1,
       }));
       logger.info('APP_SHELL', '导入完成，UI状态更新完成');
     } catch (error) {
@@ -179,13 +176,11 @@ export function useGroupDomain({
 
       logger.debug('APP_SHELL', '准备保存重复次数更新到存储');
       await safelySaveChains(updatedChains);
-      queryOptimizer.onDataChange('chains');
       logger.info('APP_SHELL', '重复次数更新保存成功，更新UI状态');
 
       setState((prev) => ({
         ...prev,
         chains: updatedChains,
-        chainsRevision: prev.chainsRevision + 1,
       }));
       logger.info('APP_SHELL', '重复次数更新完成，UI状态更新完成');
     } catch (error) {
@@ -205,10 +200,7 @@ export function useGroupDomain({
     unitId: string,
     direction: 'up' | 'down',
   ) => {
-    const chainTree = queryOptimizer.memoizedBuildChainTree(
-      readState().chains,
-      readState().chainsRevision,
-    );
+    const chainTree = buildChainTree(readState().chains);
     const groupNode = chainTree.find((node) => node.id === groupId);
     if (!groupNode) return;
 
@@ -227,11 +219,9 @@ export function useGroupDomain({
     });
 
     await safelySaveChains(updated);
-    queryOptimizer.onDataChange('chains');
     setState((prev) => ({
       ...prev,
       chains: updated,
-      chainsRevision: prev.chainsRevision + 1,
     }));
   };
 

@@ -2,6 +2,7 @@ import type {
   ActiveSession,
   Chain,
   ChainDraft,
+  ChainTreeNode,
   CompletionHistory,
   RSIPExecutionRecord,
   RSIPLibraryEntry,
@@ -13,7 +14,6 @@ import type {
   ScheduledSession,
   ViewState,
 } from '../../types';
-import { queryOptimizer } from '../../utils/queryOptimizer';
 import type {
   AppShellAppViewModel,
   AppShellDashboardViewModel,
@@ -34,9 +34,8 @@ interface BuildAppViewModelInputs {
 }
 
 interface BuildDashboardViewModelInputs {
-  currentView: ViewState;
+  viewingGroupNode: ChainTreeNode | null;
   chains: Chain[];
-  chainsRevision: number;
   scheduledSessions: ScheduledSession[];
   editingChainId: string | null;
   viewingChainId: string | null;
@@ -167,21 +166,14 @@ export function buildDashboardViewModel(
 ): AppShellDashboardViewModel {
   const editingChain = findChainById(inputs.chains, inputs.editingChainId);
   const viewingChain = findChainById(inputs.chains, inputs.viewingChainId);
-  const viewingGroupNode =
-    inputs.currentView === 'group' && inputs.viewingChainId
-      ? (queryOptimizer
-          .memoizedBuildChainTree(inputs.chains, inputs.chainsRevision)
-          .find((node) => node.id === inputs.viewingChainId) ?? null)
-      : null;
 
   return {
     chains: inputs.chains,
-    chainsRevision: inputs.chainsRevision,
     scheduledSessions: inputs.scheduledSessions,
     editingChain: editingChain,
     editorParentId: inputs.viewingChainId,
     viewingChain,
-    viewingGroupNode,
+    viewingGroupNode: inputs.viewingGroupNode,
     completionHistory: inputs.completionHistory,
     handleCreateChain: inputs.handleCreateChain,
     handleCreateTaskGroup: inputs.handleCreateTaskGroup,

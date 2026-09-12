@@ -9,10 +9,8 @@ import { hasStorageCapability } from '../../../storage/ports';
 import type { SafelySaveChains } from '../useChainsDomain';
 import { resolveAppStateReader } from '../appStateAccess';
 import { logger } from '../../../utils/logger';
-import { queryOptimizer } from '../../../utils/queryOptimizer';
 import { toast } from '../../../utils/toast';
 import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
-import type { TaskLifecycleEventPublisher } from '../../../services/task-lifecycle/TaskLifecycleEventBus';
 import { notifyTaskCompleted } from './sessionNotifications';
 import { isSessionExpired } from '../../../utils/time';
 import { createGroupStartFlow } from './groupStartFlow';
@@ -33,7 +31,7 @@ interface CreateStartChainHandlerParams {
   setShowBettingModal: (isOpen: boolean) => void;
   setShowAuxiliaryJudgment?: (chainId: string | null) => void;
   onNavigateToFocus?: () => void;
-  taskLifecycleEvents?: TaskLifecycleEventPublisher;
+  onTaskLifecycleEvent?: (event: TaskLifecycleEvent) => void;
   tr: (zh: string, en: string) => string;
 }
 
@@ -65,13 +63,10 @@ export function createStartChainHandler({
   setShowBettingModal,
   setShowAuxiliaryJudgment,
   onNavigateToFocus,
-  taskLifecycleEvents,
+  onTaskLifecycleEvent,
   tr,
 }: CreateStartChainHandlerParams) {
   const readState = resolveAppStateReader({ state, getState });
-  function publishTaskLifecycleEvent(payload: TaskLifecycleEvent): void {
-    taskLifecycleEvents?.publish(payload);
-  }
 
   function findChain(chainId: string): Chain | null {
     return readState().chains.find((chain) => chain.id === chainId) ?? null;
@@ -115,7 +110,6 @@ export function createStartChainHandler({
 
   function persistChains(chainId: string, chains: AppState['chains']): void {
     safelySaveChains(chains).catch((error) => {
-      queryOptimizer.onDataChange('chains');
       logger.error(
         'SESSIONS',
         '开始任务时保存链条数据失败',
@@ -212,7 +206,6 @@ export function createStartChainHandler({
       activeSession,
       scheduledSessions: updatedScheduledSessions,
       chains: updatedChains,
-      chainsRevision: prev.chainsRevision + 1,
     }));
     onNavigateToFocus?.();
   }
@@ -223,7 +216,7 @@ export function createStartChainHandler({
     storage,
     safelySaveChains,
     startChain: (chainId) => handleStartChain(chainId),
-    publishTaskLifecycleEvent,
+    onTaskLifecycleEvent,
     tr,
   });
 

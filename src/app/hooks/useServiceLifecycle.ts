@@ -6,7 +6,8 @@ import { fireAndForget } from '../../utils/fireAndForget';
 import { forwardTimerManager } from '../../utils/forwardTimer';
 import { ruleStateManager } from '../../services/RuleStateManager';
 import { migrationCoordinator } from '../../services/migration';
-import { systemRuntime } from '../../services/runtime';
+import { exceptionRuleCache } from '../../utils/cache';
+import { performanceMonitor } from '../../utils/performanceMonitor';
 import { initializeRuleSystem } from '../../utils/initializeRuleSystem';
 import { checkForUpdates } from '../../utils/platform-adapters/updater';
 
@@ -26,13 +27,13 @@ export function useServiceLifecycle(): ServiceLifecycleResult {
     setIsInitialized(true);
 
     forwardTimerManager.start();
-    systemRuntime.cache.start();
+    exceptionRuleCache.start();
     ruleStateManager.start();
 
     let devCleanup: (() => void) | undefined;
     if (isDev) {
-      systemRuntime.monitoring.start();
-      devCleanup = () => systemRuntime.monitoring.stop();
+      performanceMonitor.start();
+      devCleanup = () => performanceMonitor.stop();
     }
 
     const initializeNonCritical = () => {
@@ -69,7 +70,7 @@ export function useServiceLifecycle(): ServiceLifecycleResult {
 
     return () => {
       forwardTimerManager.stop();
-      systemRuntime.cache.stop();
+      exceptionRuleCache.stop();
       ruleStateManager.stop();
       devCleanup?.();
     };

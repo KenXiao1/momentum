@@ -6,15 +6,8 @@ import {
   createLocalStorageMock,
   createUnitChain,
 } from '../../../test/factories';
-import { queryOptimizer } from '../../../utils/queryOptimizer';
 import { logger } from '../../../utils/logger';
 import { useRulesDomain } from '../useRulesDomain';
-
-vi.mock('../../../utils/queryOptimizer', () => ({
-  queryOptimizer: {
-    onDataChange: vi.fn(),
-  },
-}));
 
 vi.mock('../../../utils/logger', () => ({
   logger: {
@@ -61,7 +54,6 @@ describe('useRulesDomain', () => {
     const stateRef = createStateContainer(
       createAppState({
         chains: [chain, unaffected],
-        chainsRevision: 5,
         scheduledSessions: [
           {
             chainId: chain.id,
@@ -113,7 +105,6 @@ describe('useRulesDomain', () => {
     expect(stateRef.getState().scheduledSessions).toEqual([
       expect.objectContaining({ chainId: unaffected.id }),
     ]);
-    expect(stateRef.getState().chainsRevision).toBe(6);
     expect(setShowAuxiliaryJudgment).toHaveBeenCalledWith(null);
   });
 
@@ -129,7 +120,6 @@ describe('useRulesDomain', () => {
     const stateRef = createStateContainer(
       createAppState({
         chains: [chain, untouched],
-        chainsRevision: 12,
         scheduledSessions: [
           {
             chainId: chain.id,
@@ -183,7 +173,6 @@ describe('useRulesDomain', () => {
       untouched,
     );
     expect(storage.removeScheduledSession).toHaveBeenCalledWith(chain.id);
-    expect(stateRef.getState().chainsRevision).toBe(14);
     expect(setShowAuxiliaryJudgment).toHaveBeenCalledWith(null);
   });
 
@@ -211,8 +200,6 @@ describe('useRulesDomain', () => {
       result.current.handleAuxiliaryJudgmentFailure(chain.id);
     });
     await Promise.resolve();
-
-    expect(queryOptimizer.onDataChange).toHaveBeenCalledWith('chains');
   });
 
   it('logs failure context when persistence promises reject in failure-judgment flow', async () => {

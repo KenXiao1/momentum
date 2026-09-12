@@ -74,7 +74,6 @@ type DashboardViewProps = DashboardProps & DashboardController;
 export function DashboardView({
   chains,
   scheduledSessions: _scheduledSessions,
-  chainsRevision: _chainsRevision,
   isLoading = false,
   onCreateChain,
   onCreateTaskGroup,

@@ -1,4 +1,4 @@
-﻿import type { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import type { AppState, CompletionHistory } from '../../../types';
 import type { MomentumStorage } from '../../../storage/MomentumStorage';
 import { hasStorageCapability } from '../../../storage/ports';
@@ -8,10 +8,8 @@ import { resetGroupCompletionCount } from '../../../utils/chainTree';
 import { forwardTimerManager } from '../../../utils/forwardTimer';
 import { logger } from '../../../utils/logger';
 import { emitPointsChanged } from '../../../utils/pointsEvents';
-import { queryOptimizer } from '../../../utils/queryOptimizer';
 import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
 import type { TaskLifecycleEvent } from '../../../types';
-import type { TaskLifecycleEventPublisher } from '../../../services/task-lifecycle/TaskLifecycleEventBus';
 import { notifyTaskCompleted } from './sessionNotifications';
 import {
   computeActualDuration,
@@ -62,7 +60,7 @@ interface CreateCompletionHandlersParams {
   setActiveSessionId: (sessionId: string | null) => void;
   onNavigateToDashboard?: () => void;
   onPetTaskCompleted?: (duration: number, wasSuccessful: boolean) => void;
-  taskLifecycleEvents?: TaskLifecycleEventPublisher;
+  onTaskLifecycleEvent?: (event: TaskLifecycleEvent) => void;
   tr: (zh: string, en: string) => string;
 }
 
@@ -76,20 +74,16 @@ export function createCompletionHandlers({
   setActiveSessionId,
   onNavigateToDashboard,
   onPetTaskCompleted,
-  taskLifecycleEvents,
+  onTaskLifecycleEvent,
   tr,
 }: CreateCompletionHandlersParams) {
   const readState = resolveAppStateReader({ state, getState });
-  function publishTaskLifecycleEvent(payload: TaskLifecycleEvent): void {
-    taskLifecycleEvents?.publish(payload);
-  }
 
   function persistChains(
     updatedChains: AppState['chains'],
     context: string,
   ): void {
     safelySaveChains(updatedChains).catch((error) => {
-      queryOptimizer.onDataChange('chains');
       logger.error(
         'SESSIONS',
         context,
@@ -182,7 +176,6 @@ export function createCompletionHandlers({
       updatedChains,
       chain,
       tr,
-      currentState.chainsRevision + 1,
     );
     updatedChains = groupCycleResult.updatedChains;
 
@@ -206,7 +199,7 @@ export function createCompletionHandlers({
       onPetTaskCompleted(actualDuration, true);
     }
 
-    publishTaskLifecycleEvent({
+    onTaskLifecycleEvent?.({
       type: 'task_completed',
       chainId: chain.id,
       chainKind: chain.type === 'group' ? 'group' : 'unit',
@@ -214,7 +207,7 @@ export function createCompletionHandlers({
     });
 
     if (groupCycleResult.completedGroupId) {
-      publishTaskLifecycleEvent({
+      onTaskLifecycleEvent?.({
         type: 'group_cycle_completed',
         chainId: groupCycleResult.completedGroupId,
         chainKind: 'group',
@@ -225,7 +218,6 @@ export function createCompletionHandlers({
     setState((prev) => ({
       ...prev,
       chains: updatedChains,
-      chainsRevision: prev.chainsRevision + 1,
       activeSession: null,
       completionHistory: updatedHistory,
     }));
@@ -274,7 +266,7 @@ export function createCompletionHandlers({
     persistChains(updatedChains, '中断任务时保存链条数据失败');
     persistCompletionHistoryAndCleanup(completionRecord, 'interrupt');
 
-    publishTaskLifecycleEvent({
+    onTaskLifecycleEvent?.({
       type: 'task_interrupted',
       chainId: chain.id,
       chainKind: chain.type === 'group' ? 'group' : 'unit',
@@ -284,7 +276,6 @@ export function createCompletionHandlers({
     setState((prev) => ({
       ...prev,
       chains: updatedChains,
-      chainsRevision: prev.chainsRevision + 1,
       activeSession: null,
       completionHistory: updatedHistory,
     }));

@@ -8,7 +8,7 @@ import {
   createUnitChain,
 } from '../../../../test/factories';
 import { createStartChainHandler } from '../start';
-import { queryOptimizer } from '../../../../utils/queryOptimizer';
+import { buildChainTree } from '../../../../utils/chainTree';
 import { logger } from '../../../../utils/logger';
 import { systemNotificationService } from '../../../../services/platform/SystemNotificationService';
 import { toast } from '../../../../utils/toast';
@@ -30,13 +30,6 @@ vi.mock('../../../../utils/logger', () => ({
   },
 }));
 
-vi.mock('../../../../utils/queryOptimizer', () => ({
-  queryOptimizer: {
-    memoizedBuildChainTree: vi.fn(() => []),
-    onDataChange: vi.fn(),
-  },
-}));
-
 vi.mock('../../../../services/platform/SystemNotificationService', () => ({
   systemNotificationService: {
     notifyTaskCompleted: vi.fn(),
@@ -51,6 +44,7 @@ vi.mock('../../../../utils/toast', () => ({
 }));
 
 vi.mock('../../../../utils/chainTree', () => ({
+  buildChainTree: vi.fn(() => []),
   getNextUnitInGroup: vi.fn(() => null),
   incrementGroupCompletionCount: vi.fn((chains) => chains),
 }));
@@ -476,7 +470,7 @@ describe('createStartChainHandler', () => {
       totalFailures: group.totalFailures + 1,
     });
     const stateRef = createStateContainer(
-      createAppState({ chains: [group, untouched], chainsRevision: 5 }),
+      createAppState({ chains: [group, untouched] }),
     );
     const storage = createLocalStorageMock();
 
@@ -505,7 +499,6 @@ describe('createStartChainHandler', () => {
     expect(
       stateRef.getState().chains.find((item) => item.id === untouched.id),
     ).toEqual(untouched);
-    expect(stateRef.getState().chainsRevision).toBe(6);
     expect(systemNotificationService.notifyTaskFailed).toHaveBeenCalledWith(
       group.name,
       'Group has expired',
@@ -520,7 +513,7 @@ describe('createStartChainHandler', () => {
     vi.mocked(isGroupExpired).mockReturnValue(true);
     vi.mocked(resetGroupProgress).mockReturnValue(group);
     const handleStartChain = createStartChainHandler({
-      state: createAppState({ chains: [group], chainsRevision: 1 }),
+      state: createAppState({ chains: [group] }),
       setState: vi.fn(),
       storage: createLocalStorageMock(),
       safelySaveChains: vi.fn(async () => undefined),
@@ -553,7 +546,7 @@ describe('createStartChainHandler', () => {
       duration: 33,
     });
     const stateRef = createStateContainer(
-      createAppState({ chains: [group, child], chainsRevision: 9 }),
+      createAppState({ chains: [group, child] }),
     );
     const storage = createLocalStorageMock({
       saveActiveSession: vi.fn(async () => undefined),
@@ -561,14 +554,14 @@ describe('createStartChainHandler', () => {
     });
     const safelySaveChains = vi.fn(async () => undefined);
 
-    vi.mocked(queryOptimizer.memoizedBuildChainTree).mockReturnValue([
+    vi.mocked(buildChainTree).mockReturnValue([
       {
         id: group.id,
         type: 'group',
         name: group.name,
         children: [{ id: child.id }],
       },
-    ] as unknown as ReturnType<typeof queryOptimizer.memoizedBuildChainTree>);
+    ] as unknown as ReturnType<typeof buildChainTree>);
     vi.mocked(isGroupExpired).mockReturnValue(false);
     vi.mocked(getNextUnitInGroup).mockReturnValue({
       id: child.id,
@@ -602,7 +595,6 @@ describe('createStartChainHandler', () => {
       }),
     );
     expect(stateRef.getState().activeSession?.chainId).toBe(child.id);
-    expect(stateRef.getState().chainsRevision).toBe(11);
   });
 
   it('should not start group timer when group already started', async () => {
@@ -617,21 +609,21 @@ describe('createStartChainHandler', () => {
       parentId: group.id,
     });
     const stateRef = createStateContainer(
-      createAppState({ chains: [group, child], chainsRevision: 4 }),
+      createAppState({ chains: [group, child] }),
     );
     const storage = createLocalStorageMock({
       saveActiveSession: vi.fn(async () => undefined),
       saveScheduledSessions: vi.fn(async () => undefined),
     });
 
-    vi.mocked(queryOptimizer.memoizedBuildChainTree).mockReturnValue([
+    vi.mocked(buildChainTree).mockReturnValue([
       {
         id: group.id,
         type: 'group',
         name: group.name,
         children: [{ id: child.id }],
       },
-    ] as unknown as ReturnType<typeof queryOptimizer.memoizedBuildChainTree>);
+    ] as unknown as ReturnType<typeof buildChainTree>);
     vi.mocked(getNextUnitInGroup).mockReturnValue({
       id: child.id,
       name: child.name,
@@ -667,18 +659,16 @@ describe('createStartChainHandler', () => {
       totalCompletions: 2,
     });
     const incremented = createGroupChain({ ...group, totalCompletions: 3 });
-    const stateRef = createStateContainer(
-      createAppState({ chains: [group], chainsRevision: 1 }),
-    );
+    const stateRef = createStateContainer(createAppState({ chains: [group] }));
     const storage = createLocalStorageMock({
       getActiveChains: vi.fn(async () => [incremented]),
     });
     const safelySaveChains = vi.fn(async () => undefined);
 
     vi.mocked(isGroupExpired).mockReturnValue(false);
-    vi.mocked(queryOptimizer.memoizedBuildChainTree).mockReturnValue([
+    vi.mocked(buildChainTree).mockReturnValue([
       { id: group.id, type: 'group', name: group.name, children: [] },
-    ] as unknown as ReturnType<typeof queryOptimizer.memoizedBuildChainTree>);
+    ] as unknown as ReturnType<typeof buildChainTree>);
     vi.mocked(getNextUnitInGroup).mockReturnValue(null);
     vi.mocked(incrementGroupCompletionCount).mockReturnValue([incremented]);
 
@@ -708,7 +698,6 @@ describe('createStartChainHandler', () => {
       incremented.totalCompletions,
       'Cycle 3 completed. Starting cycle 4.',
     );
-    expect(queryOptimizer.onDataChange).toHaveBeenCalledWith('chains');
   });
 
   it('should start first unit in next cycle when group is found in fresh chains', async () => {
@@ -726,7 +715,7 @@ describe('createStartChainHandler', () => {
     });
     const incremented = createGroupChain({ ...group, totalCompletions: 5 });
     const stateRef = createStateContainer(
-      createAppState({ chains: [group, firstUnit], chainsRevision: 3 }),
+      createAppState({ chains: [group, firstUnit] }),
     );
     const storage = createLocalStorageMock({
       getActiveChains: vi.fn(async () => [group, firstUnit]),
@@ -735,7 +724,7 @@ describe('createStartChainHandler', () => {
     });
     const safelySaveChains = vi.fn(async () => undefined);
 
-    vi.mocked(queryOptimizer.memoizedBuildChainTree)
+    vi.mocked(buildChainTree)
       .mockReturnValueOnce([
         { id: group.id, type: 'group', name: group.name, children: [] },
       ] as never)
@@ -786,15 +775,13 @@ describe('createStartChainHandler', () => {
       totalCompletions: 1,
     });
     const incremented = createGroupChain({ ...group, totalCompletions: 2 });
-    const stateRef = createStateContainer(
-      createAppState({ chains: [group], chainsRevision: 2 }),
-    );
+    const stateRef = createStateContainer(createAppState({ chains: [group] }));
     const storage = createLocalStorageMock({
       getActiveChains: vi.fn(async () => [incremented]),
     });
-    const taskLifecycleEvents = { publish: vi.fn() };
+    const onTaskLifecycleEvent = vi.fn();
 
-    vi.mocked(queryOptimizer.memoizedBuildChainTree).mockReturnValue([
+    vi.mocked(buildChainTree).mockReturnValue([
       { id: group.id, type: 'group', name: group.name, children: [] },
     ] as never);
     vi.mocked(getNextUnitInGroup).mockReturnValue(null);
@@ -810,7 +797,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      taskLifecycleEvents,
+      onTaskLifecycleEvent,
       tr,
     });
 
@@ -818,7 +805,7 @@ describe('createStartChainHandler', () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(taskLifecycleEvents.publish).toHaveBeenCalledWith(
+    expect(onTaskLifecycleEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'group_cycle_completed',
         chainId: group.id,
@@ -836,9 +823,7 @@ describe('createStartChainHandler', () => {
       totalCompletions: 1,
     });
     const incremented = createGroupChain({ ...group, totalCompletions: 2 });
-    const stateRef = createStateContainer(
-      createAppState({ chains: [group], chainsRevision: 1 }),
-    );
+    const stateRef = createStateContainer(createAppState({ chains: [group] }));
     const storage = createLocalStorageMock({
       getActiveChains: vi.fn(async () => {
         throw new Error('read failed');
@@ -846,7 +831,7 @@ describe('createStartChainHandler', () => {
     });
     const safelySaveChains = vi.fn(async () => undefined);
 
-    vi.mocked(queryOptimizer.memoizedBuildChainTree).mockReturnValue([
+    vi.mocked(buildChainTree).mockReturnValue([
       { id: group.id, type: 'group', name: group.name, children: [] },
     ] as never);
     vi.mocked(getNextUnitInGroup).mockReturnValue(null);
@@ -881,14 +866,10 @@ describe('createStartChainHandler', () => {
       id: 'group-missing-node',
       name: 'Missing Node Group',
     });
-    const stateRef = createStateContainer(
-      createAppState({ chains: [group], chainsRevision: 6 }),
-    );
+    const stateRef = createStateContainer(createAppState({ chains: [group] }));
     const storage = createLocalStorageMock();
 
-    vi.mocked(queryOptimizer.memoizedBuildChainTree).mockReturnValue(
-      [] as never,
-    );
+    vi.mocked(buildChainTree).mockReturnValue([] as never);
 
     const handleStartChain = createStartChainHandler({
       state: stateRef.getState(),
@@ -918,15 +899,13 @@ describe('createStartChainHandler', () => {
       totalCompletions: 7,
     });
     const incremented = createGroupChain({ ...group, totalCompletions: 8 });
-    const stateRef = createStateContainer(
-      createAppState({ chains: [group], chainsRevision: 2 }),
-    );
+    const stateRef = createStateContainer(createAppState({ chains: [group] }));
     const storage = createLocalStorageMock();
     const safelySaveChains = vi.fn(async () => {
       throw new Error('save group cycle failed');
     });
 
-    vi.mocked(queryOptimizer.memoizedBuildChainTree).mockReturnValue([
+    vi.mocked(buildChainTree).mockReturnValue([
       { id: group.id, type: 'group', name: group.name, children: [] },
     ] as never);
     vi.mocked(getNextUnitInGroup).mockReturnValue(null);
@@ -946,8 +925,6 @@ describe('createStartChainHandler', () => {
     });
 
     await handleStartChain(group.id);
-
-    expect(queryOptimizer.onDataChange).not.toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalledWith(
       'SESSIONS',
       expect.any(String),
@@ -1161,7 +1138,6 @@ describe('createStartChainHandler', () => {
       stateRef.getState().chains.find((item) => item.id === chain.id)
         ?.auxiliaryStreak,
     ).toBe(3);
-    expect(queryOptimizer.onDataChange).toHaveBeenCalledWith('chains');
     expect(logger.error).toHaveBeenCalledWith(
       'SESSIONS',
       expect.any(String),

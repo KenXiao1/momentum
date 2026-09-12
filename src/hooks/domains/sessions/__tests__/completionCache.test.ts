@@ -6,7 +6,7 @@ import {
   createLocalStorageMock,
 } from '../../../../test/factories';
 import { createCompletionHandlers } from '../completion';
-import { queryOptimizer } from '../../../../utils/queryOptimizer';
+import { buildChainTree } from '../../../../utils/chainTree';
 import { getGroupProgress } from '../../../../utils/chainTree';
 
 vi.mock('../../../../services/platform/SystemNotificationService', () => ({
@@ -26,7 +26,6 @@ describe('group completion and rendered tree consistency', () => {
     });
     let state = createAppState({
       chains: [group, unit],
-      chainsRevision: 10,
       activeSession: {
         chainId: unit.id,
         startedAt: new Date(),
@@ -35,7 +34,6 @@ describe('group completion and rendered tree consistency', () => {
         totalPausedTime: 0,
       },
     });
-    queryOptimizer.onDataChange('chains');
     const handlers = createCompletionHandlers({
       getState: () => state,
       setState: (update) => {
@@ -48,15 +46,11 @@ describe('group completion and rendered tree consistency', () => {
       tr: (_zh, en) => en,
     });
     handlers.handleCompleteSession();
-    const tree = queryOptimizer.memoizedBuildChainTree(
-      state.chains,
-      state.chainsRevision,
-    );
+    const tree = buildChainTree(state.chains);
     expect(tree[0].currentStreak).toBe(1);
     expect(tree[0].totalCompletions).toBe(1);
     expect(getGroupProgress(tree[0])).toEqual({ completed: 0, total: 2 });
     expect(state.activeSession).toBeNull();
     expect(state.completionHistory).toHaveLength(1);
-    queryOptimizer.onDataChange('chains');
   });
 });

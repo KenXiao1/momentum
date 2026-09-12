@@ -1,4 +1,5 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import { buildChainTree } from '../../utils/chainTree';
 import type { ViewState } from '../../types';
 import { navigationStore } from '../../stores/navigationStore';
 import {
@@ -44,10 +45,18 @@ export function useAppShellViewModels(
     hasActiveSession: !!state.activeSession,
     onNavigateToView,
   });
+  const { chains, currentView, viewingChainId } = state;
+  const viewingGroupNode = useMemo(
+    () =>
+      currentView === 'group' && viewingChainId
+        ? (buildChainTree(chains).find((node) => node.id === viewingChainId) ??
+          null)
+        : null,
+    [chains, currentView, viewingChainId],
+  );
   const dashboard = buildDashboardViewModel({
-    currentView: state.currentView,
+    viewingGroupNode,
     chains: state.chains,
-    chainsRevision: state.chainsRevision,
     scheduledSessions: state.scheduledSessions,
     editingChainId: state.editingChainId,
     viewingChainId: state.viewingChainId,

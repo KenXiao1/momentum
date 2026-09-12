@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Dashboard } from '../Dashboard';
 import { I18nProvider } from '../../i18n';
 import { StorageProvider } from '../../storage/StorageContext';
-import { createUnitChain } from '../../test/factories';
+import { createLocalStorageMock, createUnitChain } from '../../test/factories';
+import type { Chain } from '../../types';
 
 describe('Dashboard', () => {
   beforeEach(() => {
@@ -25,7 +26,6 @@ describe('Dashboard', () => {
         <StorageProvider storage={storage as any}>
           <Dashboard
             chains={[chain]}
-            chainsRevision={1}
             scheduledSessions={[]}
             onCreateChain={vi.fn()}
             onCreateTaskGroup={vi.fn()}
@@ -66,7 +66,6 @@ describe('Dashboard', () => {
         <StorageProvider storage={storage as any}>
           <Dashboard
             chains={[chain]}
-            chainsRevision={1}
             scheduledSessions={[]}
             onCreateChain={vi.fn()}
             onCreateTaskGroup={vi.fn()}
@@ -92,5 +91,32 @@ describe('Dashboard', () => {
     expect(
       screen.getByRole('button', { name: 'Recycle bin' }),
     ).toBeInTheDocument();
+  });
+
+  it('updates metadata when the chain count and IDs stay the same', async () => {
+    const chain = createUnitChain({ id: 'chain', name: 'Before edit' });
+    const storage = createLocalStorageMock();
+    const view = (chains: Chain[]) => (
+      <I18nProvider>
+        <StorageProvider storage={storage}>
+          <Dashboard
+            chains={chains}
+            scheduledSessions={[]}
+            onCreateChain={vi.fn()}
+            onStartChain={vi.fn()}
+            onScheduleChain={vi.fn()}
+            onViewChainDetail={vi.fn()}
+            onDeleteChain={vi.fn()}
+            onImportChains={vi.fn(async () => undefined)}
+          />
+        </StorageProvider>
+      </I18nProvider>
+    );
+    const { rerender } = render(view([chain]));
+    expect(await screen.findByText('Before edit')).toBeInTheDocument();
+
+    rerender(view([{ ...chain, name: 'After edit' }]));
+    expect(await screen.findByText('After edit')).toBeInTheDocument();
+    expect(screen.queryByText('Before edit')).not.toBeInTheDocument();
   });
 });

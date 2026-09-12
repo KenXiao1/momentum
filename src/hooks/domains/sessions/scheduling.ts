@@ -3,7 +3,6 @@ import type { AppState, ScheduledSession } from '../../../types';
 import type { MomentumStorage } from '../../../storage/MomentumStorage';
 import type { SafelySaveChains } from '../useChainsDomain';
 import { resolveAppStateReader } from '../appStateAccess';
-import { queryOptimizer } from '../../../utils/queryOptimizer';
 import { logger } from '../../../utils/logger';
 import { toast } from '../../../utils/toast';
 import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
@@ -108,12 +107,10 @@ export function createSchedulingHandlers({
     try {
       await safelySaveChains(updatedChains);
       await storage.removeScheduledSession(chainId);
-      queryOptimizer.onDataChange('chains');
       setState((prev) => ({
         ...prev,
         scheduledSessions: updatedScheduledSessions,
         chains: updatedChains,
-        chainsRevision: prev.chainsRevision + 1,
       }));
 
       notifyTaskCompleted(

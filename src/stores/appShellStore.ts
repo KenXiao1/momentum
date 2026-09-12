@@ -20,7 +20,6 @@ type AppShellStore = AppState & AppShellStateActions;
 export function createInitialAppState(): AppState {
   return {
     chains: [],
-    chainsRevision: 0,
     scheduledSessions: [],
     activeSession: null,
     completionHistory: [],
@@ -40,7 +39,6 @@ export function createInitialAppState(): AppState {
 function extractTaskRuntimeState(state: AppState): TaskRuntimeState {
   return {
     chains: state.chains,
-    chainsRevision: state.chainsRevision,
     scheduledSessions: state.scheduledSessions,
     activeSession: state.activeSession,
     completionHistory: state.completionHistory,

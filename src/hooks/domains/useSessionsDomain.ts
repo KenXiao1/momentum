@@ -13,13 +13,9 @@
  * @see docs/features/DOMAIN_BETTING.md - 赌博系统集成
  */
 import type { Dispatch, SetStateAction } from 'react';
-import type { AppState } from '../../types';
+import type { AppState, TaskLifecycleEvent } from '../../types';
 import type { MomentumStorage } from '../../storage/MomentumStorage';
 import type { SafelySaveChains } from './useChainsDomain';
-import {
-  taskLifecycleEventBus,
-  type TaskLifecycleEventPublisher,
-} from '../../services/task-lifecycle/TaskLifecycleEventBus';
 import { useI18n } from '../../i18n';
 import { resolveAppStateReader } from './appStateAccess';
 import { createCompletionHandlers } from './sessions/completion';
@@ -49,7 +45,7 @@ interface UseSessionsDomainParams {
 
   // Pet system callback (optional)
   onPetTaskCompleted?: (duration: number, wasSuccessful: boolean) => void;
-  taskLifecycleEvents?: TaskLifecycleEventPublisher;
+  onTaskLifecycleEvent?: (event: TaskLifecycleEvent) => void;
 }
 
 export function useSessionsDomain({
@@ -69,7 +65,7 @@ export function useSessionsDomain({
   onNavigateToFocus,
   onNavigateToDashboard,
   onPetTaskCompleted,
-  taskLifecycleEvents = taskLifecycleEventBus,
+  onTaskLifecycleEvent,
 }: UseSessionsDomainParams) {
   const { tr } = useI18n();
   const readState = resolveAppStateReader({ state, getState });
@@ -101,7 +97,7 @@ export function useSessionsDomain({
     setShowBettingModal,
     setShowAuxiliaryJudgment,
     onNavigateToFocus,
-    taskLifecycleEvents,
+    onTaskLifecycleEvent,
     tr,
   });
 
@@ -116,7 +112,7 @@ export function useSessionsDomain({
       setActiveSessionId,
       onNavigateToDashboard,
       onPetTaskCompleted,
-      taskLifecycleEvents,
+      onTaskLifecycleEvent,
       tr,
     });
 

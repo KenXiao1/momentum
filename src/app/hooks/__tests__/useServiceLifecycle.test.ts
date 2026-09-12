@@ -4,7 +4,8 @@ import { useServiceLifecycle } from '../useServiceLifecycle';
 import { forwardTimerManager } from '../../../utils/forwardTimer';
 import { ruleStateManager } from '../../../services/RuleStateManager';
 import { migrationCoordinator } from '../../../services/migration';
-import { systemRuntime } from '../../../services/runtime';
+import { exceptionRuleCache } from '../../../utils/cache';
+import { performanceMonitor } from '../../../utils/performanceMonitor';
 import { initializeRuleSystem } from '../../../utils/initializeRuleSystem';
 import { checkForUpdates } from '../../../utils/platform-adapters/updater';
 import { logger } from '../../../utils/logger';
@@ -20,17 +21,12 @@ vi.mock('../../../utils/forwardTimer', () => ({
   },
 }));
 
-vi.mock('../../../services/runtime', () => ({
-  systemRuntime: {
-    cache: {
-      start: vi.fn(),
-      stop: vi.fn(),
-    },
-    monitoring: {
-      start: vi.fn(),
-      stop: vi.fn(),
-    },
-  },
+vi.mock('../../../utils/cache', () => ({
+  exceptionRuleCache: { start: vi.fn(), stop: vi.fn() },
+}));
+
+vi.mock('../../../utils/performanceMonitor', () => ({
+  performanceMonitor: { start: vi.fn(), stop: vi.fn() },
 }));
 
 vi.mock('../../../services/RuleStateManager', () => ({
@@ -75,8 +71,9 @@ describe('useServiceLifecycle', () => {
 
     expect(result.current.isInitialized).toBe(true);
     expect(forwardTimerManager.start).toHaveBeenCalledTimes(1);
-    expect(systemRuntime.cache.start).toHaveBeenCalledTimes(1);
+    expect(exceptionRuleCache.start).toHaveBeenCalledTimes(1);
     expect(ruleStateManager.start).toHaveBeenCalledTimes(1);
+    expect(performanceMonitor.start).not.toHaveBeenCalled();
 
     vi.advanceTimersByTime(150);
     await Promise.resolve();
@@ -88,7 +85,7 @@ describe('useServiceLifecycle', () => {
     unmount();
 
     expect(forwardTimerManager.stop).toHaveBeenCalledTimes(1);
-    expect(systemRuntime.cache.stop).toHaveBeenCalledTimes(1);
+    expect(exceptionRuleCache.stop).toHaveBeenCalledTimes(1);
     expect(ruleStateManager.stop).toHaveBeenCalledTimes(1);
   });
 

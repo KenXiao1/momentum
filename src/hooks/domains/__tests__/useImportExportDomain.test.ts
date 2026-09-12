@@ -9,7 +9,6 @@ import {
   createSupabaseStorageMock,
   createUnitChain,
 } from '../../../test/factories';
-import { queryOptimizer } from '../../../utils/queryOptimizer';
 import { logger } from '../../../utils/logger';
 import { useImportExportDomain } from '../useImportExportDomain';
 
@@ -25,12 +24,6 @@ vi.mock('../../../utils/logger', () => ({
     debug: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
-  },
-}));
-
-vi.mock('../../../utils/queryOptimizer', () => ({
-  queryOptimizer: {
-    onDataChange: vi.fn(),
   },
 }));
 
@@ -200,7 +193,6 @@ describe('useImportExportDomain', () => {
     );
     expect(storage.saveRSIPTaskLinks).toHaveBeenCalledWith(rsipTaskLinks);
     expect(storage.savePetState).toHaveBeenCalledWith(pet);
-    expect(queryOptimizer.onDataChange).toHaveBeenCalledWith('chains');
     expect(stateRef.getState().chains).toEqual([existing, imported]);
     expect(stateRef.getState().completionHistory).toEqual(history);
     expect(stateRef.getState().rsipNodes).toEqual(rsipNodes);
@@ -212,7 +204,6 @@ describe('useImportExportDomain', () => {
       rsipExecutionRecords,
     );
     expect(stateRef.getState().rsipTaskLinks).toEqual(rsipTaskLinks);
-    expect(stateRef.getState().chainsRevision).toBe(1);
 
     expect(logger.info).toHaveBeenCalledWith(
       'APP_SHELL',
@@ -342,7 +333,6 @@ describe('useImportExportDomain', () => {
     expect(stateRef.getState().completionHistory).toHaveLength(2);
     expect(stateRef.getState().rsipNodes).toHaveLength(2);
     expect(stateRef.getState().rsipMeta).toEqual({ old: true, imported: true });
-    expect(stateRef.getState().chainsRevision).toBe(1);
   });
 
   it('should import chains without optional payloads and keep existing local view state arrays', async () => {
@@ -400,7 +390,6 @@ describe('useImportExportDomain', () => {
     expect(stateRef.getState().completionHistory).toEqual(initialHistory);
     expect(stateRef.getState().rsipNodes).toEqual(initialNodes);
     expect(stateRef.getState().rsipMeta).toEqual({ local: true });
-    expect(stateRef.getState().chainsRevision).toBe(1);
   });
 
   it('should reject empty import payloads', async () => {

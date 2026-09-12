@@ -7,12 +7,11 @@ import { getTopLevelChains } from '../../utils/chainTree';
 import { isDev } from '../../utils/env';
 import { toError } from '../../utils/errorMessage';
 import { logger } from '../../utils/logger';
-import { queryOptimizer } from '../../utils/queryOptimizer';
+import { buildChainTree } from '../../utils/chainTree';
 import type { DashboardProps } from './types';
 
 export function useDashboardController({
   chains,
-  chainsRevision,
   scheduledSessions,
   onImportChains,
   onRestoreChains,
@@ -47,8 +46,8 @@ export function useDashboardController({
         chainCount: chains.length,
       });
     }
-    return queryOptimizer.memoizedBuildChainTree(chains, chainsRevision);
-  }, [chains, chainsRevision]);
+    return buildChainTree(chains);
+  }, [chains]);
 
   const topLevelChains = useMemo(() => {
     const result = getTopLevelChains(chainTree);

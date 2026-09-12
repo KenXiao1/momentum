@@ -1,5 +1,4 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
 
 // Performance testing utilities
 export const performanceUtils = {
@@ -99,31 +98,6 @@ export const performanceUtils = {
     };
   },
 };
-
-// Mock high-resolution timer for consistent performance tests
-const mockPerformanceNow = vi.fn();
-let mockTime = 0;
-
-mockPerformanceNow.mockImplementation(() => {
-  mockTime += 0.1; // Increment by 0.1ms each call for predictable timing
-  return mockTime;
-});
-
-Object.defineProperty(global, 'performance', {
-  value: {
-    now: mockPerformanceNow,
-    mark: vi.fn(),
-    measure: vi.fn(),
-    getEntriesByType: vi.fn(() => []),
-    getEntriesByName: vi.fn(() => []),
-  },
-});
-
-// Setup performance monitoring
-beforeEach(() => {
-  mockTime = 0;
-  vi.clearAllMocks();
-});
 
 afterEach(() => {
   // Force garbage collection if available (for memory tests)

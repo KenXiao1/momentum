@@ -110,7 +110,6 @@ function createProps(overrides: AppShellViewOverrides = {}): AppShellViewProps {
 
   const dashboard: AppShellDashboardViewModel = {
     chains: [chain, groupChain],
-    chainsRevision: 1,
     scheduledSessions: [],
     editingChain: null,
     editorParentId: chain.id,

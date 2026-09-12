@@ -1,4 +1,4 @@
-﻿import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppState } from '../../../types';
 import {
@@ -9,7 +9,6 @@ import {
 } from '../../../test/factories';
 import { getSafeErrorDetailFromUnknown } from '../../../utils/errorMessage';
 import { logger } from '../../../utils/logger';
-import { queryOptimizer } from '../../../utils/queryOptimizer';
 import { toast } from '../../../utils/toast';
 import { useGroupDomain } from '../useGroupDomain';
 
@@ -33,13 +32,6 @@ vi.mock('../../../utils/logger', () => ({
 vi.mock('../../../utils/toast', () => ({
   toast: {
     error: vi.fn(),
-  },
-}));
-
-vi.mock('../../../utils/queryOptimizer', () => ({
-  queryOptimizer: {
-    memoizedBuildChainTree: vi.fn(() => []),
-    onDataChange: vi.fn(),
   },
 }));
 
@@ -127,8 +119,6 @@ describe('useGroupDomain', () => {
     });
     expect(updated?.[0]?.id).toBe(group.id);
     expect(updated?.[1]?.id).toBe(unit.id);
-    expect(queryOptimizer.onDataChange).toHaveBeenCalledWith('chains');
-    expect(stateRef.getState().chainsRevision).toBe(1);
     expect(stateRef.getState().chains).toEqual(updated);
     expectNonEmptyLogMessages();
     const importStartCall = vi
@@ -208,7 +198,6 @@ describe('useGroupDomain', () => {
       stateRef.getState().chains.find((item) => item.id === chain.id)
         ?.taskRepeatCount,
     ).toBe(5);
-    expect(stateRef.getState().chainsRevision).toBe(1);
     expectNonEmptyLogMessages();
   });
 
@@ -217,19 +206,9 @@ describe('useGroupDomain', () => {
     const a = createUnitChain({ id: 'a', parentId: group.id, sortOrder: 0 });
     const b = createUnitChain({ id: 'b', parentId: group.id, sortOrder: 1 });
     const stateRef = createStateContainer(
-      createAppState({ chains: [group, a, b], chainsRevision: 10 }),
+      createAppState({ chains: [group, a, b] }),
     );
     const safelySaveChains = vi.fn(async () => undefined);
-
-    vi.mocked(queryOptimizer.memoizedBuildChainTree).mockReturnValue([
-      {
-        id: group.id,
-        children: [
-          { id: a.id, sortOrder: a.sortOrder },
-          { id: b.id, sortOrder: b.sortOrder },
-        ],
-      },
-    ] as unknown as ReturnType<typeof queryOptimizer.memoizedBuildChainTree>);
 
     const { result } = renderHook(() =>
       useGroupDomain({
@@ -253,7 +232,6 @@ describe('useGroupDomain', () => {
     expect(
       stateRef.getState().chains.find((item) => item.id === b.id)?.sortOrder,
     ).toBe(0);
-    expect(stateRef.getState().chainsRevision).toBe(11);
     expectNonEmptyLogMessages();
   });
 
@@ -275,20 +253,9 @@ describe('useGroupDomain', () => {
       sortOrder: 30,
     });
     const stateRef = createStateContainer(
-      createAppState({ chains: [group, a, b, c], chainsRevision: 4 }),
+      createAppState({ chains: [group, a, b, c] }),
     );
     const safelySaveChains = vi.fn(async () => undefined);
-
-    vi.mocked(queryOptimizer.memoizedBuildChainTree).mockReturnValue([
-      {
-        id: group.id,
-        children: [
-          { id: a.id, sortOrder: a.sortOrder },
-          { id: b.id, sortOrder: b.sortOrder },
-          { id: c.id, sortOrder: c.sortOrder },
-        ],
-      },
-    ] as unknown as ReturnType<typeof queryOptimizer.memoizedBuildChainTree>);
 
     const { result } = renderHook(() =>
       useGroupDomain({
@@ -322,7 +289,7 @@ describe('useGroupDomain', () => {
       sortOrder: 1,
     });
     const stateRef = createStateContainer(
-      createAppState({ chains: [group, a, b], chainsRevision: 8 }),
+      createAppState({ chains: [group, a, b] }),
     );
     const safelySaveChains = vi.fn(async () => undefined);
 
@@ -335,23 +302,11 @@ describe('useGroupDomain', () => {
       }),
     );
 
-    vi.mocked(queryOptimizer.memoizedBuildChainTree).mockReturnValue(
-      [] as never,
-    );
     await act(async () => {
-      await result.current.handleReorderUnit(group.id, a.id, 'down');
+      await result.current.handleReorderUnit('missing-group', a.id, 'down');
     });
     expect(safelySaveChains).not.toHaveBeenCalled();
 
-    vi.mocked(queryOptimizer.memoizedBuildChainTree).mockReturnValue([
-      {
-        id: group.id,
-        children: [
-          { id: a.id, sortOrder: a.sortOrder },
-          { id: b.id, sortOrder: b.sortOrder },
-        ],
-      },
-    ] as never);
     await act(async () => {
       await result.current.handleReorderUnit(group.id, 'missing-unit', 'down');
       await result.current.handleReorderUnit(group.id, a.id, 'up');
@@ -360,7 +315,6 @@ describe('useGroupDomain', () => {
     expect(safelySaveChains).not.toHaveBeenCalled();
 
     rerender();
-    expect(stateRef.getState().chainsRevision).toBe(8);
   });
 
   it('should recover from save failures by reloading chains and showing error toast', async () => {

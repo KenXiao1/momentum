@@ -64,7 +64,7 @@ describe('usePeriodicCleanup', () => {
       ...expiredGroup,
       totalFailures: expiredGroup.totalFailures + 1,
     });
-    const state = createAppState({ chains: [expiredGroup], chainsRevision: 2 });
+    const state = createAppState({ chains: [expiredGroup] });
     const setState = vi.fn();
     const storage = createLocalStorageMock({
       upsertChain: vi.fn(async () => undefined),

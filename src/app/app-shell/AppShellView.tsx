@@ -201,7 +201,6 @@ export function AppShellView({
             <AppShellProfiler id="dashboard-view">
               <Dashboard
                 chains={dashboard.chains}
-                chainsRevision={dashboard.chainsRevision}
                 scheduledSessions={dashboard.scheduledSessions}
                 isLoading={app.isLoadingData}
                 onCreateChain={dashboard.handleCreateChain}

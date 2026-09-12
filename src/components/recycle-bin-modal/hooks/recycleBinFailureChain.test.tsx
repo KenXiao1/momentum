@@ -80,7 +80,6 @@ function useFailureChain(storage: MomentumStorage) {
   const domain = useRecycleBinDomain({ state, setState, storage });
   const dashboard = useDashboardController({
     chains: state.chains,
-    chainsRevision: state.chainsRevision,
     scheduledSessions: state.scheduledSessions,
     onCreateChain: vi.fn(),
     onStartChain: vi.fn(),

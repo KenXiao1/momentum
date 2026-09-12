@@ -343,7 +343,6 @@ const handleCreateChain = (parentId?: unknown) => {
 const safelySaveChains = async (chains: Chain[], retryCount = 0) => {
   try {
     await storage.saveChains(chains);
-    queryOptimizer.onDataChange('chains');
   } catch (error) {
     if (retryCount < 3) {
       // 等待后重试

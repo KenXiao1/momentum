@@ -1,4 +1,4 @@
-﻿import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppState, ChainDraft } from '../../../types';
 import {
@@ -9,7 +9,6 @@ import {
 } from '../../../test/factories';
 import { useChainsDomain } from '../useChainsDomain';
 import { useI18n } from '../../../i18n';
-import { queryOptimizer } from '../../../utils/queryOptimizer';
 import { toast } from '../../../utils/toast';
 import { logger } from '../../../utils/logger';
 import { getSafeErrorDetailFromUnknown } from '../../../utils/errorMessage';
@@ -21,12 +20,6 @@ vi.mock('../../../i18n', () => ({
     language: 'en',
     tr: trMock,
   })),
-}));
-
-vi.mock('../../../utils/queryOptimizer', () => ({
-  queryOptimizer: {
-    onDataChange: vi.fn(),
-  },
 }));
 
 vi.mock('../../../utils/logger', () => ({
@@ -351,9 +344,7 @@ describe('useChainsDomain', () => {
       totalFailures: 0,
       auxiliaryFailures: 0,
     });
-    expect(queryOptimizer.onDataChange).toHaveBeenCalledWith('chains');
     expect(onNavigateToDashboard).toHaveBeenCalledTimes(1);
-    expect(stateRef.getState().chainsRevision).toBe(1);
     expect(logger.debug).toHaveBeenCalledWith(
       'CHAINS',
       'Starting to save chain data',
@@ -708,7 +699,6 @@ describe('useChainsDomain', () => {
     expect(toast.error).toHaveBeenCalledWith('Save failed: disk is full');
     expect(storage.getActiveChains).toHaveBeenCalledTimes(1);
     expect(stateRef.getState().chains).toEqual(fallback);
-    expect(stateRef.getState().chainsRevision).toBe(1);
     expect(logger.error).toHaveBeenCalledWith(
       'CHAINS',
       'Failed to save chain',
@@ -806,7 +796,6 @@ describe('useChainsDomain', () => {
     expect(toast.error).toHaveBeenCalledWith(
       'Save failed. Check the console for details, then try again.',
     );
-    expect(stateRef.getState().chainsRevision).toBe(1);
     expect(trMock).toHaveBeenCalledWith(
       expect.any(String),
       'Save failed. Check the console for details, then try again.',

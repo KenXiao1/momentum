@@ -52,7 +52,9 @@ export function useAppShellPrimaryDomains(
     confirmTaskLink: taskLinkConfirmation.confirmTaskLink,
     onNavigateToRSIP: () => navigationStore.getState().navigateToView('rsip'),
   });
-  useTaskLifecycleIntegration(rsipDomain.handleTaskEventIntegration);
+  const onTaskLifecycleEvent = useTaskLifecycleIntegration(
+    rsipDomain.handleTaskEventIntegration,
+  );
 
   const petDomain = usePetDomain();
   const sessionsDomain = useSessionsDomain({
@@ -77,6 +79,7 @@ export function useAppShellPrimaryDomains(
     onNavigateToDashboard: () =>
       navigationStore.getState().navigateToDashboard(),
     onPetTaskCompleted: petDomain.onTaskCompleted,
+    onTaskLifecycleEvent,
   });
 
   return {

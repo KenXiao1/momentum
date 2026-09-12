@@ -7,7 +7,7 @@ import {
   incrementGroupCompletionCount,
 } from '../../../utils/chainTree';
 import { logger } from '../../../utils/logger';
-import { queryOptimizer } from '../../../utils/queryOptimizer';
+import { buildChainTree } from '../../../utils/chainTree';
 import {
   isGroupExpired,
   resetGroupProgress,
@@ -19,9 +19,7 @@ import { notifyTaskCompleted, notifyTaskFailed } from './sessionNotifications';
 type Chain = AppState['chains'][number];
 
 function findFirstUnitInGroup(chains: AppState['chains'], groupId: string) {
-  const groupNode = queryOptimizer
-    .memoizedBuildChainTree(chains)
-    .find((node) => node.id === groupId);
+  const groupNode = buildChainTree(chains).find((node) => node.id === groupId);
   return groupNode ? getNextUnitInGroup(groupNode) : null;
 }
 
@@ -31,7 +29,7 @@ interface CreateGroupStartFlowParams {
   storage: MomentumStorage;
   safelySaveChains: SafelySaveChains;
   startChain: (chainId: string) => Promise<void>;
-  publishTaskLifecycleEvent: (event: TaskLifecycleEvent) => void;
+  onTaskLifecycleEvent?: (event: TaskLifecycleEvent) => void;
   tr: (zh: string, en: string) => string;
 }
 
@@ -41,7 +39,7 @@ export function createGroupStartFlow({
   storage,
   safelySaveChains,
   startChain,
-  publishTaskLifecycleEvent,
+  onTaskLifecycleEvent,
   tr,
 }: CreateGroupStartFlowParams) {
   function replaceGroup(groupId: string, update: (chain: Chain) => Chain) {
@@ -51,7 +49,6 @@ export function createGroupStartFlow({
     setState((prev) => ({
       ...prev,
       chains: updatedChains,
-      chainsRevision: prev.chainsRevision + 1,
     }));
   }
 
@@ -113,13 +110,11 @@ export function createGroupStartFlow({
 
     try {
       await safelySaveChains(updatedChains);
-      queryOptimizer.onDataChange('chains');
       setState((prev) => ({
         ...prev,
         chains: updatedChains,
-        chainsRevision: prev.chainsRevision + 1,
       }));
-      publishTaskLifecycleEvent({
+      onTaskLifecycleEvent?.({
         type: 'group_cycle_completed',
         chainId: group.id,
         chainKind: 'group',
@@ -150,9 +145,9 @@ export function createGroupStartFlow({
     }
 
     const state = readState();
-    const groupNode = queryOptimizer
-      .memoizedBuildChainTree(state.chains, state.chainsRevision)
-      .find((node) => node.id === group.id);
+    const groupNode = buildChainTree(state.chains).find(
+      (node) => node.id === group.id,
+    );
     if (!groupNode) {
       logger.error('SESSIONS', '无法找到任务群节点', { chainId: group.id });
       return;

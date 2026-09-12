@@ -5,7 +5,7 @@ import {
 } from '../../../utils/chainTree';
 import { forwardTimerManager } from '../../../utils/forwardTimer';
 import { logger } from '../../../utils/logger';
-import { queryOptimizer } from '../../../utils/queryOptimizer';
+import { buildChainTree } from '../../../utils/chainTree';
 import { notifyTaskCompleted } from './sessionNotifications';
 
 type Chain = AppState['chains'][number];
@@ -63,16 +63,12 @@ export function maybeIncrementGroupCycleCompletion(
   chains: AppState['chains'],
   completedChain: Chain,
   tr: (zh: string, en: string) => string,
-  chainsRevision?: number,
 ): GroupCycleIncrementResult {
   if (!completedChain.parentId || completedChain.type === 'group') {
     return { updatedChains: chains };
   }
 
-  const chainTree = queryOptimizer.memoizedBuildChainTree(
-    chains,
-    chainsRevision,
-  );
+  const chainTree = buildChainTree(chains);
   const groupNode = chainTree.find(
     (node) => node.id === completedChain.parentId,
   );

@@ -108,7 +108,6 @@ export function useAppDataLoad({
           setState((prev) => ({
             ...prev,
             chains: fixedChains,
-            chainsRevision: prev.chainsRevision + 1,
             scheduledSessions: [],
             activeSession: null,
             completionHistory: [],
@@ -158,7 +157,6 @@ export function useAppDataLoad({
         setState((prev) => ({
           ...prev,
           chains,
-          chainsRevision: prev.chainsRevision + 1,
           scheduledSessions,
           activeSession,
           completionHistory: migratedCompletionHistory,

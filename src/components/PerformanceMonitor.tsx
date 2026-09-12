@@ -1,7 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { realTimeSyncService } from '../services/RealTimeSyncService';
-import { queryOptimizer } from '../utils/queryOptimizer';
-import type { PerformanceSnapshot } from '../types/performance-monitor';
+import { reactPerformanceMonitor } from '../utils/reactPerformanceMonitor';
+
+interface PerformanceSnapshot {
+  sync: ReturnType<typeof realTimeSyncService.getStats>;
+  react: ReturnType<typeof reactPerformanceMonitor.getStats>;
+  timestamp: string;
+}
 
 interface PerformanceMonitorProps {
   isVisible: boolean;
@@ -10,7 +15,7 @@ interface PerformanceMonitorProps {
 
 /**
  * Performance monitoring component for development and debugging.
- * Shows real-time cache statistics and performance metrics.
+ * Shows real-time sync status and React render metrics.
  */
 export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   isVisible,
@@ -23,13 +28,11 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
     if (isVisible) {
       const updateStats = () => {
         const syncStats = realTimeSyncService.getStats();
-        const cacheStats = queryOptimizer.getCacheStats();
-        const performanceStats = queryOptimizer.getPerformanceStats();
+        const reactStats = reactPerformanceMonitor.getStats();
 
         setStats({
           sync: syncStats,
-          cache: cacheStats,
-          performance: performanceStats,
+          react: reactStats,
           timestamp: new Date().toLocaleTimeString(),
         });
       };
@@ -107,49 +110,22 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
           </div>
         </div>
 
-        <div>
-          <h4 className="mb-1 font-semibold text-green-600 dark:text-green-400">
-            Query Cache
-          </h4>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              Cache Size:{' '}
-              <span className="font-mono">{stats?.cache?.cacheSize ?? 0}</span>
-            </div>
-            <div>
-              Pending:{' '}
-              <span className="font-mono">
-                {stats?.cache?.pendingQueries ?? 0}
-              </span>
-            </div>
-          </div>
-          {(stats?.cache?.cacheKeys?.length ?? 0) > 0 && (
-            <div className="mt-1">
-              <div className="text-gray-600 dark:text-gray-400">Cached:</div>
-              <div className="font-mono text-xs text-gray-500 dark:text-gray-500">
-                {stats?.cache?.cacheKeys.slice(0, 3).join(', ')}
-                {(stats?.cache?.cacheKeys.length ?? 0) > 3 && '...'}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {stats?.performance?.react && (
+        {stats?.react && (
           <div>
             <h4 className="mb-1 font-semibold text-purple-600 dark:text-purple-400">
               React Performance
             </h4>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                Cache Hits:{' '}
+                Renders:{' '}
                 <span className="font-mono text-green-600">
-                  {stats.performance.react.cacheHits ?? 0}
+                  {stats.react.totalRenders ?? 0}
                 </span>
               </div>
               <div>
-                Cache Misses:{' '}
+                Average render:{' '}
                 <span className="font-mono text-red-600">
-                  {stats.performance.react.cacheMisses ?? 0}
+                  {stats.react.avgRenderTime ?? 0}ms
                 </span>
               </div>
             </div>
@@ -157,13 +133,6 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
         )}
 
         <div className="flex space-x-2 border-t border-gray-200 pt-2 dark:border-slate-600">
-          <button
-            type="button"
-            onClick={() => queryOptimizer.clearCache()}
-            className="rounded bg-red-500 px-2 py-1 text-xs text-white hover:bg-red-600"
-          >
-            Clear Cache
-          </button>
           <button
             type="button"
             onClick={() => realTimeSyncService.forceRefresh()}

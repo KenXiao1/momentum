@@ -20,7 +20,6 @@ import { hasStorageCapability } from '../../storage/ports';
 import type { SafelySaveChains } from './useChainsDomain';
 import { useI18n } from '../../i18n';
 import { logger } from '../../utils/logger';
-import { queryOptimizer } from '../../utils/queryOptimizer';
 import { normalizeUnknownError } from '../../utils/errors/normalizeError';
 import {
   mergeImportedState,
@@ -150,7 +149,6 @@ export function useImportExportDomain({
 
       const updatedChains = [...currentChains, ...importedChains];
       await safelySaveChains(updatedChains);
-      queryOptimizer.onDataChange('chains');
 
       await persistImportedData({ storage, canUseAuth, options });
       if (options?.petState) await onPetImported?.();

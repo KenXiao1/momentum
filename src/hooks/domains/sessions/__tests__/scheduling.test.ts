@@ -6,16 +6,9 @@ import {
   createUnitChain,
 } from '../../../../test/factories';
 import { createSchedulingHandlers } from '../scheduling';
-import { queryOptimizer } from '../../../../utils/queryOptimizer';
 import { systemNotificationService } from '../../../../services/platform/SystemNotificationService';
 import { toast } from '../../../../utils/toast';
 import { logger } from '../../../../utils/logger';
-
-vi.mock('../../../../utils/queryOptimizer', () => ({
-  queryOptimizer: {
-    onDataChange: vi.fn(),
-  },
-}));
 
 vi.mock('../../../../services/platform/SystemNotificationService', () => ({
   systemNotificationService: {
@@ -93,7 +86,6 @@ describe('createSchedulingHandlers', () => {
     const stateRef = createStateContainer(
       createAppState({
         chains: [otherChain, targetChain],
-        chainsRevision: 9,
         scheduledSessions: [otherSchedule],
       }),
     );
@@ -128,10 +120,8 @@ describe('createSchedulingHandlers', () => {
     ]);
     expect(nextState.chains).toEqual([otherChain, targetChain]);
     expect(nextState.chains[0]).toBe(otherChain);
-    expect(nextState.chainsRevision).toBe(9);
     expect(storage.setScheduledSession).toHaveBeenCalledWith(expectedSession);
     expect(safelySaveChains).not.toHaveBeenCalled();
-    expect(queryOptimizer.onDataChange).not.toHaveBeenCalled();
   });
 
   it('ignores a duplicate schedule for the requested chain', async () => {
@@ -240,7 +230,6 @@ describe('createSchedulingHandlers', () => {
     const stateRef = createStateContainer(
       createAppState({
         chains: [otherChain, targetChain],
-        chainsRevision: 4,
         scheduledSessions: [otherSchedule, targetSchedule],
       }),
     );
@@ -268,7 +257,6 @@ describe('createSchedulingHandlers', () => {
       { ...targetChain, auxiliaryStreak: 3 },
     ]);
     expect(nextState.chains[0]).toBe(otherChain);
-    expect(nextState.chainsRevision).toBe(5);
     expect(systemNotificationService.notifyTaskCompleted).toHaveBeenCalledWith(
       targetChain.name,
       3,

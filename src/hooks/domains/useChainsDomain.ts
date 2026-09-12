@@ -19,7 +19,6 @@ import type {
   UnitChain,
 } from '../../types';
 import type { MomentumStorage } from '../../storage/MomentumStorage';
-import { queryOptimizer } from '../../utils/queryOptimizer';
 import { logger } from '../../utils/logger';
 import { toast } from '../../utils/toast';
 import { useI18n } from '../../i18n';
@@ -222,13 +221,11 @@ export function useChainsDomain({
 
       logger.debug('CHAINS', 'Saving chains');
       await safelySaveChains(updatedActiveChains);
-      queryOptimizer.onDataChange('chains');
       logger.debug('CHAINS', 'Save succeeded; updating UI state');
 
       setState((prev) => ({
         ...prev,
         chains: updatedActiveChains,
-        chainsRevision: prev.chainsRevision + 1,
       }));
       onNavigateToDashboard();
     } catch (error) {
@@ -254,7 +251,6 @@ export function useChainsDomain({
         setState((prev) => ({
           ...prev,
           chains: currentChains,
-          chainsRevision: prev.chainsRevision + 1,
         }));
       } catch (reloadError) {
         logger.error(

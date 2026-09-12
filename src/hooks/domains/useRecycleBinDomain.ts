@@ -77,7 +77,6 @@ export function useRecycleBinDomain({
       setState((prev) => ({
         ...prev,
         chains: updatedChains,
-        chainsRevision: prev.chainsRevision + 1,
         scheduledSessions: updatedScheduledSessions,
         activeSession: updatedActiveSession,
       }));
@@ -104,7 +103,6 @@ export function useRecycleBinDomain({
         setState((prev) => ({
           ...prev,
           chains: currentChains,
-          chainsRevision: prev.chainsRevision + 1,
         }));
       } catch {
         toast.warning(
@@ -127,7 +125,6 @@ export function useRecycleBinDomain({
       setState((prev) => ({
         ...prev,
         chains: updatedChains,
-        chainsRevision: prev.chainsRevision + 1,
       }));
     } catch (error) {
       const rawMessage = error instanceof Error ? error.message : '';
@@ -146,7 +143,6 @@ export function useRecycleBinDomain({
           setState((prev) => ({
             ...prev,
             chains: currentChains,
-            chainsRevision: prev.chainsRevision + 1,
           }));
         } catch (recoveryError) {
           logger.error(
@@ -172,7 +168,6 @@ export function useRecycleBinDomain({
       setState((prev) => ({
         ...prev,
         chains: updatedChains,
-        chainsRevision: prev.chainsRevision + 1,
       }));
     } catch (error) {
       logger.error(

@@ -18,7 +18,6 @@ import type { AppState } from '../../types';
 import type { MomentumStorage } from '../../storage/MomentumStorage';
 import type { SafelySaveChains } from './useChainsDomain';
 import { resolveAppStateReader } from './appStateAccess';
-import { queryOptimizer } from '../../utils/queryOptimizer';
 import { logger } from '../../utils/logger';
 import { toError } from '../../utils/errorMessage';
 
@@ -46,7 +45,6 @@ export function useRulesDomain({
     context: string,
   ) => {
     safelySaveChains(updatedChains).catch((error) => {
-      queryOptimizer.onDataChange('chains');
       logger.error('RULES_DOMAIN', context, { chainId }, toError(error));
     });
   };
@@ -85,7 +83,6 @@ export function useRulesDomain({
     setState((prev) => ({
       ...prev,
       chains: updatedChains,
-      chainsRevision: prev.chainsRevision + 1,
       scheduledSessions: updatedScheduledSessions,
     }));
     setShowAuxiliaryJudgment(null);
@@ -124,7 +121,6 @@ export function useRulesDomain({
     setState((prev) => ({
       ...prev,
       chains: updatedChains,
-      chainsRevision: prev.chainsRevision + 1,
       scheduledSessions: updatedScheduledSessions,
     }));
     setShowAuxiliaryJudgment(null);

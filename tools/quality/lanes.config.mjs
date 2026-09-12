@@ -51,13 +51,6 @@ export const QUALITY_CHECKS = Object.freeze([
     reports: [],
   },
   {
-    id: 'test-runtime-budget',
-    label: 'Test runtime budget',
-    script: 'quality:test:runtime',
-    lanes: ['info'],
-    reports: ['reports/quality/test-runtime-budget.json'],
-  },
-  {
     id: 'mutation-hotspots-required',
     label: 'Mutation hotspots freshness gate',
     script: 'quality:test:mutation-hotspots:required',

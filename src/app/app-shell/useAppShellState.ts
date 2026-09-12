@@ -15,7 +15,6 @@ export function useAppShellState() {
   const taskState = useAppShellStore(
     useShallow((state) => ({
       chains: state.chains,
-      chainsRevision: state.chainsRevision,
       scheduledSessions: state.scheduledSessions,
       activeSession: state.activeSession,
       completionHistory: state.completionHistory,

@@ -58,9 +58,17 @@ operations such as authentication and betting.
 
 `src/app/app-shell/useAppShellBootstrap.ts` reaches
 `src/app/hooks/useServiceLifecycle.ts`, which starts/stops the forward timer,
-rule state manager, cache, and development monitoring. `SystemRuntime` in
-`src/services/runtime/` groups cache and monitoring access. The lifecycle hook
-is the integration point for these services.
+rule state manager, exception-rule cache, and development monitoring directly.
+The lifecycle hook is the integration point for these services.
+
+Chain trees are derived from chain arrays. Dashboard and group rendering use
+local React memoization; domain actions build the tree when needed. There is no
+shared query cache, chain revision counter, or manual invalidation protocol.
+
+AppShell passes a task lifecycle callback into session operations to invoke RSIP
+task-link integration. `useTaskLifecycleIntegration` keeps the mounted handler
+current, ignores new dispatches after unmount, and isolates asynchronous errors.
+It does not use a global event bus.
 
 `MigrationCoordinator` in `src/services/migration/` coordinates startup, data,
 and exception-rule migrations. `StorageProvider` in `StorageContext.tsx` supplies
@@ -78,7 +86,7 @@ This allows shared modules to load in browsers without invoking native APIs.
 `src-tauri/src/lib.rs` registers Rust commands and plugins; `main.rs` is the
 desktop entry. `src-tauri/capabilities/` controls permissions and
 `src-tauri/Cargo.toml` separates desktop/mobile dependencies. The mobile code
-path exists, but release CI currently builds desktop targets; mobile packaging
+path exists; release CI builds desktop targets and Android, while iOS packaging
 remains in progress. See [deployment](DEPLOYMENT.md) for prerequisites and builds.
 
 Vite disables the PWA plugin when Tauri sets `TAURI_ENV_PLATFORM`, avoiding

@@ -54,6 +54,11 @@ production ESLint still enforces its configured errors. Cycle detection belongs
 to Dependency Cruiser. File length, import counts, comment counts, and cast totals
 are not architecture gates.
 
+Use Vitest's case/file duration output to investigate slow tests. There is no
+separate runtime-budget tool that reruns the unit suite or enforces fixed
+machine-independent timing limits. The performance setup uses the real clock;
+its harness tests verify measurement plumbing, not production latency targets.
+
 Security scanning has separate Semgrep, CodeQL, and Gitleaks workflows.
 Local verification examples are in [CONTRIBUTING.md](../../CONTRIBUTING.md).
 

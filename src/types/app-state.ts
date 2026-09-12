@@ -27,7 +27,6 @@ export type ViewState =
 
 export interface TaskRuntimeState {
   chains: Chain[];
-  chainsRevision: number;
   scheduledSessions: ScheduledSession[];
   activeSession: ActiveSession | null;
   completionHistory: CompletionHistory[];

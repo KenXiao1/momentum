@@ -58,7 +58,6 @@ export interface AppShellAppViewModel {
 
 export interface AppShellDashboardViewModel {
   chains: Chain[];
-  chainsRevision: number;
   scheduledSessions: ScheduledSession[];
   editingChain: Chain | null;
   editorParentId: string | null;

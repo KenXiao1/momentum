@@ -99,7 +99,6 @@ export function mergeImportedState(
   return {
     ...previous,
     chains,
-    chainsRevision: previous.chainsRevision + 1,
     completionHistory: appendIfNonEmpty(
       previous.completionHistory,
       options?.history,
@@ -154,7 +153,6 @@ export async function reloadStateAfterImportFailure(
   setState((previous) => ({
     ...previous,
     chains,
-    chainsRevision: previous.chainsRevision + 1,
     rsipNodes,
     rsipMeta,
     rsipGroups,

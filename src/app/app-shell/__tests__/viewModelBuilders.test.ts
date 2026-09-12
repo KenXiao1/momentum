@@ -12,14 +12,6 @@ import {
   buildSessionViewModel,
 } from '../viewModelBuilders';
 
-const queryOptimizerMock = vi.hoisted(() => ({
-  memoizedBuildChainTree: vi.fn(() => []),
-}));
-
-vi.mock('../../../utils/queryOptimizer', () => ({
-  queryOptimizer: queryOptimizerMock,
-}));
-
 describe('viewModelBuilders', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -45,7 +37,7 @@ describe('viewModelBuilders', () => {
     });
   });
 
-  it('builds the dashboard model and derives viewing chain and group node', () => {
+  it('builds the dashboard model and derives the viewing chain and passes through the memoized group node', () => {
     const unit = createUnitChain({ id: 'unit-1' });
     const group = createGroupChain({ id: 'group-1' });
     const groupNode = {
@@ -54,14 +46,11 @@ describe('viewModelBuilders', () => {
       depth: 0,
     };
 
-    queryOptimizerMock.memoizedBuildChainTree.mockReturnValue([groupNode]);
-
     const dashboard = buildDashboardViewModel({
-      currentView: 'group',
+      viewingGroupNode: groupNode,
       chains: [unit, group],
-      chainsRevision: 7,
       scheduledSessions: [],
-      editingChain: null,
+      editingChainId: null,
       viewingChainId: 'group-1',
       completionHistory: [],
       handleCreateChain: vi.fn(),
@@ -86,21 +75,16 @@ describe('viewModelBuilders', () => {
 
     expect(dashboard.viewingChain).toBe(group);
     expect(dashboard.viewingGroupNode).toEqual(groupNode);
-    expect(queryOptimizerMock.memoizedBuildChainTree).toHaveBeenCalledWith(
-      [unit, group],
-      7,
-    );
   });
 
-  it('skips group tree derivation outside the group view', () => {
+  it('keeps the group node absent outside the group view', () => {
     const unit = createUnitChain({ id: 'unit-1' });
 
     const dashboard = buildDashboardViewModel({
-      currentView: 'detail',
+      viewingGroupNode: null,
       chains: [unit],
-      chainsRevision: 1,
       scheduledSessions: [],
-      editingChain: null,
+      editingChainId: null,
       viewingChainId: unit.id,
       completionHistory: [],
       handleCreateChain: vi.fn(),
@@ -125,7 +109,6 @@ describe('viewModelBuilders', () => {
 
     expect(dashboard.viewingChain).toBe(unit);
     expect(dashboard.viewingGroupNode).toBeNull();
-    expect(queryOptimizerMock.memoizedBuildChainTree).not.toHaveBeenCalled();
   });
 
   it('builds the rsip model and preserves shared session handlers', () => {
