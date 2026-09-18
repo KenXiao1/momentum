@@ -32,7 +32,7 @@
 
 - 存储：`src/services/ExceptionRuleStorage.ts`（localStorage）
 - 重复检测：`src/services/RuleDuplicationDetector.ts`、`src/services/EnhancedDuplicationHandler.ts`
-- 校验与缓存：`src/services/EnhancedRuleValidationService.ts`
+- 完整性校验：`src/services/validateRulesIntegrity.ts`；执行校验：`src/services/rule-classification/ruleValidator.ts`
 - 统计：`src/services/RuleUsageTracker.ts`
 - 恢复：`src/services/ErrorRecoveryManager.ts`
 

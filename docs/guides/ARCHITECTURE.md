@@ -21,6 +21,10 @@ coordinate state and effects; views and sections receive props. File length is
 not an architectural boundary. Pure domain functions need no hook or service
 wrapper unless a caller needs React integration or shared orchestration.
 
+`useAppShellDomains` wires the domain hooks in one place. `useAppShellViewModels`
+derives chain context and modal data directly into the view's prop types; there
+is no separate builder layer or primary/secondary domain grouping.
+
 `src/types/index.ts` exports the shared product types. `Chain` is a discriminated
 union of `UnitChain` and `GroupChain`; `ChainDraft` preserves that union for forms.
 `src/domain/result.ts` supplies `Result<T, E>` for operations with explicit failure
@@ -59,7 +63,9 @@ operations such as authentication and betting.
 `src/app/app-shell/useAppShellBootstrap.ts` reaches
 `src/app/hooks/useServiceLifecycle.ts`, which starts/stops the forward timer,
 rule state manager, exception-rule cache, and development monitoring directly.
-The lifecycle hook is the integration point for these services.
+The lifecycle hook is the integration point for these services. `RuleStateManager`
+owns its temporary IDs, pending creations, and cleanup directly; it has no
+separate Store/Queries/Controller objects.
 
 Chain trees are derived from chain arrays. Dashboard and group rendering use
 local React memoization; domain actions build the tree when needed. There is no
@@ -82,6 +88,9 @@ Adapters in `src/utils/platform-adapters/` implement notifications, file I/O,
 window operations, haptics, and updates. Native commands use the lazy
 `src/utils/tauri-bridge.ts`; plugin APIs are also loaded inside native paths.
 This allows shared modules to load in browsers without invoking native APIs.
+Adapter getters return the module-owned instances without a second instance cache.
+The capability center reads adapter support on demand. Its operation wrappers
+preserve unsupported, cancellation, and failure results used by UI workflows.
 
 `src-tauri/src/lib.rs` registers Rust commands and plugins; `main.rs` is the
 desktop entry. `src-tauri/capabilities/` controls permissions and

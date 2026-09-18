@@ -68,23 +68,8 @@ describe('RuleStateManager', () => {
     vi.useRealTimers();
   });
 
-  it('generates temporary and real IDs', async () => {
-    const { manager } = await loadRuleStateManager();
-    manager.clearAllStates();
-
-    const t1 = manager.generateTemporaryId();
-    const t2 = manager.generateTemporaryId();
-    const real = manager.generateRealId();
-
-    expect(t1).toMatch(/^temp_/);
-    expect(t2).toMatch(/^temp_/);
-    expect(t1).not.toBe(t2);
-    expect(real).toBe('rule-real-1');
-  });
-
   it('supports optimistic creation and waitForRuleCreation success flow', async () => {
     const { manager, exceptionRuleStorageMock } = await loadRuleStateManager();
-    manager.clearAllStates();
 
     exceptionRuleStorageMock.createRule.mockResolvedValue({
       ...baseRule,
@@ -105,7 +90,9 @@ describe('RuleStateManager', () => {
 
     const created = await manager.waitForRuleCreation(temporaryId);
     expect(created.id).toBe('rule-real-1');
-    expect(manager.getRealRuleId(temporaryId)).toBe('rule-real-1');
+    expect(manager.getAllStates().idMappings.get(temporaryId)?.realId).toBe(
+      'rule-real-1',
+    );
 
     const postValidation = await manager.validateRuleId(temporaryId);
     expect(postValidation.isValid).toBe(true);
@@ -114,7 +101,6 @@ describe('RuleStateManager', () => {
 
   it('marks state as error when optimistic creation fails', async () => {
     const { manager, exceptionRuleStorageMock } = await loadRuleStateManager();
-    manager.clearAllStates();
 
     exceptionRuleStorageMock.createRule.mockRejectedValue(
       new Error('storage unavailable'),
@@ -128,14 +114,13 @@ describe('RuleStateManager', () => {
       'storage unavailable',
     );
 
-    const state = manager.getRuleState(temporaryId);
+    const state = manager.getAllStates().states.get(temporaryId);
     expect(state?.status).toBe('error');
     expect(state?.validationErrors?.[0]).toContain('storage unavailable');
   });
 
   it('validateRuleId resolves non-temporary IDs via storage', async () => {
     const { manager, exceptionRuleStorageMock } = await loadRuleStateManager();
-    manager.clearAllStates();
 
     exceptionRuleStorageMock.getRuleById
       .mockResolvedValueOnce(baseRule)
@@ -154,45 +139,75 @@ describe('RuleStateManager', () => {
     expect(invalid.error).toBeDefined();
   });
 
-  it('ruleExists and getRule handle temporary IDs and mapped real IDs', async () => {
+  it('keeps simultaneous creations and their waiting callers independent', async () => {
     const { manager, exceptionRuleStorageMock } = await loadRuleStateManager();
-    manager.clearAllStates();
-
-    const wait = deferred<ExceptionRule>();
-    exceptionRuleStorageMock.createRule.mockReturnValue(wait.promise);
-
-    const { temporaryId } = manager.startOptimisticCreation(
-      'Pending Rule',
-      'pause',
-    );
-    expect(await manager.ruleExists(temporaryId)).toBe(true);
-
-    wait.resolve({ ...baseRule, id: 'db-id' });
-    const resolved = await manager.waitForRuleCreation(temporaryId);
-    expect(resolved.id).toBe('rule-real-1');
-
-    exceptionRuleStorageMock.getRuleById.mockResolvedValueOnce({
-      ...baseRule,
-      id: 'rule-real-1',
+    const first = deferred<ExceptionRule>();
+    const second = deferred<ExceptionRule>();
+    exceptionRuleStorageMock.createRule
+      .mockReturnValueOnce(first.promise)
+      .mockReturnValueOnce(second.promise);
+    const a = manager.startOptimisticCreation('First', 'pause');
+    const b = manager.startOptimisticCreation('Second', 'early_completion');
+    expect(a.temporaryId).not.toBe(b.temporaryId);
+    const waitingA = manager.waitForRuleCreation(a.temporaryId);
+    const waitingB = manager.waitForRuleCreation(b.temporaryId);
+    const failure = expect(waitingB).rejects.toThrow('second failed');
+    let firstSettled = false;
+    void waitingA.then(() => {
+      firstSettled = true;
     });
-    expect(await manager.ruleExists(temporaryId)).toBe(true);
+    second.reject(new Error('second failed'));
+    await failure;
+    expect(firstSettled).toBe(false);
+    expect(await manager.validateRuleId(a.temporaryId)).toMatchObject({
+      isValid: true,
+      isTemporary: true,
+      realId: undefined,
+    });
+    expect(await manager.validateRuleId(b.temporaryId)).toMatchObject({
+      isValid: false,
+      isTemporary: true,
+    });
+    first.resolve({ ...baseRule, name: 'First' });
+    await expect(waitingA).resolves.toMatchObject({ name: 'First' });
+    expect(await manager.validateRuleId(a.temporaryId)).toMatchObject({
+      isValid: true,
+      realId: 'rule-real-1',
+    });
   });
 
-  it('start and stop are idempotent and periodic cleanup runs on interval', async () => {
-    const { manager } = await loadRuleStateManager();
-    manager.clearAllStates();
-    manager.stop();
-
-    const cleanupSpy = vi.spyOn(manager, 'cleanupExpiredStates');
-
+  it('expires temporary IDs without deleting persisted rules and stops cleanup on unmount', async () => {
+    const { manager, exceptionRuleStorageMock } = await loadRuleStateManager();
+    exceptionRuleStorageMock.createRule.mockResolvedValue(baseRule);
+    exceptionRuleStorageMock.getRuleById.mockResolvedValue(baseRule);
+    const { temporaryId } = manager.startOptimisticCreation(
+      'Expiring',
+      'pause',
+    );
+    await manager.waitForRuleCreation(temporaryId);
     manager.start();
     manager.start();
-    await vi.advanceTimersByTimeAsync(5 * 60 * 1000);
-    expect(cleanupSpy).toHaveBeenCalledTimes(1);
-
+    await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
+    expect(await manager.validateRuleId(temporaryId)).toMatchObject({
+      isValid: true,
+    });
     manager.stop();
     manager.stop();
     await vi.advanceTimersByTimeAsync(5 * 60 * 1000);
-    expect(cleanupSpy).toHaveBeenCalledTimes(1);
+    expect(await manager.validateRuleId(temporaryId)).toMatchObject({
+      isValid: true,
+    });
+    manager.start();
+    await vi.advanceTimersByTimeAsync(5 * 60 * 1000);
+    expect(await manager.validateRuleId(temporaryId)).toMatchObject({
+      isValid: false,
+      isTemporary: true,
+    });
+    expect(await manager.validateRuleId('rule-real-1')).toMatchObject({
+      isValid: true,
+      isTemporary: false,
+    });
+    manager.stop();
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

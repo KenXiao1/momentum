@@ -176,7 +176,7 @@ describe('useRulesDomain', () => {
     expect(setShowAuxiliaryJudgment).toHaveBeenCalledWith(null);
   });
 
-  it('should invalidate chain query cache when chain persistence fails', async () => {
+  it('reports failed chain persistence while preserving the auxiliary judgment result', async () => {
     const chain = createUnitChain({ id: 'chain-3' });
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
     const storage = createLocalStorageMock({
@@ -200,6 +200,17 @@ describe('useRulesDomain', () => {
       result.current.handleAuxiliaryJudgmentFailure(chain.id);
     });
     await Promise.resolve();
+    expect(stateRef.getState().chains[0]).toMatchObject({
+      id: chain.id,
+      auxiliaryStreak: 0,
+      auxiliaryFailures: chain.auxiliaryFailures + 1,
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      'RULES_DOMAIN',
+      'Failed to persist chains after failure judgment',
+      { chainId: chain.id },
+      expect.objectContaining({ message: 'save failed' }),
+    );
   });
 
   it('logs failure context when persistence promises reject in failure-judgment flow', async () => {

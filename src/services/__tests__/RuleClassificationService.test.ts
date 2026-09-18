@@ -3,7 +3,10 @@
  */
 
 import { RuleClassificationService } from '../RuleClassificationService';
-import { ExceptionRuleStorageService } from '../ExceptionRuleStorage';
+import {
+  ExceptionRuleStorageService,
+  exceptionRuleStorage,
+} from '../ExceptionRuleStorage';
 import {
   ExceptionRuleType,
   ExceptionRuleError,
@@ -182,6 +185,49 @@ describe('RuleClassificationService', () => {
         service.validateRuleForAction(rule.id, 'pause'),
       ).rejects.toThrow(ExceptionRuleException);
     });
+  });
+
+  test('validation sees edits and deletion immediately without a validation cache protocol', async () => {
+    const rule = await storage.createRule({
+      name: 'Editable',
+      type: ExceptionRuleType.PAUSE_ONLY,
+    });
+    await expect(
+      service.validateRuleForAction(rule.id, 'pause'),
+    ).resolves.toBeUndefined();
+    await storage.updateRule(rule.id, {
+      type: ExceptionRuleType.EARLY_COMPLETION_ONLY,
+    });
+    await expect(
+      service.validateRuleForAction(rule.id, 'pause'),
+    ).rejects.toMatchObject({ type: ExceptionRuleError.RULE_TYPE_MISMATCH });
+    await expect(
+      service.validateRuleForAction(rule.id, 'early_completion'),
+    ).resolves.toBeUndefined();
+    await storage.deleteRule(rule.id);
+    await expect(
+      service.validateRuleForAction(rule.id, 'early_completion'),
+    ).rejects.toMatchObject({ type: ExceptionRuleError.RULE_NOT_FOUND });
+  });
+
+  test('validation reports storage failure and a later retry can succeed', async () => {
+    const rule = await storage.createRule({
+      name: 'Retry',
+      type: ExceptionRuleType.PAUSE_ONLY,
+    });
+    const read = vi
+      .spyOn(exceptionRuleStorage, 'getRuleById')
+      .mockRejectedValueOnce(new Error('storage unavailable'));
+    try {
+      await expect(
+        service.validateRuleForAction(rule.id, 'pause'),
+      ).rejects.toMatchObject({ type: ExceptionRuleError.VALIDATION_ERROR });
+      await expect(
+        service.validateRuleForAction(rule.id, 'pause'),
+      ).resolves.toBeUndefined();
+    } finally {
+      read.mockRestore();
+    }
   });
 
   describe('规则类型建议', () => {

@@ -18,9 +18,7 @@ const exceptionRuleStorageMock = vi.hoisted(() => ({
   getUsageRecords: vi.fn(),
 }));
 
-const enhancedRuleValidationServiceMock = vi.hoisted(() => ({
-  validateRulesIntegrity: vi.fn(),
-}));
+const validateRulesIntegrityMock = vi.hoisted(() => vi.fn());
 
 vi.mock('../../DataIntegrityChecker', () => ({
   dataIntegrityChecker: dataIntegrityCheckerMock,
@@ -38,8 +36,8 @@ vi.mock('../../ExceptionRuleStorage', () => ({
   exceptionRuleStorage: exceptionRuleStorageMock,
 }));
 
-vi.mock('../../EnhancedRuleValidationService', () => ({
-  enhancedRuleValidationService: enhancedRuleValidationServiceMock,
+vi.mock('../../validateRulesIntegrity', () => ({
+  validateRulesIntegrity: validateRulesIntegrityMock,
 }));
 
 import { checkDataIntegrity } from '../checks/dataIntegrity';
@@ -199,11 +197,9 @@ describe('system health checks', () => {
       { id: 'r1' },
       { id: 'r2' },
     ]);
-    enhancedRuleValidationServiceMock.validateRulesIntegrity.mockResolvedValueOnce(
-      {
-        invalidRules: [{ id: 'r2' }],
-      },
-    );
+    validateRulesIntegrityMock.mockResolvedValueOnce({
+      invalidRules: [{ id: 'r2' }],
+    });
 
     const result = await checkValidationService();
     expect(result.status).toBe('warning');
@@ -219,9 +215,7 @@ describe('system health checks', () => {
     exceptionRuleStorageMock.getRules.mockResolvedValueOnce([]);
     const result = await checkValidationService();
 
-    expect(
-      enhancedRuleValidationServiceMock.validateRulesIntegrity,
-    ).not.toHaveBeenCalled();
+    expect(validateRulesIntegrityMock).not.toHaveBeenCalled();
     expect(result.status).toBe('healthy');
     expect(result.score).toBe(100);
     expect(result.metrics).toMatchObject({

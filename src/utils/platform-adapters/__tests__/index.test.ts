@@ -6,7 +6,33 @@ describe('platform adapter selection', () => {
     vi.resetModules();
   });
 
-  it('selects and caches each Tauri adapter for a mobile runtime', async () => {
+  it.each([false, true])(
+    'keeps web and desktop haptics unsupported (desktop=%s)',
+    async (isTauri) => {
+      vi.resetModules();
+      vi.doMock('../../platform', () => ({ isTauri, isTauriMobile: false }));
+      const adapters = await import('../index');
+      const [{ webHapticsAdapter }, a, b] = await Promise.all([
+        import('../web-haptics'),
+        adapters.getHapticsAdapter(),
+        adapters.getHapticsAdapter(),
+      ]);
+      expect(a).toBe(webHapticsAdapter);
+      expect(b).toBe(a);
+      expect(a.getCapabilities().canImpact).toBe(false);
+      const [filesA, filesB, expectedFile] = await Promise.all([
+        adapters.getFileAdapter(),
+        adapters.getFileAdapter(),
+        isTauri
+          ? import('../tauri-file').then((m) => m.tauriFileAdapter)
+          : import('../web-file').then((m) => m.webFileAdapter),
+      ]);
+      expect(filesA).toBe(expectedFile);
+      expect(filesB).toBe(filesA);
+    },
+  );
+
+  it('selects the module-owned Tauri adapters for a mobile runtime', async () => {
     vi.resetModules();
     vi.doMock('../../platform', () => ({
       isTauri: true,

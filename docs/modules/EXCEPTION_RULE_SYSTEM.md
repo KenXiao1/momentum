@@ -150,31 +150,9 @@ try {
 
 ## 缓存策略
 
-### 缓存层次
-
-| 缓存类型     | TTL    | 失效条件      | 存储位置 |
-| ------------ | ------ | ------------- | -------- |
-| 验证结果缓存 | 5分钟  | 规则变更      | 内存     |
-| 重复检查缓存 | 2分钟  | 规则创建/删除 | 内存     |
-| 规则列表缓存 | 请求级 | 请求结束      | 内存     |
-| 统计数据缓存 | 10分钟 | 使用记录新增  | 内存     |
-
-### 缓存清理
-
-```typescript
-// 定期清理（在 AppShellContainer 中）
-useEffect(() => {
-  const interval = setInterval(
-    () => {
-      enhancedRuleValidationService.cleanupExpiredCache();
-      enhancedDuplicationHandler.clearCache();
-    },
-    5 * 60 * 1000,
-  ); // 5分钟
-
-  return () => clearInterval(interval);
-}, []);
-```
+当前缓存的所有权、TTL 与失效边界见 [缓存指南](../guides/CACHING_STRATEGY.md)。
+第二轮消融删除了没有生产调用的预验证结果缓存；实际规则使用仍执行类型与有效性验证。
+`useServiceLifecycle` 启停 `exceptionRuleCache` 自己的定时清理，AppShell 不另建清理 timer。
 
 ---
 

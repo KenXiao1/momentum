@@ -29,7 +29,6 @@ interface NavigationActions {
 }
 
 export type NavigationStore = NavigationState & NavigationActions;
-export type NavigationStoreApi = ReturnType<typeof createNavigationStore>;
 
 export function createInitialNavigationState(): NavigationState {
   return {

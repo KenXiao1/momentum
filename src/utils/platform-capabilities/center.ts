@@ -16,16 +16,13 @@ function toPlacement(supported: boolean): 'topbar' | 'settings' | 'hidden' {
   return isTauriMobile ? 'settings' : 'topbar';
 }
 
-class PlatformCapabilityCenterImpl implements PlatformCapabilityCenter {
-  private capabilitiesCache: PlatformCapabilities | null = null;
-
-  notification = createNotificationCapability(() => this.getCapabilities());
-  window = createWindowCapability(() => this.getCapabilities());
-  file = createFileCapability(() => this.getCapabilities());
-  haptics = createHapticsCapability(() => this.getCapabilities());
+const center: PlatformCapabilityCenter = {
+  notification: createNotificationCapability(() => center.getCapabilities()),
+  window: createWindowCapability(() => center.getCapabilities()),
+  file: createFileCapability(() => center.getCapabilities()),
+  haptics: createHapticsCapability(() => center.getCapabilities()),
 
   async getCapabilities(): Promise<PlatformCapabilities> {
-    if (this.capabilitiesCache) return this.capabilitiesCache;
     const [notification, window, file, haptics] = await Promise.all([
       getNotificationAdapter(),
       getWindowAdapter(),
@@ -37,7 +34,7 @@ class PlatformCapabilityCenterImpl implements PlatformCapabilityCenter {
     const windowCaps = window.getCapabilities();
     const fileCaps = file.getCapabilities();
     const hapticsCaps = haptics.getCapabilities();
-    this.capabilitiesCache = {
+    return {
       notification: {
         supported: notificationSupported,
         canRequestPermission:
@@ -60,13 +57,9 @@ class PlatformCapabilityCenterImpl implements PlatformCapabilityCenter {
         canSelectionChanged: hapticsCaps.canSelectionChanged,
       },
     };
-    return this.capabilitiesCache;
-  }
-}
-
-let singleton: PlatformCapabilityCenter | null = null;
+  },
+};
 
 export function getPlatformCapabilityCenter(): PlatformCapabilityCenter {
-  singleton ??= new PlatformCapabilityCenterImpl();
-  return singleton;
+  return center;
 }

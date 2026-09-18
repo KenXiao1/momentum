@@ -3,10 +3,23 @@ import {
   ExceptionRuleError,
   ExceptionRuleException,
   ExceptionRuleType,
-} from '../../../types';
-import { exceptionRuleStorage } from '../../ExceptionRuleStorage';
-import { getErrorMessage } from '../../../utils/errorMessage';
-import type { ValidationIssue, ValidationReport } from '../types';
+} from '../types';
+import { exceptionRuleStorage } from './ExceptionRuleStorage';
+import { getErrorMessage } from '../utils/errorMessage';
+interface ValidationReport {
+  totalRules: number;
+  validRules: number;
+  invalidRules: ValidationIssue[];
+  summary: string;
+}
+
+interface ValidationIssue {
+  ruleId: string;
+  ruleName: string;
+  issue: string;
+  severity: 'critical' | 'warning' | 'info';
+  fixable: boolean;
+}
 
 function isValidRuleType(type: string): type is ExceptionRuleType {
   return Object.values(ExceptionRuleType).includes(type as ExceptionRuleType);

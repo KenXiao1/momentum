@@ -56,7 +56,8 @@ const establishedPatterns = [
   'src/domain/result.ts',
   'src/infra/storage/supabase/retry.ts',
   'src/services/errorClassification/ErrorClassifiers.ts',
-  'src/services/enhanced-rule-validation/validators/typeMatch.ts',
+  'src/services/rule-classification/RuleTypeValidator.ts',
+  'src/services/rule-classification/ruleValidator.ts',
   'src/services/recovery/RecoveryStrategy.ts',
   'src/utils/local-preferences/timerState.ts',
 ];

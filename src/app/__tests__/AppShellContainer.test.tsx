@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AppShellContainer from '../AppShellContainer';
 import { createGroupChain, createUnitChain } from '../../test/factories';
-import type { ChainTreeNode } from '../../types';
+import type { AppShellViewProps } from '../app-shell/types';
 import {
   appShellStore,
   createInitialAppState,
@@ -139,23 +139,23 @@ vi.mock('../hooks/usePeriodicCleanup', () => ({
 }));
 
 vi.mock('../AppShellView', () => ({
-  AppShellView: (props: {
-    app: {
-      isInitialized: boolean;
-      isLoadingData: boolean;
-      currentView: string;
-    };
-    dashboard: {
-      viewingGroupNode: ChainTreeNode | null;
-      handleCreateChain: () => void;
-      handleDeleteChain: (id: string) => void;
-      openRSIP: () => void;
-    };
-  }) => (
+  AppShellView: (props: AppShellViewProps) => (
     <div>
       <div data-testid="initialized">{String(props.app.isInitialized)}</div>
       <div data-testid="loading">{String(props.app.isLoadingData)}</div>
       <div data-testid="view">{props.app.currentView}</div>
+      <div data-testid="chain-context">
+        {JSON.stringify({
+          editing: props.dashboard.editingChain?.name ?? null,
+          viewing: props.dashboard.viewingChain?.name ?? null,
+          active: props.session.activeChain?.name ?? null,
+          auxiliary: props.session.auxiliaryJudgmentChain?.name ?? null,
+          betting: props.session.bettingModal,
+        })}
+      </div>
+      <button onClick={props.session.clearAuxiliaryJudgment}>
+        clear-auxiliary
+      </button>
       <div data-testid="group-progress">
         {props.dashboard.viewingGroupNode?.children
           .map(
@@ -322,6 +322,92 @@ describe('AppShellContainer', () => {
     expect(screen.getByTestId('group-progress')).toHaveTextContent(
       'Cloud task:0/3',
     );
+  });
+
+  it('derives chain context and modal details from current app and navigation data', () => {
+    const focus = createUnitChain({
+      id: 'focus',
+      name: 'Focus Chain',
+      duration: 45,
+    });
+    const aux = createUnitChain({ id: 'aux', name: 'Auxiliary Chain' });
+    appShellStore.getState().updateAppState({
+      chains: [focus, aux],
+      activeSession: {
+        chainId: focus.id,
+        startedAt: new Date(),
+        duration: 45,
+        isPaused: false,
+        totalPausedTime: 0,
+      },
+    });
+    navigationStore.setState({
+      editingChainId: focus.id,
+      viewingChainId: aux.id,
+      showAuxiliaryJudgment: aux.id,
+      showBettingModal: true,
+      pendingChainId: focus.id,
+      currentSessionId: 'session-1',
+    });
+    render(<AppShellContainer />);
+    expect(
+      JSON.parse(screen.getByTestId('chain-context').textContent!),
+    ).toEqual({
+      editing: 'Focus Chain',
+      viewing: 'Auxiliary Chain',
+      active: 'Focus Chain',
+      auxiliary: 'Auxiliary Chain',
+      betting: {
+        isOpen: true,
+        sessionId: 'session-1',
+        chainName: 'Focus Chain',
+        taskDuration: 45,
+      },
+    });
+    expect(screen.getByTestId('group-progress')).toBeEmptyDOMElement();
+    fireEvent.click(screen.getByText('clear-auxiliary'));
+    expect(navigationStore.getState().showAuxiliaryJudgment).toBeNull();
+
+    act(() => appShellStore.getState().updateAppState({ chains: [] }));
+    expect(
+      JSON.parse(screen.getByTestId('chain-context').textContent!),
+    ).toEqual({
+      editing: null,
+      viewing: null,
+      active: null,
+      auxiliary: null,
+      betting: {
+        isOpen: true,
+        sessionId: 'session-1',
+        chainName: null,
+        taskDuration: 0,
+      },
+    });
+  });
+
+  it.each([
+    {
+      showBettingModal: true,
+      pendingChainId: null,
+      currentSessionId: 'session-1',
+    },
+    {
+      showBettingModal: true,
+      pendingChainId: 'chain-1',
+      currentSessionId: null,
+    },
+    {
+      showBettingModal: false,
+      pendingChainId: 'chain-1',
+      currentSessionId: 'session-1',
+    },
+  ])('keeps incomplete or closed betting flow hidden: %j', (navigation) => {
+    navigationStore.setState(navigation);
+    render(<AppShellContainer />);
+    expect(
+      JSON.parse(screen.getByTestId('chain-context').textContent!).betting
+        .isOpen,
+    ).toBe(false);
   });
 
   it('connects the session callback to RSIP task integration', async () => {

@@ -79,7 +79,7 @@ production guarantees.
 
 ## Further investigation
 
-Exception-rule search/validation caches, layout monitoring, and schema capability
+Exception-rule search/duplicate caches, layout monitoring, and schema capability
 caches should be evaluated independently. See [caching and derived state](CACHING_STRATEGY.md)
 for ownership and persistence distinctions. Remove an unnecessary cache instead
 of adding more invalidation paths merely to preserve its current design.

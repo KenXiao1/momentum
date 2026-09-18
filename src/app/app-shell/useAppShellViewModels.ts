@@ -1,14 +1,8 @@
 import { useCallback, useMemo } from 'react';
 import { buildChainTree } from '../../utils/chainTree';
-import type { ViewState } from '../../types';
+import type { Chain, ViewState } from '../../types';
 import { navigationStore } from '../../stores/navigationStore';
-import {
-  buildAppViewModel,
-  buildDashboardViewModel,
-  buildPetViewModel,
-  buildRsipViewModel,
-  buildSessionViewModel,
-} from './viewModelBuilders';
+import type { AppShellViewProps } from './types';
 import type { AppShellBootstrap } from './useAppShellBootstrap';
 import type { AppShellDomains } from './useAppShellDomains';
 import type { AppShellStateController } from './useAppShellState';
@@ -17,7 +11,7 @@ export function useAppShellViewModels(
   state: AppShellStateController,
   bootstrap: AppShellBootstrap,
   domains: AppShellDomains,
-) {
+): AppShellViewProps {
   const handleViewChainDetail = (chainId: string) => {
     const chain = state.chains.find((candidate) => candidate.id === chainId);
     if (!chain) return;
@@ -38,13 +32,13 @@ export function useAppShellViewModels(
     navigationStore.getState().navigateToView(view);
   }, []);
 
-  const app = buildAppViewModel({
+  const app: AppShellViewProps['app'] = {
     isInitialized: bootstrap.isInitialized,
     isLoadingData: bootstrap.isLoadingData,
     currentView: state.currentView,
     hasActiveSession: !!state.activeSession,
     onNavigateToView,
-  });
+  };
   const { chains, currentView, viewingChainId } = state;
   const viewingGroupNode = useMemo(
     () =>
@@ -54,12 +48,13 @@ export function useAppShellViewModels(
         : null,
     [chains, currentView, viewingChainId],
   );
-  const dashboard = buildDashboardViewModel({
+  const dashboard: AppShellViewProps['dashboard'] = {
     viewingGroupNode,
     chains: state.chains,
     scheduledSessions: state.scheduledSessions,
-    editingChainId: state.editingChainId,
-    viewingChainId: state.viewingChainId,
+    editingChain: findChainById(chains, state.editingChainId),
+    editorParentId: viewingChainId,
+    viewingChain: findChainById(chains, viewingChainId),
     completionHistory: state.completionHistory,
     handleCreateChain: domains.handleCreateChain,
     handleCreateTaskGroup: domains.handleCreateTaskGroup,
@@ -79,8 +74,8 @@ export function useAppShellViewModels(
     handleImportUnits: domains.handleImportUnits,
     handleUpdateTaskRepeatCount: domains.handleUpdateTaskRepeatCount,
     handleReorderUnit: domains.handleReorderUnit,
-  });
-  const rsip = buildRsipViewModel({
+  };
+  const rsip: AppShellViewProps['rsip'] = {
     nodes: state.rsipNodes,
     meta: state.rsipMeta,
     groups: state.rsipGroups,
@@ -103,16 +98,23 @@ export function useAppShellViewModels(
     getTaskActions: domains.getRsipTaskActions,
     handleStartChain: domains.handleStartChain,
     handleScheduleChain: domains.handleScheduleChain,
-  });
-  const session = buildSessionViewModel({
-    chains: state.chains,
+  };
+  const bettingChain = findChainById(chains, state.pendingChainId);
+  const session: AppShellViewProps['session'] = {
+    activeChain: findChainById(chains, state.activeSession?.chainId),
     activeSession: state.activeSession,
-    showAuxiliaryJudgment: state.showAuxiliaryJudgment,
+    auxiliaryJudgmentChain: findChainById(chains, state.showAuxiliaryJudgment),
     clearAuxiliaryJudgment: () =>
       navigationStore.getState().setShowAuxiliaryJudgment(null),
-    showBettingModal: state.showBettingModal,
-    pendingChainId: state.pendingChainId,
-    currentSessionId: state.currentSessionId,
+    bettingModal: {
+      isOpen:
+        state.showBettingModal &&
+        state.pendingChainId !== null &&
+        state.currentSessionId !== null,
+      sessionId: state.currentSessionId,
+      chainName: bettingChain?.name ?? null,
+      taskDuration: bettingChain?.duration ?? 0,
+    },
     handleCompleteSession: domains.handleCompleteSession,
     handleInterruptSession: domains.handleInterruptSession,
     handlePauseSession: domains.handlePauseSession,
@@ -121,13 +123,21 @@ export function useAppShellViewModels(
     handleBetCancelled: domains.handleBetCancelled,
     handleAuxiliaryJudgmentFailure: domains.handleAuxiliaryJudgmentFailure,
     handleAuxiliaryJudgmentAllow: domains.handleAuxiliaryJudgmentAllow,
-  });
+  };
 
   return {
     app,
     dashboard,
     rsip,
     session,
-    pet: buildPetViewModel(domains.petDomain),
+    pet: domains.petDomain,
   };
+}
+
+function findChainById(
+  chains: Chain[],
+  chainId: string | null | undefined,
+): Chain | null {
+  if (!chainId) return null;
+  return chains.find((chain) => chain.id === chainId) ?? null;
 }

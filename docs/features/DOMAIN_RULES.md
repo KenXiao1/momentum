@@ -18,18 +18,18 @@
 
 ## 关键文件
 
-| 文件                                            | 职责                                              |
-| ----------------------------------------------- | ------------------------------------------------- |
-| `src/types/index.ts`                            | 核心类型定义（ExceptionRule, RuleUsageRecord 等） |
-| `src/hooks/domains/useRulesDomain.ts`           | 业务逻辑 Hook                                     |
-| `src/services/ExceptionRuleManager.ts`          | 核心管理器                                        |
-| `src/services/RuleClassificationService.ts`     | 规则分类验证                                      |
-| `src/services/RuleStateManager.ts`              | 规则状态管理                                      |
-| `src/services/RuleDuplicationDetector.ts`       | 重复检测                                          |
-| `src/services/RuleUsageTracker.ts`              | 使用记录追踪                                      |
-| `src/services/EnhancedRuleValidationService.ts` | 增强验证                                          |
-| `src/services/DataIntegrityChecker.ts`          | 数据完整性检查                                    |
-| `src/services/ErrorRecoveryManager.ts`          | 错误恢复                                          |
+| 文件                                        | 职责                                              |
+| ------------------------------------------- | ------------------------------------------------- |
+| `src/types/index.ts`                        | 核心类型定义（ExceptionRule, RuleUsageRecord 等） |
+| `src/hooks/domains/useRulesDomain.ts`       | 业务逻辑 Hook                                     |
+| `src/services/ExceptionRuleManager.ts`      | 核心管理器                                        |
+| `src/services/RuleClassificationService.ts` | 规则分类验证                                      |
+| `src/services/RuleStateManager.ts`          | 规则状态管理                                      |
+| `src/services/RuleDuplicationDetector.ts`   | 重复检测                                          |
+| `src/services/RuleUsageTracker.ts`          | 使用记录追踪                                      |
+| `src/services/validateRulesIntegrity.ts`    | 创建告警与完整性报告                              |
+| `src/services/DataIntegrityChecker.ts`      | 数据完整性检查                                    |
+| `src/services/ErrorRecoveryManager.ts`      | 错误恢复                                          |
 
 ---
 
@@ -113,8 +113,8 @@ enum ExceptionRuleError {
 
 ```
 ExceptionRuleManager (主管理器)
-├── EnhancedRuleValidationService (验证服务)
-│   └── 预验证、批量验证、缓存
+├── validateRulesIntegrity (完整性函数)
+│   └── 创建告警、健康检查
 ├── EnhancedDuplicationHandler (重复处理)
 │   └── 实时检测、智能命名建议
 ├── RuleStateManager (状态管理)
@@ -288,19 +288,11 @@ if (report.issues.length > 0) {
 
 ## 缓存策略
 
-| 缓存     | TTL    | 说明                 |
-| -------- | ------ | -------------------- |
-| 验证结果 | 5 分钟 | 规则可用性预检结果   |
-| 重复检查 | 2 分钟 | 名称重复检测结果     |
-| 规则列表 | 请求级 | 避免同一请求多次读取 |
+名称重复检查保留两分钟缓存。预验证结果缓存没有生产调用，已在第二轮消融中删除。
+实际执行通过 `ruleClassificationService.validateRuleForAction` 检查规则的有效性和类型；
+创建告警与健康检查直接调用 `validateRulesIntegrity`。
 
-### 缓存清理
-
-```typescript
-// 清理过期缓存
-enhancedRuleValidationService.cleanupExpiredCache();
-enhancedDuplicationHandler.cleanupExpiredCache();
-```
+缓存的所有权、失效与清理见 [缓存指南](../guides/CACHING_STRATEGY.md)。
 
 ---
 
@@ -386,9 +378,8 @@ async initialize(): Promise<void> {
   // 3. 同步规则状态
   await ruleStateManager.syncRuleStates();
 
-  // 4. 清理过期缓存
-  enhancedRuleValidationService.cleanupExpiredCache();
-  enhancedDuplicationHandler.cleanupExpiredCache();
+  // 4. 清除重复检查结果
+  enhancedDuplicationHandler.clearCache();
 }
 ```
 

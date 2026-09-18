@@ -21,7 +21,6 @@ import type {
 import { ExceptionRuleType } from '../../types';
 import { dataIntegrityChecker } from '../DataIntegrityChecker';
 import { ruleStateManager } from '../RuleStateManager';
-import { enhancedRuleValidationService } from '../EnhancedRuleValidationService';
 import { enhancedDuplicationHandler } from '../EnhancedDuplicationHandler';
 import { exceptionRuleStorage } from '../ExceptionRuleStorage';
 import { ruleClassificationService } from '../RuleClassificationService';
@@ -99,7 +98,6 @@ export class ExceptionRuleManager {
       }
 
       await ruleStateManager.syncRuleStates();
-      enhancedRuleValidationService.cleanupExpiredCache();
       enhancedDuplicationHandler.clearCache();
 
       ruleExportImportService.setRuleUpdater(ruleMaintenanceService);

@@ -1,4 +1,4 @@
-import { enhancedRuleValidationService } from '../../EnhancedRuleValidationService';
+import { validateRulesIntegrity } from '../../validateRulesIntegrity';
 import { exceptionRuleStorage } from '../../ExceptionRuleStorage';
 import { statusFromScore } from '../scoring';
 import type { ComponentHealth } from '../types';
@@ -12,8 +12,7 @@ export async function checkValidationService(): Promise<ComponentHealth> {
     let score = 100;
 
     if (sampleRules.length > 0) {
-      const report =
-        await enhancedRuleValidationService.validateRulesIntegrity(sampleRules);
+      const report = await validateRulesIntegrity(sampleRules);
 
       if (report.invalidRules.length > 0) {
         issues.push(`${report.invalidRules.length} 个规则验证失败`);

@@ -23,14 +23,13 @@ for fixtures, measurements, and limitations.
 
 ## Remaining caches
 
-| Area                               | Implementation                                                                    | Ownership and behavior                                                                                  |
-| ---------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Exception rules                    | `src/utils/cache/CacheCore.ts`, `ExceptionRuleCache.ts`                           | In-memory entries with TTL, oldest-entry eviction, namespace invalidation, and rule subscribers         |
-| Rule search                        | `src/utils/rule-search-optimizer/RuleSearchCache.ts`                              | Up to 100 cached searches and 50 history entries; separate popularity counts; clearCache clears results |
-| Validation and duplicate detection | `src/services/enhanced-rule-validation/cache.ts`, `EnhancedDuplicationHandler.ts` | Namespaces in the exception-rule cache                                                                  |
-| Supabase schema capabilities       | `src/infra/storage/supabase/schemaCapabilities.ts`                                | Tracks capabilities reported missing by older user databases; participates in compatibility fallbacks   |
-| Task time statistics               | `src/infra/storage/supabase/taskTimeStats.ts`                                     | Module-level cache of locally persisted statistics with a five-second TTL                               |
-| Platform capabilities              | `src/utils/platform-capabilities/center.ts`                                       | Caches supported operations obtained from platform adapters                                             |
+| Area                         | Implementation                                          | Ownership and behavior                                                                                  |
+| ---------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Exception rules              | `src/utils/cache/CacheCore.ts`, `ExceptionRuleCache.ts` | In-memory entries with TTL, oldest-entry eviction, namespace invalidation, and rule subscribers         |
+| Rule search                  | `src/utils/rule-search-optimizer/RuleSearchCache.ts`    | Up to 100 cached searches and 50 history entries; separate popularity counts; clearCache clears results |
+| Duplicate detection          | `src/services/EnhancedDuplicationHandler.ts`            | Two-minute namespace in the exception-rule cache                                                        |
+| Supabase schema capabilities | `src/infra/storage/supabase/schemaCapabilities.ts`      | Tracks capabilities reported missing by older user databases; participates in compatibility fallbacks   |
+| Task time statistics         | `src/infra/storage/supabase/taskTimeStats.ts`           | Module-level cache of locally persisted statistics with a five-second TTL                               |
 
 `src/constants/cache.ts` owns the common exception-rule cache defaults: five-minute
 TTL, 1,000 entries, and one-minute cleanup. Search/duplicate TTLs are two minutes;
@@ -41,6 +40,13 @@ current implementation and are not performance guarantees.
 `RealTimeSyncService.clearAllCaches` asks the selected storage implementation to
 clear its caches. Other invalidation behavior belongs to each cache and caller;
 there is no universal invalidation mechanism.
+
+The unused rule prevalidation cache was removed in the
+[second ablation round](../plans/ablation-driven-simplification-2026-09-18.md).
+Runtime rule usage still validates through `rule-classification/ruleValidator.ts`;
+creation warnings and health checks call `validateRulesIntegrity.ts` directly.
+Platform support is read from adapters on demand, without a capability snapshot
+cache. Native notification permission handling remains in the native adapter.
 
 ## Persistence and compatibility
 
@@ -62,5 +68,4 @@ updated values and failure behavior, including equal-size replacement arrays,
 switching users/modes, and out-of-order asynchronous completion. Retain a cache
 only if its observed benefit justifies its state and invalidation rules.
 
-The rule caches and platform capability caches remain candidates for separate
-experiments. Their existence alone is not evidence of a performance requirement.
+The remaining rule caches are candidates for separate experiments. Their existence alone is not evidence of a performance requirement.

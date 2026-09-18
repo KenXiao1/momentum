@@ -11,7 +11,7 @@ import {
 } from '../../types';
 import { exceptionRuleStorage } from '../ExceptionRuleStorage';
 import { enhancedDuplicationHandler } from '../EnhancedDuplicationHandler';
-import { enhancedRuleValidationService } from '../EnhancedRuleValidationService';
+import { validateRulesIntegrity } from '../validateRulesIntegrity';
 import { errorClassificationService } from '../ErrorClassificationService';
 import { errorRecoveryManager } from '../ErrorRecoveryManager';
 import { ruleStateManager } from '../RuleStateManager';
@@ -155,8 +155,7 @@ class RuleCreator {
   }
 
   private async logValidationWarnings(rule: ExceptionRule): Promise<void> {
-    const validationResult =
-      await enhancedRuleValidationService.validateRulesIntegrity([rule]);
+    const validationResult = await validateRulesIntegrity([rule]);
     if (validationResult.invalidRules.length > 0) {
       logger.warn('RULE_CREATOR', 'Rule has issues', {
         invalidRules: validationResult.invalidRules,

@@ -17,9 +17,7 @@ const enhancedDuplicationHandlerMock = vi.hoisted(() => ({
   checkDuplicationRealTime: vi.fn(),
 }));
 
-const enhancedRuleValidationServiceMock = vi.hoisted(() => ({
-  validateRulesIntegrity: vi.fn(),
-}));
+const validateRulesIntegrityMock = vi.hoisted(() => vi.fn());
 
 const errorClassificationServiceMock = vi.hoisted(() => ({
   analyzeError: vi.fn(),
@@ -47,8 +45,8 @@ vi.mock('../../EnhancedDuplicationHandler', () => ({
   enhancedDuplicationHandler: enhancedDuplicationHandlerMock,
 }));
 
-vi.mock('../../EnhancedRuleValidationService', () => ({
-  enhancedRuleValidationService: enhancedRuleValidationServiceMock,
+vi.mock('../../validateRulesIntegrity', () => ({
+  validateRulesIntegrity: validateRulesIntegrityMock,
 }));
 
 vi.mock('../../ErrorClassificationService', () => ({
@@ -102,7 +100,7 @@ describe('rule-manager/RuleCreator', () => {
       rule: createRule(),
       warnings: ['duplicate warning'],
     });
-    enhancedRuleValidationServiceMock.validateRulesIntegrity.mockResolvedValue({
+    validateRulesIntegrityMock.mockResolvedValue({
       invalidRules: [],
     });
     errorClassificationServiceMock.analyzeError.mockReturnValue({
@@ -168,7 +166,7 @@ describe('rule-manager/RuleCreator', () => {
   });
 
   it('logs warnings when created rule fails integrity validation', async () => {
-    enhancedRuleValidationServiceMock.validateRulesIntegrity.mockResolvedValue({
+    validateRulesIntegrityMock.mockResolvedValue({
       invalidRules: [{ ruleId: 'rule-1' }],
     });
 
