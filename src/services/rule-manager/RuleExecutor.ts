@@ -14,9 +14,6 @@ import {
 import { exceptionRuleStorage } from '../ExceptionRuleStorage';
 import { ruleClassificationService } from '../RuleClassificationService';
 import { ruleUsageTracker } from '../RuleUsageTracker';
-import { ruleStateManager } from '../RuleStateManager';
-import { logger } from '../../utils/logger';
-import { isDev } from '../../utils/env';
 
 export interface RuleExecutionResult {
   record: RuleUsageRecord;
@@ -38,38 +35,7 @@ class RuleExecutor {
     pauseOptions?: PauseOptions,
   ): Promise<RuleExecutionResult> {
     try {
-      if (isDev) {
-        logger.debug('RULE_EXECUTOR', 'Validating ruleId', { ruleId });
-      }
-
-      const validation = await ruleStateManager.validateRuleId(ruleId);
-
-      if (isDev) {
-        logger.debug('RULE_EXECUTOR', 'RuleId validation result', {
-          ruleId,
-          validation,
-        });
-      }
-
-      if (!validation.isValid) {
-        logger.error('RULE_EXECUTOR', 'RuleId validation failed', {
-          ruleId,
-          validation,
-        });
-        throw new ExceptionRuleException(
-          ExceptionRuleError.RULE_NOT_FOUND,
-          validation.error || `Rule ID ${ruleId} is invalid`,
-        );
-      }
-
-      const realRuleId = validation.realId || ruleId;
-      let rule: ExceptionRule | null = null;
-
-      if (validation.isTemporary) {
-        rule = await ruleStateManager.waitForRuleCreation(ruleId);
-      } else {
-        rule = await exceptionRuleStorage.getRuleById(realRuleId);
-      }
+      const rule = await exceptionRuleStorage.getRuleById(ruleId);
 
       if (!rule) {
         throw new ExceptionRuleException(
@@ -78,13 +44,10 @@ class RuleExecutor {
         );
       }
 
-      await ruleClassificationService.validateRuleForAction(
-        realRuleId,
-        actionType,
-      );
+      await ruleClassificationService.validateRuleForAction(ruleId, actionType);
 
       const record = await ruleUsageTracker.recordUsage(
-        realRuleId,
+        ruleId,
         sessionContext,
         actionType,
         pauseOptions,

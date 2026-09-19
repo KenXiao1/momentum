@@ -4,11 +4,7 @@
  */
 
 export { ruleCreator } from './RuleCreator';
-export type {
-  RuleCreationResult,
-  RealTimeCheckResult,
-  OptimisticCreationResult,
-} from './RuleCreator';
+export type { RuleCreationResult, RealTimeCheckResult } from './RuleCreator';
 
 export { ruleExecutor } from './RuleExecutor';
 export type { RuleExecutionResult } from './RuleExecutor';

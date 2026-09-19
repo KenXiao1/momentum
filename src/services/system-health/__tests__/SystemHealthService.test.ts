@@ -5,7 +5,6 @@ async function loadService() {
   vi.resetModules();
 
   const checkDataIntegrity = vi.fn();
-  const checkRuleStates = vi.fn();
   const checkValidationService = vi.fn();
   const checkErrorHandling = vi.fn();
   const checkStorage = vi.fn();
@@ -18,11 +17,9 @@ async function loadService() {
   });
 
   const exceptionRuleStorage = { getRules: vi.fn() };
-  const ruleStateManager = { getAllStates: vi.fn() };
   const errorClassificationService = { getErrorStatistics: vi.fn() };
 
   vi.doMock('../checks/dataIntegrity', () => ({ checkDataIntegrity }));
-  vi.doMock('../checks/ruleStates', () => ({ checkRuleStates }));
   vi.doMock('../checks/validation', () => ({ checkValidationService }));
   vi.doMock('../checks/errorHandling', () => ({ checkErrorHandling }));
   vi.doMock('../checks/storage', () => ({ checkStorage }));
@@ -30,7 +27,6 @@ async function loadService() {
   vi.doMock('../summary', () => ({ generateSummary }));
   vi.doMock('../scoring', () => ({ statusFromScore }));
   vi.doMock('../../ExceptionRuleStorage', () => ({ exceptionRuleStorage }));
-  vi.doMock('../../RuleStateManager', () => ({ ruleStateManager }));
   vi.doMock('../../ErrorClassificationService', () => ({
     errorClassificationService,
   }));
@@ -41,7 +37,6 @@ async function loadService() {
     service: module.systemHealthService,
     mocks: {
       checkDataIntegrity,
-      checkRuleStates,
       checkValidationService,
       checkErrorHandling,
       checkStorage,
@@ -49,7 +44,6 @@ async function loadService() {
       generateSummary,
       statusFromScore,
       exceptionRuleStorage,
-      ruleStateManager,
       errorClassificationService,
     },
   };
@@ -73,7 +67,6 @@ describe('SystemHealthService', () => {
     const { service, mocks } = await loadService();
 
     mocks.checkDataIntegrity.mockResolvedValue(component('integrity', 90));
-    mocks.checkRuleStates.mockResolvedValue(component('state', 80));
     mocks.checkValidationService.mockResolvedValue(component('validation', 70));
     mocks.checkErrorHandling.mockResolvedValue(component('errors', 60));
     mocks.checkStorage.mockResolvedValue(component('storage', 50));
@@ -82,9 +75,14 @@ describe('SystemHealthService', () => {
 
     const report = await service.performHealthCheck();
 
-    expect(report.score).toBe(70);
+    expect(report.score).toBe(68);
     expect(report.status).toBe('warning');
-    expect(report.components).toHaveLength(5);
+    expect(report.components.map(({ name }) => name)).toEqual([
+      'integrity',
+      'validation',
+      'errors',
+      'storage',
+    ]);
     expect(report.recommendations).toEqual(['reduce critical errors']);
     expect(report.summary).toBe('system summary');
 
@@ -93,7 +91,7 @@ describe('SystemHealthService', () => {
     );
     expect(mocks.generateSummary).toHaveBeenCalledWith(
       'warning',
-      70,
+      67.5,
       report.components,
     );
     expect(report.timestamp).toBeInstanceOf(Date);
@@ -103,21 +101,15 @@ describe('SystemHealthService', () => {
     const { service, mocks } = await loadService();
 
     mocks.exceptionRuleStorage.getRules.mockResolvedValue([]);
-    mocks.ruleStateManager.getAllStates.mockReturnValue({
-      states: new Map([
-        ['a', { status: 'error' }],
-        ['b', { status: 'ok' }],
-      ]),
-    });
     mocks.errorClassificationService.getErrorStatistics.mockReturnValue({
       errorsBySeverity: new Map([['critical', 2]]),
     });
 
     const result = await service.quickHealthCheck();
 
-    expect(result.score).toBe(25);
+    expect(result.score).toBe(45);
     expect(result.status).toBe('critical');
-    expect(result.issues).toHaveLength(3);
+    expect(result.issues).toHaveLength(2);
   });
 
   it('quickHealthCheck falls back to score=0 when checks throw', async () => {

@@ -125,14 +125,11 @@ class RecoveryOptionsProvider {
 
       default:
         actions.push({
-          id: 'generic_recovery',
-          label: tr('尝试通用恢复', 'Try generic recovery'),
-          description: tr(
-            '执行通用的错误恢复流程',
-            'Run a generic recovery flow',
-          ),
+          id: 'check_data_integrity',
+          label: tr('检查数据完整性', 'Check data integrity'),
+          description: tr('检查并修复规则数据', 'Check and repair rule data'),
           type: 'secondary',
-          handler: async () => recoveryHandlers.handleGenericRecovery(error),
+          handler: async () => recoveryHandlers.handleDataIntegrityCheck(error),
         });
     }
 

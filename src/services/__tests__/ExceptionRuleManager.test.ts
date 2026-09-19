@@ -3,8 +3,10 @@
  */
 
 import { ExceptionRuleManager } from '../ExceptionRuleManager';
+import { exceptionRuleStorage } from '../ExceptionRuleStorage';
 import {
   ExceptionRuleType,
+  ExceptionRuleError,
   SessionContext,
   ExceptionRuleException,
 } from '../../types';
@@ -171,6 +173,62 @@ describe('ExceptionRuleManager', () => {
   });
 
   describe('规则使用和统计', () => {
+    test('reports a storage failure without treating it as a missing rule or recording usage', async () => {
+      const lookup = vi
+        .spyOn(exceptionRuleStorage, 'getRuleById')
+        .mockRejectedValueOnce(new Error('storage unavailable'));
+      try {
+        await expect(
+          manager.useRule(
+            'persisted-rule',
+            createMockSessionContext(),
+            'pause',
+          ),
+        ).rejects.toMatchObject({ type: ExceptionRuleError.STORAGE_ERROR });
+        expect(await exceptionRuleStorage.getUsageRecords()).toEqual([]);
+      } finally {
+        lookup.mockRestore();
+      }
+    });
+
+    test('uses the persisted chain rule ID immediately and after reloading', async () => {
+      const { rule } = await manager.createChainRule(
+        'chain_1',
+        'Persisted rule',
+        ExceptionRuleType.PAUSE_ONLY,
+      );
+      expect(await manager.getRuleById(rule.id)).toEqual(rule);
+      const first = await manager.useRule(
+        rule.id,
+        createMockSessionContext(),
+        'pause',
+      );
+      expect(first.record.ruleId).toBe(rule.id);
+
+      const reloaded = new ExceptionRuleManager();
+      const second = await reloaded.useRule(
+        rule.id,
+        createMockSessionContext(),
+        'pause',
+      );
+      expect(second.rule.id).toBe(rule.id);
+      expect(await reloaded.getRuleUsageHistory(rule.id)).toHaveLength(2);
+    });
+
+    test('rejects a deleted rule without recording usage', async () => {
+      const { rule } = await manager.createChainRule(
+        'chain_1',
+        'Deleted rule',
+        ExceptionRuleType.PAUSE_ONLY,
+      );
+      await manager.deleteRule(rule.id);
+      await expect(
+        manager.useRule(rule.id, createMockSessionContext(), 'pause'),
+      ).rejects.toMatchObject({ type: ExceptionRuleError.RULE_NOT_FOUND });
+      expect(await manager.getRuleUsageHistory(rule.id)).toEqual([]);
+      expect((await manager.getRuleById(rule.id))?.usageCount).toBe(0);
+    });
+
     test('应该能够使用规则并记录统计', async () => {
       const createResult = await manager.createRule(
         '测试规则',

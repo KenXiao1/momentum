@@ -1,9 +1,7 @@
 import { errorClassificationService } from '../ErrorClassificationService';
 import { exceptionRuleStorage } from '../ExceptionRuleStorage';
-import { ruleStateManager } from '../RuleStateManager';
 import { checkDataIntegrity } from './checks/dataIntegrity';
 import { checkErrorHandling } from './checks/errorHandling';
-import { checkRuleStates } from './checks/ruleStates';
 import { checkStorage } from './checks/storage';
 import { checkValidationService } from './checks/validation';
 import { generateRecommendations } from './recommendations';
@@ -20,7 +18,6 @@ class SystemHealthService {
     const components: ComponentHealth[] = [];
 
     components.push(await checkDataIntegrity());
-    components.push(await checkRuleStates());
     components.push(await checkValidationService());
     components.push(await checkErrorHandling());
     components.push(await checkStorage());
@@ -51,15 +48,6 @@ class SystemHealthService {
       if (rules.length === 0) {
         issues.push('没有规则数据');
         score -= 30;
-      }
-
-      const states = ruleStateManager.getAllStates();
-      const errorStates = Array.from(states.states.values()).filter(
-        (s) => s.status === 'error',
-      );
-      if (errorStates.length > 0) {
-        issues.push(`${errorStates.length} 个规则处于错误状态`);
-        score -= 20;
       }
 
       const errorStats = errorClassificationService.getErrorStatistics();

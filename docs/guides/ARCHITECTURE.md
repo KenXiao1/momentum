@@ -61,11 +61,11 @@ operations such as authentication and betting.
 ## Lifecycle
 
 `src/app/app-shell/useAppShellBootstrap.ts` reaches
-`src/app/hooks/useServiceLifecycle.ts`, which starts/stops the forward timer,
-rule state manager, exception-rule cache, and development monitoring directly.
-The lifecycle hook is the integration point for these services. `RuleStateManager`
-owns its temporary IDs, pending creations, and cleanup directly; it has no
-separate Store/Queries/Controller objects.
+`src/app/hooks/useServiceLifecycle.ts`, which starts/stops the forward timer
+and development monitoring directly. The lifecycle hook is the integration point
+for these services. Rule creation returns the persisted ID; execution reads storage
+and validates the current rule. There is no service-level temporary ID registry or
+rule-state mirror. The rule manager UI keeps its own optimistic update/rollback.
 
 Chain trees are derived from chain arrays. Dashboard and group rendering use
 local React memoization; domain actions build the tree when needed. There is no

@@ -2,9 +2,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useServiceLifecycle } from '../useServiceLifecycle';
 import { forwardTimerManager } from '../../../utils/forwardTimer';
-import { ruleStateManager } from '../../../services/RuleStateManager';
 import { migrationCoordinator } from '../../../services/migration';
-import { exceptionRuleCache } from '../../../utils/cache';
 import { performanceMonitor } from '../../../utils/performanceMonitor';
 import { initializeRuleSystem } from '../../../utils/initializeRuleSystem';
 import { checkForUpdates } from '../../../utils/platform-adapters/updater';
@@ -21,19 +19,8 @@ vi.mock('../../../utils/forwardTimer', () => ({
   },
 }));
 
-vi.mock('../../../utils/cache', () => ({
-  exceptionRuleCache: { start: vi.fn(), stop: vi.fn() },
-}));
-
 vi.mock('../../../utils/performanceMonitor', () => ({
   performanceMonitor: { start: vi.fn(), stop: vi.fn() },
-}));
-
-vi.mock('../../../services/RuleStateManager', () => ({
-  ruleStateManager: {
-    start: vi.fn(),
-    stop: vi.fn(),
-  },
 }));
 
 vi.mock('../../../utils/initializeRuleSystem', () => ({
@@ -71,8 +58,6 @@ describe('useServiceLifecycle', () => {
 
     expect(result.current.isInitialized).toBe(true);
     expect(forwardTimerManager.start).toHaveBeenCalledTimes(1);
-    expect(exceptionRuleCache.start).toHaveBeenCalledTimes(1);
-    expect(ruleStateManager.start).toHaveBeenCalledTimes(1);
     expect(performanceMonitor.start).not.toHaveBeenCalled();
 
     vi.advanceTimersByTime(150);
@@ -85,8 +70,6 @@ describe('useServiceLifecycle', () => {
     unmount();
 
     expect(forwardTimerManager.stop).toHaveBeenCalledTimes(1);
-    expect(exceptionRuleCache.stop).toHaveBeenCalledTimes(1);
-    expect(ruleStateManager.stop).toHaveBeenCalledTimes(1);
   });
 
   it('should log error when non-critical initialization reports failure', async () => {

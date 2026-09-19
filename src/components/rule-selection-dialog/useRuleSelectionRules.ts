@@ -1,8 +1,7 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { ExceptionRule } from '../../types';
 import { ExceptionRuleType } from '../../types';
 import { exceptionRuleManager } from '../../services/ExceptionRuleManager';
-import { ExceptionRuleCache } from '../../utils/exceptionRuleCache';
 import { getSafeErrorDetailFromUnknown } from '../../utils/errorMessage';
 import { normalizeUnknownError } from '../../utils/errors/normalizeError';
 import { logger } from '../../utils/logger';
@@ -20,7 +19,6 @@ export function useRuleSelectionRules(params: {
   const [rules, setRules] = useState<ExceptionRule[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const cache = useMemo(() => new ExceptionRuleCache(), []);
 
   const createDefaultRules = useCallback(async () => {
     const names =
@@ -62,7 +60,12 @@ export function useRuleSelectionRules(params: {
     try {
       const allRules = await exceptionRuleManager.getAllRules();
       const applicable = allRules.filter((rule) => {
-        if (rule.chainId !== chainId || rule.scope !== 'chain') return false;
+        if (
+          !rule.isActive ||
+          rule.chainId !== chainId ||
+          rule.scope !== 'chain'
+        )
+          return false;
         return actionType === 'pause'
           ? rule.type === ExceptionRuleType.PAUSE_ONLY
           : rule.type === ExceptionRuleType.EARLY_COMPLETION_ONLY;
@@ -83,12 +86,7 @@ export function useRuleSelectionRules(params: {
     setLoading(true);
     setError(null);
     try {
-      let chainRules = cache.getChainRules(chainId);
-      if (!chainRules) {
-        chainRules = await fetchRules();
-        cache.setChainRules(chainId, chainRules);
-      }
-      setRules(chainRules);
+      setRules(await fetchRules());
     } catch (error) {
       setError(
         getSafeErrorDetailFromUnknown(error, language) ??
@@ -97,14 +95,14 @@ export function useRuleSelectionRules(params: {
     } finally {
       setLoading(false);
     }
-  }, [cache, chainId, fetchRules, language, tr]);
+  }, [fetchRules, language, tr]);
 
   const addRule = useCallback(
     (rule: ExceptionRule) => {
-      cache.addRuleToChain(chainId, rule);
-      setRules(cache.getChainRules(chainId) ?? []);
+      if (rule.chainId !== chainId || rule.scope !== 'chain') return;
+      setRules((current) => [...current, rule]);
     },
-    [cache, chainId],
+    [chainId],
   );
 
   return { rules, loading, error, setError, loadRules, addRule };

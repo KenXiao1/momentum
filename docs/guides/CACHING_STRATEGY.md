@@ -23,20 +23,19 @@ for fixtures, measurements, and limitations.
 
 ## Remaining caches
 
-| Area                         | Implementation                                          | Ownership and behavior                                                                                  |
-| ---------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Exception rules              | `src/utils/cache/CacheCore.ts`, `ExceptionRuleCache.ts` | In-memory entries with TTL, oldest-entry eviction, namespace invalidation, and rule subscribers         |
-| Rule search                  | `src/utils/rule-search-optimizer/RuleSearchCache.ts`    | Up to 100 cached searches and 50 history entries; separate popularity counts; clearCache clears results |
-| Duplicate detection          | `src/services/EnhancedDuplicationHandler.ts`            | Two-minute namespace in the exception-rule cache                                                        |
-| Supabase schema capabilities | `src/infra/storage/supabase/schemaCapabilities.ts`      | Tracks capabilities reported missing by older user databases; participates in compatibility fallbacks   |
-| Task time statistics         | `src/infra/storage/supabase/taskTimeStats.ts`           | Module-level cache of locally persisted statistics with a five-second TTL                               |
+| Area                         | Implementation                                       | Ownership and behavior                                                                                  |
+| ---------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Rule search                  | `src/utils/rule-search-optimizer/RuleSearchCache.ts` | Up to 100 cached searches and 50 history entries; separate popularity counts; clearCache clears results |
+| Supabase schema capabilities | `src/infra/storage/supabase/schemaCapabilities.ts`   | Tracks capabilities reported missing by older user databases; participates in compatibility fallbacks   |
+| Task time statistics         | `src/infra/storage/supabase/taskTimeStats.ts`        | Module-level cache of locally persisted statistics with a five-second TTL                               |
 
-`src/constants/cache.ts` owns the common exception-rule cache defaults: five-minute
-TTL, 1,000 entries, and one-minute cleanup. Search/duplicate TTLs are two minutes;
-statistics use ten minutes. Callers can override TTLs. These values describe the
-current implementation and are not performance guarantees.
+Rule selection reloads rules from storage and filters by chain, action type, and
+active status. React state holds the displayed list. Duplicate checks also read
+current storage; they do not keep a separate TTL snapshot. This prevents edited or
+deleted rules and a previous action's list from surviving a reload. The unused
+exception-rule cache framework, subscribers, and cleanup timer were removed with
+the last two consumers in the [third ablation round](../plans/ablation-driven-simplification-2026-09-18-round-3.md).
 
-`useServiceLifecycle` starts/stops the exception-rule cache cleanup interval.
 `RealTimeSyncService.clearAllCaches` asks the selected storage implementation to
 clear its caches. Other invalidation behavior belongs to each cache and caller;
 there is no universal invalidation mechanism.
@@ -68,4 +67,8 @@ updated values and failure behavior, including equal-size replacement arrays,
 switching users/modes, and out-of-order asynchronous completion. Retain a cache
 only if its observed benefit justifies its state and invalidation rules.
 
-The remaining rule caches are candidates for separate experiments. Their existence alone is not evidence of a performance requirement.
+The third-round probe retained search index and result reuse: at 10,000 synthetic
+rules, forcing reindexing cost 34–48ms per query on the audit machine. This is a
+stress measurement, not a production rule-count distribution. Direct duplicate
+checks also cost 19–33ms at that scale; investigate a measured large-library issue
+before introducing another cache, and preserve freshness in any replacement.

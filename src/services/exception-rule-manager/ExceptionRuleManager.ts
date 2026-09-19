@@ -20,8 +20,6 @@ import type {
 } from '../../types';
 import { ExceptionRuleType } from '../../types';
 import { dataIntegrityChecker } from '../DataIntegrityChecker';
-import { ruleStateManager } from '../RuleStateManager';
-import { enhancedDuplicationHandler } from '../EnhancedDuplicationHandler';
 import { exceptionRuleStorage } from '../ExceptionRuleStorage';
 import { ruleClassificationService } from '../RuleClassificationService';
 import { ruleUsageTracker } from '../RuleUsageTracker';
@@ -40,7 +38,6 @@ import {
   ruleMaintenanceService,
   type RuleCreationResult,
   type RealTimeCheckResult,
-  type OptimisticCreationResult,
   type RuleExecutionResult,
   type ImportResult,
   type ExportResult,
@@ -97,9 +94,6 @@ export class ExceptionRuleManager {
         }
       }
 
-      await ruleStateManager.syncRuleStates();
-      enhancedDuplicationHandler.clearCache();
-
       ruleExportImportService.setRuleUpdater(ruleMaintenanceService);
       ruleExportImportService.setRuleCreator(ruleCreator);
 
@@ -137,14 +131,6 @@ export class ExceptionRuleManager {
   ): Promise<RuleCreationResult> {
     await this.initialize();
     return ruleCreator.createChainRule(chainId, name, type, description);
-  }
-
-  createRuleOptimistic(
-    name: string,
-    type: ExceptionRuleType,
-    description?: string,
-  ): OptimisticCreationResult {
-    return ruleCreator.createRuleOptimistic(name, type, description);
   }
 
   async checkRuleNameRealTime(

@@ -49,16 +49,6 @@ vi.mock('../../utils/ruleSearchOptimizer', () => {
   return { RuleSearchOptimizer };
 });
 
-vi.mock('../../utils/exceptionRuleCache', () => {
-  class ExceptionRuleCache {
-    getChainRules = vi.fn(() => null);
-    setChainRules = vi.fn();
-    updateChainRules = vi.fn();
-    addRuleToChain = vi.fn();
-  }
-  return { ExceptionRuleCache };
-});
-
 vi.mock('../../utils/LayoutStabilityMonitor', () => {
   const startMonitoring = vi.fn();
   const stopMonitoring = vi.fn();

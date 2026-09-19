@@ -24,7 +24,6 @@
 | `src/hooks/domains/useRulesDomain.ts`       | 业务逻辑 Hook                                     |
 | `src/services/ExceptionRuleManager.ts`      | 核心管理器                                        |
 | `src/services/RuleClassificationService.ts` | 规则分类验证                                      |
-| `src/services/RuleStateManager.ts`          | 规则状态管理                                      |
 | `src/services/RuleDuplicationDetector.ts`   | 重复检测                                          |
 | `src/services/RuleUsageTracker.ts`          | 使用记录追踪                                      |
 | `src/services/validateRulesIntegrity.ts`    | 创建告警与完整性报告                              |
@@ -117,7 +116,6 @@ ExceptionRuleManager (主管理器)
 │   └── 创建告警、健康检查
 ├── EnhancedDuplicationHandler (重复处理)
 │   └── 实时检测、智能命名建议
-├── RuleStateManager (状态管理)
 │   └── 生命周期追踪、ID映射
 ├── RuleClassificationService (分类服务)
 │   └── 类型验证、操作匹配
@@ -288,7 +286,8 @@ if (report.issues.length > 0) {
 
 ## 缓存策略
 
-名称重复检查保留两分钟缓存。预验证结果缓存没有生产调用，已在第二轮消融中删除。
+名称重复检查直接读取当前存储；规则选择列表重新加载时按链、操作类型及激活状态筛选。
+第二轮删除的预验证缓存及第三轮删除的状态镜像均不参与实际规则使用。
 实际执行通过 `ruleClassificationService.validateRuleForAction` 检查规则的有效性和类型；
 创建告警与健康检查直接调用 `validateRulesIntegrity`。
 
@@ -375,11 +374,9 @@ async initialize(): Promise<void> {
     await dataIntegrityChecker.autoFixIssues(fixable);
   }
 
-  // 3. 同步规则状态
-  await ruleStateManager.syncRuleStates();
-
-  // 4. 清除重复检查结果
-  enhancedDuplicationHandler.clearCache();
+  // 3. 配置导入流程使用的创建和更新服务
+  ruleExportImportService.setRuleUpdater(ruleMaintenanceService);
+  ruleExportImportService.setRuleCreator(ruleCreator);
 }
 ```
 

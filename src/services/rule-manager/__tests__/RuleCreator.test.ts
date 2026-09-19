@@ -27,11 +27,6 @@ const errorRecoveryManagerMock = vi.hoisted(() => ({
   attemptRecovery: vi.fn(),
 }));
 
-const ruleStateManagerMock = vi.hoisted(() => ({
-  startOptimisticCreation: vi.fn(),
-  waitForRuleCreation: vi.fn(),
-}));
-
 const loggerMock = vi.hoisted(() => ({
   debug: vi.fn(),
   warn: vi.fn(),
@@ -55,10 +50,6 @@ vi.mock('../../ErrorClassificationService', () => ({
 
 vi.mock('../../ErrorRecoveryManager', () => ({
   errorRecoveryManager: errorRecoveryManagerMock,
-}));
-
-vi.mock('../../RuleStateManager', () => ({
-  ruleStateManager: ruleStateManagerMock,
 }));
 
 vi.mock('../../../utils/logger', () => ({
@@ -112,13 +103,6 @@ describe('rule-manager/RuleCreator', () => {
     errorRecoveryManagerMock.attemptRecovery.mockResolvedValue({
       success: false,
     });
-    ruleStateManagerMock.startOptimisticCreation.mockReturnValue({
-      temporaryRule: createRule({ id: 'temp-1' }),
-      temporaryId: 'temp-1',
-    });
-    ruleStateManagerMock.waitForRuleCreation.mockResolvedValue(
-      createRule({ id: 'rule-final' }),
-    );
     exceptionRuleStorageMock.getRuleById.mockResolvedValue(
       createRule({ id: 'rule-recovered' }),
     );
@@ -275,23 +259,7 @@ describe('rule-manager/RuleCreator', () => {
     });
   });
 
-  it('supports optimistic creation and real-time name checks with fallback', async () => {
-    const optimistic = ruleCreator.createRuleOptimistic(
-      'Optimistic Rule',
-      ExceptionRuleType.PAUSE_ONLY,
-      'optimistic desc',
-    );
-
-    expect(ruleStateManagerMock.startOptimisticCreation).toHaveBeenCalledWith(
-      'Optimistic Rule',
-      ExceptionRuleType.PAUSE_ONLY,
-      'optimistic desc',
-    );
-    expect(optimistic.temporaryId).toBe('temp-1');
-    await expect(optimistic.promise).resolves.toEqual(
-      createRule({ id: 'rule-final' }),
-    );
-
+  it('supports real-time name checks with fallback', async () => {
     const checkResult = await ruleCreator.checkRuleNameRealTime(
       'Rule Name',
       'exclude-id',

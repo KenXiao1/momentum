@@ -1,10 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ExceptionRuleError, ExceptionRuleException } from '../../../types';
 
-const ruleStateManagerMock = vi.hoisted(() => ({
-  syncRuleStates: vi.fn(),
-}));
-
 const dataIntegrityCheckerMock = vi.hoisted(() => ({
   checkRuleDataIntegrity: vi.fn(),
   autoFixIssues: vi.fn(),
@@ -12,10 +8,6 @@ const dataIntegrityCheckerMock = vi.hoisted(() => ({
 
 const enhancedDuplicationHandlerMock = vi.hoisted(() => ({
   generateNameSuggestions: vi.fn(),
-}));
-
-vi.mock('../../RuleStateManager', () => ({
-  ruleStateManager: ruleStateManagerMock,
 }));
 
 vi.mock('../../DataIntegrityChecker', () => ({
@@ -26,7 +18,7 @@ vi.mock('../../EnhancedDuplicationHandler', () => ({
   enhancedDuplicationHandler: enhancedDuplicationHandlerMock,
 }));
 
-import { extractRuleIdFromError, recoveryHandlers } from '../RecoveryHandlers';
+import { recoveryHandlers } from '../RecoveryHandlers';
 
 function createError(
   message: string,
@@ -143,7 +135,7 @@ describe('recovery/RecoveryHandlers', () => {
     );
   });
 
-  it('returns graceful failures when data integrity and generic recovery throw', async () => {
+  it('returns graceful failures when data integrity checks throw', async () => {
     dataIntegrityCheckerMock.checkRuleDataIntegrity.mockRejectedValueOnce(
       new Error('check failed'),
     );
@@ -151,37 +143,5 @@ describe('recovery/RecoveryHandlers', () => {
       createError('storage'),
     );
     expect(integrityFailure.success).toBe(false);
-
-    ruleStateManagerMock.syncRuleStates.mockRejectedValueOnce(
-      new Error('sync failed'),
-    );
-    const genericFailure = await recoveryHandlers.handleGenericRecovery(
-      createError('generic'),
-    );
-    expect(genericFailure.success).toBe(false);
-  });
-
-  it('returns success when generic recovery can sync rule states', async () => {
-    ruleStateManagerMock.syncRuleStates.mockResolvedValueOnce(undefined);
-
-    const result = await recoveryHandlers.handleGenericRecovery(
-      createError('generic'),
-    );
-    expect(result).toEqual(
-      expect.objectContaining({
-        success: true,
-      }),
-    );
-    expect(ruleStateManagerMock.syncRuleStates).toHaveBeenCalledTimes(1);
-  });
-
-  it('parses rule ids from known error message formats', () => {
-    const english = createError('Rule ID abc-123 is missing');
-    const secondary = createError('Rule ID xyz-789 not found');
-    const noId = createError('nothing useful');
-
-    expect(extractRuleIdFromError(english)).toBe('abc-123');
-    expect(extractRuleIdFromError(secondary)).toBe('xyz-789');
-    expect(extractRuleIdFromError(noId)).toBeNull();
   });
 });

@@ -4,9 +4,7 @@ import { logger } from '../../utils/logger';
 import { toError } from '../../utils/errorHandling';
 import { fireAndForget } from '../../utils/fireAndForget';
 import { forwardTimerManager } from '../../utils/forwardTimer';
-import { ruleStateManager } from '../../services/RuleStateManager';
 import { migrationCoordinator } from '../../services/migration';
-import { exceptionRuleCache } from '../../utils/cache';
 import { performanceMonitor } from '../../utils/performanceMonitor';
 import { initializeRuleSystem } from '../../utils/initializeRuleSystem';
 import { checkForUpdates } from '../../utils/platform-adapters/updater';
@@ -17,8 +15,7 @@ interface ServiceLifecycleResult {
 
 /**
  * Manages global service lifecycle (start/stop) for the application.
- * Handles: forwardTimerManager, cache runtime, ruleStateManager,
- * and dev-only monitoring runtime.
+ * Handles the forward timer and dev-only monitoring.
  */
 export function useServiceLifecycle(): ServiceLifecycleResult {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -27,8 +24,6 @@ export function useServiceLifecycle(): ServiceLifecycleResult {
     setIsInitialized(true);
 
     forwardTimerManager.start();
-    exceptionRuleCache.start();
-    ruleStateManager.start();
 
     let devCleanup: (() => void) | undefined;
     if (isDev) {
@@ -70,8 +65,6 @@ export function useServiceLifecycle(): ServiceLifecycleResult {
 
     return () => {
       forwardTimerManager.stop();
-      exceptionRuleCache.stop();
-      ruleStateManager.stop();
       devCleanup?.();
     };
   }, []);

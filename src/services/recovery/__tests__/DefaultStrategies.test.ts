@@ -2,10 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ExceptionRuleError, ExceptionRuleException } from '../../../types';
 import { RecoveryStrategyRegistry } from '../RecoveryStrategy';
 
-const ruleStateManagerMock = vi.hoisted(() => ({
-  waitForRuleCreation: vi.fn(),
-}));
-
 const dataIntegrityCheckerMock = vi.hoisted(() => ({
   checkRuleDataIntegrity: vi.fn(),
   autoFixIssues: vi.fn(),
@@ -15,15 +11,10 @@ const recoveryOptionsProviderMock = vi.hoisted(() => ({
   getRecoveryOptions: vi.fn(),
 }));
 
-const extractRuleIdFromErrorMock = vi.hoisted(() => vi.fn());
 const recoveryHandlersMock = vi.hoisted(() => ({
   handleValidationFix: vi.fn(),
-  handleGenericRecovery: vi.fn(),
+  handleDataIntegrityCheck: vi.fn(),
   handleSystemReset: vi.fn(),
-}));
-
-vi.mock('../../RuleStateManager', () => ({
-  ruleStateManager: ruleStateManagerMock,
 }));
 
 vi.mock('../../DataIntegrityChecker', () => ({
@@ -35,7 +26,6 @@ vi.mock('../RecoveryOptionsProvider', () => ({
 }));
 
 vi.mock('../RecoveryHandlers', () => ({
-  extractRuleIdFromError: extractRuleIdFromErrorMock,
   recoveryHandlers: recoveryHandlersMock,
 }));
 
@@ -72,7 +62,7 @@ describe('recovery/DefaultStrategies', () => {
       success: true,
       message: 'validation fixed',
     });
-    recoveryHandlersMock.handleGenericRecovery.mockResolvedValue({
+    recoveryHandlersMock.handleDataIntegrityCheck.mockResolvedValue({
       success: true,
       message: 'generic fixed',
     });
@@ -80,7 +70,6 @@ describe('recovery/DefaultStrategies', () => {
       success: true,
       message: 'reset done',
     });
-    extractRuleIdFromErrorMock.mockReturnValue(null);
   });
 
   it('registers built-in strategies for expected error types', () => {
@@ -102,32 +91,18 @@ describe('recovery/DefaultStrategies', () => {
     );
   });
 
-  it('handles missing rules by recovering temporary rules or returning user actions', async () => {
+  it('returns user actions for missing rules, including expired temporary IDs', async () => {
     const registry = new RecoveryStrategyRegistry();
     initializeDefaultStrategies(registry);
     const strategy = registry.getStrategies(
       ExceptionRuleError.RULE_NOT_FOUND,
     )[0];
 
-    extractRuleIdFromErrorMock.mockReturnValueOnce('temp_123');
-    ruleStateManagerMock.waitForRuleCreation.mockResolvedValueOnce({
-      id: 'temp_123',
-      name: 'Recovered',
-    });
-    const recovered = await strategy!.handler(
-      createError(ExceptionRuleError.RULE_NOT_FOUND),
-      {} as never,
-    );
-    expect(recovered).toEqual(
-      expect.objectContaining({
-        success: true,
-        recoveredData: { id: 'temp_123', name: 'Recovered' },
-      }),
-    );
-
-    extractRuleIdFromErrorMock.mockReturnValueOnce('rule-regular');
     const unresolved = await strategy!.handler(
-      createError(ExceptionRuleError.RULE_NOT_FOUND),
+      createError(
+        ExceptionRuleError.RULE_NOT_FOUND,
+        'Rule ID temp_123 is missing',
+      ),
       {} as never,
     );
     expect(unresolved.success).toBe(false);
@@ -223,7 +198,9 @@ describe('recovery/DefaultStrategies', () => {
     expect(unknown.success).toBe(false);
     expect(unknown.message).toBe('Unknown error type: CUSTOM_ERROR');
     await unknown.actions?.[0]?.handler();
-    expect(recoveryHandlersMock.handleGenericRecovery).toHaveBeenCalledTimes(1);
+    expect(recoveryHandlersMock.handleDataIntegrityCheck).toHaveBeenCalledTimes(
+      1,
+    );
 
     const failed = createRecoveryFailureResult();
     expect(failed.success).toBe(false);

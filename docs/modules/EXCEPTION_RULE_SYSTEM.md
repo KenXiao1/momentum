@@ -43,21 +43,21 @@
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                      基础设施层                               │
-│  ExceptionRuleStorage / RuleStateManager / DataIntegrityChecker│
+│  ExceptionRuleStorage / DataIntegrityChecker                 │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ### 服务职责
 
-| 服务                        | 文件                         | 行数目标 | 职责                         |
-| --------------------------- | ---------------------------- | -------- | ---------------------------- |
-| **RuleCreator**             | `RuleCreator.ts`             | <200     | 规则创建、名称检查、乐观更新 |
-| **RuleQueryService**        | `RuleQueryService.ts`        | <200     | 规则查询、搜索、建议         |
-| **RuleExecutor**            | `RuleExecutor.ts`            | <150     | 规则执行、验证、使用记录     |
-| **RuleStatsService**        | `RuleStatsService.ts`        | <150     | 统计计算、类型分布           |
-| **RuleExportImportService** | `RuleExportImportService.ts` | <150     | 数据导入导出                 |
-| **RuleMaintenanceService**  | `RuleMaintenanceService.ts`  | <200     | 更新、删除、清理、健康检查   |
-| **ExceptionRuleManager**    | `ExceptionRuleManager.ts`    | <150     | 协调器，初始化，外部接口     |
+| 服务                        | 文件                         | 行数目标 | 职责                       |
+| --------------------------- | ---------------------------- | -------- | -------------------------- |
+| **RuleCreator**             | `RuleCreator.ts`             | <200     | 规则创建、名称检查         |
+| **RuleQueryService**        | `RuleQueryService.ts`        | <200     | 规则查询、搜索、建议       |
+| **RuleExecutor**            | `RuleExecutor.ts`            | <150     | 规则执行、验证、使用记录   |
+| **RuleStatsService**        | `RuleStatsService.ts`        | <150     | 统计计算、类型分布         |
+| **RuleExportImportService** | `RuleExportImportService.ts` | <150     | 数据导入导出               |
+| **RuleMaintenanceService**  | `RuleMaintenanceService.ts`  | <200     | 更新、删除、清理、健康检查 |
+| **ExceptionRuleManager**    | `ExceptionRuleManager.ts`    | <150     | 协调器，初始化，外部接口   |
 
 ---
 
@@ -96,14 +96,14 @@ sequenceDiagram
     participant FocusMode
     participant Manager as ExceptionRuleManager
     participant Executor as RuleExecutor
-    participant StateManager as RuleStateManager
+    participant Storage as ExceptionRuleStorage
     participant Classification as ClassificationService
     participant Tracker as UsageTracker
 
     FocusMode->>Manager: useRule(ruleId, context, actionType)
     Manager->>Executor: useRule(ruleId, context, actionType)
-    Executor->>StateManager: validateRuleId(ruleId)
-    StateManager-->>Executor: { isValid, realId }
+    Executor->>Storage: getRuleById(ruleId)
+    Storage-->>Executor: persisted rule (or null)
     Executor->>Classification: validateRuleForAction(ruleId, actionType)
     Classification-->>Executor: void (or throw)
     Executor->>Tracker: recordUsage(ruleId, context, actionType)
@@ -152,7 +152,10 @@ try {
 
 当前缓存的所有权、TTL 与失效边界见 [缓存指南](../guides/CACHING_STRATEGY.md)。
 第二轮消融删除了没有生产调用的预验证结果缓存；实际规则使用仍执行类型与有效性验证。
-`useServiceLifecycle` 启停 `exceptionRuleCache` 自己的定时清理，AppShell 不另建清理 timer。
+第三轮删除了重复检测 TTL、规则选择快照和无 UI 调用的服务层乐观创建链。
+创建结果使用持久化 ID；管理页自己的乐观展示与失败回滚仍保留。
+健康检查只报告现存的数据完整性、验证、错误处理和存储组件；未知错误的恢复选项
+执行数据完整性检查，不再通过复制规则状态宣称恢复成功。
 
 ---
 
@@ -160,13 +163,13 @@ try {
 
 ### 单元测试覆盖
 
-| 模块                 | 覆盖率目标 | 重点测试                     |
-| -------------------- | ---------- | ---------------------------- |
-| RuleCreator          | 80%        | 创建流程、重复检测、乐观更新 |
-| RuleQueryService     | 70%        | 查询准确性、搜索算法         |
-| RuleExecutor         | 90%        | 规则验证、使用记录           |
-| RuleStatsService     | 70%        | 统计计算、边界条件           |
-| ErrorRecoveryManager | 80%        | 恢复策略、错误分类           |
+| 模块                 | 覆盖率目标 | 重点测试             |
+| -------------------- | ---------- | -------------------- |
+| RuleCreator          | 80%        | 创建流程、重复检测   |
+| RuleQueryService     | 70%        | 查询准确性、搜索算法 |
+| RuleExecutor         | 90%        | 规则验证、使用记录   |
+| RuleStatsService     | 70%        | 统计计算、边界条件   |
+| ErrorRecoveryManager | 80%        | 恢复策略、错误分类   |
 
 ### 集成测试场景
 
@@ -182,9 +185,8 @@ try {
 ### 已实施优化
 
 1. **批量验证**: 多个规则一次验证，减少 I/O
-2. **缓存预热**: 启动时预加载常用规则
-3. **延迟初始化**: 首次使用时才初始化管理器
-4. **乐观更新**: UI 立即响应，后台同步
+2. **延迟初始化**: 首次使用时才初始化管理器
+3. **乐观更新**: UI 立即响应，后台同步
 
 ### 性能指标
 

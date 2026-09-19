@@ -4,12 +4,11 @@
  */
 
 import { ExceptionRuleError } from '../../types';
-import { ruleStateManager } from '../RuleStateManager';
 import { dataIntegrityChecker } from '../DataIntegrityChecker';
 import { tr } from '../../utils/runtimeI18n';
 import { RecoveryStrategyRegistry, RecoveryResult } from './RecoveryStrategy';
 import { recoveryOptionsProvider } from './RecoveryOptionsProvider';
-import { extractRuleIdFromError, recoveryHandlers } from './RecoveryHandlers';
+import { recoveryHandlers } from './RecoveryHandlers';
 
 /**
  * 初始化所有默认恢复策略
@@ -24,20 +23,6 @@ export function initializeDefaultStrategies(
     strategy: 'auto_fix',
     priority: 100,
     handler: async (error) => {
-      const ruleId = extractRuleIdFromError(error);
-      if (ruleId?.startsWith('temp_')) {
-        try {
-          const rule = await ruleStateManager.waitForRuleCreation(ruleId);
-          return {
-            success: true,
-            message: tr('从临时规则恢复成功', 'Recovered from temporary rule'),
-            recoveredData: rule,
-          };
-        } catch {
-          // 继续其他策略
-        }
-      }
-
       return {
         success: false,
         message: tr(
@@ -168,15 +153,12 @@ export function createUnknownErrorResult(errorType: string): RecoveryResult {
     ),
     actions: [
       {
-        id: 'generic_recovery',
-        label: tr('通用恢复', 'Generic recovery'),
-        description: tr(
-          '尝试通用的错误恢复方法',
-          'Try generic recovery actions',
-        ),
+        id: 'check_data_integrity',
+        label: tr('检查数据完整性', 'Check data integrity'),
+        description: tr('检查并修复规则数据', 'Check and repair rule data'),
         type: 'secondary',
         handler: async () =>
-          recoveryHandlers.handleGenericRecovery({} as never),
+          recoveryHandlers.handleDataIntegrityCheck({} as never),
       },
     ],
   };

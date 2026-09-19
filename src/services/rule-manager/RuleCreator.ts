@@ -1,6 +1,6 @@
 /**
  * RuleCreator - 规则创建服务
- * 负责例外规则的创建逻辑，包括普通创建、链专属创建和乐观更新创建
+ * 负责例外规则的创建逻辑，包括普通创建和链专属创建
  */
 
 import {
@@ -14,7 +14,6 @@ import { enhancedDuplicationHandler } from '../EnhancedDuplicationHandler';
 import { validateRulesIntegrity } from '../validateRulesIntegrity';
 import { errorClassificationService } from '../ErrorClassificationService';
 import { errorRecoveryManager } from '../ErrorRecoveryManager';
-import { ruleStateManager } from '../RuleStateManager';
 import { logger } from '../../utils/logger';
 import { isDev } from '../../utils/env';
 import { tr } from '../../utils/runtimeI18n';
@@ -33,12 +32,6 @@ export interface RealTimeCheckResult {
     description: string;
     suggestedName?: string;
   }>;
-}
-
-export interface OptimisticCreationResult {
-  temporaryRule: ExceptionRule;
-  temporaryId: string;
-  promise: Promise<ExceptionRule>;
 }
 
 /**
@@ -112,21 +105,6 @@ class RuleCreator {
         error,
       );
     }
-  }
-
-  /** 创建规则（乐观更新版本） */
-  createRuleOptimistic(
-    name: string,
-    type: ExceptionRuleType,
-    description?: string,
-  ): OptimisticCreationResult {
-    const { temporaryRule, temporaryId } =
-      ruleStateManager.startOptimisticCreation(name, type, description);
-    return {
-      temporaryRule,
-      temporaryId,
-      promise: ruleStateManager.waitForRuleCreation(temporaryId),
-    };
   }
 
   /** 实时检查规则名称重复 */

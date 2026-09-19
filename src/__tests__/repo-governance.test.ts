@@ -1,4 +1,5 @@
 import {
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
@@ -27,12 +28,47 @@ const SEMGREP_WORKFLOW_PATH = path.join(
   'workflows',
   'semgrep.yml',
 );
-const ARCHITECTURE_VIOLATION_FIXTURE_PATH = path.join(
-  REPO_ROOT,
-  'src',
-  'components',
-  '__architecture_violation_fixture__.ts',
-);
+// Exercise the real configuration without modifying or traversing application sources.
+function runArchitectureFixture(files: Record<string, string>) {
+  const fixtureDir = mkdtempSync(
+    path.join(os.tmpdir(), 'momentum-architecture-'),
+  );
+  try {
+    writeFileSync(
+      path.join(fixtureDir, 'tsconfig.app.json'),
+      JSON.stringify({
+        compilerOptions: {
+          target: 'ES2022',
+          module: 'ESNext',
+          moduleResolution: 'Bundler',
+        },
+        include: ['src'],
+      }),
+    );
+    for (const [relativePath, source] of Object.entries(files)) {
+      const filePath = path.join(fixtureDir, relativePath);
+      mkdirSync(path.dirname(filePath), { recursive: true });
+      writeFileSync(filePath, source);
+    }
+    return spawnSync(
+      process.execPath,
+      [
+        path.join(
+          REPO_ROOT,
+          'node_modules/dependency-cruiser/bin/dependency-cruise.mjs',
+        ),
+        'src',
+        '--config',
+        path.join(REPO_ROOT, '.dependency-cruiser.cjs'),
+        '--output-type',
+        'err',
+      ],
+      { cwd: fixtureDir, encoding: 'utf8', timeout: 30_000 },
+    );
+  } finally {
+    rmSync(fixtureDir, { recursive: true, force: true });
+  }
+}
 
 function readFile(filePath: string): string {
   return readFileSync(filePath, 'utf8');
@@ -82,33 +118,26 @@ describe('repo governance', () => {
       /--output-type\s+err(?:\s|$)/,
     );
 
-    writeFileSync(
-      ARCHITECTURE_VIOLATION_FIXTURE_PATH,
-      "import '../infra/storage/supabase/SupabaseStorage';\n",
-      'utf8',
+    const allowed = runArchitectureFixture({
+      'src/components/view.ts': "import '../storage/ports';\n",
+      'src/storage/ports.ts': 'export {};\n',
+    });
+    expect(allowed.error).toBeUndefined();
+    expect(allowed.status).toBe(0);
+
+    const denied = runArchitectureFixture({
+      'src/components/view.ts':
+        "import '../infra/storage/supabase/SupabaseStorage';\n",
+      'src/infra/storage/supabase/SupabaseStorage.ts': 'export {};\n',
+    });
+    expect(denied.error).toBeUndefined();
+    expect(denied.status).toBe(1);
+    expect(`${denied.stdout}${denied.stderr}`).toContain(
+      'no-component-to-supabase-infra',
     );
-
-    try {
-      const npmCliPath = process.env.npm_execpath;
-      if (!npmCliPath) {
-        throw new Error('npm_execpath is required for the governance test');
-      }
-      const result = spawnSync(
-        process.execPath,
-        [npmCliPath, 'run', 'quality:arch-gate'],
-        {
-          cwd: REPO_ROOT,
-          encoding: 'utf8',
-        },
-      );
-      const output = `${result.stdout}${result.stderr}`;
-
-      expect(result.status).not.toBe(0);
-      expect(output).toContain('no-component-to-supabase-infra');
-      expect(output).toContain('__architecture_violation_fixture__.ts');
-    } finally {
-      rmSync(ARCHITECTURE_VIOLATION_FIXTURE_PATH, { force: true });
-    }
+    expect(`${denied.stdout}${denied.stderr}`).toContain(
+      'src/components/view.ts',
+    );
   }, 45_000);
 
   it('codeql workflow uses the security-extended query suite', () => {
@@ -163,22 +192,12 @@ describe('repo governance', () => {
   );
 
   it('fails the architecture gate for circular imports', () => {
-    const fixtureDir = mkdtempSync(path.join(os.tmpdir(), 'momentum-cycle-'));
-    writeFileSync(path.join(fixtureDir, 'a.ts'), "import './b';\n");
-    writeFileSync(path.join(fixtureDir, 'b.ts'), "import './a';\n");
-
-    try {
-      const npmCliPath = process.env.npm_execpath;
-      if (!npmCliPath) throw new Error('npm_execpath is required');
-      const result = spawnSync(
-        process.execPath,
-        [npmCliPath, 'run', 'quality:arch-gate', '--', fixtureDir],
-        { cwd: REPO_ROOT, encoding: 'utf8' },
-      );
-      expect(result.status).not.toBe(0);
-      expect(`${result.stdout}${result.stderr}`).toContain('no-circular');
-    } finally {
-      rmSync(fixtureDir, { recursive: true, force: true });
-    }
+    const result = runArchitectureFixture({
+      'src/a.ts': "import './b';\n",
+      'src/b.ts': "import './a';\n",
+    });
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(1);
+    expect(`${result.stdout}${result.stderr}`).toContain('no-circular');
   }, 45_000);
 });

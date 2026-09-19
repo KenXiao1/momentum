@@ -11,8 +11,6 @@ import {
 import type { ExceptionRule } from '../types';
 import { exceptionRuleStorage } from './ExceptionRuleStorage';
 import { tr } from '../utils/runtimeI18n';
-import { exceptionRuleCache } from '../utils/exceptionRuleCache';
-import { normalizeName } from '../utils/stringUtils';
 import {
   findExactDuplicateRules,
   findSimilarRulesWithSimilarity,
@@ -42,8 +40,6 @@ interface RealTimeDuplicationCheck {
 }
 
 export class EnhancedDuplicationHandler {
-  private readonly CACHE_TTL = 2 * 60 * 1000; // 2分钟缓存
-
   /**
    * 生成智能的名称建议
    */
@@ -104,17 +100,6 @@ export class EnhancedDuplicationHandler {
     excludeId?: string,
   ): Promise<DuplicationCheckResult> {
     const trimmedName = name.trim();
-    const cacheKey = `check_${normalizeName(trimmedName)}_${excludeId || 'new'}`;
-
-    // 检查缓存
-    const cached = exceptionRuleCache.getNamespaced<DuplicationCheckResult>(
-      'duplication',
-      cacheKey,
-    );
-    if (cached) {
-      return cached;
-    }
-
     try {
       const allRules = await exceptionRuleStorage.getRules();
       const exactMatches = findExactDuplicateRules(
@@ -152,14 +137,6 @@ export class EnhancedDuplicationHandler {
         canProceed: conflictType !== 'exact',
       };
 
-      // 缓存结果
-      exceptionRuleCache.setNamespaced(
-        'duplication',
-        cacheKey,
-        result,
-        this.CACHE_TTL,
-      );
-
       return result;
     } catch (error) {
       throw new ExceptionRuleException(
@@ -187,7 +164,6 @@ export class EnhancedDuplicationHandler {
 
     if (!checkResult.hasConflict) {
       const result = await createRuleIfNoConflict(name, type, description);
-      this.clearCache();
       return result;
     }
 
@@ -199,7 +175,6 @@ export class EnhancedDuplicationHandler {
         description,
         checkResult,
       );
-      this.clearCache();
       return result;
     }
 
@@ -210,7 +185,6 @@ export class EnhancedDuplicationHandler {
 
       case 'modify_name': {
         const result = await handleModifyName(name, type, description);
-        this.clearCache();
         return result;
       }
 
@@ -231,7 +205,6 @@ export class EnhancedDuplicationHandler {
             description,
             checkResult,
           );
-          this.clearCache();
           return result;
         }
 
@@ -249,20 +222,6 @@ export class EnhancedDuplicationHandler {
           },
         );
     }
-  }
-
-  /**
-   * 清除缓存
-   */
-  clearCache(): void {
-    exceptionRuleCache.invalidateNamespace('duplication');
-  }
-
-  /**
-   * 清理过期缓存
-   */
-  cleanupExpiredCache(): void {
-    exceptionRuleCache.clearExpired();
   }
 }
 

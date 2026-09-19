@@ -9,10 +9,6 @@ const errorClassificationServiceMock = vi.hoisted(() => ({
   getErrorTrends: vi.fn(),
 }));
 
-const ruleStateManagerMock = vi.hoisted(() => ({
-  getAllStates: vi.fn(),
-}));
-
 const exceptionRuleStorageMock = vi.hoisted(() => ({
   getRules: vi.fn(),
   getUsageRecords: vi.fn(),
@@ -28,10 +24,6 @@ vi.mock('../../ErrorClassificationService', () => ({
   errorClassificationService: errorClassificationServiceMock,
 }));
 
-vi.mock('../../RuleStateManager', () => ({
-  ruleStateManager: ruleStateManagerMock,
-}));
-
 vi.mock('../../ExceptionRuleStorage', () => ({
   exceptionRuleStorage: exceptionRuleStorageMock,
 }));
@@ -42,7 +34,6 @@ vi.mock('../../validateRulesIntegrity', () => ({
 
 import { checkDataIntegrity } from '../checks/dataIntegrity';
 import { checkErrorHandling } from '../checks/errorHandling';
-import { checkRuleStates } from '../checks/ruleStates';
 import { checkStorage } from '../checks/storage';
 import { checkValidationService } from '../checks/validation';
 import { generateRecommendations } from '../recommendations';
@@ -111,38 +102,6 @@ describe('system health checks', () => {
       },
     );
     const result = await checkErrorHandling();
-    expect(result.status).toBe('critical');
-    expect(result.score).toBe(0);
-    expect(result.issues.length).toBe(1);
-  });
-
-  it('checks rule state health from pending + error states', async () => {
-    ruleStateManagerMock.getAllStates.mockReturnValueOnce({
-      pendingCreations: new Set(Array.from({ length: 11 }, (_, i) => `p-${i}`)),
-      states: new Map([
-        ['a', { status: 'ok' }],
-        ['b', { status: 'error' }],
-      ]),
-      idMappings: new Set(['map-1']),
-    });
-
-    const result = await checkRuleStates();
-    expect(result.status).toBe('warning');
-    expect(result.score).toBe(70);
-    expect(result.issues.length).toBe(2);
-    expect(result.metrics).toMatchObject({
-      totalStates: 2,
-      pendingCreations: 11,
-      idMappings: 1,
-      errorStates: 1,
-    });
-  });
-
-  it('returns critical rule-state result when state manager throws', async () => {
-    ruleStateManagerMock.getAllStates.mockImplementationOnce(() => {
-      throw new Error('state-error');
-    });
-    const result = await checkRuleStates();
     expect(result.status).toBe('critical');
     expect(result.score).toBe(0);
     expect(result.issues.length).toBe(1);
@@ -249,23 +208,6 @@ describe('system health recommendations and summary', () => {
         autoFixableIssues: 1,
       },
     });
-    ruleStateManagerMock.getAllStates.mockReturnValue({
-      pendingCreations: new Set([
-        'a',
-        'b',
-        'c',
-        'd',
-        'e',
-        'f',
-        'g',
-        'h',
-        'i',
-        'j',
-        'k',
-      ]),
-      states: new Map([['state-1', { status: 'error' }]]),
-      idMappings: new Set(['m']),
-    });
     errorClassificationServiceMock.getErrorStatistics.mockReturnValue({
       totalErrors: 100,
       errorsBySeverity: new Map([['critical', 1]]),
@@ -276,7 +218,6 @@ describe('system health recommendations and summary', () => {
 
     const components = [
       await checkDataIntegrity(),
-      await checkRuleStates(),
       await checkErrorHandling(),
       {
         name: 'misc',

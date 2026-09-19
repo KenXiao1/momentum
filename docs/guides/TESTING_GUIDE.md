@@ -51,7 +51,9 @@ edit or every pull request.
 Knip, duplication, and full SonarJS reports. Their summaries record failures
 without blocking the lane. Full SonarJS/duplication findings are advisory;
 production ESLint still enforces its configured errors. Cycle detection belongs
-to Dependency Cruiser. File length, import counts, comment counts, and cast totals
+to Dependency Cruiser. Governance tests execute the real import configuration
+against temporary fixtures (including an allowed public port), without writing
+into application sources. `quality:arch-gate` still checks the complete repository. File length, import counts, comment counts, and cast totals
 are not architecture gates.
 
 Use Vitest's case/file duration output to investigate slow tests. There is no

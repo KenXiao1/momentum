@@ -23,16 +23,6 @@ vi.mock('../services/ExceptionRuleManager', () => ({
   },
 }));
 
-vi.mock('../utils/exceptionRuleCache', () => {
-  class ExceptionRuleCache {
-    getChainRules = vi.fn(() => null);
-    setChainRules = vi.fn();
-    updateChainRules = vi.fn();
-  }
-
-  return { ExceptionRuleCache };
-});
-
 vi.mock('../utils/ruleSearchOptimizer', () => {
   class RuleSearchOptimizer {
     updateIndex = vi.fn();

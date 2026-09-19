@@ -23,13 +23,6 @@ function getRecommendationsForComponent(component: ComponentHealth): string[] {
     recommendations.push('运行数据修复工具');
   }
 
-  if (component.name === '规则状态管理') {
-    const errorStates = getNumberMetric(component.metrics, 'errorStates');
-    if (errorStates !== null && errorStates > 0) {
-      recommendations.push('清理错误状态的规则');
-    }
-  }
-
   if (component.name === '错误处理') {
     const criticalErrors = getNumberMetric(component.metrics, 'criticalErrors');
     if (criticalErrors !== null && criticalErrors > 0) {

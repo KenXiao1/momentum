@@ -55,10 +55,6 @@ describe('EnhancedDuplicationHandler', () => {
     vi.clearAllMocks();
   });
 
-  afterEach(() => {
-    handler.clearCache();
-  });
-
   describe('checkDuplicationRealTime', () => {
     it('should return no conflict for empty name', async () => {
       const result = await handler.checkDuplicationRealTime('');
@@ -116,6 +112,32 @@ describe('EnhancedDuplicationHandler', () => {
   });
 
   describe('checkDuplication', () => {
+    it('observes renames immediately without requiring cache invalidation', async () => {
+      vi.mocked(exceptionRuleStorage.getRules).mockResolvedValue(mockRules);
+      expect((await handler.checkDuplication('上厕所')).hasConflict).toBe(true);
+      vi.mocked(exceptionRuleStorage.getRules).mockResolvedValue([
+        { ...mockRules[0], name: 'Stretch' },
+        mockRules[1],
+      ]);
+      expect((await handler.checkDuplication('上厕所')).hasConflict).toBe(
+        false,
+      );
+    });
+
+    it('observes deletion before offering an existing rule for reuse', async () => {
+      vi.mocked(exceptionRuleStorage.getRules).mockResolvedValue(mockRules);
+      expect(
+        (await handler.checkDuplication('上厕所')).existingRules,
+      ).toHaveLength(1);
+      vi.mocked(exceptionRuleStorage.getRules).mockResolvedValue([
+        { ...mockRules[0], isActive: false },
+        mockRules[1],
+      ]);
+      expect((await handler.checkDuplication('上厕所')).existingRules).toEqual(
+        [],
+      );
+    });
+
     it('should detect exact match', async () => {
       vi.mocked(exceptionRuleStorage.getRules).mockResolvedValue(mockRules);
 
@@ -162,15 +184,6 @@ describe('EnhancedDuplicationHandler', () => {
       const result = await handler.checkDuplication('上厕所');
 
       expect(result.hasConflict).toBe(false);
-    });
-
-    it('should use cache for repeated checks', async () => {
-      vi.mocked(exceptionRuleStorage.getRules).mockResolvedValue(mockRules);
-
-      await handler.checkDuplication('上厕所');
-      await handler.checkDuplication('上厕所');
-
-      expect(exceptionRuleStorage.getRules).toHaveBeenCalledTimes(1);
     });
 
     it('should throw exception on storage error', async () => {
@@ -341,31 +354,6 @@ describe('EnhancedDuplicationHandler', () => {
       const suggestions = handler.generateNameSuggestions('上厕所', []);
 
       expect(suggestions.length).toBeLessThanOrEqual(3);
-    });
-  });
-
-  describe('cache management', () => {
-    it('should clear cache', async () => {
-      vi.mocked(exceptionRuleStorage.getRules).mockResolvedValue(mockRules);
-
-      await handler.checkDuplication('上厕所');
-      handler.clearCache();
-      await handler.checkDuplication('上厕所');
-
-      expect(exceptionRuleStorage.getRules).toHaveBeenCalledTimes(2);
-    });
-
-    it('should cleanup expired cache entries', async () => {
-      vi.mocked(exceptionRuleStorage.getRules).mockResolvedValue(mockRules);
-
-      await handler.checkDuplication('上厕所');
-
-      // Manually trigger cleanup (cache entries are fresh, so nothing should be removed)
-      handler.cleanupExpiredCache();
-
-      // Cache should still be valid
-      await handler.checkDuplication('上厕所');
-      expect(exceptionRuleStorage.getRules).toHaveBeenCalledTimes(1);
     });
   });
 });

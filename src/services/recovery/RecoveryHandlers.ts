@@ -4,7 +4,6 @@
  */
 
 import { ExceptionRuleException } from '../../types';
-import { ruleStateManager } from '../RuleStateManager';
 import { dataIntegrityChecker } from '../DataIntegrityChecker';
 import { enhancedDuplicationHandler } from '../EnhancedDuplicationHandler';
 import { tr } from '../../utils/runtimeI18n';
@@ -217,27 +216,6 @@ export const recoveryHandlers = {
   },
 
   /**
-   * 处理通用恢复
-   */
-  async handleGenericRecovery(
-    error: ExceptionRuleException,
-  ): Promise<RecoveryResult> {
-    ignoreUnused(error);
-    try {
-      await ruleStateManager.syncRuleStates();
-      return {
-        success: true,
-        message: tr('已同步规则状态', 'Rule state synced'),
-      };
-    } catch {
-      return {
-        success: false,
-        message: tr('通用恢复失败', 'Generic recovery failed'),
-      };
-    }
-  },
-
-  /**
    * 处理验证修复
    */
   async handleValidationFix(
@@ -271,17 +249,6 @@ export const recoveryHandlers = {
     };
   },
 };
-
-/**
- * 从错误信息中提取规则 ID
- */
-export function extractRuleIdFromError(
-  error: ExceptionRuleException,
-): string | null {
-  const message = error.message;
-  const match = message.match(/(?:规则 ID|Rule ID)\s+([\w-]+)/i);
-  return match?.[1] ?? null;
-}
 
 /**
  * 从错误信息中提取规则名称
