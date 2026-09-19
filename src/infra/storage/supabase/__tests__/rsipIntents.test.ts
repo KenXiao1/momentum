@@ -1,15 +1,105 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  createRSIPNodesWithMeta,
   appendRSIPRunRecord,
   removeRSIPNodes,
   upsertRSIPLibraryEntry,
   upsertRSIPNode,
 } from '../rsipIntents';
+import { buildRSIPNodeRows } from '../rsipPayloadBuilder';
 import { createMockContext, createSupabaseError } from './testHelpers';
 
 describe('supabase/rsipIntents', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('uses stable RPC arguments on retry and maps the authoritative response', async () => {
+    const ctx = createMockContext();
+    const node = {
+      id: 'node-1',
+      title: 'Draft',
+      rule: 'Rule',
+      sortOrder: 0,
+      createdAt: new Date('2026-09-18'),
+    };
+    const meta = { lastAddedAt: node.createdAt, currentRunNumber: 1 };
+    ctx.mockClient.rpc
+      .mockResolvedValueOnce({ error: { message: 'response lost' } })
+      .mockResolvedValueOnce({
+        error: null,
+        data: {
+          nodes: [
+            {
+              ...buildRSIPNodeRows([node], 'test-user-123')[0],
+              title: 'Persisted',
+            },
+          ],
+          meta: {
+            user_id: 'test-user-123',
+            last_added_at: node.createdAt.toISOString(),
+            allow_multiple_per_day: true,
+            current_run_number: 7,
+          },
+        },
+      });
+    await expect(createRSIPNodesWithMeta(ctx, [node], meta)).rejects.toThrow(
+      'response lost',
+    );
+    const saved = await createRSIPNodesWithMeta(ctx, [node], meta);
+    expect(ctx.mockClient.rpc.mock.calls[1]).toEqual(
+      ctx.mockClient.rpc.mock.calls[0],
+    );
+    expect(ctx.mockClient.rpc).toHaveBeenCalledWith(
+      'create_rsip_nodes_with_meta',
+      expect.objectContaining({
+        p_intent_key: node.id,
+        p_nodes: [
+          expect.objectContaining({ created_at: node.createdAt.toISOString() }),
+        ],
+      }),
+    );
+    expect(saved.nodes[0]).toEqual(
+      expect.objectContaining({
+        title: 'Persisted',
+        createdAt: node.createdAt,
+      }),
+    );
+    expect(saved.meta).toEqual(
+      expect.objectContaining({
+        allowMultiplePerDay: true,
+        currentRunNumber: 7,
+        lastAddedAt: node.createdAt,
+      }),
+    );
+    expect(ctx.mockClient.from).not.toHaveBeenCalled();
+  });
+
+  it.each(['PGRST202', '42501'])(
+    'rejects %s without falling back to separate table writes',
+    async (code) => {
+      const ctx = createMockContext();
+      ctx.mockClient.rpc.mockResolvedValue({
+        error: { code, message: 'RPC unavailable' },
+      });
+      await expect(createRSIPNodesWithMeta(ctx, [], {})).rejects.toThrow(
+        'RPC unavailable',
+      );
+      expect(ctx.mockClient.from).not.toHaveBeenCalled();
+    },
+  );
+
+  it('rejects unauthenticated creation and malformed acknowledgements', async () => {
+    const ctx = createMockContext({ user: null });
+    await expect(createRSIPNodesWithMeta(ctx, [], {})).rejects.toThrow(
+      'Authentication required',
+    );
+    expect(ctx.mockClient.rpc).not.toHaveBeenCalled();
+    const authenticated = createMockContext();
+    authenticated.mockClient.rpc.mockResolvedValue({ error: null, data: null });
+    await expect(
+      createRSIPNodesWithMeta(authenticated, [], {}),
+    ).rejects.toThrow();
   });
 
   it('inserts or updates a single RSIP node with onConflict id', async () => {

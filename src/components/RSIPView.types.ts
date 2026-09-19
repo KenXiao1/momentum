@@ -36,7 +36,10 @@ export interface RSIPViewProps {
   chains?: Chain[];
   onBack: () => void;
   onSaveNodes: (nodes: RSIPNode[]) => void | Promise<void>;
-  onSaveMeta: (meta: RSIPMeta) => void | Promise<void>;
+  onCreateNodes: (nodes: RSIPNode[]) => Promise<void>;
+  onSaveMeta: (
+    meta: RSIPMeta | ((current: RSIPMeta) => RSIPMeta),
+  ) => void | Promise<void>;
   onSaveGroups?: (groups: RSIPNodeGroup[]) => void | Promise<void>;
   onSaveTaskLinks?: (links: RSIPTaskLink[]) => void | Promise<void>;
   onMarkExecuted?: (

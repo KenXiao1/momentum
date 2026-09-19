@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef } from 'react';
-import type { RSIPMeta, RSIPNode, RSIPNodeGroup } from '../../../types';
+import { useCallback, useRef } from 'react';
+import type { RSIPNode, RSIPNodeGroup } from '../../../types';
 import type { RSIPViewProps } from '../../RSIPView.types';
 import { toast } from '../../../utils/toast';
 import type {
@@ -11,7 +11,7 @@ interface UseRSIPViewCreationActionsParams {
   state: RSIPViewStateSlice;
   props: Pick<
     RSIPViewProps,
-    'onSaveMeta' | 'onSaveNodes' | 'onSaveGroups' | 'onCreateGroup'
+    'onSaveMeta' | 'onCreateNodes' | 'onSaveGroups' | 'onCreateGroup'
   >;
 }
 
@@ -31,7 +31,6 @@ export function useRSIPViewCreationActions({
   const {
     meta,
     groups,
-    nodes,
     canAddToday,
     splitTemplates,
     selectedParentId,
@@ -52,52 +51,47 @@ export function useRSIPViewCreationActions({
     setSplitItems,
     tr,
   } = state;
-  const { onSaveMeta, onSaveNodes, onSaveGroups, onCreateGroup } = props;
+  const { onSaveMeta, onCreateNodes, onSaveGroups, onCreateGroup } = props;
   const nodeCreationInFlightRef = useRef(false);
   const groupCreationInFlightRef = useRef(false);
-  const metaSaveQueueRef = useRef<Promise<void>>(Promise.resolve());
-  const latestMetaRef = useRef(meta);
-  useEffect(() => {
-    latestMetaRef.current = meta;
-  }, [meta]);
-
-  const enqueueMetaUpdate = useCallback(
-    (update: (current: RSIPMeta) => RSIPMeta) => {
-      const queuedSave = metaSaveQueueRef.current
-        .catch(() => undefined)
-        .then(async () => {
-          const previousMeta = latestMetaRef.current;
-          const nextMeta = update(previousMeta);
-          latestMetaRef.current = nextMeta;
-          try {
-            await onSaveMeta(nextMeta);
-          } catch (error) {
-            if (latestMetaRef.current === nextMeta) {
-              latestMetaRef.current = previousMeta;
-            }
-            throw error;
-          }
-        });
-      metaSaveQueueRef.current = queuedSave;
-      return queuedSave;
+  const pendingCreationRef = useRef<{ key: string; nodes: RSIPNode[] } | null>(
+    null,
+  );
+  const submitDraft = useCallback(
+    async (drafts: Omit<RSIPNode, 'id' | 'createdAt' | 'sortOrder'>[]) => {
+      const key = JSON.stringify(drafts);
+      if (pendingCreationRef.current?.key !== key) {
+        const createdAt = new Date();
+        pendingCreationRef.current = {
+          key,
+          nodes: drafts.map((draft, index) => ({
+            ...draft,
+            id: crypto.randomUUID(),
+            createdAt,
+            sortOrder: Math.floor(createdAt.getTime() / 1000) + index,
+          })),
+        };
+      }
+      await onCreateNodes(pendingCreationRef.current.nodes);
+      pendingCreationRef.current = null;
     },
-    [onSaveMeta],
+    [onCreateNodes],
   );
 
   const handleModeChange = useCallback(
-    (mode: 'free' | 'strict') => {
-      return enqueueMetaUpdate((current) => ({
+    async (mode: 'free' | 'strict') => {
+      return onSaveMeta((current) => ({
         ...current,
         allowMultiplePerDay: mode === 'free',
       }));
     },
-    [enqueueMetaUpdate],
+    [onSaveMeta],
   );
 
-  const handleRecordTreeOpened = useCallback(() => {
+  const handleRecordTreeOpened = useCallback(async () => {
     const now = new Date();
     const today = now.toDateString();
-    return enqueueMetaUpdate((current) => {
+    return onSaveMeta((current) => {
       const lastOpened = current.lastTreeOpenedAt
         ? new Date(current.lastTreeOpenedAt).toDateString()
         : null;
@@ -112,7 +106,7 @@ export function useRSIPViewCreationActions({
 
       return { ...current, lastTreeOpenedAt: now, treeOpenStreak };
     });
-  }, [enqueueMetaUpdate]);
+  }, [onSaveMeta]);
 
   const handleCreateGroup = useCallback(async () => {
     if (groupCreationInFlightRef.current) {
@@ -186,14 +180,11 @@ export function useRSIPViewCreationActions({
       return;
     }
 
-    const newNode: RSIPNode = {
-      id: crypto.randomUUID(),
+    const newNode = {
       parentId: selectedParentId || undefined,
       groupId: selectedGroupId || undefined,
       title: title.trim(),
       rule: rule.trim(),
-      sortOrder: Math.floor(Date.now() / 1000),
-      createdAt: new Date(),
       useTimer: createUseTimer,
       timerMinutes: createUseTimer ? createTimerMinutes : undefined,
       type: createType,
@@ -202,13 +193,9 @@ export function useRSIPViewCreationActions({
     };
     nodeCreationInFlightRef.current = true;
     try {
-      await onSaveNodes([...nodes, newNode]);
+      await submitDraft([newNode]);
       setTitle('');
       setRule('');
-      await enqueueMetaUpdate((current) => ({
-        ...current,
-        lastAddedAt: new Date(),
-      }));
     } finally {
       nodeCreationInFlightRef.current = false;
     }
@@ -219,9 +206,7 @@ export function useRSIPViewCreationActions({
     createTimerMinutes,
     createType,
     createUseTimer,
-    enqueueMetaUpdate,
-    nodes,
-    onSaveNodes,
+    submitDraft,
     rule,
     selectedGroupId,
     selectedParentId,
@@ -276,16 +261,11 @@ export function useRSIPViewCreationActions({
       return;
     }
 
-    const baseSort = Math.floor(Date.now() / 1000);
-    const createdAt = new Date();
-    const newNodes = validItems.map((item, index) => ({
-      id: crypto.randomUUID(),
+    const newNodes = validItems.map((item) => ({
       parentId: selectedParentId || undefined,
       groupId: selectedGroupId || undefined,
       title: item.title.trim(),
       rule: item.rule.trim(),
-      sortOrder: baseSort + index,
-      createdAt,
       type: createType,
       emoji: createEmoji,
       isPassive: item.isPassive,
@@ -294,13 +274,9 @@ export function useRSIPViewCreationActions({
 
     nodeCreationInFlightRef.current = true;
     try {
-      await onSaveNodes([...nodes, ...newNodes]);
+      await submitDraft(newNodes);
       setSplitItems([]);
       setSplitGoal('');
-      await enqueueMetaUpdate((current) => ({
-        ...current,
-        lastAddedAt: new Date(),
-      }));
     } finally {
       nodeCreationInFlightRef.current = false;
     }
@@ -310,9 +286,7 @@ export function useRSIPViewCreationActions({
     tr,
     createEmoji,
     createType,
-    enqueueMetaUpdate,
-    nodes,
-    onSaveNodes,
+    submitDraft,
     selectedGroupId,
     selectedParentId,
     setSplitGoal,

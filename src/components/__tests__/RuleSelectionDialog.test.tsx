@@ -15,39 +15,6 @@ vi.mock('../../services/ExceptionRuleManager', () => ({
 }));
 
 // Mock the utility modules
-vi.mock('../../utils/ruleSearchOptimizer', () => {
-  class RuleSearchOptimizer {
-    updateIndex = vi.fn();
-    searchRulesDebounced = vi.fn(
-      (
-        rules: ExceptionRule[],
-        query: string,
-        callback: (results: unknown) => void,
-      ) => {
-        const normalizedQuery = query.toLowerCase();
-        const results = rules
-          .filter((rule) => rule.name.toLowerCase().includes(normalizedQuery))
-          .map((rule) => ({
-            rule,
-            score: 100,
-            matchType: 'contains',
-            highlightRanges: [],
-          }));
-        callback(results);
-      },
-    );
-    detectDuplicates = vi.fn((name: string, rules: ExceptionRule[]) => {
-      const exactMatches = rules.filter((rule) => rule.name === name);
-      return {
-        hasExactMatch: exactMatches.length > 0,
-        exactMatches,
-        similarRules: [],
-      };
-    });
-  }
-
-  return { RuleSearchOptimizer };
-});
 
 vi.mock('../../utils/LayoutStabilityMonitor', () => {
   const startMonitoring = vi.fn();

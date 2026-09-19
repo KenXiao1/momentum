@@ -85,6 +85,7 @@ export function useAppShellViewModels(
     taskLinks: state.rsipTaskLinks,
     chains: state.chains,
     onBack: handleBackToDashboard,
+    createNodes: domains.createNodes,
     saveNodes: domains.saveNodes,
     saveMeta: domains.saveMeta,
     saveGroups: domains.saveGroups,

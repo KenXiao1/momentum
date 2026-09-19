@@ -177,6 +177,7 @@ export function AppShellView({
                 taskLinks={rsip.taskLinks}
                 chains={rsip.chains}
                 onBack={rsip.onBack}
+                onCreateNodes={rsip.createNodes}
                 onSaveNodes={rsip.saveNodes}
                 onSaveMeta={rsip.saveMeta}
                 onSaveGroups={rsip.saveGroups}

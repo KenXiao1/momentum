@@ -10,24 +10,14 @@ export function useRuleSearchResults(rules: ExceptionRule[], query: string) {
   const [results, setResults] = useState<SearchResult[]>([]);
 
   useEffect(() => {
-    if (!rules.length) {
-      setResults([]);
-    } else if (query.trim()) {
-      optimizer.searchRulesDebounced(rules, query, setResults);
-    } else {
-      setResults(
-        [...rules]
-          .sort(
-            (left, right) => (right.usageCount ?? 0) - (left.usageCount ?? 0),
-          )
-          .map((rule) => ({
-            rule,
-            score: rule.usageCount ?? 0,
-            matchType: 'exact' as const,
-            highlightRanges: [],
-          })),
-      );
+    if (!rules.length || !query.trim()) {
+      setResults(optimizer.searchRules(rules, ''));
+      return;
     }
+    const timer = setTimeout(() => {
+      setResults(optimizer.searchRules(rules, query));
+    }, 200);
+    return () => clearTimeout(timer);
   }, [optimizer, query, rules]);
 
   return {

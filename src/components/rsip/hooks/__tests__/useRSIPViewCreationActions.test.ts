@@ -4,6 +4,11 @@ import type { RSIPViewProps } from '../../../RSIPView.types';
 import type { RSIPNode } from '../../../../types';
 import type { RSIPViewStateSlice } from '../useRSIPViewModel.types';
 import { useRSIPViewCreationActions } from '../useRSIPViewCreationActions';
+import { useRsipDomain } from '../../../../hooks/domains/useRsipDomain';
+import {
+  createAppState,
+  createLocalStorageMock,
+} from '../../../../test/factories';
 import { createGroup, createNode, createState } from './testHelpers';
 
 const NOW = new Date('2026-07-14T10:20:30.000Z');
@@ -12,12 +17,12 @@ const UUID_2 = '00000000-0000-4000-8000-000000000002';
 
 type CreationProps = Pick<
   RSIPViewProps,
-  'onSaveMeta' | 'onSaveNodes' | 'onSaveGroups' | 'onCreateGroup'
+  'onSaveMeta' | 'onCreateNodes' | 'onSaveGroups' | 'onCreateGroup'
 >;
 
 function createProps(overrides: Partial<CreationProps> = {}): CreationProps {
   return {
-    onSaveNodes: vi.fn(),
+    onCreateNodes: vi.fn(),
     onSaveMeta: vi.fn(),
     ...overrides,
   };
@@ -28,7 +33,26 @@ function renderCreationActions(
   propsOverrides: Partial<CreationProps> = {},
 ) {
   const state = createState(stateOverrides);
-  const props = createProps(propsOverrides);
+  let appState = createAppState({
+    rsipMeta: state.meta,
+    rsipNodes: state.nodes,
+  });
+  const storage = createLocalStorageMock({
+    ...(propsOverrides.onSaveMeta
+      ? { saveRSIPMeta: propsOverrides.onSaveMeta }
+      : {}),
+  });
+  const domain = useRsipDomain({
+    storage,
+    getState: () => appState,
+    setState: (update) => {
+      appState = typeof update === 'function' ? update(appState) : update;
+    },
+  });
+  const props = createProps({
+    ...propsOverrides,
+    onSaveMeta: vi.fn(domain.saveMeta),
+  });
   const hook = renderHook(() => useRSIPViewCreationActions({ state, props }));
 
   return { ...hook, props, state };
@@ -207,7 +231,7 @@ describe('useRSIPViewCreationActions', () => {
       overrides: { canAddToday: true, rule: '\t' },
     },
   ])('does not create a single node when $name', async ({ overrides }) => {
-    const onSaveNodes = vi.fn();
+    const onCreateNodes = vi.fn();
     const onSaveMeta = vi.fn();
     const setTitle = vi.fn();
     const setRule = vi.fn();
@@ -219,12 +243,12 @@ describe('useRSIPViewCreationActions', () => {
         setRule,
         ...overrides,
       },
-      { onSaveNodes, onSaveMeta },
+      { onCreateNodes, onSaveMeta },
     );
 
     await act(() => result.current.handleAddSingle());
 
-    expect(onSaveNodes).not.toHaveBeenCalled();
+    expect(onCreateNodes).not.toHaveBeenCalled();
     expect(onSaveMeta).not.toHaveBeenCalled();
     expect(setTitle).not.toHaveBeenCalled();
     expect(setRule).not.toHaveBeenCalled();
@@ -233,7 +257,7 @@ describe('useRSIPViewCreationActions', () => {
   it('creates one trimmed node with its hierarchy, timer, type, and passive fields', async () => {
     vi.spyOn(crypto, 'randomUUID').mockReturnValue(UUID_1);
     const existing = createNode({ id: 'existing' });
-    const onSaveNodes = vi.fn(async () => undefined);
+    const onCreateNodes = vi.fn(async () => undefined);
     const onSaveMeta = vi.fn(async () => undefined);
     const setTitle = vi.fn();
     const setRule = vi.fn();
@@ -253,7 +277,7 @@ describe('useRSIPViewCreationActions', () => {
         setTitle,
         setRule,
       },
-      { onSaveNodes, onSaveMeta },
+      { onCreateNodes, onSaveMeta },
     );
 
     await act(() => result.current.handleAddSingle());
@@ -272,25 +296,22 @@ describe('useRSIPViewCreationActions', () => {
       emoji: '🌅',
       isPassive: true,
     };
-    expect(onSaveNodes).toHaveBeenCalledWith([existing, expectedNode]);
-    expect(onSaveMeta).toHaveBeenCalledWith({
-      allowMultiplePerDay: true,
-      lastAddedAt: NOW,
-    });
+    expect(onCreateNodes).toHaveBeenCalledWith([expectedNode]);
+    expect(onSaveMeta).not.toHaveBeenCalled();
     expect(setTitle).toHaveBeenCalledWith('');
     expect(setRule).toHaveBeenCalledWith('');
   });
 
-  it('waits for the node-save callback before recording metadata or clearing the form', async () => {
+  it('waits for the node-save callback before clearing the form', async () => {
     vi.spyOn(crypto, 'randomUUID').mockReturnValue(UUID_1);
     const deferred = createDeferred();
-    const onSaveNodes = vi.fn(() => deferred.promise);
+    const onCreateNodes = vi.fn(() => deferred.promise);
     const onSaveMeta = vi.fn(async () => undefined);
     const setTitle = vi.fn();
     const setRule = vi.fn();
     const { result } = renderCreationActions(
       { title: 'Policy', rule: 'Rule', setTitle, setRule },
-      { onSaveNodes, onSaveMeta },
+      { onCreateNodes, onSaveMeta },
     );
 
     let submission!: Promise<void>;
@@ -298,7 +319,7 @@ describe('useRSIPViewCreationActions', () => {
       submission = result.current.handleAddSingle();
     });
 
-    expect(onSaveNodes).toHaveBeenCalledOnce();
+    expect(onCreateNodes).toHaveBeenCalledOnce();
     expect(onSaveMeta).not.toHaveBeenCalled();
     expect(setTitle).not.toHaveBeenCalled();
 
@@ -307,19 +328,19 @@ describe('useRSIPViewCreationActions', () => {
       await submission;
     });
 
-    expect(onSaveMeta).toHaveBeenCalledOnce();
+    expect(onSaveMeta).not.toHaveBeenCalled();
     expect(setTitle).toHaveBeenCalledWith('');
     expect(setRule).toHaveBeenCalledWith('');
   });
 
-  it('coalesces repeated single-node submissions while the full-state save is pending', async () => {
+  it('coalesces repeated single-node submissions while the atomic save is pending', async () => {
     vi.spyOn(crypto, 'randomUUID').mockReturnValue(UUID_1);
     const deferred = createDeferred();
-    const onSaveNodes = vi.fn(() => deferred.promise);
+    const onCreateNodes = vi.fn(() => deferred.promise);
     const onSaveMeta = vi.fn(async () => undefined);
     const { result } = renderCreationActions(
       { title: 'Policy', rule: 'Rule' },
-      { onSaveNodes, onSaveMeta },
+      { onCreateNodes, onSaveMeta },
     );
 
     let firstSubmission!: Promise<void>;
@@ -330,7 +351,7 @@ describe('useRSIPViewCreationActions', () => {
     });
 
     await duplicateSubmission;
-    expect(onSaveNodes).toHaveBeenCalledOnce();
+    expect(onCreateNodes).toHaveBeenCalledOnce();
     expect(onSaveMeta).not.toHaveBeenCalled();
 
     await act(async () => {
@@ -338,48 +359,7 @@ describe('useRSIPViewCreationActions', () => {
       await firstSubmission;
     });
 
-    expect(onSaveMeta).toHaveBeenCalledOnce();
-  });
-
-  it('merges a mode change made while node persistence is pending into the later metadata update', async () => {
-    vi.spyOn(crypto, 'randomUUID').mockReturnValue(UUID_1);
-    const nodeSave = createDeferred();
-    const onSaveNodes = vi.fn(() => nodeSave.promise);
-    const onSaveMeta = vi.fn(async () => undefined);
-    const { result } = renderCreationActions(
-      {
-        meta: { treeOpenStreak: 3, allowMultiplePerDay: false },
-        title: 'Policy',
-        rule: 'Rule',
-      },
-      { onSaveNodes, onSaveMeta },
-    );
-
-    let creation!: Promise<void>;
-    let modeChange!: Promise<void>;
-    act(() => {
-      creation = result.current.handleAddSingle();
-      modeChange = result.current.handleModeChange('free');
-    });
-
-    await act(async () => {
-      await modeChange;
-    });
-    expect(onSaveMeta).toHaveBeenCalledWith({
-      treeOpenStreak: 3,
-      allowMultiplePerDay: true,
-    });
-
-    await act(async () => {
-      nodeSave.resolve();
-      await creation;
-    });
-
-    expect(onSaveMeta).toHaveBeenNthCalledWith(2, {
-      treeOpenStreak: 3,
-      allowMultiplePerDay: true,
-      lastAddedAt: NOW,
-    });
+    expect(onSaveMeta).not.toHaveBeenCalled();
   });
 
   it('surfaces a node-save failure without falsely marking or clearing the draft', async () => {
@@ -390,7 +370,7 @@ describe('useRSIPViewCreationActions', () => {
     const { result } = renderCreationActions(
       { title: 'Policy', rule: 'Rule', setTitle, setRule },
       {
-        onSaveNodes: vi.fn(() => Promise.reject(failure)),
+        onCreateNodes: vi.fn(() => Promise.reject(failure)),
         onSaveMeta,
       },
     );
@@ -404,23 +384,6 @@ describe('useRSIPViewCreationActions', () => {
     expect(onSaveMeta).not.toHaveBeenCalled();
     expect(setTitle).not.toHaveBeenCalled();
     expect(setRule).not.toHaveBeenCalled();
-  });
-
-  it('clears a committed node draft even when the follow-up metadata save fails', async () => {
-    const failure = new Error('meta save failed');
-    const setTitle = vi.fn();
-    const setRule = vi.fn();
-    const { result } = renderCreationActions(
-      { title: 'Policy', rule: 'Rule', setTitle, setRule },
-      {
-        onSaveNodes: vi.fn(async () => undefined),
-        onSaveMeta: vi.fn(() => Promise.reject(failure)),
-      },
-    );
-
-    await expect(result.current.handleAddSingle()).rejects.toBe(failure);
-    expect(setTitle).toHaveBeenCalledWith('');
-    expect(setRule).toHaveBeenCalledWith('');
   });
 
   it('applies a split template with fresh row identities and leaves its source unchanged', () => {
@@ -508,17 +471,17 @@ describe('useRSIPViewCreationActions', () => {
       },
     },
   ])('does not submit a split when $name', async ({ state }) => {
-    const onSaveNodes = vi.fn();
+    const onCreateNodes = vi.fn();
     const onSaveMeta = vi.fn();
     const setSplitItems = vi.fn();
     const { result } = renderCreationActions(
       { ...state, setSplitItems },
-      { onSaveNodes, onSaveMeta },
+      { onCreateNodes, onSaveMeta },
     );
 
     await act(() => result.current.handleSubmitSplit());
 
-    expect(onSaveNodes).not.toHaveBeenCalled();
+    expect(onCreateNodes).not.toHaveBeenCalled();
     expect(onSaveMeta).not.toHaveBeenCalled();
     expect(setSplitItems).not.toHaveBeenCalled();
   });
@@ -528,7 +491,7 @@ describe('useRSIPViewCreationActions', () => {
       .mockReturnValueOnce(UUID_1)
       .mockReturnValueOnce(UUID_2);
     const existing = createNode({ id: 'existing' });
-    const onSaveNodes = vi.fn(async () => undefined);
+    const onCreateNodes = vi.fn(async () => undefined);
     const onSaveMeta = vi.fn(async () => undefined);
     const setSplitItems = vi.fn();
     const setSplitGoal = vi.fn();
@@ -559,14 +522,13 @@ describe('useRSIPViewCreationActions', () => {
         setSplitItems,
         setSplitGoal,
       },
-      { onSaveNodes, onSaveMeta },
+      { onCreateNodes, onSaveMeta },
     );
 
     await act(() => result.current.handleSubmitSplit());
 
     const baseSort = Math.floor(NOW.getTime() / 1000);
-    expect(onSaveNodes).toHaveBeenCalledWith([
-      existing,
+    expect(onCreateNodes).toHaveBeenCalledWith([
       {
         id: UUID_1,
         parentId: 'parent-1',
@@ -594,10 +556,7 @@ describe('useRSIPViewCreationActions', () => {
         splitFromGoal: 'Better sleep',
       },
     ]);
-    expect(onSaveMeta).toHaveBeenCalledWith({
-      allowMultiplePerDay: true,
-      lastAddedAt: NOW,
-    });
+    expect(onSaveMeta).not.toHaveBeenCalled();
     expect(setSplitItems).toHaveBeenCalledWith([]);
     expect(setSplitGoal).toHaveBeenCalledWith('');
   });
@@ -605,7 +564,7 @@ describe('useRSIPViewCreationActions', () => {
   it('prevents duplicate split submissions until the first save has settled', async () => {
     vi.spyOn(crypto, 'randomUUID').mockReturnValue(UUID_1);
     const deferred = createDeferred();
-    const onSaveNodes = vi.fn(() => deferred.promise);
+    const onCreateNodes = vi.fn(() => deferred.promise);
     const onSaveMeta = vi.fn(async () => undefined);
     const { result } = renderCreationActions(
       {
@@ -613,7 +572,7 @@ describe('useRSIPViewCreationActions', () => {
           { id: 'row', title: 'Policy', rule: 'Rule', isPassive: false },
         ],
       },
-      { onSaveNodes, onSaveMeta },
+      { onCreateNodes, onSaveMeta },
     );
 
     let firstSubmission!: Promise<void>;
@@ -624,17 +583,17 @@ describe('useRSIPViewCreationActions', () => {
     });
 
     await duplicateSubmission;
-    expect(onSaveNodes).toHaveBeenCalledOnce();
+    expect(onCreateNodes).toHaveBeenCalledOnce();
 
     await act(async () => {
       deferred.resolve();
       await firstSubmission;
     });
 
-    expect(onSaveMeta).toHaveBeenCalledOnce();
+    expect(onSaveMeta).not.toHaveBeenCalled();
   });
 
-  it('clears committed split rows even when the follow-up metadata save fails', async () => {
+  it('keeps split drafts when atomic persistence fails', async () => {
     const failure = new Error('meta save failed');
     const setSplitItems = vi.fn();
     const setSplitGoal = vi.fn();
@@ -648,14 +607,13 @@ describe('useRSIPViewCreationActions', () => {
         setSplitGoal,
       },
       {
-        onSaveNodes: vi.fn(async () => undefined),
-        onSaveMeta: vi.fn(() => Promise.reject(failure)),
+        onCreateNodes: vi.fn(() => Promise.reject(failure)),
       },
     );
 
     await expect(result.current.handleSubmitSplit()).rejects.toBe(failure);
-    expect(setSplitItems).toHaveBeenCalledWith([]);
-    expect(setSplitGoal).toHaveBeenCalledWith('');
+    expect(setSplitItems).not.toHaveBeenCalled();
+    expect(setSplitGoal).not.toHaveBeenCalled();
   });
 
   it('delegates group creation with normalized input and selects the saved group', async () => {
@@ -772,7 +730,7 @@ describe('useRSIPViewCreationActions', () => {
       ],
     });
     await act(() => result.current.handleSubmitSplit());
-    expect(props.onSaveNodes).not.toHaveBeenCalled();
+    expect(props.onCreateNodes).not.toHaveBeenCalled();
     expect(props.onSaveMeta).not.toHaveBeenCalled();
   });
 });

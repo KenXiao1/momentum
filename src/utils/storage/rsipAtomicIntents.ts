@@ -156,7 +156,7 @@ function mergeArchivedEntries(
 export function createRSIPNodesWithMeta(
   newNodes: RSIPNode[],
   nextMeta: RSIPMeta,
-): void {
+): { nodes: RSIPNode[]; meta: RSIPMeta } {
   assertUniqueNodeIds(newNodes);
   const currentNodes = getRSIPNodes();
   const currentIds = new Set(currentNodes.map((node) => node.id));
@@ -173,6 +173,11 @@ export function createRSIPNodesWithMeta(
       ? serializeRecord(JSON.parse(previousMetaRaw))
       : null,
   });
+  const requestedIds = new Set(newNodes.map((node) => node.id));
+  return {
+    nodes: getRSIPNodes().filter((node) => requestedIds.has(node.id)),
+    meta: getRSIPMeta(),
+  };
 }
 
 export function archiveRSIPNodesAndRemove(

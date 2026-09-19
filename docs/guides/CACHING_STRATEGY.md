@@ -47,6 +47,11 @@ creation warnings and health checks call `validateRulesIntegrity.ts` directly.
 Platform support is read from adapters on demand, without a capability snapshot
 cache. Native notification permission handling remains in the native adapter.
 
+Search debouncing belongs to `useRuleSearchResults`: its effect cancels pending
+work when query/rules change or the component unmounts. Empty queries reuse the
+optimizer's usage-order sorting. The optimizer owns only search computation and
+reuse, with no callback timer that can restore an outdated list.
+
 ## Persistence and compatibility
 
 Local preferences, timer snapshots, pet state, and RSIP journals are persistent

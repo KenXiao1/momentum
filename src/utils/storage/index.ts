@@ -1,3 +1,4 @@
+import { createRSIPNodesWithMeta } from './rsipAtomicIntents';
 import {
   cleanupExpiredDeletedChains,
   getActiveChains,
@@ -76,6 +77,7 @@ export const storage = {
   appendCompletionHistory,
 
   // RSIP nodes
+  createRSIPNodesWithMeta,
   getRSIPNodes,
   saveRSIPNodes,
   upsertRSIPNode,

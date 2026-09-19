@@ -94,9 +94,6 @@ export class ExceptionRuleManager {
         }
       }
 
-      ruleExportImportService.setRuleUpdater(ruleMaintenanceService);
-      ruleExportImportService.setRuleCreator(ruleCreator);
-
       this.initialized = true;
       logger.info('EXCEPTION_RULE_MANAGER', 'Initialization completed');
     } catch (error) {

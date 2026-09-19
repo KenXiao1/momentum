@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { RSIPViewProps } from '../../../components/RSIPView.types';
 import type {
   AppShellAppViewModel,
   AppShellDashboardViewModel,
@@ -26,7 +27,11 @@ vi.mock('../../../components/Dashboard', () => ({
 }));
 
 vi.mock('../../../components/RSIPView', () => ({
-  RSIPView: () => <div data-testid="rsip-view">rsip</div>,
+  RSIPView: ({ onCreateNodes }: RSIPViewProps) => (
+    <button data-testid="rsip-view" onClick={() => onCreateNodes([])}>
+      rsip
+    </button>
+  ),
 }));
 
 vi.mock('../../../components/ChainEditor', () => ({
@@ -147,6 +152,7 @@ function createProps(overrides: AppShellViewOverrides = {}): AppShellViewProps {
     taskLinks: [],
     chains: dashboard.chains,
     onBack: dashboard.handleBackToDashboard,
+    createNodes: vi.fn(),
     saveNodes: vi.fn(),
     saveMeta: vi.fn(),
     saveGroups: vi.fn(),
@@ -301,6 +307,14 @@ describe('AppShellView', () => {
     );
     expect(await screen.findByTestId('taskgroup-editor')).toBeInTheDocument();
     expect(screen.queryByTestId('pet-widget')).not.toBeInTheDocument();
+  });
+
+  it('wires RSIP form creation to the dedicated domain action', async () => {
+    const props = createProps({ app: { currentView: 'rsip' } });
+    render(<AppShellView {...props} />);
+    fireEvent.click(await screen.findByTestId('rsip-view'));
+    expect(props.rsip.createNodes).toHaveBeenCalledWith([]);
+    expect(props.rsip.saveNodes).not.toHaveBeenCalled();
   });
 
   it('renders focus/detail/group/rsip views when required state is available', async () => {

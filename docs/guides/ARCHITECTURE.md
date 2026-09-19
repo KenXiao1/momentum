@@ -51,6 +51,17 @@ passes through every layer. Contract changes affect both adapters and their
 tests. Supabase schema/type changes are covered by the
 [migration guide](apply-migration.md).
 
+Single-policy and split-template submissions use `createNodes` through the public
+`createRSIPNodesWithMeta` port. The domain queues both affected slices and publishes
+persisted nodes and metadata in one state update. Local storage uses the existing
+recovery journal; Supabase uses `create_rsip_nodes_with_meta` and its returned rows.
+An unchanged failed form keeps its node IDs for retry. Metadata updater functions
+are evaluated inside the domain queue, so mode changes retain committed creation
+metadata without a second UI metadata snapshot or queue.
+
+This contract covers form creation. Library restoration, bulk replacement, and
+collapse/archive orchestration have their own existing persistence paths.
+
 `StorageContext.tsx` selects and wires the adapter. Tauri starts in local mode
 unless a valid cloud preference was saved. Web defaults to cloud when Supabase
 is configured. Switching modes selects a different data source and does not

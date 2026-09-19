@@ -52,6 +52,7 @@ const handlers = vi.hoisted(() => ({
   handleRestoreChains: vi.fn(),
   handlePermanentDeleteChains: vi.fn(),
   openRSIP: vi.fn(),
+  createRSIPNodes: vi.fn(),
   saveRSIPNodes: vi.fn(),
   saveRSIPMeta: vi.fn(),
   saveRSIPGroups: vi.fn(),
@@ -144,6 +145,7 @@ vi.mock('../AppShellView', () => ({
       <div data-testid="initialized">{String(props.app.isInitialized)}</div>
       <div data-testid="loading">{String(props.app.isLoadingData)}</div>
       <div data-testid="view">{props.app.currentView}</div>
+      <button onClick={() => props.rsip.createNodes([])}>create-policy</button>
       <div data-testid="chain-context">
         {JSON.stringify({
           editing: props.dashboard.editingChain?.name ?? null,
@@ -228,6 +230,7 @@ describe('AppShellContainer', () => {
     });
     useRsipDomainMock.mockReturnValue({
       openRSIP: handlers.openRSIP,
+      createNodes: handlers.createRSIPNodes,
       saveNodes: handlers.saveRSIPNodes,
       saveMeta: handlers.saveRSIPMeta,
       saveGroups: handlers.saveRSIPGroups,
@@ -408,6 +411,13 @@ describe('AppShellContainer', () => {
       JSON.parse(screen.getByTestId('chain-context').textContent!).betting
         .isOpen,
     ).toBe(false);
+  });
+
+  it('passes the dedicated atomic creation action to the RSIP view model', () => {
+    render(<AppShellContainer />);
+    fireEvent.click(screen.getByText('create-policy'));
+    expect(handlers.createRSIPNodes).toHaveBeenCalledWith([]);
+    expect(handlers.saveRSIPNodes).not.toHaveBeenCalled();
   });
 
   it('connects the session callback to RSIP task integration', async () => {

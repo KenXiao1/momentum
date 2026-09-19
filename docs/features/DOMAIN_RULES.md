@@ -374,11 +374,11 @@ async initialize(): Promise<void> {
     await dataIntegrityChecker.autoFixIssues(fixable);
   }
 
-  // 3. 配置导入流程使用的创建和更新服务
-  ruleExportImportService.setRuleUpdater(ruleMaintenanceService);
-  ruleExportImportService.setRuleCreator(ruleCreator);
 }
 ```
+
+导入服务直接使用固定的 RuleCreator 和 RuleMaintenanceService，不依赖初始化时
+注入 setter。冷启动直接导入也支持 updateExisting，并走同一套创建、更新校验。
 
 ---
 

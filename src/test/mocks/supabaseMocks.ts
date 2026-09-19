@@ -4,6 +4,8 @@ export const TEST_SUPABASE_URL = 'https://test.supabase.co';
 export const TEST_SUPABASE_USER_ID = 'test-user-123';
 
 type TableName =
+  | 'rsip_nodes'
+  | 'rsip_meta'
   | 'rsip_groups'
   | 'chains'
   | 'scheduled_sessions'
@@ -27,6 +29,8 @@ const mockUser = {
 };
 
 const tables: Record<TableName, Map<string, JsonRow>> = {
+  rsip_nodes: new Map(),
+  rsip_meta: new Map(),
   rsip_groups: new Map(),
   chains: new Map(),
   scheduled_sessions: new Map(),
@@ -35,6 +39,12 @@ const tables: Record<TableName, Map<string, JsonRow>> = {
 };
 
 let authenticated = false;
+const rsipCreationIntents = new Map<string, string[]>();
+let loseRSIPCreationResponse = false;
+
+export function failNextRSIPCreationResponse(): void {
+  loseRSIPCreationResponse = true;
+}
 let generatedId = 0;
 let pendingFailure:
   | {
@@ -45,6 +55,8 @@ let pendingFailure:
   | undefined;
 
 export function resetSupabaseMockState(): void {
+  rsipCreationIntents.clear();
+  loseRSIPCreationResponse = false;
   for (const table of Object.values(tables)) table.clear();
   authenticated = false;
   generatedId = 0;
@@ -83,10 +95,12 @@ function asRows(body: unknown): JsonRow[] {
 }
 
 function tableKey(table: TableName, row: JsonRow): string {
+  if (table === 'rsip_meta') return String(row.user_id);
   if (
     table === 'chains' ||
     table === 'active_sessions' ||
-    table === 'rsip_groups'
+    table === 'rsip_groups' ||
+    table === 'rsip_nodes'
   ) {
     return String(row.id ?? `generated-${generatedId++}`);
   }
@@ -212,6 +226,53 @@ function authResponse() {
 }
 
 export const supabaseMockHandlers = [
+  http.post(
+    `${TEST_SUPABASE_URL}/rest/v1/rpc/create_rsip_nodes_with_meta`,
+    async ({ request }) => {
+      if (!authenticated)
+        return HttpResponse.json(
+          { message: 'Authentication required' },
+          { status: 401 },
+        );
+      const { p_intent_key, p_nodes, p_meta } = (await request.json()) as {
+        p_intent_key: string;
+        p_nodes: JsonRow[];
+        p_meta: JsonRow;
+      };
+      if (!p_intent_key || !Array.isArray(p_nodes) || !p_meta) {
+        return HttpResponse.json(
+          { message: 'Invalid named RPC arguments' },
+          { status: 400 },
+        );
+      }
+      if (!rsipCreationIntents.has(p_intent_key)) {
+        for (const node of p_nodes) {
+          if (!tables.rsip_nodes.has(String(node.id)))
+            tables.rsip_nodes.set(String(node.id), node);
+        }
+        tables.rsip_meta.set(TEST_SUPABASE_USER_ID, {
+          ...p_meta,
+          ...tables.rsip_meta.get(TEST_SUPABASE_USER_ID),
+          user_id: TEST_SUPABASE_USER_ID,
+          last_added_at: p_meta.last_added_at,
+        });
+        rsipCreationIntents.set(
+          p_intent_key,
+          p_nodes.map((node) => String(node.id)),
+        );
+      }
+      if (loseRSIPCreationResponse) {
+        loseRSIPCreationResponse = false;
+        return HttpResponse.error();
+      }
+      return HttpResponse.json({
+        nodes: rsipCreationIntents
+          .get(p_intent_key)
+          ?.flatMap((id) => tables.rsip_nodes.get(id) ?? []),
+        meta: tables.rsip_meta.get(TEST_SUPABASE_USER_ID),
+      });
+    },
+  ),
   http.get(`${TEST_SUPABASE_URL}/auth/v1/user`, () => {
     if (!authenticated) {
       return HttpResponse.json(
@@ -234,6 +295,8 @@ export const supabaseMockHandlers = [
     return new HttpResponse(null, { status: 204 });
   }),
   ...createTableHandlers('rsip_groups'),
+  ...createTableHandlers('rsip_nodes'),
+  ...createTableHandlers('rsip_meta'),
   ...createTableHandlers('chains'),
   ...createTableHandlers('scheduled_sessions'),
   ...createTableHandlers('active_sessions'),

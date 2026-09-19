@@ -62,6 +62,11 @@ export interface HistoryStore {
 export interface RsipStore {
   getRSIPNodes(): Promise<RSIPNode[]>;
   saveRSIPNodes(nodes: RSIPNode[]): Promise<void>;
+  // Returns the persisted affected nodes and current metadata, including on retry.
+  createRSIPNodesWithMeta(
+    nodes: RSIPNode[],
+    meta: RSIPMeta,
+  ): Promise<{ nodes: RSIPNode[]; meta: RSIPMeta }>;
   upsertRSIPNode(node: RSIPNode): Promise<void>;
   removeRSIPNodes(nodeIds: string[]): Promise<void>;
   getRSIPMeta(): Promise<RSIPMeta>;

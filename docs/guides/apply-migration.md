@@ -36,6 +36,14 @@ explicitly changes the supported schema range. Test a migrated schema and the
 affected compatibility path. MSW tests do not execute PostgreSQL or prove RLS;
 SQL changes also need database-level validation against the intended test database.
 
+RSIP form creation requires the existing
+`20260716000000_add_atomic_rsip_intents.sql` migration. Its RPC takes
+`p_intent_key`, `p_nodes`, and `p_meta` and returns the affected persisted nodes
+and current metadata. The client keeps the submitted node IDs when retrying an
+ambiguous response. If the RPC is absent, creation rejects without separate table
+writes; those cannot provide the same atomic contract. Existing bulk-save and
+missing-column compatibility paths remain available for their original callers.
+
 ## Applying migrations
 
 Use the Supabase CLI with the intended project or local database. The

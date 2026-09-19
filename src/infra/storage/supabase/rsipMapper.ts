@@ -7,7 +7,8 @@ import type {
   RSIPRunRecord,
   RSIPTaskLink,
 } from '../../../types';
-import type { Database } from '../../../lib/database.types';
+import type { z } from 'zod';
+import type { rsipNodeRowSchema, rsipMetaRowSchema } from './rsipRowSchema';
 import {
   decodeRSIPExecutionRecord,
   decodeRSIPLibraryEntry,
@@ -18,8 +19,8 @@ import {
   decodeRSIPTaskLink,
 } from '../../../serialization';
 
-type RSIPNodeRow = Database['public']['Tables']['rsip_nodes']['Row'];
-type RSIPMetaRow = Database['public']['Tables']['rsip_meta']['Row'];
+type RSIPNodeRow = z.infer<typeof rsipNodeRowSchema>;
+type RSIPMetaRow = z.infer<typeof rsipMetaRowSchema>;
 
 export function mapRSIPNodeRow(row: RSIPNodeRow): RSIPNode {
   return decodeRSIPNode({

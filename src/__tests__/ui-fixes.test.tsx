@@ -23,20 +23,6 @@ vi.mock('../services/ExceptionRuleManager', () => ({
   },
 }));
 
-vi.mock('../utils/ruleSearchOptimizer', () => {
-  class RuleSearchOptimizer {
-    updateIndex = vi.fn();
-    searchRulesDebounced = vi.fn((_rules, _query, callback) => callback([]));
-    detectDuplicates = vi.fn(() => ({
-      hasExactMatch: false,
-      exactMatches: [],
-      similarRules: [],
-    }));
-  }
-
-  return { RuleSearchOptimizer };
-});
-
 vi.mock('../utils/LayoutStabilityMonitor', async () => {
   const actual = await vi.importActual<any>('../utils/LayoutStabilityMonitor');
   return {

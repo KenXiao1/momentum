@@ -10,6 +10,8 @@ import {
   ExceptionRuleException,
 } from '../../types';
 import { exceptionRuleStorage } from '../ExceptionRuleStorage';
+import { ruleCreator } from './RuleCreator';
+import { ruleMaintenanceService } from './RuleMaintenanceService';
 import { findExactDuplicateRules } from '../duplication/duplicationDetection';
 
 interface ImportOptions {
@@ -44,54 +46,6 @@ interface RuleImportData {
  * 单一职责：处理规则的导入和导出
  */
 class RuleExportImportService {
-  private ruleUpdater: {
-    updateRule: (
-      id: string,
-      updates: Partial<Pick<ExceptionRule, 'name' | 'type' | 'description'>>,
-    ) => Promise<{ rule: ExceptionRule; warnings: string[] }>;
-  } | null = null;
-
-  private ruleCreator: {
-    createRule: (
-      name: string,
-      type: ExceptionRule['type'],
-      description?: string,
-    ) => Promise<{ rule: ExceptionRule; warnings: string[] }>;
-  } | null = null;
-
-  /**
-   * 设置规则更新器（依赖注入）
-   */
-  setRuleUpdater(updater: typeof this.ruleUpdater): void {
-    this.ruleUpdater = updater;
-  }
-
-  /**
-   * 设置规则创建器（依赖注入）
-   */
-  setRuleCreator(creator: typeof this.ruleCreator): void {
-    this.ruleCreator = creator;
-  }
-
-  private async createRuleForImport(
-    ruleData: RuleImportData,
-  ): Promise<ExceptionRule> {
-    if (this.ruleCreator) {
-      const result = await this.ruleCreator.createRule(
-        ruleData.name,
-        ruleData.type,
-        ruleData.description,
-      );
-      return result.rule;
-    }
-
-    return exceptionRuleStorage.createRule({
-      name: ruleData.name,
-      type: ruleData.type,
-      description: ruleData.description,
-    });
-  }
-
   private async handleDuplicateImport(params: {
     ruleData: RuleImportData;
     duplicates: ExceptionRule[];
@@ -108,9 +62,9 @@ class RuleExportImportService {
       return true;
     }
 
-    if (options.updateExisting && this.ruleUpdater) {
+    if (options.updateExisting) {
       const existingRule = duplicates[0];
-      const updated = await this.ruleUpdater.updateRule(existingRule.id, {
+      const updated = await ruleMaintenanceService.updateRule(existingRule.id, {
         type: ruleData.type,
         description: ruleData.description,
       });
@@ -151,7 +105,11 @@ class RuleExportImportService {
         });
         if (wasDuplicateHandled) continue;
 
-        const rule = await this.createRuleForImport(ruleData);
+        const { rule } = await ruleCreator.createRule(
+          ruleData.name,
+          ruleData.type,
+          ruleData.description,
+        );
         imported.push(rule);
       } catch (error) {
         errors.push({

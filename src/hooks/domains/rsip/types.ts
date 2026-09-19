@@ -40,7 +40,9 @@ export interface UseRsipDomainParams {
 
 export interface SaveFns {
   saveNodes: (nodes: RSIPNode[]) => Promise<void>;
-  saveMeta: (meta: RSIPMeta) => Promise<void>;
+  saveMeta: (
+    meta: RSIPMeta | ((current: RSIPMeta) => RSIPMeta),
+  ) => Promise<void>;
   saveGroups: (groups: RSIPNodeGroup[]) => Promise<void>;
   savePolicyLibrary: (entries: RSIPLibraryEntry[]) => Promise<void>;
   saveRunHistory: (records: RSIPRunRecord[]) => Promise<void>;

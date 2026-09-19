@@ -1,4 +1,4 @@
-import type { AppState } from '../../types';
+import type { AppState, RSIPNode } from '../../types';
 import { logger } from '../../utils/logger';
 import { toError } from '../../utils/errorHandling';
 import { rsipTaskIntegrationService } from '../../services/rsip-integration/RSIPTaskIntegrationService';
@@ -48,55 +48,34 @@ export function useRsipDomain({
     sliceWriteQueuesBySetter.set(setState, sliceWriteQueues);
   }
 
-  const persistThenCommitSlice = async <K extends keyof AppState>(
+  const enqueueWrite = async (
+    keys: (keyof AppState)[],
+    write: () => Promise<void>,
+  ) => {
+    const previousWrites = keys.map((key) => sliceWriteQueues.get(key));
+    const currentWrite = Promise.all(
+      previousWrites.map((previous) => previous?.catch(() => undefined)),
+    ).then(write);
+    for (const key of keys) sliceWriteQueues.set(key, currentWrite);
+    try {
+      await currentWrite;
+    } finally {
+      for (const key of keys) {
+        if (sliceWriteQueues.get(key) === currentWrite)
+          sliceWriteQueues.delete(key);
+      }
+    }
+  };
+
+  const persistThenCommitSlice = <K extends keyof AppState>(
     key: K,
     value: AppState[K],
     persist: () => Promise<void>,
-  ) => {
-    const previousWrite = sliceWriteQueues.get(key) ?? Promise.resolve();
-    const currentWrite = previousWrite
-      .catch(() => undefined)
-      .then(async () => {
-        await persist();
-        setState((current) => ({ ...current, [key]: value }));
-      });
-    sliceWriteQueues.set(key, currentWrite);
-
-    try {
-      await currentWrite;
-    } finally {
-      if (sliceWriteQueues.get(key) === currentWrite) {
-        sliceWriteQueues.delete(key);
-      }
-    }
-  };
-
-  const persistThenAppendExecutionRecord = async (
-    record: Parameters<SaveFns['appendExecutionRecord']>[0],
-  ) => {
-    const key = 'rsipExecutionRecords';
-    const previousWrite = sliceWriteQueues.get(key) ?? Promise.resolve();
-    const currentWrite = previousWrite
-      .catch(() => undefined)
-      .then(async () => {
-        await storage.appendRSIPExecutionRecord(record);
-        setState((current) => {
-          return {
-            ...current,
-            rsipExecutionRecords: [...current.rsipExecutionRecords, record],
-          };
-        });
-      });
-    sliceWriteQueues.set(key, currentWrite);
-
-    try {
-      await currentWrite;
-    } finally {
-      if (sliceWriteQueues.get(key) === currentWrite) {
-        sliceWriteQueues.delete(key);
-      }
-    }
-  };
+  ) =>
+    enqueueWrite([key], async () => {
+      await persist();
+      setState((current) => ({ ...current, [key]: value }));
+    });
 
   const openRSIP = () => {
     onNavigateToRSIP?.();
@@ -106,7 +85,13 @@ export function useRsipDomain({
     record,
   ) => {
     try {
-      await persistThenAppendExecutionRecord(record);
+      await enqueueWrite(['rsipExecutionRecords'], async () => {
+        await storage.appendRSIPExecutionRecord(record);
+        setState((current) => ({
+          ...current,
+          rsipExecutionRecords: [...current.rsipExecutionRecords, record],
+        }));
+      });
     } catch (error) {
       logPersistenceError(
         'Failed to append RSIP execution record',
@@ -119,9 +104,14 @@ export function useRsipDomain({
 
   const saveMeta: SaveFns['saveMeta'] = async (meta) => {
     try {
-      await persistThenCommitSlice('rsipMeta', meta, () =>
-        storage.saveRSIPMeta(meta),
-      );
+      await enqueueWrite(['rsipMeta'], async () => {
+        const nextMeta =
+          typeof meta === 'function'
+            ? meta(readState()?.rsipMeta ?? (await storage.getRSIPMeta()))
+            : meta;
+        await storage.saveRSIPMeta(nextMeta);
+        setState((current) => ({ ...current, rsipMeta: nextMeta }));
+      });
     } catch (error) {
       logPersistenceError('Failed to save RSIP meta', { meta }, error);
       throw error;
@@ -257,6 +247,45 @@ export function useRsipDomain({
     }
   };
 
+  const createNodes = async (newNodes: RSIPNode[]): Promise<void> => {
+    if (newNodes.length === 0) return;
+    try {
+      await enqueueWrite(['rsipNodes', 'rsipMeta'], async () => {
+        const state = readState();
+        const currentNodes = state?.rsipNodes ?? (await storage.getRSIPNodes());
+        const meta = state?.rsipMeta ?? (await storage.getRSIPMeta());
+        const ids = new Set(currentNodes.map((node) => node.id));
+        const addedCount = newNodes.filter((node) => !ids.has(node.id)).length;
+        if (!canCreateRSIPNodes(meta, currentNodes, addedCount)) {
+          throw new Error('Strict mode allows only one new policy per day.');
+        }
+        const createdAt = newNodes[0].createdAt;
+        const persisted = await storage.createRSIPNodesWithMeta(newNodes, {
+          ...meta,
+          lastAddedAt: createdAt,
+          currentRunNumber: meta.currentRunNumber ?? 1,
+          currentRunStartedAt: meta.currentRunStartedAt ?? createdAt,
+        });
+        const requestedIds = new Set(newNodes.map((node) => node.id));
+        setState((current) => ({
+          ...current,
+          rsipNodes: [
+            ...current.rsipNodes.filter((node) => !requestedIds.has(node.id)),
+            ...persisted.nodes,
+          ].sort((left, right) => left.sortOrder - right.sortOrder),
+          rsipMeta: persisted.meta,
+        }));
+      });
+    } catch (error) {
+      logPersistenceError(
+        'Failed to create RSIP nodes',
+        { nodeCount: newNodes.length },
+        error,
+      );
+      throw error;
+    }
+  };
+
   const saveNodes: SaveFns['saveNodes'] = async (nodes) => {
     const writeContext: { previousState: AppState | null } = {
       previousState: null,
@@ -343,6 +372,7 @@ export function useRsipDomain({
 
   return {
     openRSIP,
+    createNodes,
     saveNodes,
     saveMeta,
     saveGroups,

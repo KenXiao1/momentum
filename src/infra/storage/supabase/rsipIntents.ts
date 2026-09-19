@@ -1,4 +1,13 @@
-import type { RSIPLibraryEntry, RSIPNode, RSIPRunRecord } from '../../../types';
+import { z } from 'zod';
+import type {
+  RSIPLibraryEntry,
+  RSIPMeta,
+  RSIPNode,
+  RSIPRunRecord,
+} from '../../../types';
+import type { RsipStore } from '../../../storage/ports';
+import { rsipMetaRowSchema, rsipNodeRowSchema } from './rsipRowSchema';
+import { mapRSIPMetaRow, mapRSIPNodeRow } from './rsipMapper';
 import { buildRSIPNodeRows } from './rsipPayloadBuilder';
 import type { SupabaseStorageContext } from './types';
 import {
@@ -6,6 +15,50 @@ import {
   RSIP_NODES_TABLE,
   type SupabaseLikeError,
 } from './rsipNodeCapabilities';
+
+const creationResultSchema = z.object({
+  nodes: z.array(rsipNodeRowSchema),
+  meta: rsipMetaRowSchema,
+});
+
+export async function createRSIPNodesWithMeta(
+  ctx: SupabaseStorageContext,
+  nodes: RSIPNode[],
+  meta: RSIPMeta,
+): ReturnType<RsipStore['createRSIPNodesWithMeta']> {
+  const user = await ctx.getCurrentUser();
+  if (!user) throw new Error('Authentication required to create RSIP nodes');
+
+  const { data, error } = await ctx
+    .getClient()
+    .rpc('create_rsip_nodes_with_meta', {
+      // IDs belong to the submitted draft and survive an ambiguous response/retry.
+      p_intent_key: nodes
+        .map((node) => node.id)
+        .sort()
+        .join(','),
+      p_nodes: buildRSIPNodeRows(nodes, user.id),
+      p_meta: {
+        last_added_at: meta.lastAddedAt?.toISOString() ?? null,
+        allow_multiple_per_day: !!meta.allowMultiplePerDay,
+        last_tree_opened_at: meta.lastTreeOpenedAt?.toISOString() ?? null,
+        daily_tree_open_required: meta.dailyTreeOpenRequired ?? false,
+        tree_open_streak: meta.treeOpenStreak ?? 0,
+        current_run_number: meta.currentRunNumber ?? null,
+        current_run_started_at: meta.currentRunStartedAt?.toISOString() ?? null,
+      },
+    });
+  if (error) {
+    throw new Error(
+      `Failed to create RSIP nodes atomically (requires the atomic RSIP migration): ${error.message}`,
+    );
+  }
+  const persisted = creationResultSchema.parse(data);
+  return {
+    nodes: persisted.nodes.map(mapRSIPNodeRow),
+    meta: mapRSIPMetaRow(persisted.meta),
+  };
+}
 
 type UpsertClient = {
   from: (tableName: string) => {

@@ -656,6 +656,10 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
+      create_rsip_nodes_with_meta: {
+        Args: { p_intent_key: string; p_nodes: Json; p_meta: Json };
+        Returns: Json;
+      };
       perform_daily_checkin: {
         Args: {
           target_user_id: string;

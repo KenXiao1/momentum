@@ -56,6 +56,8 @@ export const localStorageAdapter: MomentumStorage = {
     localStorageUtils.appendCompletionHistory(record),
 
   // RSIP
+  createRSIPNodesWithMeta: async (nodes, meta) =>
+    localStorageUtils.createRSIPNodesWithMeta(nodes, meta),
   getRSIPNodes: async () => localStorageUtils.getRSIPNodes(),
   saveRSIPNodes: async (nodes) => localStorageUtils.saveRSIPNodes(nodes),
   upsertRSIPNode: async (node) => localStorageUtils.upsertRSIPNode(node),

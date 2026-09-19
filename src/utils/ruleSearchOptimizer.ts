@@ -22,27 +22,9 @@ export class RuleSearchOptimizer {
   private readonly cache = new RuleSearchCache();
   private readonly duplicates = new RuleDuplicateDetector();
 
-  private debounceTimer: NodeJS.Timeout | null = null;
-  private readonly DEBOUNCE_DELAY = 200;
-
   updateIndex(rules: ExceptionRule[]): void {
     this.cache.clearCache(); // Clear stale cache entries after index updates.
     this.index.updateIndex(rules);
-  }
-
-  searchRulesDebounced(
-    rules: ExceptionRule[],
-    query: string,
-    callback: (results: SearchResult[]) => void,
-  ): void {
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-    }
-
-    this.debounceTimer = setTimeout(() => {
-      const results = this.searchRules(rules, query);
-      callback(results);
-    }, this.DEBOUNCE_DELAY);
   }
 
   searchRules(rules: ExceptionRule[], query: string): SearchResult[] {

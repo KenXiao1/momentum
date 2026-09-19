@@ -12,6 +12,10 @@ export abstract class SupabaseStorageRsip
       rsipApi.getRSIPNodes(this.ctx),
     );
   }
+  createRSIPNodesWithMeta: RsipStore['createRSIPNodesWithMeta'] = (
+    nodes,
+    meta,
+  ) => rsipIntentApi.createRSIPNodesWithMeta(this.ctx, nodes, meta);
   saveRSIPNodes: RsipStore['saveRSIPNodes'] = (nodes) =>
     rsipApi.saveRSIPNodes(this.ctx, nodes);
   upsertRSIPNode: RsipStore['upsertRSIPNode'] = (node) =>

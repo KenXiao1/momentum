@@ -86,28 +86,6 @@ describe('Rule System Fixes', () => {
     expect(exactResults[0]?.rule.id).toBe('rule-1');
   });
 
-  it('debounces rapid searches and triggers callback once', () => {
-    vi.useFakeTimers();
-
-    try {
-      const optimizer = new RuleSearchOptimizer();
-      const rules = [createRule({ id: 'rule-1', name: 'Test Rule' })];
-      optimizer.updateIndex(rules);
-
-      const callback = vi.fn();
-
-      optimizer.searchRulesDebounced(rules, 'test 1', callback);
-      optimizer.searchRulesDebounced(rules, 'test 2', callback);
-      optimizer.searchRulesDebounced(rules, 'test rule', callback);
-
-      expect(callback).not.toHaveBeenCalled();
-      vi.advanceTimersByTime(220);
-      expect(callback).toHaveBeenCalledTimes(1);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
   it('handles malformed rule payloads gracefully', () => {
     const optimizer = new RuleSearchOptimizer();
     const malformedRules = [

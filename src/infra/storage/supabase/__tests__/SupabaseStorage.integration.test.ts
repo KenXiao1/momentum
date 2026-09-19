@@ -4,6 +4,7 @@ import { createUnitChain } from '../../../../test/factories/chainFactory';
 import { supabase } from '../../../../lib/supabase';
 import {
   failSupabaseTransportRequests,
+  failNextRSIPCreationResponse,
   resetSupabaseMockState,
 } from '../../../../test/mocks/supabaseMocks';
 import { SupabaseStorage } from '../SupabaseStorage';
@@ -62,6 +63,31 @@ describe('SupabaseStorage HTTP boundary', () => {
     sessionStorage.setItem('storage-boundary', 'session');
     expect(localStorage.getItem('storage-boundary')).toBe('');
     expect(sessionStorage.getItem('storage-boundary')).toBe('session');
+  });
+
+  it('retries atomic RSIP creation after a lost response through the real SDK', async () => {
+    await authenticate();
+    const node = {
+      id: '00000000-0000-4000-8000-000000000001',
+      title: 'Policy',
+      rule: 'Rule',
+      sortOrder: 0,
+      createdAt: new Date('2026-09-18T08:00:00.000Z'),
+    };
+    const meta = {
+      lastAddedAt: node.createdAt,
+      currentRunNumber: 1,
+      currentRunStartedAt: node.createdAt,
+    };
+    failNextRSIPCreationResponse();
+    await expect(storage.createRSIPNodesWithMeta([node], meta)).rejects.toThrow(
+      'Failed to create RSIP nodes atomically',
+    );
+    const persisted = await storage.createRSIPNodesWithMeta([node], meta);
+    expect(persisted.nodes).toEqual([expect.objectContaining(node)]);
+    expect(persisted.meta).toEqual(expect.objectContaining(meta));
+    expect(await storage.getRSIPNodes()).toEqual(persisted.nodes);
+    expect(await storage.getRSIPMeta()).toEqual(persisted.meta);
   });
 
   it('runs unauthenticated reads and failures through production auth logic', async () => {
