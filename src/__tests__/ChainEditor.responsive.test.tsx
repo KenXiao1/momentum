@@ -44,7 +44,7 @@ const enableCustomDurationSlider = async () => {
 const mockChain: Chain = {
   id: 'test-chain',
   name: '测试链条',
-  type: 'unit' as ChainType,
+  type: 'unit',
   duration: 25,
   trigger: '戴上降噪耳机',
   description: '这是一个测试链条的描述',
@@ -57,8 +57,11 @@ const mockChain: Chain = {
   totalFailures: 0,
   auxiliaryFailures: 0,
   createdAt: new Date(),
-  lastCompletedAt: null,
+  lastCompletedAt: undefined,
   exceptions: [],
+  auxiliaryExceptions: [],
+  timeLimitExceptions: [],
+  sortOrder: 0,
 };
 
 const mockProps = {

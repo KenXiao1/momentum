@@ -82,3 +82,10 @@ src-tauri/gen/
 
 src-tauri/.tauri-private.key
 src-tauri/.tauri-private.key.pub
+
+# Browser journey test artifacts
+/playwright-report/
+/test-results/
+
+# Local MCP configuration can contain account access tokens.
+.mcp.json

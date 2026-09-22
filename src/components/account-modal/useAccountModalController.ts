@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AuthUser } from '../../domain/auth';
 import type { GamblingSettings } from '../../domain/userSettings';
+import { useDiagnosticsExport } from './useDiagnosticsExport';
 import { useI18n } from '../../i18n';
 import { hasStorageCapability } from '../../storage/ports';
 import { useStorage } from '../../storage/useStorage';
@@ -25,6 +26,7 @@ export function useAccountModalController(params: {
   const storage = useStorage();
   const storageMode = useStorageMode();
   const i18n = useI18n();
+  const diagnostics = useDiagnosticsExport();
   const { language, tr } = i18n;
   const canUseAuth = hasStorageCapability(storage, 'auth');
   const canUseBetting = hasStorageCapability(storage, 'betting');
@@ -195,6 +197,7 @@ export function useAccountModalController(params: {
   };
 
   return {
+    diagnostics,
     ...i18n,
     ...storageMode,
     canUseAuth,

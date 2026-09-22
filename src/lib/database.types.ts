@@ -656,6 +656,10 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
+      commit_storage_operation: {
+        Args: { p_operation_id: string; p_changes: Json };
+        Returns: Json;
+      };
       create_rsip_nodes_with_meta: {
         Args: { p_intent_key: string; p_nodes: Json; p_meta: Json };
         Returns: Json;

@@ -425,4 +425,64 @@ describe('createSchedulingHandlers', () => {
     expect(stateRef.getState().chains[0].auxiliaryStreak).toBe(0);
     expect(stateRef.getState().scheduledSessions).toHaveLength(1);
   });
+  it('ignores completion when only another chain has a booking', async () => {
+    const chain = createUnitChain({ id: 'target' });
+    const state = createAppState({
+      chains: [chain],
+      scheduledSessions: [
+        {
+          chainId: 'other',
+          scheduledAt: new Date(),
+          expiresAt: new Date(Date.now() + 60000),
+          auxiliarySignal: 'bell',
+        },
+      ],
+    });
+    const storage = createLocalStorageMock();
+    const safelySaveChains = vi.fn(async () => undefined);
+    const setState = vi.fn();
+    const handlers = createSchedulingHandlers({
+      state,
+      setState,
+      storage,
+      safelySaveChains,
+      setShowAuxiliaryJudgment: vi.fn(),
+      tr,
+    });
+    await handlers.handleCompleteBooking(chain.id);
+    expect(safelySaveChains).not.toHaveBeenCalled();
+    expect(storage.removeScheduledSession).not.toHaveBeenCalled();
+    expect(setState).not.toHaveBeenCalled();
+  });
+
+  it('releases the booking lock after a failed save so retry can commit', async () => {
+    const chain = createUnitChain({ id: 'retry' });
+    const stateRef = createStateContainer(createAppState({ chains: [chain] }));
+    const storage = createLocalStorageMock();
+    const save = vi
+      .fn(async () => undefined)
+      .mockRejectedValueOnce(new Error('offline'));
+    const translate = vi.fn(tr);
+    const handlers = createSchedulingHandlers({
+      ...stateRef,
+      storage,
+      safelySaveChains: save,
+      setShowAuxiliaryJudgment: vi.fn(),
+      tr: translate,
+    });
+    await handlers.handleScheduleChain(chain.id);
+    await handlers.handleCompleteBooking(chain.id);
+    expect(translate).toHaveBeenCalledWith(
+      '完成预约失败，请重试',
+      'Failed to complete booking. Please try again.',
+    );
+    expect(toast.error).toHaveBeenCalledWith(
+      'Failed to complete booking. Please try again.',
+    );
+    expect(stateRef.getState().scheduledSessions).toHaveLength(1);
+    await handlers.handleCompleteBooking(chain.id);
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(stateRef.getState().chains[0].auxiliaryStreak).toBe(1);
+    expect(stateRef.getState().scheduledSessions).toEqual([]);
+  });
 });

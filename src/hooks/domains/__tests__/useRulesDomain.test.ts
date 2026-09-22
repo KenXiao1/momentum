@@ -1,3 +1,4 @@
+import type { SafelySaveChains } from '../useChainsDomain';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppState } from '../../../types';
@@ -73,7 +74,7 @@ describe('useRulesDomain', () => {
     const storage = createLocalStorageMock({
       removeScheduledSession: vi.fn(async () => undefined),
     });
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
     const setShowAuxiliaryJudgment = vi.fn();
 
     const { result } = renderHook(() =>
@@ -139,7 +140,7 @@ describe('useRulesDomain', () => {
     const storage = createLocalStorageMock({
       removeScheduledSession: vi.fn(async () => undefined),
     });
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
     const setShowAuxiliaryJudgment = vi.fn();
 
     const { result } = renderHook(() =>

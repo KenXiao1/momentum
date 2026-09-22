@@ -10,14 +10,15 @@
  */
 
 import { SchemaChecker } from '../schemaChecker';
-import { supabase } from '../../lib/supabase';
-import type { Mocked } from 'vitest';
+const { mockSupabase } = vi.hoisted(() => ({
+  mockSupabase: {
+    rpc: vi.fn<(fn: string, args?: { sql?: string }) => Promise<unknown>>(),
+  },
+}));
 
 // Mock Supabase
 vi.mock('../../lib/supabase', () => ({
-  supabase: {
-    rpc: vi.fn(),
-  },
+  supabase: mockSupabase,
 }));
 
 // Mock logger
@@ -29,8 +30,6 @@ vi.mock('../logger', () => ({
     debug: vi.fn(),
   },
 }));
-
-const mockSupabase = supabase as Mocked<typeof supabase>;
 
 describe('SchemaChecker', () => {
   let checker: SchemaChecker;

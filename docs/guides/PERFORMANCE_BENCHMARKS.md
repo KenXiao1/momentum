@@ -6,19 +6,45 @@ contains the chain-tree comparison and build-size results.
 
 ## What is currently measured
 
-| Tool                    | Source                                                | Purpose                                                                          |
-| ----------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------- |
-| React Profiler          | `src/app/app-shell/AppShellProfiler.tsx`              | Development render durations for shell views                                     |
-| React render statistics | `src/utils/reactPerformanceMonitor.ts`                | Render counts, averages, maxima, and per-component statistics                    |
-| Browser monitoring      | `src/utils/performance-monitor/PerformanceMonitor.ts` | FPS, layout shifts, paint observations, and explicit measurements                |
-| Performance logging     | `src/utils/performanceLogger.ts`                      | Development timing and diagnostics; critical errors also log outside development |
-| Layout diagnostics      | `src/utils/LayoutStabilityMonitor.ts`                 | Layout observations and issue reports                                            |
-| Development panel       | `src/components/PerformanceMonitor.tsx`               | Realtime-sync status, React render statistics, and force refresh                 |
-| Build output            | `npm run build`                                       | Vite asset/chunk sizes and compressed-size estimates                             |
+| Tool                    | Source                                                | Purpose                                                                                   |
+| ----------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| React Profiler          | `src/app/app-shell/AppShellProfiler.tsx`              | Development render durations for shell views                                              |
+| React render statistics | `src/utils/reactPerformanceMonitor.ts`                | Render counts, averages, maxima, and per-component statistics                             |
+| Browser monitoring      | `src/utils/performance-monitor/PerformanceMonitor.ts` | FPS, layout shifts, paint observations, and explicit measurements                         |
+| Performance logging     | `src/utils/performanceLogger.ts`                      | Development timing and diagnostics; critical errors also log outside development          |
+| Layout diagnostics      | `src/utils/LayoutStabilityMonitor.ts`                 | Layout observations and issue reports                                                     |
+| Development panel       | `src/components/PerformanceMonitor.tsx`               | Realtime-sync status, React render statistics, and force refresh                          |
+| Production diagnostics  | `src/utils/diagnostics.ts`                            | Local error categories, Web Vitals, and storage operation timings; user-controlled export |
+| Browser benchmark       | `npm run benchmark:browser`                           | Production Chromium startup and RSIP rendering with 100/1,000 chains and 256 policy nodes |
+| Build output            | `npm run build`                                       | Vite asset/chunk sizes and compressed-size estimates                                      |
 
 The development panel no longer reports query-cache hits or offers a cache-clear
 button: the global query optimizer was removed. Tree construction still has
 `performanceLogger.time` instrumentation, and React owns memoization in rendering.
+
+## Production diagnostics
+
+Personal Settings includes **Export diagnostics** and **Clear diagnostics**.
+The device stores at most 200 records from the last seven days. The allowlisted
+record format contains error category/reason/severity or metric name/value/unit,
+plus a timestamp. It does not serialize log messages, context payloads, stacks,
+URLs, user identifiers, or task content. Persisted records are validated again
+before export, and unavailable/full browser storage cannot fail a business operation.
+There is no automatic upload or third-party collector.
+
+Production records Web Vitals when the browser emits them and warns/errors from
+the application logger and unhandled errors. Missing metrics remain missing;
+they are not reported as zero. Operation timing wraps collection saves, session
+completion, and imports. These records describe attempts and whether their
+promise resolved or rejected, rather than proving cloud delivery from a UI event.
+
+`npm run benchmark:browser` builds an isolated production bundle, starts Chromium,
+and measures five fresh browser contexts for each data size. It checks that the
+dashboard and all 256 RSIP cards render, and verifies a real diagnostic download.
+The JSON report under `reports/quality/browser-benchmark.json` includes individual
+samples, medians, browser/OS, commit, and dirty-worktree status. Timing is advisory:
+compare runs on the same machine and build conditions before setting a regression
+budget. The benchmark does not simulate mobile hardware or Supabase network latency.
 
 ## Existing APIs
 
@@ -41,6 +67,7 @@ monitoring code does not require a separate runtime facade.
 
 ```sh
 npm run test:performance
+npm run benchmark:browser
 npm run test:all -- src/utils/__tests__/chainTree.test.ts
 npm run build
 ```

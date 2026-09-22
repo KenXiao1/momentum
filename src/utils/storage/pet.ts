@@ -1,8 +1,10 @@
+import { recoverOperationJournal } from './operationJournal';
 import type { PetState, SerializedPetState } from '../../types/pet';
 import { parseTruthyDateOrNow, toIsoString } from '../../serialization';
 import { STORAGE_KEYS } from './keys';
 
 export function getPetState(): PetState | null {
+  recoverOperationJournal();
   const data = localStorage.getItem(STORAGE_KEYS.PET_STATE);
   if (!data) return null;
 
@@ -22,6 +24,7 @@ export function getPetState(): PetState | null {
 }
 
 export function savePetState(pet: PetState): void {
+  recoverOperationJournal();
   const serialized: SerializedPetState = {
     ...pet,
     createdAt: toIsoString(pet.createdAt),

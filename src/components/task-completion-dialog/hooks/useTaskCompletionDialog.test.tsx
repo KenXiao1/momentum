@@ -1,3 +1,4 @@
+import { createLocalStorageMock } from '../../../test/factories';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -36,16 +37,15 @@ function history(
 }
 
 function createStorage(entries: CompletionHistory[] = []) {
-  return {
-    kind: 'local' as const,
+  return createLocalStorageMock({
     getCompletionHistory: vi.fn(async () => entries),
-  };
+  });
 }
 
 function storageWrapper(storage: ReturnType<typeof createStorage>) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <StorageContext.Provider value={storage as MomentumStorage}>
+      <StorageContext.Provider value={storage}>
         {children}
       </StorageContext.Provider>
     );
@@ -73,7 +73,10 @@ function renderDialogHook(
     isOpen: boolean;
     chainId: string;
     isDurationless: boolean;
-    onComplete: (description: string, notes?: string) => void;
+    onComplete: (
+      description: string,
+      notes?: string,
+    ) => void | Promise<void | boolean>;
     onCancel: () => void;
   }> = {},
 ) {
@@ -133,7 +136,7 @@ describe('useTaskCompletionDialog', () => {
   it('does not load while closed and never exposes suggestions from another chain', async () => {
     const nextHistory = deferred<CompletionHistory[]>();
     const storage = createStorage();
-    storage.getCompletionHistory
+    vi.mocked(storage.getCompletionHistory)
       .mockResolvedValueOnce([
         history('chain A task', '2026-07-10T00:00:00.000Z'),
       ])
@@ -178,7 +181,7 @@ describe('useTaskCompletionDialog', () => {
     expect(storage.getCompletionHistory).toHaveBeenCalledTimes(2);
   });
 
-  it('blocks a blank durationless completion, then sanitizes and resets a valid submission', () => {
+  it('blocks a blank durationless completion, then sanitizes and resets a valid submission', async () => {
     const onComplete = vi.fn();
     const storage = createStorage();
     const { result } = renderDialogHook(storage, { onComplete });
@@ -187,7 +190,9 @@ describe('useTaskCompletionDialog', () => {
       result.current.setDescription('   ');
       result.current.setNotes('not submitted');
     });
-    act(() => result.current.handleSubmit());
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
 
     expect(onComplete).not.toHaveBeenCalled();
     expect(result.current.description).toBe('   ');
@@ -199,7 +204,9 @@ describe('useTaskCompletionDialog', () => {
       result.current.setIsNotesVisible(true);
       result.current.setShowQuickFill(true);
     });
-    act(() => result.current.handleSubmit());
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
 
     expect(onComplete).toHaveBeenCalledTimes(1);
     expect(onComplete).toHaveBeenCalledWith(
@@ -212,7 +219,7 @@ describe('useTaskCompletionDialog', () => {
     expect(result.current.showQuickFill).toBe(false);
   });
 
-  it('allows a durationful completion without a description', () => {
+  it('allows a timed completion without a description', async () => {
     const onComplete = vi.fn();
     const { result } = renderDialogHook(createStorage(), {
       isDurationless: false,
@@ -220,7 +227,9 @@ describe('useTaskCompletionDialog', () => {
     });
     const enter = keyEvent('Enter');
 
-    act(() => result.current.handleDescriptionKeyDown(enter.event));
+    await act(async () => {
+      result.current.handleDescriptionKeyDown(enter.event);
+    });
 
     expect(enter.preventDefault).toHaveBeenCalledTimes(1);
     expect(onComplete).toHaveBeenCalledWith('', undefined);
@@ -254,8 +263,10 @@ describe('useTaskCompletionDialog', () => {
     const descriptionInput = document.createElement('input');
     const notesTextarea = document.createElement('textarea');
     document.body.append(descriptionInput, notesTextarea);
-    result.current.descriptionInputRef.current = descriptionInput;
-    result.current.notesTextareaRef.current = notesTextarea;
+    Object.assign(result.current.descriptionInputRef, {
+      current: descriptionInput,
+    });
+    Object.assign(result.current.notesTextareaRef, { current: notesTextarea });
 
     act(() => result.current.handleQuickFill('chosen task'));
     expect(result.current.description).toBe('chosen task');
@@ -273,7 +284,9 @@ describe('useTaskCompletionDialog', () => {
 
     act(() => result.current.setNotes('keyboard note'));
     const ctrlEnter = keyEvent('Enter', { ctrlKey: true });
-    act(() => result.current.handleNotesKeyDown(ctrlEnter.event));
+    await act(async () => {
+      result.current.handleNotesKeyDown(ctrlEnter.event);
+    });
 
     expect(ctrlEnter.preventDefault).toHaveBeenCalledTimes(1);
     expect(onComplete).toHaveBeenCalledWith('chosen task', 'keyboard note');
@@ -303,7 +316,7 @@ describe('useTaskCompletionDialog', () => {
   it('logs a history failure and retries when the dialog is reopened', async () => {
     const priorLogCount = logger.getLogs(undefined, 'TASK_COMPLETION').length;
     const storage = createStorage();
-    storage.getCompletionHistory
+    vi.mocked(storage.getCompletionHistory)
       .mockRejectedValueOnce(new Error('history unavailable'))
       .mockResolvedValueOnce([
         history('loaded on retry', '2026-07-10T00:00:00.000Z'),
@@ -350,7 +363,7 @@ describe('useTaskCompletionDialog', () => {
     const firstRequest = deferred<CompletionHistory[]>();
     const secondRequest = deferred<CompletionHistory[]>();
     const storage = createStorage();
-    storage.getCompletionHistory
+    vi.mocked(storage.getCompletionHistory)
       .mockReturnValueOnce(firstRequest.promise)
       .mockReturnValueOnce(secondRequest.promise);
     const onComplete = vi.fn();
@@ -389,5 +402,28 @@ describe('useTaskCompletionDialog', () => {
     });
 
     expect(result.current.recentDescriptions).toEqual(['current task']);
+  });
+  it('retains the completion draft after a rejected save and clears only after a committed retry', async () => {
+    const onComplete = vi
+      .fn<() => Promise<boolean>>()
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+    const { result } = renderDialogHook(createStorage(), { onComplete });
+    act(() => {
+      result.current.setDescription('Keep my completed work');
+      result.current.setNotes('Recovery note');
+    });
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+    expect(result.current.description).toBe('Keep my completed work');
+    expect(result.current.notes).toBe('Recovery note');
+    expect(result.current.isSubmitting).toBe(false);
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+    expect(onComplete).toHaveBeenCalledTimes(2);
+    expect(result.current.description).toBe('');
+    expect(result.current.notes).toBe('');
   });
 });

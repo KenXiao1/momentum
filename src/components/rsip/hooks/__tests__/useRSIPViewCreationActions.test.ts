@@ -39,7 +39,11 @@ function renderCreationActions(
   });
   const storage = createLocalStorageMock({
     ...(propsOverrides.onSaveMeta
-      ? { saveRSIPMeta: propsOverrides.onSaveMeta }
+      ? {
+          saveRSIPMeta: async (meta) => {
+            await propsOverrides.onSaveMeta?.(meta);
+          },
+        }
       : {}),
   });
   const domain = useRsipDomain({

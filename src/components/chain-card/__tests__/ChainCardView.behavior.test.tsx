@@ -1,11 +1,19 @@
+import { createChain as createFixtureChain } from '../../../test/factories/chainFactory';
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ChainCardView } from '../ChainCardView';
-import type { ChainTreeNode, ScheduledSession } from '../../../types';
+import type {
+  ChainRecord,
+  ChainTreeNode,
+  ScheduledSession,
+} from '../../../types';
 
 function makeChain(overrides?: Partial<ChainTreeNode>): ChainTreeNode {
-  return {
+  const fields: Partial<ChainRecord> & {
+    children?: ChainTreeNode[];
+    depth?: number;
+  } = {
     id: 'chain-1',
     parentId: undefined,
     type: 'unit',
@@ -31,6 +39,11 @@ function makeChain(overrides?: Partial<ChainTreeNode>): ChainTreeNode {
     depth: 0,
     ...overrides,
   };
+  return {
+    ...createFixtureChain(fields.type === 'group' ? 'group' : 'unit', fields),
+    children: fields.children ?? [],
+    depth: fields.depth ?? 0,
+  };
 }
 
 function makeProps(overrides?: {
@@ -55,7 +68,7 @@ function makeProps(overrides?: {
     props: {
       chain: overrides?.chain ?? makeChain(),
       typeConfig: {
-        icon: 'bolt',
+        icon: 'zap' as const,
         bgColor: 'bg-slate-200',
         color: 'text-slate-700',
         name: 'Unit',

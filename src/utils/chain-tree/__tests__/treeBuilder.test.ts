@@ -11,7 +11,9 @@ type MockedPerformanceLogger = {
 };
 
 async function loadBuilderWithEnv(isDevValue: boolean): Promise<{
-  buildChainTree: (chains: Chain[]) => ReturnType<(chains: Chain[]) => Chain[]>;
+  buildChainTree: (
+    chains: Chain[],
+  ) => ReturnType<typeof import('../treeBuilder').buildChainTree>;
   performanceLogger: MockedPerformanceLogger;
 }> {
   vi.resetModules();

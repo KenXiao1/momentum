@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "types": ["vitest/globals", "node"],
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "allowJs": true,
+    "checkJs": false,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"]
+  },
+  "include": [
+    "src",
+    "e2e",
+    "playwright.config.ts",
+    "playwright.benchmark.config.ts",
+    "benchmarks"
+  ],
+  "exclude": []
+}

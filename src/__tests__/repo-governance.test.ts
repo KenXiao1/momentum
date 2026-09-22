@@ -90,11 +90,21 @@ function readWorkflowSources(): Array<{ file: string; source: string }> {
 }
 
 describe('repo governance', () => {
-  it('ci workflow only invokes the aggregated quality lanes', () => {
+  it('ci runs independent quality lanes behind a stable required result', () => {
     const workflow = readFile(CI_WORKFLOW_PATH);
     const commands = [...new Set(extractNpmRunCommands(workflow))].sort();
 
-    expect(commands).toEqual(['quality:ci:info', 'quality:ci:required']);
+    expect(commands).toEqual([
+      'build',
+      'quality:ci:info',
+      'quality:ci:static',
+      'quality:ci:tests',
+      'quality:rust',
+      'security:npm-audit',
+      'test:e2e',
+    ]);
+    expect(workflow).toMatch(/required:\s+if: always\(\)/);
+    expect(workflow).toContain('job.result !== "success"');
 
     const packageJson = JSON.parse(readFile(PACKAGE_JSON_PATH)) as {
       scripts: Record<string, string>;
@@ -146,11 +156,15 @@ describe('repo governance', () => {
     expect(workflow).toMatch(/queries:\s*security-extended/);
   });
 
-  it('semgrep workflow includes scheduled scans and default-branch gating', () => {
+  it('semgrep runs for CI and schedules with a pinned scanner and validated artifact', () => {
     const workflow = readFile(SEMGREP_WORKFLOW_PATH);
 
     expect(workflow).toMatch(/schedule:/);
-    expect(workflow).toContain('default_branch');
+    expect(workflow).toContain('workflow_call:');
+    expect(workflow).toMatch(/semgrep==\d+\.\d+\.\d+/);
+    expect(workflow).toContain('npm run security:semgrep');
+    expect(workflow).toContain('if-no-files-found: error');
+    expect(workflow).not.toContain('continue-on-error: true');
   });
 
   it('pins every third-party action to a full commit SHA', () => {

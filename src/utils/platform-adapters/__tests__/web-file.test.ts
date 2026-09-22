@@ -112,7 +112,7 @@ describe('webFileAdapter', () => {
     vi.spyOn(FileReader.prototype, 'readAsText').mockImplementation(function (
       this: FileReader,
     ) {
-      this.onerror?.(new ProgressEvent('error'));
+      this.onerror?.(new ProgressEvent('error') as ProgressEvent<FileReader>);
     });
     vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(function (
       this: HTMLInputElement,

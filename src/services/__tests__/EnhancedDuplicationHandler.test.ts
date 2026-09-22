@@ -259,7 +259,7 @@ describe('EnhancedDuplicationHandler', () => {
 
       const result = await handler.handleDuplicateCreation(
         '上厕所',
-        ExceptionRuleType.BREAK_CHAIN,
+        ExceptionRuleType.EARLY_COMPLETION_ONLY,
         undefined,
         'use_existing',
       );

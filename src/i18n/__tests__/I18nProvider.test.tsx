@@ -35,6 +35,7 @@ describe('I18nProvider', () => {
       wrapper: createWrapper(),
     });
 
+    // @ts-expect-error Exercise the runtime fallback for external, unknown keys.
     expect(result.current.t('missing {name}', { name: 'Neo' })).toBe(
       'missing Neo',
     );

@@ -7,12 +7,17 @@ export function useTaskCompletionDialog(params: {
   isOpen: boolean;
   chainId: string;
   isDurationless: boolean;
-  onComplete: (description: string, notes?: string) => void;
+  onComplete: (
+    description: string,
+    notes?: string,
+  ) => void | Promise<boolean | void>;
   onCancel: () => void;
 }) {
   const { isOpen, chainId, isDurationless, onComplete, onCancel } = params;
 
   const [description, setDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitting = useRef(false);
   const [notes, setNotes] = useState('');
   const [isNotesVisible, setIsNotesVisible] = useState(false);
   const [recentDescriptionsState, setRecentDescriptionsState] = useState<{
@@ -97,7 +102,8 @@ export function useTaskCompletionDialog(params: {
     setShowQuickFill(false);
   }, []);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
+    if (submitting.current) return;
     if (isDurationless && !description.trim()) {
       return;
     }
@@ -105,8 +111,18 @@ export function useTaskCompletionDialog(params: {
     const sanitizedDescription = sanitizeInput(description);
     const sanitizedNotes = notes.trim() ? sanitizeInput(notes) : undefined;
 
-    onComplete(sanitizedDescription || '', sanitizedNotes);
-    resetForm();
+    submitting.current = true;
+    setIsSubmitting(true);
+    try {
+      const result = await onComplete(
+        sanitizedDescription || '',
+        sanitizedNotes,
+      );
+      if (result !== false) resetForm();
+    } finally {
+      submitting.current = false;
+      setIsSubmitting(false);
+    }
   }, [
     description,
     isDurationless,
@@ -171,6 +187,7 @@ export function useTaskCompletionDialog(params: {
 
   return {
     description,
+    isSubmitting,
     setDescription,
     notes,
     setNotes,

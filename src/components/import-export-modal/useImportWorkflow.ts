@@ -1,12 +1,10 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type React from 'react';
-import type { ExceptionRule, RSIPNode, RSIPNodeGroup } from '../../types';
+import type { RSIPNode, RSIPNodeGroup } from '../../types';
 import { useI18n, type Language } from '../../i18n';
+import { prepareImportPlan } from '../../services/import-export/importPlan';
 import { exceptionRuleManager } from '../../services/ExceptionRuleManager';
-import {
-  importExportService,
-  type ImportExportImportOptions,
-} from '../../services/ImportExportService';
+import { type ImportExportImportOptions } from '../../services/ImportExportService';
 import { hasStorageCapability } from '../../storage/ports';
 import { useStorage } from '../../storage/useStorage';
 import { getSafeErrorDetail } from '../../utils/errorMessage';
@@ -72,10 +70,15 @@ export function useImportWorkflow(params: {
     },
   );
 
+  const importing = useRef(false);
   const handleImport = useCallback(async () => {
+    if (importing.current) return;
+    importing.current = true;
     try {
       setImportStatus('checking-auth');
       setImportError('');
+      let scope = storage.kind as string;
+      let expectedUserId: string | undefined;
       if (hasStorageCapability(storage, 'auth')) {
         const result = await storage.waitForAuthentication(10000);
         if (!result.ok || !result.value.isAuthenticated || !result.value.user) {
@@ -86,15 +89,18 @@ export function useImportWorkflow(params: {
             ),
           );
         }
+        scope += `:${result.value.user.id}`;
+        expectedUserId = result.value.user.id;
       }
       setImportStatus('creating-session');
-      const parsed = importExportService.parseImportData({
+      const { plan, save } = await prepareImportPlan(scope, {
         json: importData,
         options: importOptions,
         existingRsipNodes: params.existingRsipNodes,
         existingRsipGroups: params.existingRsipGroups,
         tr,
       });
+      const parsed = plan.parsed;
       if (
         parsed.invalidReferences.rsipExecutionRecordsSkipped ||
         parsed.invalidReferences.rsipTaskLinksSkipped
@@ -105,31 +111,33 @@ export function useImportWorkflow(params: {
           parsed.invalidReferences,
         );
       }
-      let importedExceptionRules: ExceptionRule[] = [];
-      if (parsed.exceptionRulesToImport.length) {
-        importedExceptionRules = (
-          await exceptionRuleManager.importRules(
-            parsed.exceptionRulesToImport,
-            {
-              skipDuplicates: true,
-              updateExisting: false,
-            },
-          )
-        ).imported;
-      }
       setImportStatus('importing');
-      await params.onImport(parsed.chains, {
-        history: parsed.history,
-        rsipNodes: parsed.rsipNodes,
-        rsipMeta: parsed.rsipMeta,
-        rsipGroups: parsed.rsipGroups,
-        rsipPolicyLibrary: parsed.rsipPolicyLibrary,
-        rsipRunHistory: parsed.rsipRunHistory,
-        rsipExecutionRecords: parsed.rsipExecutionRecords,
-        rsipTaskLinks: parsed.rsipTaskLinks,
-        petState: parsed.petState,
-        exceptionRules: importedExceptionRules,
-      });
+      if (plan.stage === 'data') {
+        await params.onImport(parsed.chains, {
+          expectedUserId,
+          history: parsed.history,
+          rsipNodes: parsed.rsipNodes,
+          rsipMeta: parsed.rsipMeta,
+          rsipGroups: parsed.rsipGroups,
+          rsipPolicyLibrary: parsed.rsipPolicyLibrary,
+          rsipRunHistory: parsed.rsipRunHistory,
+          rsipExecutionRecords: parsed.rsipExecutionRecords,
+          rsipTaskLinks: parsed.rsipTaskLinks,
+          petState: parsed.petState,
+        });
+        await save('rules');
+      }
+      if (plan.stage === 'rules' && parsed.exceptionRulesToImport.length) {
+        const result = await exceptionRuleManager.importRules(
+          parsed.exceptionRulesToImport,
+          { skipDuplicates: true, updateExisting: false },
+        );
+        if (result.errors.length > 0)
+          throw new Error(
+            'Some exception rules could not be imported. Retry to finish the saved import.',
+          );
+      }
+      await save('committed');
       setImportStatus('success');
       setTimeout(params.onClose, 3000);
     } catch (error) {
@@ -141,6 +149,8 @@ export function useImportWorkflow(params: {
       );
       setImportError(getImportErrorMessage(error, language, tr));
       setImportStatus('error');
+    } finally {
+      importing.current = false;
     }
   }, [importData, importOptions, language, params, storage, tr]);
 

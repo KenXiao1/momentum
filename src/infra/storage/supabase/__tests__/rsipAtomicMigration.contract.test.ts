@@ -44,7 +44,9 @@ describe('atomic RSIP migration contract', () => {
     expect(insertIndex).toBeGreaterThan(-1);
     expect(deleteIndex).toBeGreaterThan(insertIndex);
     expect(archive).toContain("intent.intent_kind = 'archive_nodes'");
-    expect(archive).toContain("'removed_node_ids', to_jsonb(v_intent_node_ids)");
+    expect(archive).toContain(
+      "'removed_node_ids', to_jsonb(v_intent_node_ids)",
+    );
   });
 
   it('verifies creation ownership before metadata can commit', () => {
@@ -56,7 +58,9 @@ describe('atomic RSIP migration contract', () => {
 
     expect(migration).toContain('FOREIGN KEY (user_id, parent_id)');
     expect(migration).toContain('FOREIGN KEY (user_id, group_id)');
-    expect(migration).toContain('CREATE TABLE IF NOT EXISTS public.rsip_atomic_intents');
+    expect(migration).toContain(
+      'CREATE TABLE IF NOT EXISTS public.rsip_atomic_intents',
+    );
     expect(creation).toContain('ON CONFLICT (id) DO NOTHING');
     expect(creation).toContain("intent.intent_kind = 'create_nodes_with_meta'");
     expect(creation).toContain("'nodes', v_nodes_result");

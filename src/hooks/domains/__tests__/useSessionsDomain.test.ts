@@ -38,6 +38,7 @@ vi.mock('../sessions/pauseResume', () => ({
 vi.mock('../../../i18n', () => ({
   useI18n: vi.fn(() => ({
     tr: (_zh: string, en: string) => en,
+    t: (key: string) => key,
   })),
 }));
 

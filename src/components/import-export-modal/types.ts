@@ -23,6 +23,7 @@ export type ImportStatus =
 export type ImportCallback = (
   chains: Chain[],
   options?: {
+    expectedUserId?: string;
     history?: CompletionHistory[];
     rsipNodes?: RSIPNode[];
     rsipMeta?: RSIPMeta;

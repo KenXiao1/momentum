@@ -5,6 +5,10 @@ import {
   getRSIPMeta,
   saveRSIPMeta,
   getRSIPGroups,
+  saveRSIPGroups,
+  saveRSIPPolicyLibrary,
+  saveRSIPRunHistory,
+  saveRSIPTaskLinks,
   getRSIPExecutionRecords,
 } from '../rsip';
 import {
@@ -60,16 +64,27 @@ describe('rsip.ts', () => {
       expect(result).toEqual([]);
     });
 
-    it('should return empty array on error', async () => {
-      const queryBuilder = createMockQueryBuilder({
-        data: null,
-        error: createSupabaseError('UNKNOWN', 'Database error'),
+    it('rejects failed reads instead of representing an empty persisted collection', async () => {
+      const ctx = createMockContext({
+        queryBuilder: createMockQueryBuilder({
+          data: null,
+          error: createSupabaseError('UNKNOWN', 'Database error'),
+        }),
       });
-      const ctx = createMockContext({ queryBuilder });
+      await expect(getRSIPNodes(ctx)).rejects.toThrow(
+        'Cannot prepare rsip_nodes',
+      );
+      expect(ctx.mockClient.rpc).not.toHaveBeenCalled();
+    });
 
-      const result = await getRSIPNodes(ctx);
-
-      expect(result).toEqual([]);
+    it('rejects malformed node rows instead of returning an empty tree', async () => {
+      const ctx = createMockContext({
+        queryBuilder: createMockQueryBuilder({
+          data: [createMockRSIPNodeRow({ id: 1 })],
+          error: null,
+        }),
+      });
+      await expect(getRSIPNodes(ctx)).rejects.toThrow('Expected string');
     });
 
     it('should return mapped RSIP nodes on success', async () => {
@@ -143,343 +158,157 @@ describe('rsip.ts', () => {
     });
   });
 
-  describe('saveRSIPNodes', () => {
-    it('should return early when user is not authenticated', async () => {
+  describe('bulk collection writes', () => {
+    const nodes: RSIPNode[] = [
+      {
+        id: 'rsip-1',
+        title: 'Morning Routine',
+        rule: 'Wake up at 6am',
+        sortOrder: 1,
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        useTimer: true,
+        timerMinutes: 30,
+      },
+    ];
+    function setup(rows: Record<string, unknown>[] = []) {
+      const queryBuilder = createMockQueryBuilder({ data: rows, error: null });
+      const ctx = createMockContext({ queryBuilder });
+      ctx.mockClient.rpc.mockImplementation(
+        async (_name, args: { p_operation_id: string }) => ({
+          data: { success: true, operation_id: args.p_operation_id },
+          error: null,
+        }),
+      );
+      return { ctx, queryBuilder };
+    }
+
+    it('rejects unauthenticated saves', async () => {
       const ctx = createMockContext({ user: null });
-      const nodes: RSIPNode[] = [
-        {
-          id: 'rsip-1',
-          title: 'Test',
-          rule: 'Test rule',
-          sortOrder: 1,
-          createdAt: new Date(),
-        },
-      ];
-
-      await saveRSIPNodes(ctx, nodes);
-
-      expect(ctx.mockClient.from).not.toHaveBeenCalled();
-    });
-
-    it('should upsert nodes and delete removed ones', async () => {
-      const existingNodes = [{ id: 'rsip-1' }, { id: 'rsip-2' }];
-      const ctx = createMockContext();
-      let deleteCalled = false;
-      let upsertCalled = false;
-
-      ctx.mockClient.from = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            data: existingNodes,
-            error: null,
-          }),
-        }),
-        delete: vi.fn().mockImplementation(() => {
-          deleteCalled = true;
-          return {
-            in: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                error: null,
-              }),
-            }),
-          };
-        }),
-        upsert: vi.fn().mockImplementation(() => {
-          upsertCalled = true;
-          return { error: null };
-        }),
-      });
-
-      const nodes: RSIPNode[] = [
-        {
-          id: 'rsip-1',
-          title: 'Test',
-          rule: 'Test rule',
-          sortOrder: 1,
-          createdAt: new Date(),
-        },
-      ];
-
-      await saveRSIPNodes(ctx, nodes);
-
-      expect(deleteCalled).toBe(true);
-      expect(upsertCalled).toBe(true);
-    });
-
-    it('should throw error when query fails', async () => {
-      const ctx = createMockContext();
-      ctx.mockClient.from = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            data: null,
-            error: createSupabaseError('UNKNOWN', 'Query failed'),
-          }),
-        }),
-      });
-
-      const nodes: RSIPNode[] = [
-        {
-          id: 'rsip-1',
-          title: 'Test',
-          rule: 'Test rule',
-          sortOrder: 1,
-          createdAt: new Date(),
-        },
-      ];
-
       await expect(saveRSIPNodes(ctx, nodes)).rejects.toThrow(
-        'Failed to query RSIP nodes',
+        'Authentication required',
       );
+      expect(ctx.mockClient.rpc).not.toHaveBeenCalled();
     });
 
-    it('should throw error when delete fails', async () => {
-      const ctx = createMockContext();
-      ctx.mockClient.from = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            data: [{ id: 'rsip-old' }],
-            error: null,
-          }),
-        }),
-        delete: vi.fn().mockReturnValue({
-          in: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              error: createSupabaseError('UNKNOWN', 'Delete failed'),
-            }),
-          }),
-        }),
-      });
-
-      const nodes: RSIPNode[] = [
-        {
-          id: 'rsip-new',
-          title: 'Test',
-          rule: 'Test rule',
-          sortOrder: 1,
-          createdAt: new Date(),
-        },
-      ];
-
-      await expect(saveRSIPNodes(ctx, nodes)).rejects.toThrow(
-        'Failed to delete removed RSIP nodes',
-      );
-    });
-
-    it('should throw error when upsert fails', async () => {
-      const ctx = createMockContext();
-      ctx.mockClient.from = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            data: [],
-            error: null,
-          }),
-        }),
-        upsert: vi.fn().mockReturnValue({
-          error: createSupabaseError('UNKNOWN', 'Upsert failed'),
-        }),
-      });
-
-      const nodes: RSIPNode[] = [
-        {
-          id: 'rsip-1',
-          title: 'Test',
-          rule: 'Test rule',
-          sortOrder: 1,
-          createdAt: new Date(),
-        },
-      ];
-
-      await expect(saveRSIPNodes(ctx, nodes)).rejects.toThrow(
-        'Failed to save RSIP nodes',
-      );
-    });
-
-    it('should surface missing migrated columns without retrying a reduced payload', async () => {
-      const ctx = createMockContext();
-      const upsert = vi.fn().mockReturnValue({
-        error: createSupabaseError(
-          'PGRST204',
-          "Could not find the 'consecutive_executions' column of 'rsip_nodes' in the schema cache",
-        ),
-      });
-
-      ctx.mockClient.from = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            data: [],
-            error: null,
-          }),
-        }),
-        upsert,
-      });
-
-      const nodes: RSIPNode[] = [
-        {
-          id: 'rsip-1',
-          title: 'Test',
-          rule: 'Test rule',
-          sortOrder: 1,
-          createdAt: new Date(),
-        },
-      ];
-
-      await expect(saveRSIPNodes(ctx, nodes)).rejects.toThrow(
-        'Failed to save RSIP nodes',
-      );
-      expect(upsert).toHaveBeenCalledTimes(1);
-      expect(ctx.markSchemaCapabilityMissing).not.toHaveBeenCalled();
-    });
-
-    it('should always write complete node columns on subsequent saves', async () => {
-      const ctx = createMockContext();
-      const upsert = vi.fn().mockReturnValue({ error: null });
-
-      ctx.mockClient.from = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            data: [],
-            error: null,
-          }),
-        }),
-        upsert,
-      });
-
-      const nodes: RSIPNode[] = [
-        {
-          id: 'rsip-1',
-          title: 'Test',
-          rule: 'Test rule',
-          sortOrder: 1,
-          createdAt: new Date(),
-        },
-      ];
-
-      await saveRSIPNodes(ctx, nodes);
-      await saveRSIPNodes(ctx, nodes);
-
-      expect(upsert).toHaveBeenCalledTimes(2);
-      for (const [payload] of upsert.mock.calls) {
-        expect(payload[0]).toHaveProperty('consecutive_executions');
+    it('rejects every unauthenticated collection save, including empty replacements', async () => {
+      const ctx = createMockContext({ user: null });
+      for (const save of [
+        saveRSIPGroups,
+        saveRSIPPolicyLibrary,
+        saveRSIPRunHistory,
+        saveRSIPTaskLinks,
+      ]) {
+        await expect(save(ctx, [])).rejects.toThrow('Authentication required');
       }
-      expect(ctx.isSchemaCapabilityMissing).not.toHaveBeenCalled();
+      expect(ctx.mockClient.from).not.toHaveBeenCalled();
+      expect(ctx.mockClient.rpc).not.toHaveBeenCalled();
     });
 
-    it('should map all fields correctly for upsert', async () => {
-      const ctx = createMockContext();
-      let upsertData: unknown[] = [];
-
-      ctx.mockClient.from = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            data: [],
-            error: null,
-          }),
-        }),
-        upsert: vi.fn().mockImplementation((data: unknown[]) => {
-          upsertData = data;
-          return { error: null };
-        }),
-      });
-
-      const nodes: RSIPNode[] = [
-        {
-          id: 'rsip-1',
-          parentId: 'parent-1',
-          title: 'Morning Routine',
-          rule: 'Wake up at 6am',
-          sortOrder: 1,
-          createdAt: new Date('2024-01-01T00:00:00Z'),
-          useTimer: true,
-          timerMinutes: 30,
-        },
+    it('replaces nodes in one RPC with full mapped fields and the observed snapshot', async () => {
+      const before = [
+        createMockRSIPNodeRow(),
+        createMockRSIPNodeRow({ id: 'removed' }),
       ];
-
+      const { ctx, queryBuilder } = setup(before);
+      await getRSIPNodes(ctx);
       await saveRSIPNodes(ctx, nodes);
-
-      expect(upsertData).toHaveLength(1);
-      const record = upsertData[0] as Record<string, unknown>;
-      expect(record.id).toBe('rsip-1');
-      expect(record.parent_id).toBe('parent-1');
-      expect(record.title).toBe('Morning Routine');
-      expect(record.rule).toBe('Wake up at 6am');
-      expect(record.sort_order).toBe(1);
-      expect(record.use_timer).toBe(true);
-      expect(record.timer_minutes).toBe(30);
-      expect(record.user_id).toBe('test-user-123');
+      expect(ctx.mockClient.rpc).toHaveBeenCalledWith(
+        'commit_storage_operation',
+        expect.objectContaining({
+          p_changes: [
+            {
+              table: 'rsip_nodes',
+              before,
+              after: [
+                expect.objectContaining({
+                  id: 'rsip-1',
+                  title: 'Morning Routine',
+                  rule: 'Wake up at 6am',
+                  user_id: 'test-user-123',
+                  parent_id: null,
+                  use_timer: true,
+                  timer_minutes: 30,
+                  consecutive_executions: 0,
+                }),
+              ],
+            },
+          ],
+        }),
+      );
+      expect(queryBuilder.delete).not.toHaveBeenCalled();
+      expect(queryBuilder.upsert).not.toHaveBeenCalled();
     });
 
-    it('should handle nodes without optional fields', async () => {
-      const ctx = createMockContext();
-      let upsertData: unknown[] = [];
-
-      ctx.mockClient.from = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            data: [],
-            error: null,
-          }),
-        }),
-        upsert: vi.fn().mockImplementation((data: unknown[]) => {
-          upsertData = data;
-          return { error: null };
-        }),
+    it('surfaces missing migrations without destructive fallback', async () => {
+      const { ctx, queryBuilder } = setup([createMockRSIPNodeRow()]);
+      ctx.mockClient.rpc.mockResolvedValue({
+        data: null,
+        error: createSupabaseError('PGRST202', 'RPC is missing'),
       });
-
-      const nodes: RSIPNode[] = [
-        {
-          id: 'rsip-1',
-          title: 'Test',
-          rule: 'Test rule',
-          sortOrder: 1,
-          createdAt: new Date(),
-        },
-      ];
-
-      await saveRSIPNodes(ctx, nodes);
-
-      const record = upsertData[0] as Record<string, unknown>;
-      expect(record.parent_id).toBeNull();
-      expect(record.use_timer).toBe(false);
-      expect(record.timer_minutes).toBeNull();
+      await expect(saveRSIPNodes(ctx, [])).rejects.toThrow(
+        'Requires the storage operations migration',
+      );
+      expect(queryBuilder.delete).not.toHaveBeenCalled();
+      expect(queryBuilder.upsert).not.toHaveBeenCalled();
     });
 
-    it('should not delete when no nodes removed', async () => {
-      const ctx = createMockContext();
-      let deleteCalled = false;
-
-      ctx.mockClient.from = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            data: [{ id: 'rsip-1' }],
-            error: null,
-          }),
+    it('does not issue any write after a snapshot read fails', async () => {
+      const ctx = createMockContext({
+        queryBuilder: createMockQueryBuilder({
+          data: null,
+          error: createSupabaseError('UNKNOWN', 'read failed'),
         }),
-        delete: vi.fn().mockImplementation(() => {
-          deleteCalled = true;
-          return {
-            in: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                error: null,
-              }),
-            }),
-          };
-        }),
-        upsert: vi.fn().mockReturnValue({ error: null }),
       });
+      await expect(saveRSIPNodes(ctx, nodes)).rejects.toThrow(
+        'Cannot prepare rsip_nodes',
+      );
+      expect(ctx.mockClient.rpc).not.toHaveBeenCalled();
+    });
 
-      const nodes: RSIPNode[] = [
+    it('surfaces concurrent modification without deleting nodes', async () => {
+      const { ctx, queryBuilder } = setup([createMockRSIPNodeRow()]);
+      ctx.mockClient.rpc.mockResolvedValue({
+        data: null,
+        error: createSupabaseError('40001', 'Collection changed'),
+      });
+      await expect(saveRSIPNodes(ctx, nodes)).rejects.toThrow(
+        'Collection changed',
+      );
+      expect(queryBuilder.delete).not.toHaveBeenCalled();
+    });
+
+    it('saves group membership and tolerance in the same collection RPC', async () => {
+      const { ctx, queryBuilder } = setup([]);
+      await saveRSIPGroups(ctx, [
         {
-          id: 'rsip-1',
-          title: 'Test',
-          rule: 'Test rule',
-          sortOrder: 1,
-          createdAt: new Date(),
+          id: 'group-1',
+          title: 'Group',
+          faultTolerance: 2,
+          faultToleranceUsed: 1,
+          createdAt: nodes[0].createdAt,
         },
-      ];
-
-      await saveRSIPNodes(ctx, nodes);
-
-      expect(deleteCalled).toBe(false);
+      ]);
+      expect(ctx.mockClient.rpc).toHaveBeenCalledWith(
+        'commit_storage_operation',
+        expect.objectContaining({
+          p_changes: [
+            {
+              table: 'rsip_groups',
+              before: [],
+              after: [
+                expect.objectContaining({
+                  id: 'group-1',
+                  fault_tolerance: 2,
+                  fault_tolerance_used: 1,
+                  user_id: 'test-user-123',
+                }),
+              ],
+            },
+          ],
+        }),
+      );
+      expect(queryBuilder.delete).not.toHaveBeenCalled();
+      expect(queryBuilder.upsert).not.toHaveBeenCalled();
     });
   });
 

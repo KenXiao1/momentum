@@ -221,9 +221,12 @@ describe('createStartChainHandler', () => {
     const chain = createUnitChain({ id: 'unit-3', duration: 20 });
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
     const storage = createSupabaseStorageMock({
-      isGamblingModeEnabled: vi.fn(async () => ({ ok: true, value: true })),
+      isGamblingModeEnabled: vi.fn(async () => ({
+        ok: true as const,
+        value: true,
+      })),
       createBettingSession: vi.fn(async () => ({
-        ok: true,
+        ok: true as const,
         value: 'bet-session-id',
       })),
       saveActiveSession: vi.fn(async () => undefined),
@@ -261,9 +264,12 @@ describe('createStartChainHandler', () => {
     const chain = createUnitChain({ id: 'unit-pending', duration: 25 });
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
     const storage = createSupabaseStorageMock({
-      isGamblingModeEnabled: vi.fn(async () => ({ ok: true, value: true })),
+      isGamblingModeEnabled: vi.fn(async () => ({
+        ok: true as const,
+        value: true,
+      })),
       createBettingSession: vi.fn(async () => ({
-        ok: true,
+        ok: true as const,
         value: 'new-session',
       })),
       saveActiveSession: vi.fn(async () => undefined),
@@ -294,7 +300,10 @@ describe('createStartChainHandler', () => {
     const chain = createUnitChain({ id: 'local-unit', duration: 30 });
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
     const storage = createLocalStorageMock({
-      isGamblingModeEnabled: vi.fn(async () => ({ ok: true, value: true })),
+      isGamblingModeEnabled: vi.fn(async () => ({
+        ok: true as const,
+        value: true,
+      })),
       saveActiveSession: vi.fn(async () => undefined),
       saveScheduledSessions: vi.fn(async () => undefined),
     });
@@ -324,9 +333,12 @@ describe('createStartChainHandler', () => {
     const chain = createUnitChain({ id: 'unit-gambling-off' });
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
     const storage = createSupabaseStorageMock({
-      isGamblingModeEnabled: vi.fn(async () => ({ ok: true, value: false })),
+      isGamblingModeEnabled: vi.fn(async () => ({
+        ok: true as const,
+        value: false,
+      })),
       createBettingSession: vi.fn(async () => ({
-        ok: true,
+        ok: true as const,
         value: 'never-called',
       })),
       saveActiveSession: vi.fn(async () => undefined),
@@ -355,9 +367,12 @@ describe('createStartChainHandler', () => {
   it('should not start when gambling is enabled but target chain is missing', async () => {
     const stateRef = createStateContainer(createAppState({ chains: [] }));
     const storage = createSupabaseStorageMock({
-      isGamblingModeEnabled: vi.fn(async () => ({ ok: true, value: true })),
+      isGamblingModeEnabled: vi.fn(async () => ({
+        ok: true as const,
+        value: true,
+      })),
       createBettingSession: vi.fn(async () => ({
-        ok: true,
+        ok: true as const,
         value: 'unexpected',
       })),
       saveActiveSession: vi.fn(async () => undefined),
@@ -430,8 +445,12 @@ describe('createStartChainHandler', () => {
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
     const storage = createSupabaseStorageMock({
       isGamblingModeEnabled: vi.fn(async () => ({
-        ok: false,
-        error: { code: 'READ_ONLY', message: 'blocked', recoverable: true },
+        ok: false as const,
+        error: {
+          code: 'STORAGE' as const,
+          message: 'blocked',
+          recoverable: true,
+        },
       })),
       saveActiveSession: vi.fn(async () => undefined),
       saveScheduledSessions: vi.fn(async () => undefined),
@@ -569,6 +588,7 @@ describe('createStartChainHandler', () => {
     } as never);
     vi.mocked(startGroupTimer).mockImplementation((value) => ({
       ...value,
+      type: 'group',
       groupStartedAt: new Date(),
     }));
 
@@ -936,10 +956,13 @@ describe('createStartChainHandler', () => {
   it('should show toast when betting session creation returns error', async () => {
     const chain = createUnitChain({ id: 'unit-err' });
     const storage = createSupabaseStorageMock({
-      isGamblingModeEnabled: vi.fn(async () => ({ ok: true, value: true })),
+      isGamblingModeEnabled: vi.fn(async () => ({
+        ok: true as const,
+        value: true,
+      })),
       createBettingSession: vi.fn(async () => ({
-        ok: false,
-        error: { code: 'FAIL', message: 'nope' },
+        ok: false as const,
+        error: { code: 'STORAGE' as const, message: 'nope' },
       })),
       saveActiveSession: vi.fn(async () => undefined),
     });
@@ -969,10 +992,13 @@ describe('createStartChainHandler', () => {
   it('should use chinese copy and exact logger payload when betting session creation fails', async () => {
     const chain = createUnitChain({ id: 'unit-err-zh', duration: 15 });
     const storage = createSupabaseStorageMock({
-      isGamblingModeEnabled: vi.fn(async () => ({ ok: true, value: true })),
+      isGamblingModeEnabled: vi.fn(async () => ({
+        ok: true as const,
+        value: true,
+      })),
       createBettingSession: vi.fn(async () => ({
-        ok: false,
-        error: { code: 'FAIL', message: 'nope' },
+        ok: false as const,
+        error: { code: 'STORAGE' as const, message: 'nope' },
       })),
       saveActiveSession: vi.fn(async () => undefined),
     });
@@ -996,7 +1022,7 @@ describe('createStartChainHandler', () => {
       'Failed to create betting session',
       {
         chainId: chain.id,
-        code: 'FAIL',
+        code: 'STORAGE' as const,
         message: 'nope',
       },
     );

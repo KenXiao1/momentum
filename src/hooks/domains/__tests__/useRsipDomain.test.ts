@@ -929,7 +929,7 @@ describe('useRsipDomain', () => {
     });
     const randomUUIDMock = vi
       .spyOn(crypto, 'randomUUID')
-      .mockReturnValue('created-group-id');
+      .mockReturnValue('00000000-0000-4000-8000-000000000001');
     const domain = useRsipDomain({
       setState: stateRef.setState,
       storage,
@@ -939,7 +939,7 @@ describe('useRsipDomain', () => {
     const created = await domain.createGroup('  Focus Group  ', 2.8, '🎯');
 
     expect(created).toMatchObject({
-      id: 'created-group-id',
+      id: '00000000-0000-4000-8000-000000000001',
       title: 'Focus Group',
       faultTolerance: 2,
       emoji: '🎯',
@@ -954,7 +954,7 @@ describe('useRsipDomain', () => {
     });
     const randomUUIDMock = vi
       .spyOn(crypto, 'randomUUID')
-      .mockReturnValue('stateless-group-id');
+      .mockReturnValue('00000000-0000-4000-8000-000000000002');
     const stateRef = createStateContainer(createBaseState());
     const domain = useRsipDomain({
       setState: stateRef.setState,
@@ -964,7 +964,7 @@ describe('useRsipDomain', () => {
     const created = await domain.createGroup('Stateless Group', 1.2);
 
     expect(created).toMatchObject({
-      id: 'stateless-group-id',
+      id: '00000000-0000-4000-8000-000000000002',
       title: 'Stateless Group',
       faultTolerance: 1,
     });
@@ -1139,7 +1139,7 @@ describe('useRsipDomain', () => {
     });
     const randomUUIDMock = vi
       .spyOn(crypto, 'randomUUID')
-      .mockReturnValue('restored-node-id');
+      .mockReturnValue('00000000-0000-4000-8000-000000000003');
     const domain = useRsipDomain({
       setState: stateRef.setState,
       storage,
@@ -1154,7 +1154,7 @@ describe('useRsipDomain', () => {
     );
 
     expect(restored).toMatchObject({
-      id: 'restored-node-id',
+      id: '00000000-0000-4000-8000-000000000003',
       parentId: 'parent-1',
       title: 'Restore Me',
       rule: 'Restored Rule',
@@ -1168,7 +1168,7 @@ describe('useRsipDomain', () => {
     });
     expect(stateRef.getState().rsipNodes).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: 'restored-node-id' }),
+        expect.objectContaining({ id: '00000000-0000-4000-8000-000000000003' }),
       ]),
     );
     expect(stateRef.getState().rsipPolicyLibrary?.[0]).toMatchObject({
@@ -1262,7 +1262,7 @@ describe('useRsipDomain', () => {
     });
     const randomUUIDMock = vi
       .spyOn(crypto, 'randomUUID')
-      .mockReturnValue('new-record-id');
+      .mockReturnValue('00000000-0000-4000-8000-000000000004');
     const domain = useRsipDomain({
       setState: stateRef.setState,
       storage,
@@ -1523,7 +1523,7 @@ describe('useRsipDomain', () => {
     });
     const randomUUIDMock = vi
       .spyOn(crypto, 'randomUUID')
-      .mockReturnValue('violation-record-id');
+      .mockReturnValue('00000000-0000-4000-8000-000000000005');
     const domain = useRsipDomain({
       setState: stateRef.setState,
       storage,
@@ -1540,7 +1540,7 @@ describe('useRsipDomain', () => {
 
     expect(updated).toEqual([expect.objectContaining({ id: 'safe-node' })]);
     expect(stateRef.getState().rsipExecutionRecords?.[0]).toMatchObject({
-      id: 'violation-record-id',
+      id: '00000000-0000-4000-8000-000000000005',
       nodeId: 'violation-node',
       status: 'violated',
       reasonCode: 'integration_task_interrupted',

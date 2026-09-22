@@ -1,3 +1,4 @@
+import type { SafelySaveChains } from '../useChainsDomain';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppState } from '../../../types';
@@ -86,13 +87,15 @@ describe('useGroupDomain', () => {
   });
 
   it('should import units in copy mode and append copied chains', async () => {
-    vi.spyOn(crypto, 'randomUUID').mockReturnValue('copied-id');
+    vi.spyOn(crypto, 'randomUUID').mockReturnValue(
+      '00000000-0000-4000-8000-000000000001',
+    );
     const group = createGroupChain({ id: 'group-1', name: 'Group 1' });
     const unit = createUnitChain({ id: 'unit-1', name: 'Unit 1' });
     const stateRef = createStateContainer(
       createAppState({ chains: [group, unit] }),
     );
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useGroupDomain({
@@ -111,7 +114,7 @@ describe('useGroupDomain', () => {
     const updated = safelySaveChains.mock.calls[0]?.[0];
     expect(updated).toHaveLength(3);
     expect(updated?.[2]).toMatchObject({
-      id: 'copied-id',
+      id: '00000000-0000-4000-8000-000000000001',
       parentId: group.id,
       name: 'Unit 1 (Copy)',
       currentStreak: 0,
@@ -143,7 +146,7 @@ describe('useGroupDomain', () => {
     const stateRef = createStateContainer(
       createAppState({ chains: [group, unit, sibling] }),
     );
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useGroupDomain({
@@ -175,7 +178,7 @@ describe('useGroupDomain', () => {
   it('should update task repeat count and persist changes', async () => {
     const chain = createUnitChain({ id: 'unit-3', taskRepeatCount: 1 });
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useGroupDomain({
@@ -208,7 +211,7 @@ describe('useGroupDomain', () => {
     const stateRef = createStateContainer(
       createAppState({ chains: [group, a, b] }),
     );
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useGroupDomain({
@@ -255,7 +258,7 @@ describe('useGroupDomain', () => {
     const stateRef = createStateContainer(
       createAppState({ chains: [group, a, b, c] }),
     );
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useGroupDomain({
@@ -291,7 +294,7 @@ describe('useGroupDomain', () => {
     const stateRef = createStateContainer(
       createAppState({ chains: [group, a, b] }),
     );
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result, rerender } = renderHook(() =>
       useGroupDomain({

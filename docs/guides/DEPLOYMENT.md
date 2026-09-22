@@ -54,6 +54,16 @@ The [Tauri release workflow](../../.github/workflows/tauri-build.yml) runs for
 `v*` tags or manual dispatch and builds Windows, macOS, and Linux packages.
 Mobile code paths exist, but mobile release packaging is still in progress.
 
+Both tag and manual runs first require successful `CI` for the exact checked-out
+commit from a push to the default branch, including its `required` job. The
+commit must be on the default branch's history. A failed, cancelled, pending, or
+missing latest run blocks all package builds. Publication repeats this check so
+a failed rerun during packaging cannot reuse earlier success. Merge through a
+pull request, wait for default-branch CI to succeed, then create the version tag.
+Do not rename the stable `required` job without updating branch protection and
+`tools/quality/release-gate.mjs` together. Only the publication job receives
+write access to repository contents.
+
 Tagged versions must match `src-tauri/tauri.conf.json`. The workflow currently
 requires Supabase build secrets, and tagged releases require an updater signing
 key. Its environment declarations are the source for accepted secret names and

@@ -224,15 +224,17 @@ describe('RSIP creation atomic domain chain', () => {
     );
     const setItem = Storage.prototype.setItem;
     let failMeta = true;
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(
-      function (key, value) {
-        if (key === STORAGE_KEYS.RSIP_META && failMeta) {
-          failMeta = false;
-          throw new Error('interrupted meta write');
-        }
-        setItem.call(this, key, value);
-      },
-    );
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      this: Storage,
+      key,
+      value,
+    ) {
+      if (key === STORAGE_KEYS.RSIP_META && failMeta) {
+        failMeta = false;
+        throw new Error('interrupted meta write');
+      }
+      setItem.call(this, key, value);
+    });
     await act(async () => {
       await expect(result.current.handleSubmitSplit()).rejects.toThrow(
         'interrupted meta write',

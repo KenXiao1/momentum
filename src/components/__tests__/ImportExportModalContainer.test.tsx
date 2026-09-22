@@ -1,4 +1,10 @@
-﻿import { act, fireEvent, render, screen } from '@testing-library/react';
+﻿import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ImportExportModalContainer } from '../ImportExportModalContainer';
 
@@ -96,32 +102,11 @@ vi.mock('../ImportExportModalView', () => ({
       >
         set-options
       </button>
-      <button
-        onClick={() =>
-          props.onFileUpload({
-            target: {
-              files: [
-                new File(['from-file'], 'import.json', {
-                  type: 'application/json',
-                }),
-              ],
-            },
-          } as React.ChangeEvent<HTMLInputElement>)
-        }
-      >
-        upload-file
-      </button>
-      <button
-        onClick={() =>
-          props.onFileUpload({
-            target: {
-              files: [],
-            },
-          } as React.ChangeEvent<HTMLInputElement>)
-        }
-      >
-        upload-empty
-      </button>
+      <input
+        data-testid="file-upload"
+        type="file"
+        onChange={props.onFileUpload}
+      />
       <button
         onClick={async () => {
           await props.onImport();
@@ -150,7 +135,7 @@ describe('ImportExportModalContainer', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers();
+    vi.useRealTimers();
     getSafeErrorDetailMock.mockReturnValue('safe detail');
     loggerErrorMock.mockReset();
 
@@ -186,7 +171,11 @@ describe('ImportExportModalContainer', () => {
       },
       exceptionRulesToImport: [{ id: 'rule-a' }],
     });
-    importRulesMock.mockResolvedValue({ imported: [{ id: 'rule-a' }] });
+    importRulesMock.mockResolvedValue({
+      imported: [{ id: 'rule-a' }],
+      errors: [],
+      skipped: [],
+    });
     exportRulesMock.mockResolvedValue([{ id: 'rule-a' }]);
     saveFileMock.mockResolvedValue(true);
     createExportDataMock.mockReturnValue({
@@ -236,6 +225,9 @@ describe('ImportExportModalContainer', () => {
       fireEvent.click(screen.getByText('run-import'));
     });
 
+    await waitFor(() =>
+      expect(screen.getByTestId('import-status')).toHaveTextContent('success'),
+    );
     expect(parseImportDataMock).toHaveBeenCalled();
     expect(importRulesMock).toHaveBeenCalledWith([{ id: 'rule-a' }], {
       skipDuplicates: true,
@@ -247,15 +239,14 @@ describe('ImportExportModalContainer', () => {
         history: [{ id: 'h1' }],
         rsipNodes: [{ id: 'r1' }],
         rsipMeta: { allowMultiplePerDay: true },
-        exceptionRules: [{ id: 'rule-a' }],
       }),
     );
 
     expect(screen.getByTestId('import-status').textContent).toBe('success');
-    await act(async () => {
-      vi.advanceTimersByTime(3000);
+    expect(onClose).not.toHaveBeenCalled();
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1), {
+      timeout: 4000,
     });
-    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('updates tab/options, handles file upload, and imports without auth for local storage', async () => {
@@ -287,13 +278,24 @@ describe('ImportExportModalContainer', () => {
     expect(screen.getByTestId('active-tab').textContent).toBe('import');
 
     fireEvent.click(screen.getByText('set-options'));
-    fireEvent.click(screen.getByText('upload-empty'));
-    fireEvent.click(screen.getByText('upload-file'));
+    fireEvent.change(screen.getByTestId('file-upload'), {
+      target: { files: [] },
+    });
+    fireEvent.change(screen.getByTestId('file-upload'), {
+      target: {
+        files: [
+          new File(['from-file'], 'import.json', { type: 'application/json' }),
+        ],
+      },
+    });
 
     await act(async () => {
       fireEvent.click(screen.getByText('run-import'));
     });
 
+    await waitFor(() =>
+      expect(screen.getByTestId('import-status')).toHaveTextContent('success'),
+    );
     expect(parseImportDataMock).toHaveBeenCalledWith(
       expect.objectContaining({
         json: '{"fromFile":"9"}',
@@ -308,7 +310,7 @@ describe('ImportExportModalContainer', () => {
     expect(onImport).toHaveBeenCalledWith(
       [{ id: 'c-local' }],
       expect.objectContaining({
-        exceptionRules: [],
+        history: [],
       }),
     );
   });
@@ -340,6 +342,9 @@ describe('ImportExportModalContainer', () => {
 
     expect(parseImportDataMock).not.toHaveBeenCalled();
     expect(screen.getByTestId('import-status').textContent).toBe('error');
+    await waitFor(() =>
+      expect(screen.getByTestId('import-status')).toHaveTextContent('error'),
+    );
     expect(screen.getByTestId('import-error').textContent).toBe(
       'Authentication failed: please make sure you are signed in and try importing again.',
     );
@@ -362,6 +367,9 @@ describe('ImportExportModalContainer', () => {
     await act(async () => {
       fireEvent.click(screen.getByText('run-import'));
     });
+    await waitFor(() =>
+      expect(screen.getByTestId('import-status')).toHaveTextContent('error'),
+    );
     expect(screen.getByTestId('import-error').textContent).toBe(
       'Invalid import format: please make sure you uploaded a valid JSON file.',
     );
@@ -373,6 +381,9 @@ describe('ImportExportModalContainer', () => {
     await act(async () => {
       fireEvent.click(screen.getByText('run-import'));
     });
+    await waitFor(() =>
+      expect(screen.getByTestId('import-status')).toHaveTextContent('error'),
+    );
     expect(screen.getByTestId('import-error').textContent).toBe(
       'Import failed: sanitized detail',
     );
@@ -384,6 +395,9 @@ describe('ImportExportModalContainer', () => {
     await act(async () => {
       fireEvent.click(screen.getByText('run-import'));
     });
+    await waitFor(() =>
+      expect(screen.getByTestId('import-status')).toHaveTextContent('error'),
+    );
     expect(screen.getByTestId('import-error').textContent).toBe(
       'Import failed. Check the console for details, then try again.',
     );
@@ -394,6 +408,9 @@ describe('ImportExportModalContainer', () => {
     await act(async () => {
       fireEvent.click(screen.getByText('run-import'));
     });
+    await waitFor(() =>
+      expect(screen.getByTestId('import-status')).toHaveTextContent('error'),
+    );
     expect(screen.getByTestId('import-error').textContent).toBe(
       'Import failed: unknown error',
     );
@@ -422,7 +439,6 @@ describe('ImportExportModalContainer', () => {
         chains: [{ id: 'c1' }],
         history: [{ id: 'h1' }],
         rsipNodes: [{ id: 'r1' }],
-        exceptionRules: [{ id: 'rule-a' }],
       }),
     );
     expect(saveFileMock).toHaveBeenCalledTimes(1);

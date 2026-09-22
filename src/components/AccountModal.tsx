@@ -3,6 +3,7 @@ import { AlertCircle, User } from 'lucide-react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { isTauri } from '../utils/platform';
 import { fireAndForget } from '../utils/fireAndForget';
+import { AccountModalDiagnosticsSection } from './account-modal/AccountModalDiagnosticsSection';
 import { AccountModalHeader } from './account-modal/AccountModalHeader';
 import { AccountModalLanguageSection } from './account-modal/AccountModalLanguageSection';
 import { AccountModalStorageSection } from './account-modal/AccountModalStorageSection';
@@ -118,7 +119,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="account-modal-title"
-        className="w-full max-w-md rounded-3xl border border-gray-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800"
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl border border-gray-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800"
         style={{ overscrollBehavior: 'contain' }}
       >
         <AccountModalHeader
@@ -143,6 +144,15 @@ export const AccountModal: React.FC<AccountModalProps> = ({
           )}
           <NotificationToggle placement="settings" />
           {accountContent}
+          <AccountModalDiagnosticsSection
+            t={controller.t}
+            busy={controller.diagnostics.busy}
+            status={controller.diagnostics.status}
+            onExport={() => {
+              void controller.diagnostics.exportFile();
+            }}
+            onClear={controller.diagnostics.clear}
+          />
         </div>
       </div>
     </div>

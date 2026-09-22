@@ -1,4 +1,4 @@
-import type { Chain, GroupChain, UnitChain } from '../../types';
+import type { Chain, ChainRecord, GroupChain, UnitChain } from '../../types';
 
 const now = () => new Date('2026-01-01T00:00:00.000Z');
 
@@ -17,6 +17,7 @@ export function createUnitChain(overrides: Partial<UnitChain> = {}): UnitChain {
     totalCompletions: overrides.totalCompletions ?? 0,
     totalFailures: overrides.totalFailures ?? 0,
     auxiliaryFailures: overrides.auxiliaryFailures ?? 0,
+    timeLimitExceptions: overrides.timeLimitExceptions ?? [],
     exceptions: overrides.exceptions ?? [],
     auxiliaryExceptions: overrides.auxiliaryExceptions ?? [],
     auxiliarySignal: overrides.auxiliarySignal ?? 'signal',
@@ -70,7 +71,7 @@ export function createGroupChain(
 
 export function createChain(
   kind: 'unit' | 'group' = 'unit',
-  overrides: Partial<Chain> = {},
+  overrides: Partial<ChainRecord> = {},
 ): Chain {
   return kind === 'group'
     ? createGroupChain(overrides as Partial<GroupChain>)

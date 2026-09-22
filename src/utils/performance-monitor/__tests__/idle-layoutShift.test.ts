@@ -26,7 +26,11 @@ describe('performance-monitor idle', () => {
     vi.useFakeTimers();
     const callback = vi.fn();
     const previous = window.requestIdleCallback;
-    window.requestIdleCallback = undefined;
+    Object.defineProperty(window, 'requestIdleCallback', {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
 
     try {
       runWhenIdle(callback);

@@ -113,7 +113,10 @@ describe('useBettingDomain', () => {
 
   it('should cancel supabase session and emit points refresh', async () => {
     const storage = createSupabaseStorageMock({
-      deleteBettingSession: vi.fn(async () => ({ ok: true, value: undefined })),
+      deleteBettingSession: vi.fn(async () => ({
+        ok: true as const,
+        value: undefined,
+      })),
     });
     vi.mocked(useStorage).mockReturnValue(storage);
 
@@ -178,9 +181,9 @@ describe('useBettingDomain', () => {
   it('should keep cleanup flow even when delete session returns domain error', async () => {
     const storage = createSupabaseStorageMock({
       deleteBettingSession: vi.fn(async () => ({
-        ok: false,
+        ok: false as const,
         error: {
-          code: 'BET_DELETE_FAILED',
+          code: 'STORAGE' as const,
           message: 'delete failed',
         },
       })),
@@ -214,7 +217,7 @@ describe('useBettingDomain', () => {
       {
         sessionId: 'session-4',
         error: {
-          code: 'BET_DELETE_FAILED',
+          code: 'STORAGE' as const,
           message: 'delete failed',
         },
       },

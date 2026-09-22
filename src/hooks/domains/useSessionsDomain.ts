@@ -67,7 +67,7 @@ export function useSessionsDomain({
   onPetTaskCompleted,
   onTaskLifecycleEvent,
 }: UseSessionsDomainParams) {
-  const { tr } = useI18n();
+  const { tr, t } = useI18n();
   const readState = resolveAppStateReader({ state, getState });
 
   const {
@@ -117,7 +117,13 @@ export function useSessionsDomain({
     });
 
   const { handlePauseSession, handleResumeSession } = createPauseResumeHandlers(
-    { state, getState: readState, setState, storage },
+    {
+      state,
+      getState: readState,
+      setState,
+      storage,
+      saveErrorMessage: t('sessions.pauseResume.saveFailed'),
+    },
   );
 
   return {

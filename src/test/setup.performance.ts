@@ -85,7 +85,7 @@ export const performanceUtils = {
       reset: () => {
         initialMemory = this.getMemoryUsage();
       },
-      check: (threshold = this.BENCHMARKS.MEMORY_LIMIT) => {
+      check: (threshold = performanceUtils.BENCHMARKS.MEMORY_LIMIT) => {
         const currentMemory = this.getMemoryUsage();
         const growth = currentMemory.used - initialMemory.used;
         return {
@@ -107,4 +107,7 @@ afterEach(() => {
 });
 
 // Make performance utilities available globally for tests
-global.performanceUtils = performanceUtils;
+Object.defineProperty(globalThis, 'performanceUtils', {
+  value: performanceUtils,
+  configurable: true,
+});

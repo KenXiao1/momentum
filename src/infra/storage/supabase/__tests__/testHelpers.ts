@@ -23,6 +23,7 @@ interface MockQueryBuilder {
   is: ReturnType<typeof vi.fn>;
   in: ReturnType<typeof vi.fn>;
   order: ReturnType<typeof vi.fn>;
+  range: ReturnType<typeof vi.fn>;
   limit: ReturnType<typeof vi.fn>;
   single: ReturnType<typeof vi.fn>;
   maybeSingle: ReturnType<typeof vi.fn>;
@@ -51,6 +52,7 @@ export function createMockQueryBuilder(
     is: vi.fn().mockReturnThis(),
     in: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
+    range: vi.fn().mockReturnValue(result),
     limit: vi.fn().mockReturnThis(),
     single: vi.fn().mockReturnValue(result),
     maybeSingle: vi.fn().mockReturnValue(result),

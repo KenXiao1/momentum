@@ -3,6 +3,9 @@ import { LOCAL_STORAGE_CAPABILITIES } from './ports';
 import { storage as localStorageUtils } from '../utils/storage';
 import { err, ok } from '../domain/result';
 import type { AppError } from '../domain/errors';
+import { withOperationLock } from '../utils/storage/operationJournal';
+import { measureStorageOperation } from '../utils/diagnostics';
+import { commitSessionCompletion, importData } from './localOperations';
 
 const notSupported = (message: string) =>
   err<AppError>({ code: 'NOT_SUPPORTED', message });
@@ -11,6 +14,10 @@ const AUTH_NOT_SUPPORTED_MESSAGE =
   'Auth is not supported in local storage mode';
 const USER_SETTINGS_NOT_SUPPORTED_MESSAGE =
   'User settings are not supported in local storage mode';
+// Reads may recover journals, so they share the write lock across documents.
+const readLocal = <T>(read: () => T): Promise<T> =>
+  withOperationLock('local-data', async () => read());
+
 const BETTING_NOT_SUPPORTED_MESSAGE =
   'Betting is not supported in local storage mode';
 const DAILY_CHECKIN_NOT_SUPPORTED_MESSAGE =
@@ -19,86 +26,162 @@ const DAILY_CHECKIN_NOT_SUPPORTED_MESSAGE =
 export const localStorageAdapter: MomentumStorage = {
   kind: 'local',
   capabilities: LOCAL_STORAGE_CAPABILITIES,
+  commitSessionCompletion: (input) =>
+    measureStorageOperation('session-complete', 'local', () =>
+      commitSessionCompletion(input),
+    ),
+  importData: (input) =>
+    measureStorageOperation('import', 'local', () => importData(input)),
 
   // Chains
-  getChains: async () => localStorageUtils.getChains(),
-  saveChains: async (chains) => localStorageUtils.saveChains(chains),
-  upsertChain: async (chain) => localStorageUtils.upsertChain(chain),
-  getActiveChains: async () => localStorageUtils.getActiveChains(),
-  getDeletedChains: async () => localStorageUtils.getDeletedChains(),
+  getChains: async () => readLocal(() => localStorageUtils.getChains()),
+  saveChains: async (chains) =>
+    withOperationLock('local-data', async () =>
+      localStorageUtils.saveChains(chains),
+    ),
+  upsertChain: async (chain) =>
+    withOperationLock('local-data', async () =>
+      localStorageUtils.upsertChain(chain),
+    ),
+  getActiveChains: async () =>
+    readLocal(() => localStorageUtils.getActiveChains()),
+  getDeletedChains: async () =>
+    readLocal(() => localStorageUtils.getDeletedChains()),
   softDeleteChain: async (chainId) =>
-    localStorageUtils.softDeleteChain(chainId),
-  restoreChain: async (chainId) => localStorageUtils.restoreChain(chainId),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.softDeleteChain(chainId),
+    ),
+  restoreChain: async (chainId) =>
+    withOperationLock('local-data', async () =>
+      localStorageUtils.restoreChain(chainId),
+    ),
   permanentlyDeleteChain: async (chainId) =>
-    localStorageUtils.permanentlyDeleteChain(chainId),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.permanentlyDeleteChain(chainId),
+    ),
   cleanupExpiredDeletedChains: async (olderThanDays) =>
-    localStorageUtils.cleanupExpiredDeletedChains(olderThanDays),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.cleanupExpiredDeletedChains(olderThanDays),
+    ),
 
   // Scheduled sessions
-  getScheduledSessions: async () => localStorageUtils.getScheduledSessions(),
+  getScheduledSessions: async () =>
+    readLocal(() => localStorageUtils.getScheduledSessions()),
   saveScheduledSessions: async (sessions) =>
-    localStorageUtils.saveScheduledSessions(sessions),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.saveScheduledSessions(sessions),
+    ),
   setScheduledSession: async (session) =>
-    localStorageUtils.setScheduledSession(session),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.setScheduledSession(session),
+    ),
   removeScheduledSession: async (chainId) =>
-    localStorageUtils.removeScheduledSession(chainId),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.removeScheduledSession(chainId),
+    ),
 
   // Active session
-  getActiveSession: async () => localStorageUtils.getActiveSession(),
+  getActiveSession: async () =>
+    readLocal(() => localStorageUtils.getActiveSession()),
   saveActiveSession: async (session) =>
-    localStorageUtils.saveActiveSession(session),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.saveActiveSession(session),
+    ),
 
   // Completion history
-  getCompletionHistory: async () => localStorageUtils.getCompletionHistory(),
+  getCompletionHistory: async () =>
+    readLocal(() => localStorageUtils.getCompletionHistory()),
   saveCompletionHistory: async (history) =>
-    localStorageUtils.saveCompletionHistory(history),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.saveCompletionHistory(history),
+    ),
   appendCompletionHistory: async (record) =>
-    localStorageUtils.appendCompletionHistory(record),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.appendCompletionHistory(record),
+    ),
 
   // RSIP
   createRSIPNodesWithMeta: async (nodes, meta) =>
-    localStorageUtils.createRSIPNodesWithMeta(nodes, meta),
-  getRSIPNodes: async () => localStorageUtils.getRSIPNodes(),
-  saveRSIPNodes: async (nodes) => localStorageUtils.saveRSIPNodes(nodes),
-  upsertRSIPNode: async (node) => localStorageUtils.upsertRSIPNode(node),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.createRSIPNodesWithMeta(nodes, meta),
+    ),
+  getRSIPNodes: async () => readLocal(() => localStorageUtils.getRSIPNodes()),
+  saveRSIPNodes: async (nodes) =>
+    withOperationLock('local-data', async () =>
+      localStorageUtils.saveRSIPNodes(nodes),
+    ),
+  upsertRSIPNode: async (node) =>
+    withOperationLock('local-data', async () =>
+      localStorageUtils.upsertRSIPNode(node),
+    ),
   removeRSIPNodes: async (nodeIds) =>
-    localStorageUtils.removeRSIPNodes(nodeIds),
-  getRSIPMeta: async () => localStorageUtils.getRSIPMeta(),
-  saveRSIPMeta: async (meta) => localStorageUtils.saveRSIPMeta(meta),
-  getRSIPGroups: async () => localStorageUtils.getRSIPGroups(),
-  saveRSIPGroups: async (groups) => localStorageUtils.saveRSIPGroups(groups),
-  getRSIPPolicyLibrary: async () => localStorageUtils.getRSIPPolicyLibrary(),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.removeRSIPNodes(nodeIds),
+    ),
+  getRSIPMeta: async () => readLocal(() => localStorageUtils.getRSIPMeta()),
+  saveRSIPMeta: async (meta) =>
+    withOperationLock('local-data', async () =>
+      localStorageUtils.saveRSIPMeta(meta),
+    ),
+  getRSIPGroups: async () => readLocal(() => localStorageUtils.getRSIPGroups()),
+  saveRSIPGroups: async (groups) =>
+    withOperationLock('local-data', async () =>
+      localStorageUtils.saveRSIPGroups(groups),
+    ),
+  getRSIPPolicyLibrary: async () =>
+    readLocal(() => localStorageUtils.getRSIPPolicyLibrary()),
   saveRSIPPolicyLibrary: async (entries) =>
-    localStorageUtils.saveRSIPPolicyLibrary(entries),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.saveRSIPPolicyLibrary(entries),
+    ),
   upsertRSIPLibraryEntry: async (entry) =>
-    localStorageUtils.upsertRSIPLibraryEntry(entry),
-  getRSIPRunHistory: async () => localStorageUtils.getRSIPRunHistory(),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.upsertRSIPLibraryEntry(entry),
+    ),
+  getRSIPRunHistory: async () =>
+    readLocal(() => localStorageUtils.getRSIPRunHistory()),
   saveRSIPRunHistory: async (records) =>
-    localStorageUtils.saveRSIPRunHistory(records),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.saveRSIPRunHistory(records),
+    ),
   appendRSIPRunRecord: async (record) =>
-    localStorageUtils.appendRSIPRunRecord(record),
-  getRSIPTaskLinks: async () => localStorageUtils.getRSIPTaskLinks(),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.appendRSIPRunRecord(record),
+    ),
+  getRSIPTaskLinks: async () =>
+    readLocal(() => localStorageUtils.getRSIPTaskLinks()),
   saveRSIPTaskLinks: async (links) =>
-    localStorageUtils.saveRSIPTaskLinks(links),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.saveRSIPTaskLinks(links),
+    ),
   getRSIPExecutionRecords: async () =>
-    localStorageUtils.getRSIPExecutionRecords(),
+    readLocal(() => localStorageUtils.getRSIPExecutionRecords()),
   appendRSIPExecutionRecord: async (record) =>
-    localStorageUtils.appendRSIPExecutionRecord(record),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.appendRSIPExecutionRecord(record),
+    ),
 
   // Task time stats
-  getTaskTimeStats: async () => localStorageUtils.getTaskTimeStats(),
+  getTaskTimeStats: async () =>
+    readLocal(() => localStorageUtils.getTaskTimeStats()),
   saveTaskTimeStats: async (stats) =>
-    localStorageUtils.saveTaskTimeStats(stats),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.saveTaskTimeStats(stats),
+    ),
   getLastCompletionTime: async (chainId) =>
-    localStorageUtils.getLastCompletionTime(chainId),
+    readLocal(() => localStorageUtils.getLastCompletionTime(chainId)),
   updateTaskTimeStats: async (chainId, actualDuration) =>
-    localStorageUtils.updateTaskTimeStats(chainId, actualDuration),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.updateTaskTimeStats(chainId, actualDuration),
+    ),
   getTaskAverageTime: async (chainId) =>
-    localStorageUtils.getTaskAverageTime(chainId),
+    readLocal(() => localStorageUtils.getTaskAverageTime(chainId)),
 
   // Compatibility / maintenance
   migrateCompletionHistoryForTiming: async () =>
-    localStorageUtils.migrateCompletionHistoryForTiming(),
+    withOperationLock('local-data', async () =>
+      localStorageUtils.migrateCompletionHistoryForTiming(),
+    ),
   clearCache: () => localStorageUtils.clearCache(),
 
   // Auth (not supported in local mode)
@@ -134,6 +217,9 @@ export const localStorageAdapter: MomentumStorage = {
     notSupported(DAILY_CHECKIN_NOT_SUPPORTED_MESSAGE),
 
   // Pet (supported in local mode)
-  getPetState: async () => localStorageUtils.getPetState(),
-  savePetState: async (pet) => localStorageUtils.savePetState(pet),
+  getPetState: async () => readLocal(() => localStorageUtils.getPetState()),
+  savePetState: async (pet) =>
+    withOperationLock('local-data', async () =>
+      localStorageUtils.savePetState(pet),
+    ),
 };

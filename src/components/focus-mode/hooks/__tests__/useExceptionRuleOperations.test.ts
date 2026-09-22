@@ -183,6 +183,29 @@ describe('useExceptionRuleOperations', () => {
     expect(params.scheduleAutoResume).not.toHaveBeenCalled();
   });
 
+  it('retains the rule dialog without a success message or auto-resume when pause persistence fails', async () => {
+    const params = createParams('pause');
+    params.onPause.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    const rule = createRule();
+    const pauseOptions = { duration: 120, autoResume: true };
+    const { result } = renderHook(() => useExceptionRuleOperations(params));
+    await act(async () => {
+      await result.current.handleRuleSelected(rule, pauseOptions);
+    });
+    expect(params.finishFlow).not.toHaveBeenCalled();
+    expect(params.onRuleUsed).not.toHaveBeenCalled();
+    expect(params.scheduleAutoResume).not.toHaveBeenCalled();
+    expect(userFeedbackHandlerMock.showSuccess).not.toHaveBeenCalled();
+    expect(userFeedbackHandlerMock.hideProgress).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      await result.current.handleRuleSelected(rule, pauseOptions);
+    });
+    expect(params.finishFlow).toHaveBeenCalledTimes(1);
+    expect(params.onRuleUsed).toHaveBeenCalledTimes(1);
+    expect(params.scheduleAutoResume).toHaveBeenCalledWith(2);
+    expect(userFeedbackHandlerMock.showSuccess).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps the flow open and surfaces a storage error when rule use rejects', async () => {
     exceptionRuleManagerMock.useRule.mockRejectedValue(
       new Error('storage unavailable'),

@@ -1,11 +1,16 @@
 import type { CompletionHistory } from '../../../types';
 import type { SupabaseClient, SupabaseStorageContext } from './types';
+import { operationFingerprint } from '../../../utils/operationIdentity';
+import { readOperationRows } from './operations';
+import {
+  getObservedUserScopedRows,
+  getUserScopedOrderedRows,
+  replaceUserScopedRows,
+} from './rsipShared';
 import {
   buildCompletionHistoryRowsBasic,
   buildCompletionHistoryRowsWithNewFields,
-  mapBasicCompletionHistoryRow,
   mapCompletionHistoryRow,
-  type CompletionHistoryBasicRow,
   type CompletionHistorySelectRow,
 } from './historyMapper';
 
@@ -84,39 +89,13 @@ async function insertCompletionHistoryLegacy(
 export async function getCompletionHistory(
   ctx: SupabaseStorageContext,
 ): Promise<CompletionHistory[]> {
-  const user = await ctx.getCurrentUser();
-  if (!user) return [];
-
-  const client = ctx.getClient();
-
-  const selectFull =
-    'chain_id, completed_at, duration, was_successful, reason_for_failure, actual_duration, is_forward_timed, description, notes';
-  const selectBasic =
-    'chain_id, completed_at, duration, was_successful, reason_for_failure, description, notes';
-
-  const { data, error } = await client
-    .from('completion_history')
-    .select(selectFull)
-    .eq('user_id', user.id)
-    .order('completed_at', { ascending: false });
-
-  if (!error && data) {
-    return (data as CompletionHistorySelectRow[]).map(mapCompletionHistoryRow);
-  }
-
-  if (error && !isMissingTimingColumns(error)) return [];
-
-  const { data: basicData, error: basicError } = await client
-    .from('completion_history')
-    .select(selectBasic)
-    .eq('user_id', user.id)
-    .order('completed_at', { ascending: false });
-
-  if (basicError || !basicData) return [];
-
-  return (basicData as CompletionHistoryBasicRow[]).map(
-    mapBasicCompletionHistoryRow,
-  );
+  const { rows } = await getUserScopedOrderedRows(ctx, {
+    table: 'completion_history',
+    orderBy: 'completed_at',
+    ascending: false,
+    errorLabel: 'completion history',
+  });
+  return (rows as CompletionHistorySelectRow[]).map(mapCompletionHistoryRow);
 }
 
 async function persistCompletionHistory(
@@ -170,16 +149,33 @@ export async function saveCompletionHistory(
   history: CompletionHistory[],
 ): Promise<void> {
   const user = await ctx.getCurrentUser();
-  if (!user) return;
-
-  const { error } = await ctx
-    .getClient()
-    .from('completion_history')
-    .delete()
-    .eq('user_id', user.id);
-  if (error) return;
-
-  await persistCompletionHistory(ctx, user.id, history);
+  if (!user)
+    throw new Error('Authentication required to save completion history.');
+  const before =
+    getObservedUserScopedRows(ctx, user.id, 'completion_history') ??
+    (await readOperationRows(ctx, 'completion_history', user.id));
+  const rows = await Promise.all(
+    buildCompletionHistoryRowsWithNewFields(user.id, history).map(
+      async (row) => {
+        const existing = before.find(
+          (item) =>
+            item.chain_id === row.chain_id &&
+            new Date(String(item.completed_at)).getTime() ===
+              new Date(row.completed_at).getTime(),
+        );
+        // Stable identity preserves existing trigger metadata and survives retries
+        // when an INSERT committed but its response never reached this device.
+        const digest = await operationFingerprint({
+          userId: user.id,
+          chainId: row.chain_id,
+          completedAt: row.completed_at,
+        });
+        const stableId = `${digest.slice(0, 8)}-${digest.slice(8, 12)}-8${digest.slice(13, 16)}-a${digest.slice(17, 20)}-${digest.slice(20, 32)}`;
+        return { ...existing, ...row, id: existing?.id ?? stableId };
+      },
+    ),
+  );
+  await replaceUserScopedRows(ctx, 'completion_history', rows, before, user.id);
 }
 
 export async function appendCompletionHistory(

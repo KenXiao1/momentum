@@ -34,6 +34,12 @@ function createBaseStorageMock(kind: Kind): MomentumStorage {
     getActiveSession: vi.fn(async () => null),
     saveActiveSession: vi.fn(async () => undefined),
 
+    commitSessionCompletion: vi.fn(async (input) => ({
+      chains: input.chains,
+      record: input.record,
+    })),
+    importData: vi.fn(async () => undefined),
+
     // Completion history
     getCompletionHistory: vi.fn(async () => []),
     saveCompletionHistory: vi.fn(async () => undefined),
@@ -95,6 +101,8 @@ function createBaseStorageMock(kind: Kind): MomentumStorage {
     completeTaskWithBetting: vi.fn(async () => ok(undefined)),
     placeBet: vi.fn(async () =>
       ok({
+        success: true,
+        message: 'ok',
         session_id: 'session-id',
         chain_name: 'Test Chain',
         points_wagered: 0,

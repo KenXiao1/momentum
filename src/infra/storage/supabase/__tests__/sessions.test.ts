@@ -477,7 +477,7 @@ describe('sessions.ts', () => {
   });
 
   describe('saveActiveSession', () => {
-    it('should return early when user is not authenticated', async () => {
+    it('rejects saving and clearing a session when authentication is lost', async () => {
       const ctx = createMockContext({ user: null });
       const session: ActiveSession = {
         id: 'session-1',
@@ -488,7 +488,12 @@ describe('sessions.ts', () => {
         totalPausedTime: 0,
       };
 
-      await saveActiveSession(ctx, session);
+      await expect(saveActiveSession(ctx, session)).rejects.toThrow(
+        'Authentication required',
+      );
+      await expect(saveActiveSession(ctx, null)).rejects.toThrow(
+        'Authentication required',
+      );
 
       expect(ctx.mockClient.from).not.toHaveBeenCalled();
     });

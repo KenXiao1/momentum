@@ -12,7 +12,10 @@ interface TaskCompletionDialogProps {
   chainName: string;
   chainId: string;
   isDurationless?: boolean;
-  onComplete: (description: string, notes?: string) => void;
+  onComplete: (
+    description: string,
+    notes?: string,
+  ) => void | Promise<boolean | void>;
   onCancel: () => void;
 }
 
@@ -28,6 +31,7 @@ export const TaskCompletionDialog: React.FC<TaskCompletionDialogProps> = ({
 
   const {
     description,
+    isSubmitting,
     setDescription,
     notes,
     setNotes,
@@ -53,7 +57,8 @@ export const TaskCompletionDialog: React.FC<TaskCompletionDialogProps> = ({
 
   if (!isOpen) return null;
 
-  const disableComplete = isDurationless && !description.trim();
+  const disableComplete =
+    isSubmitting || (isDurationless && !description.trim());
 
   return (
     <DialogShell

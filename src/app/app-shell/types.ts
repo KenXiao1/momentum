@@ -160,9 +160,12 @@ export interface AppShellSessionViewModel {
   auxiliaryJudgmentChain: Chain | null;
   clearAuxiliaryJudgment: () => void;
   bettingModal: AppShellBettingModalViewModel;
-  handleCompleteSession: (description?: string, notes?: string) => void;
-  handleInterruptSession: (reason?: string) => void;
-  handlePauseSession: () => void;
+  handleCompleteSession: (
+    description?: string,
+    notes?: string,
+  ) => void | Promise<boolean | void>;
+  handleInterruptSession: (reason?: string) => void | Promise<boolean | void>;
+  handlePauseSession: () => void | Promise<boolean | void>;
   handleResumeSession: () => void;
   handleBetPlaced: (betResult: BetPlacementResult) => Promise<void>;
   handleBetCancelled: () => Promise<void>;

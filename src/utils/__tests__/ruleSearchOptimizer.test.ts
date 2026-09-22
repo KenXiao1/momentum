@@ -165,7 +165,7 @@ describe('RuleSearchOptimizer', () => {
     it('should generate suggestions for completion rules', () => {
       const suggestions = optimizer.generateNameSuggestions(
         '任务',
-        ExceptionRuleType.EARLY_COMPLETION,
+        ExceptionRuleType.EARLY_COMPLETION_ONLY,
       );
       expect(suggestions.length).toBeGreaterThan(0);
       expect(suggestions.some((s) => s.includes('任务'))).toBe(true);

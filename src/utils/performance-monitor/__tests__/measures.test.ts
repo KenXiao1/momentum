@@ -21,12 +21,9 @@ describe('performance-monitor/measures', () => {
 
   it('measureRender creates marks and handles measure failures', () => {
     const renderFn = vi.fn(() => ({ ok: true }));
-    const markSpy = vi
-      .spyOn(performance, 'mark')
-      .mockImplementation(() => undefined);
+    const markSpy = vi.spyOn(performance, 'mark');
     const measureSpy = vi
       .spyOn(performance, 'measure')
-      .mockImplementationOnce(() => undefined)
       .mockImplementationOnce(() => {
         throw new Error('measure failed');
       });

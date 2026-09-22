@@ -1,7 +1,8 @@
+import { createChain as createFixtureChain } from '../../../../test/factories/chainFactory';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FormEvent } from 'react';
-import type { Chain } from '../../../../types';
+import type { ChainRecord, Chain } from '../../../../types';
 import {
   CUSTOM_AUXILIARY_SIGNAL_VALUE,
   CUSTOM_TRIGGER_VALUE,
@@ -9,7 +10,7 @@ import {
 import { useChainEditorForm } from '../useChainEditorForm';
 
 function createChain(overrides: Partial<Chain> = {}): Chain {
-  return {
+  const fields: Partial<ChainRecord> = {
     id: 'chain-1',
     type: 'unit',
     parentId: 'parent-0',
@@ -31,6 +32,9 @@ function createChain(overrides: Partial<Chain> = {}): Chain {
     timeLimitExceptions: [],
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     ...overrides,
+  };
+  return {
+    ...createFixtureChain(fields.type === 'group' ? 'group' : 'unit', fields),
   };
 }
 

@@ -59,8 +59,11 @@ An unchanged failed form keeps its node IDs for retry. Metadata updater function
 are evaluated inside the domain queue, so mode changes retain committed creation
 metadata without a second UI metadata snapshot or queue.
 
-This contract covers form creation. Library restoration, bulk replacement, and
-collapse/archive orchestration have their own existing persistence paths.
+Bulk RSIP/history replacement and complete-session/import operations use the
+transaction and recovery contracts in [operations recovery](OPERATIONS_RECOVERY.md).
+The local adapter writes a recovery journal; cloud operations use authenticated
+RPCs with observed-row comparison and durable operation receipts. Notifications
+and UI success transitions follow confirmation of the core commit.
 
 `StorageContext.tsx` selects and wires the adapter. Tauri starts in local mode
 unless a valid cloud preference was saved. Web defaults to cloud when Supabase

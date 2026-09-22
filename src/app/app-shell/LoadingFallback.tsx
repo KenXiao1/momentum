@@ -1,7 +1,7 @@
 import { useI18n } from '../../i18n';
 
 export function LoadingFallback() {
-  const { tr } = useI18n();
+  const { t } = useI18n();
 
   return (
     <div className="bg-background flex min-h-screen items-center justify-center">
@@ -10,7 +10,7 @@ export function LoadingFallback() {
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
         </div>
         <p className="text-sm text-gray-500 dark:text-slate-400">
-          {tr('加载中…', 'Loading…')}
+          {t('common.loading')}
         </p>
       </div>
     </div>

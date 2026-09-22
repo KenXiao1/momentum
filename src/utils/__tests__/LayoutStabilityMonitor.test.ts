@@ -56,17 +56,37 @@ describe('LayoutStabilityMonitor', () => {
   let monitor: LayoutStabilityMonitor;
   let container: HTMLElement;
 
-  let resizeObserverObserve: ReturnType<typeof vi.fn>;
-  let resizeObserverDisconnect: ReturnType<typeof vi.fn>;
-  let mutationObserverObserve: ReturnType<typeof vi.fn>;
-  let mutationObserverDisconnect: ReturnType<typeof vi.fn>;
-  let performanceObserverObserve: ReturnType<typeof vi.fn>;
-  let performanceObserverDisconnect: ReturnType<typeof vi.fn>;
+  let resizeObserverObserve: ReturnType<
+    typeof vi.fn<(...args: unknown[]) => void>
+  >;
+  let resizeObserverDisconnect: ReturnType<
+    typeof vi.fn<(...args: unknown[]) => void>
+  >;
+  let mutationObserverObserve: ReturnType<
+    typeof vi.fn<(...args: unknown[]) => void>
+  >;
+  let mutationObserverDisconnect: ReturnType<
+    typeof vi.fn<(...args: unknown[]) => void>
+  >;
+  let performanceObserverObserve: ReturnType<
+    typeof vi.fn<(...args: unknown[]) => void>
+  >;
+  let performanceObserverDisconnect: ReturnType<
+    typeof vi.fn<(...args: unknown[]) => void>
+  >;
 
-  let mockResizeObserver: ReturnType<typeof vi.fn>;
-  let mockMutationObserver: ReturnType<typeof vi.fn>;
-  let mockPerformanceObserver: ReturnType<typeof vi.fn>;
-  let mockRequestAnimationFrame: ReturnType<typeof vi.fn>;
+  let mockResizeObserver: ReturnType<
+    typeof vi.fn<(...args: unknown[]) => void>
+  >;
+  let mockMutationObserver: ReturnType<
+    typeof vi.fn<(...args: unknown[]) => void>
+  >;
+  let mockPerformanceObserver: ReturnType<
+    typeof vi.fn<(...args: unknown[]) => void>
+  >;
+  let mockRequestAnimationFrame: ReturnType<
+    typeof vi.fn<(callback: FrameRequestCallback) => number>
+  >;
 
   let originalResizeObserver: unknown;
   let originalMutationObserver: unknown;

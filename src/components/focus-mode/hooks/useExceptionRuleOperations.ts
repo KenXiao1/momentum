@@ -30,7 +30,7 @@ function isExceptionRule(value: unknown): value is ExceptionRule {
 export function useExceptionRuleOperations(params: {
   pendingActionType: PendingActionType | null;
   sessionContext: SessionContext;
-  onPause: (duration?: number) => void;
+  onPause: (duration?: number) => void | Promise<boolean | void>;
   onRequestCompletionDialog: () => void;
   scheduleAutoResume: (minutes: number) => void;
   clearAutoResumeSchedule: () => void;
@@ -165,6 +165,13 @@ export function useExceptionRuleOperations(params: {
         pendingActionType,
         pauseOptions,
       );
+      if (
+        pendingActionType === 'pause' &&
+        (await params.onPause(pauseOptions?.duration)) === false
+      ) {
+        userFeedbackHandler.hideProgress();
+        return;
+      }
       userFeedbackHandler.hideProgress();
       const successMessage =
         pendingActionType === 'pause'
@@ -183,7 +190,6 @@ export function useExceptionRuleOperations(params: {
       params.onRuleUsed?.(rule, pendingActionType, pauseOptions);
 
       if (pendingActionType === 'pause') {
-        params.onPause(pauseOptions?.duration);
         if (pauseOptions?.duration && pauseOptions.autoResume) {
           params.scheduleAutoResume(Math.floor(pauseOptions.duration / 60));
         }

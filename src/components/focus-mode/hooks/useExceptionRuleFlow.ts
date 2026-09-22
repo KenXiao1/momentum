@@ -13,7 +13,7 @@ import {
 
 interface UseExceptionRuleFlowParams {
   sessionContext: SessionContext;
-  onPause: (duration?: number) => void;
+  onPause: (duration?: number) => void | Promise<boolean | void>;
   onRequestCompletionDialog: () => void;
   scheduleAutoResume: (minutes: number) => void;
   clearAutoResumeSchedule: () => void;

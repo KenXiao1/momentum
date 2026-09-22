@@ -202,13 +202,15 @@ describe('petLogic', () => {
   describe('createNewPet', () => {
     it('should create a new pet with generated id and defaults', () => {
       vi.useFakeTimers();
-      vi.spyOn(crypto, 'randomUUID').mockReturnValue('pet-uuid-1');
+      vi.spyOn(crypto, 'randomUUID').mockReturnValue(
+        '00000000-0000-4000-8000-000000000001',
+      );
       const now = new Date('2026-02-06T12:34:56.000Z');
       vi.setSystemTime(now);
 
       const pet = createNewPet('Momo');
 
-      expect(pet.id).toBe('pet-uuid-1');
+      expect(pet.id).toBe('00000000-0000-4000-8000-000000000001');
       expect(pet.name).toBe('Momo');
       expect(pet.level).toBe(1);
       expect(pet.stage).toBe('egg');

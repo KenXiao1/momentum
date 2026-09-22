@@ -18,6 +18,7 @@ import {
 
 vi.mock('../../../i18n', () => ({
   useI18n: () => ({
+    t: (key: string) => (key === 'common.loading' ? 'Loading…' : key),
     tr: (_zh: string, en: string) => en,
   }),
 }));
@@ -208,6 +209,7 @@ function createProps(overrides: AppShellViewOverrides = {}): AppShellViewProps {
     mood: 'happy',
     isLoading: false,
     hasPet: true,
+    reloadPet: vi.fn(async () => undefined),
     createPet: vi.fn(async () => createPetState()),
     feedPet: vi.fn(async () => null),
     onTaskCompleted: vi.fn(async () => null),

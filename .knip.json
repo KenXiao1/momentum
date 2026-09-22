@@ -11,5 +11,6 @@
     "src/test/**",
     "src/**/*.test.*",
     "src/**/*.spec.*"
-  ]
+  ],
+  "ignoreBinaries": ["python3"]
 }

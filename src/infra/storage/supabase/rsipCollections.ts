@@ -30,36 +30,22 @@ export async function saveRSIPGroups(
   groups: RSIPNodeGroup[],
 ): Promise<void> {
   const user = await ctx.getCurrentUser();
-  if (!user) return;
-  const client = ctx.getClient();
-  if (groups.length > 0) {
-    const { error } = await client.from('rsip_groups').upsert(
-      groups.map((group) => ({
-        id: group.id,
-        user_id: user.id,
-        title: group.title,
-        fault_tolerance: group.faultTolerance,
-        fault_tolerance_used: group.faultToleranceUsed ?? 0,
-        emoji: group.emoji ?? null,
-        created_at: group.createdAt.toISOString(),
-      })),
-    );
-    if (error) throw new Error(`Failed to save rsip groups: ${error.message}`);
-  }
-  const existing = await getRSIPGroups(ctx);
-  const retainedIds = new Set(groups.map((group) => group.id));
-  const removedIds = existing
-    .filter((group) => !retainedIds.has(group.id))
-    .map((group) => group.id);
-  if (removedIds.length > 0) {
-    const { error } = await client
-      .from('rsip_groups')
-      .delete()
-      .eq('user_id', user.id)
-      .in('id', removedIds);
-    if (error)
-      throw new Error(`Failed to remove rsip groups: ${error.message}`);
-  }
+  if (!user) throw new Error('Authentication required to save RSIP groups.');
+  await replaceUserScopedRows(
+    ctx,
+    'rsip_groups',
+    groups.map((group) => ({
+      id: group.id,
+      user_id: user.id,
+      title: group.title,
+      fault_tolerance: group.faultTolerance,
+      fault_tolerance_used: group.faultToleranceUsed ?? 0,
+      emoji: group.emoji ?? null,
+      created_at: group.createdAt.toISOString(),
+    })),
+    undefined,
+    user.id,
+  );
 }
 
 export async function getRSIPPolicyLibrary(
@@ -79,7 +65,7 @@ export async function saveRSIPPolicyLibrary(
   entries: RSIPLibraryEntry[],
 ): Promise<void> {
   const user = await ctx.getCurrentUser();
-  if (!user) return;
+  if (!user) throw new Error('Authentication required to save collections.');
   await replaceUserScopedRows(
     ctx,
     'rsip_policy_library',
@@ -97,8 +83,9 @@ export async function saveRSIPPolicyLibrary(
       use_timer: entry.useTimer ?? false,
       timer_minutes: entry.timerMinutes ?? null,
       is_passive: entry.isPassive ?? false,
-      updated_at: new Date().toISOString(),
     })),
+    undefined,
+    user.id,
   );
 }
 
@@ -119,7 +106,7 @@ export async function saveRSIPRunHistory(
   records: RSIPRunRecord[],
 ): Promise<void> {
   const user = await ctx.getCurrentUser();
-  if (!user) return;
+  if (!user) throw new Error('Authentication required to save collections.');
   await replaceUserScopedRows(
     ctx,
     'rsip_run_history',
@@ -132,8 +119,9 @@ export async function saveRSIPRunHistory(
       duration_days: record.durationDays,
       collapse_reason: record.collapseReason ?? null,
       collapse_node_title: record.collapseNodeTitle ?? null,
-      updated_at: new Date().toISOString(),
     })),
+    undefined,
+    user.id,
   );
 }
 
@@ -155,7 +143,7 @@ export async function saveRSIPTaskLinks(
   links: RSIPTaskLink[],
 ): Promise<void> {
   const user = await ctx.getCurrentUser();
-  if (!user) return;
+  if (!user) throw new Error('Authentication required to save collections.');
   await replaceUserScopedRows(
     ctx,
     'rsip_task_links',
@@ -171,5 +159,7 @@ export async function saveRSIPTaskLinks(
       is_active: link.isActive,
       updated_at: link.updatedAt.toISOString(),
     })),
+    undefined,
+    user.id,
   );
 }

@@ -16,7 +16,7 @@ vi.mock('../../../../services/platform/SystemNotificationService', () => ({
 }));
 
 describe('group completion and rendered tree consistency', () => {
-  it('B09 renders the settled cycle and reset progress without a refresh', () => {
+  it('B09 renders the settled cycle and reset progress without a refresh', async () => {
     const group = createGroupChain({ id: 'group' });
     const unit = createUnitChain({
       id: 'unit',
@@ -45,7 +45,7 @@ describe('group completion and rendered tree consistency', () => {
       setActiveSessionId: vi.fn(),
       tr: (_zh, en) => en,
     });
-    handlers.handleCompleteSession();
+    await handlers.handleCompleteSession();
     const tree = buildChainTree(state.chains);
     expect(tree[0].currentStreak).toBe(1);
     expect(tree[0].totalCompletions).toBe(1);

@@ -1,3 +1,4 @@
+import type { SafelySaveChains } from '../useChainsDomain';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppState, ChainDraft } from '../../../types';
@@ -130,6 +131,9 @@ describe('useChainsDomain', () => {
     trMock.mockClear();
     vi.mocked(useI18n).mockReturnValue({
       language: 'en',
+      locale: 'en-US',
+      setLanguage: vi.fn(),
+      t: vi.fn((key) => key),
       tr: trMock,
     });
   });
@@ -225,7 +229,7 @@ describe('useChainsDomain', () => {
     const legacyTaskGroup = {
       ...createUnitChain({ id: 'legacy-taskgroup', name: 'Legacy Task Group' }),
       isTaskGroup: true,
-    } as AppState['chains'][number];
+    } as unknown as AppState['chains'][number];
     const decoy = createUnitChain({ id: 'decoy-unit', name: 'Decoy Unit' });
     const stateRef = createStateContainer(
       createAppState({ chains: [decoy, legacyTaskGroup] }),
@@ -296,7 +300,9 @@ describe('useChainsDomain', () => {
   });
 
   it('should create a new chain and persist via safelySaveChains', async () => {
-    vi.spyOn(crypto, 'randomUUID').mockReturnValue('new-chain-id');
+    vi.spyOn(crypto, 'randomUUID').mockReturnValue(
+      '00000000-0000-4000-8000-000000000001',
+    );
     const existing = createUnitChain({ id: 'existing-1', name: 'Existing' });
     const anotherActive = createUnitChain({
       id: 'existing-2',
@@ -313,7 +319,7 @@ describe('useChainsDomain', () => {
     const storage = createLocalStorageMock({
       getChains: vi.fn(async () => [existing, anotherActive, deleted]),
     });
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
     const onNavigateToDashboard = vi.fn();
 
     const { result } = renderHook(() =>
@@ -335,7 +341,7 @@ describe('useChainsDomain', () => {
     const updated = safelySaveChains.mock.calls[0]?.[0];
     expect(updated).toHaveLength(3);
     expect(updated?.[2]).toMatchObject({
-      id: 'new-chain-id',
+      id: '00000000-0000-4000-8000-000000000001',
       name: 'Draft Chain',
       parentId: undefined,
       currentStreak: 0,
@@ -370,7 +376,7 @@ describe('useChainsDomain', () => {
       'CHAINS',
       'Create chain',
       expect.objectContaining({
-        newChainId: 'new-chain-id',
+        newChainId: '00000000-0000-4000-8000-000000000001',
         type: 'unit',
       }),
     );
@@ -390,7 +396,9 @@ describe('useChainsDomain', () => {
   });
 
   it('should create a new group chain from draft when not editing', async () => {
-    vi.spyOn(crypto, 'randomUUID').mockReturnValue('new-group-id');
+    vi.spyOn(crypto, 'randomUUID').mockReturnValue(
+      '00000000-0000-4000-8000-000000000002',
+    );
     const existing = createUnitChain({ id: 'existing-1', name: 'Existing' });
     const stateRef = createStateContainer(
       createAppState({ chains: [existing] }),
@@ -398,7 +406,7 @@ describe('useChainsDomain', () => {
     const storage = createLocalStorageMock({
       getChains: vi.fn(async () => [existing]),
     });
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useChainsDomain({
@@ -418,10 +426,12 @@ describe('useChainsDomain', () => {
     });
 
     const updated = safelySaveChains.mock.calls[0]?.[0] as AppState['chains'];
-    const newGroup = updated.find((chain) => chain.id === 'new-group-id');
+    const newGroup = updated.find(
+      (chain) => chain.id === '00000000-0000-4000-8000-000000000002',
+    );
 
     expect(newGroup).toMatchObject({
-      id: 'new-group-id',
+      id: '00000000-0000-4000-8000-000000000002',
       type: 'group',
       name: 'New Group Draft',
     });
@@ -429,7 +439,7 @@ describe('useChainsDomain', () => {
       'CHAINS',
       'Create chain',
       expect.objectContaining({
-        newChainId: 'new-group-id',
+        newChainId: '00000000-0000-4000-8000-000000000002',
         type: 'group',
       }),
     );
@@ -449,7 +459,7 @@ describe('useChainsDomain', () => {
     const storage = createLocalStorageMock({
       getChains: vi.fn(async () => [editing, untouched]),
     });
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useChainsDomain({
@@ -501,17 +511,20 @@ describe('useChainsDomain', () => {
   });
 
   it('should default isCopy to false when omitted and preserve a valid string parent id', async () => {
-    vi.spyOn(crypto, 'randomUUID').mockReturnValue('implicit-copy-flag-id');
+    vi.spyOn(crypto, 'randomUUID').mockReturnValue(
+      '00000000-0000-4000-8000-000000000003',
+    );
     const stateRef = createStateContainer(createAppState({ chains: [] }));
     const storage = createLocalStorageMock({
       getChains: vi.fn(async () => []),
     });
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useChainsDomain({
         state: stateRef.getState(),
         setState: stateRef.setState,
+        editingChainId: null,
         storage,
         safelySaveChains,
       }),
@@ -525,7 +538,7 @@ describe('useChainsDomain', () => {
 
     expect(safelySaveChains).toHaveBeenCalledWith([
       expect.objectContaining({
-        id: 'implicit-copy-flag-id',
+        id: '00000000-0000-4000-8000-000000000003',
         parentId: 'parent-123',
         name: 'Implicit Copy Flag',
       }),
@@ -552,7 +565,7 @@ describe('useChainsDomain', () => {
     const storage = createLocalStorageMock({
       getChains: vi.fn(async () => [editing]),
     });
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useChainsDomain({
@@ -591,7 +604,7 @@ describe('useChainsDomain', () => {
     const storage = createLocalStorageMock({
       getChains: vi.fn(async () => [editing]),
     });
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useChainsDomain({
@@ -619,7 +632,9 @@ describe('useChainsDomain', () => {
   });
 
   it('should create a copied chain when editing and copy mode is enabled', async () => {
-    vi.spyOn(crypto, 'randomUUID').mockReturnValue('copied-chain-id');
+    vi.spyOn(crypto, 'randomUUID').mockReturnValue(
+      '00000000-0000-4000-8000-000000000004',
+    );
     const editing = createUnitChain({ id: 'editing-1', name: 'Source Chain' });
     const stateRef = createStateContainer(
       createAppState({ chains: [editing] }),
@@ -627,7 +642,7 @@ describe('useChainsDomain', () => {
     const storage = createLocalStorageMock({
       getChains: vi.fn(async () => [editing]),
     });
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useChainsDomain({
@@ -648,7 +663,9 @@ describe('useChainsDomain', () => {
 
     const updated = safelySaveChains.mock.calls[0]?.[0] as AppState['chains'];
     const original = updated.find((c) => c.id === editing.id);
-    const copied = updated.find((c) => c.id === 'copied-chain-id');
+    const copied = updated.find(
+      (c) => c.id === '00000000-0000-4000-8000-000000000004',
+    );
 
     expect(updated).toHaveLength(2);
     expect(original?.name).toBe('Source Chain');
@@ -657,7 +674,7 @@ describe('useChainsDomain', () => {
       'CHAINS',
       'Copy chain',
       expect.objectContaining({
-        newChainId: 'copied-chain-id',
+        newChainId: '00000000-0000-4000-8000-000000000004',
       }),
     );
     expectNonEmptyDebugMessages();
@@ -818,6 +835,7 @@ describe('useChainsDomain', () => {
       useChainsDomain({
         state: stateRef.getState(),
         setState: stateRef.setState,
+        editingChainId: null,
         storage,
         safelySaveChains: vi.fn(async () => undefined),
       }),
@@ -881,6 +899,9 @@ describe('useChainsDomain', () => {
   it('should use chinese error copy when safe detail is unavailable', async () => {
     vi.mocked(useI18n).mockReturnValue({
       language: 'zh',
+      locale: 'zh-CN',
+      setLanguage: vi.fn(),
+      t: vi.fn((key) => key),
       tr: (zh: string) => zh,
     });
     const editing = createUnitChain({ id: 'editing-zh', name: 'Editing Zh' });

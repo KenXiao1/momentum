@@ -5,6 +5,7 @@ import { supabase } from '../../../../lib/supabase';
 import {
   failSupabaseTransportRequests,
   failNextRSIPCreationResponse,
+  failNextStorageOperationResponse,
   resetSupabaseMockState,
 } from '../../../../test/mocks/supabaseMocks';
 import { SupabaseStorage } from '../SupabaseStorage';
@@ -245,12 +246,77 @@ describe('SupabaseStorage HTTP boundary', () => {
       { ...group, faultToleranceUsed: 1 },
       { ...other, faultToleranceUsed: 0 },
     ]);
-    failSupabaseTransportRequests('POST', 'rsip_groups', 10);
+    failSupabaseTransportRequests('POST', 'rsip_groups');
     await expect(
       storage.saveRSIPGroups([{ ...group, faultToleranceUsed: 2 }]),
     ).rejects.toThrow();
     expect(await storage.getRSIPGroups()).toHaveLength(2);
     await storage.saveRSIPGroups([]);
     expect(await storage.getRSIPGroups()).toEqual([]);
+  });
+  it('replays a collection commit after losing its response without duplicate nodes', async () => {
+    await authenticate();
+    expect(await storage.getRSIPNodes()).toEqual([]);
+    const node = {
+      id: 'lost-node',
+      title: 'Policy',
+      rule: 'Daily',
+      sortOrder: 0,
+      createdAt: new Date('2026-09-20T08:00:00Z'),
+    };
+    failNextStorageOperationResponse();
+    await expect(storage.saveRSIPNodes([node])).rejects.toThrow(
+      'Save not confirmed',
+    );
+    await storage.saveRSIPNodes([node]);
+    expect(await storage.getRSIPNodes()).toEqual([
+      expect.objectContaining(node),
+    ]);
+  });
+
+  it('preserves history across a failed replacement and a lost response retry', async () => {
+    await authenticate();
+    const original = historyRecord('original', '2026-09-18T12:00:00Z');
+    const replacement = historyRecord('replacement', '2026-09-19T12:00:00Z');
+    await storage.appendCompletionHistory(original);
+    expect(await storage.getCompletionHistory()).toEqual([
+      expect.objectContaining(original),
+    ]);
+    failSupabaseTransportRequests('POST', 'completion_history');
+    await expect(storage.saveCompletionHistory([replacement])).rejects.toThrow(
+      'Save not confirmed',
+    );
+    expect(await storage.getCompletionHistory()).toEqual([
+      expect.objectContaining(original),
+    ]);
+    failNextStorageOperationResponse();
+    await expect(storage.saveCompletionHistory([replacement])).rejects.toThrow(
+      'Save not confirmed',
+    );
+    await storage.saveCompletionHistory([replacement]);
+    expect(await storage.getCompletionHistory()).toEqual([
+      expect.objectContaining(replacement),
+    ]);
+  });
+  it('rejects a stale group editor after another client saves', async () => {
+    await authenticate();
+    const first = new SupabaseStorage();
+    const second = new SupabaseStorage();
+    const group = {
+      id: 'shared-group',
+      title: 'Original',
+      faultTolerance: 2,
+      createdAt: new Date('2026-09-20T12:00:00Z'),
+    };
+    await first.saveRSIPGroups([group]);
+    await first.getRSIPGroups();
+    await second.getRSIPGroups();
+    await second.saveRSIPGroups([{ ...group, title: 'Other client' }]);
+    await expect(
+      first.saveRSIPGroups([{ ...group, faultTolerance: 3 }]),
+    ).rejects.toThrow('Collection changed');
+    expect(await first.getRSIPGroups()).toEqual([
+      expect.objectContaining({ title: 'Other client', faultTolerance: 2 }),
+    ]);
   });
 });

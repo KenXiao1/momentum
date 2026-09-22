@@ -1,3 +1,4 @@
+import type { MomentumStorage } from '../../../storage/MomentumStorage';
 import { act, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CheckinStats } from '../../../domain/checkin';
@@ -114,7 +115,7 @@ describe('useCheckinDomain', () => {
 
   it('should set safe-detail loading error when stats query returns domain error', async () => {
     const getUserCheckinStats = vi.fn(async () =>
-      err({ code: 'DB_FAIL', message: 'db down' }),
+      err({ code: 'STORAGE' as const, message: 'db down' }),
     );
     const storage = createSupabaseStorageMock({ getUserCheckinStats });
     vi.mocked(getSafeErrorDetail).mockReturnValue('safe: db down');
@@ -236,11 +237,19 @@ describe('useCheckinDomain', () => {
   });
 
   it('should block duplicate check-in while request is in flight and use fallback total point math', async () => {
-    let resolveCheckin: ((value: ReturnType<typeof ok>) => void) | null = null;
+    let resolveCheckin:
+      | ((
+          value: Awaited<ReturnType<MomentumStorage['performDailyCheckin']>>,
+        ) => void)
+      | null = null;
     const performDailyCheckin = vi.fn(
       () =>
-        new Promise((resolve) => {
-          resolveCheckin = resolve as (value: ReturnType<typeof ok>) => void;
+        new Promise<
+          Awaited<ReturnType<MomentumStorage['performDailyCheckin']>>
+        >((resolve) => {
+          resolveCheckin = resolve as (
+            value: Awaited<ReturnType<MomentumStorage['performDailyCheckin']>>,
+          ) => void;
         }),
     );
     const storage = createSupabaseStorageMock({
@@ -290,7 +299,7 @@ describe('useCheckinDomain', () => {
 
   it('should surface operation error when performDailyCheckin returns domain error', async () => {
     const performDailyCheckin = vi.fn(async () =>
-      err({ code: 'CHECKIN_FAIL', message: 'quota hit' }),
+      err({ code: 'STORAGE' as const, message: 'quota hit' }),
     );
     const storage = createSupabaseStorageMock({
       getUserCheckinStats: vi.fn(async () => ok(baseStats)),

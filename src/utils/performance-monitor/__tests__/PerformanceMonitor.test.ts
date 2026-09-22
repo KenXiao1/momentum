@@ -13,7 +13,7 @@ const reportMetricsMock = vi.hoisted(() =>
   vi.fn((metrics) => ({ ...metrics })),
 );
 const checkPerformanceMock = vi.hoisted(() =>
-  vi.fn(() => ({ passed: true, issues: [] })),
+  vi.fn(() => ({ passed: true, issues: [] as string[] })),
 );
 const performanceLoggerMock = vi.hoisted(() => ({
   debug: vi.fn(),

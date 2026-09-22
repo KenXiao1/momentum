@@ -152,6 +152,7 @@ export function createChainStub(id: string, name: string): Chain {
     auxiliaryFailures: 0,
     exceptions: [],
     auxiliaryExceptions: [],
+    timeLimitExceptions: [],
     auxiliarySignal: '',
     auxiliaryDuration: 5,
     auxiliaryCompletionTrigger: '',

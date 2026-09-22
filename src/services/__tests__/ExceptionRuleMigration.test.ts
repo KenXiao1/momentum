@@ -159,25 +159,37 @@ describe('ExceptionRuleMigrationService', () => {
       vi.spyOn(exceptionRuleManager, 'createRule')
         .mockResolvedValueOnce({
           rule: {
+            scope: 'global',
+            createdAt: new Date(),
+            usageCount: 0,
+            isActive: true,
+            type: ExceptionRuleType.PAUSE_ONLY,
             id: 'rule1',
             name: '上厕所',
-            type: ExceptionRuleType.PAUSE_ONLY,
           },
           warnings: [],
         })
         .mockResolvedValueOnce({
           rule: {
+            scope: 'global',
+            createdAt: new Date(),
+            usageCount: 0,
+            isActive: true,
+            type: ExceptionRuleType.PAUSE_ONLY,
             id: 'rule2',
             name: '喝水',
-            type: ExceptionRuleType.PAUSE_ONLY,
           },
           warnings: [],
         })
         .mockResolvedValueOnce({
           rule: {
+            scope: 'global',
+            createdAt: new Date(),
+            usageCount: 0,
+            isActive: true,
+            type: ExceptionRuleType.PAUSE_ONLY,
             id: 'rule3',
             name: '休息',
-            type: ExceptionRuleType.PAUSE_ONLY,
           },
           warnings: [],
         });
@@ -207,9 +219,13 @@ describe('ExceptionRuleMigrationService', () => {
       vi.spyOn(exceptionRuleManager, 'createRule')
         .mockResolvedValueOnce({
           rule: {
+            scope: 'global',
+            createdAt: new Date(),
+            usageCount: 0,
+            isActive: true,
+            type: ExceptionRuleType.PAUSE_ONLY,
             id: 'rule1',
             name: '有效规则',
-            type: ExceptionRuleType.PAUSE_ONLY,
           },
           warnings: [],
         })
@@ -235,9 +251,13 @@ describe('ExceptionRuleMigrationService', () => {
 
       vi.spyOn(exceptionRuleManager, 'createRule').mockResolvedValue({
         rule: {
+          scope: 'global',
+          createdAt: new Date(),
+          usageCount: 0,
+          isActive: true,
+          type: ExceptionRuleType.PAUSE_ONLY,
           id: 'rule1',
           name: '规则1',
-          type: ExceptionRuleType.PAUSE_ONLY,
         },
         warnings: [],
       });
@@ -283,18 +303,24 @@ describe('ExceptionRuleMigrationService', () => {
       // Mock rule manager
       vi.spyOn(exceptionRuleManager, 'getAllRules').mockResolvedValue([
         {
+          scope: 'global',
+          createdAt: new Date(),
+          usageCount: 0,
+          isActive: true,
+          type: ExceptionRuleType.PAUSE_ONLY,
           id: 'rule1',
           name: '规则1',
-          type: ExceptionRuleType.PAUSE_ONLY,
           description: '从旧系统迁移的规则',
-          isActive: true,
         },
         {
+          scope: 'global',
+          createdAt: new Date(),
+          usageCount: 0,
+          isActive: true,
+          type: ExceptionRuleType.PAUSE_ONLY,
           id: 'rule2',
           name: '规则2',
-          type: ExceptionRuleType.PAUSE_ONLY,
           description: '从旧系统迁移的规则',
-          isActive: true,
         },
       ]);
 
@@ -321,18 +347,24 @@ describe('ExceptionRuleMigrationService', () => {
 
       vi.spyOn(exceptionRuleManager, 'getAllRules').mockResolvedValue([
         {
+          scope: 'global',
+          createdAt: new Date(),
+          usageCount: 0,
+          isActive: true,
+          type: ExceptionRuleType.PAUSE_ONLY,
           id: 'rule1',
           name: '规则1',
-          type: ExceptionRuleType.PAUSE_ONLY,
           description: '从旧系统迁移的规则',
-          isActive: true,
         },
         {
+          scope: 'global',
+          createdAt: new Date(),
+          usageCount: 0,
+          isActive: true,
+          type: ExceptionRuleType.PAUSE_ONLY,
           id: 'rule2',
           name: '规则2',
-          type: ExceptionRuleType.PAUSE_ONLY,
           description: '从旧系统迁移的规则',
-          isActive: true,
         },
       ]);
 
@@ -362,11 +394,21 @@ describe('ExceptionRuleMigrationService', () => {
       // Mock migrated rules
       vi.spyOn(exceptionRuleManager, 'getAllRules').mockResolvedValue([
         {
+          scope: 'global',
+          createdAt: new Date(),
+          usageCount: 0,
+          isActive: true,
+          type: ExceptionRuleType.PAUSE_ONLY,
           id: 'rule1',
           name: '规则1',
           description: '从旧系统迁移的规则',
         },
         {
+          scope: 'global',
+          createdAt: new Date(),
+          usageCount: 0,
+          isActive: true,
+          type: ExceptionRuleType.PAUSE_ONLY,
           id: 'rule2',
           name: '规则2',
           description: '从旧系统迁移的规则',
@@ -410,10 +452,14 @@ describe('ExceptionRuleMigrationService', () => {
 
       vi.spyOn(exceptionRuleManager, 'getAllRules').mockResolvedValue([
         {
+          scope: 'global',
+          createdAt: new Date(),
+          usageCount: 0,
+          isActive: true,
+          type: ExceptionRuleType.PAUSE_ONLY,
           id: 'rule1',
           name: '规则1',
           description: '从旧系统迁移的规则',
-          isActive: true,
         },
       ]);
 

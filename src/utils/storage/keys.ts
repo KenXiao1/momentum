@@ -14,3 +14,10 @@ export const STORAGE_KEYS = {
   TASK_TIME_STATS: 'momentum_task_time_stats',
   PET_STATE: 'momentum_pet_state',
 } as const;
+
+export function completedSessionKey(session: {
+  chainId: string;
+  startedAt: Date;
+}): string {
+  return `momentum_completed_session:${session.chainId}:${session.startedAt.toISOString()}`;
+}

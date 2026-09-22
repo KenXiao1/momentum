@@ -1,35 +1,41 @@
+import { createChain as createFixtureChain } from '../../test/factories/chainFactory';
 import {
   buildChainTree,
   getNextUnitInGroup,
   getGroupProgress,
   getGroupUnitProgress,
 } from '../chainTree';
-import { Chain, ChainTreeNode } from '../../types';
+import { ChainRecord, Chain, ChainTreeNode } from '../../types';
 
 // Mock chain data for testing
-const createMockChain = (overrides: Partial<Chain> = {}): Chain => ({
-  id: 'test-id',
-  name: 'Test Chain',
-  parentId: undefined,
-  type: 'unit',
-  sortOrder: 0,
-  trigger: 'Test trigger',
-  duration: 30,
-  description: 'Test description',
-  currentStreak: 0,
-  auxiliaryStreak: 0,
-  totalCompletions: 0,
-  totalFailures: 0,
-  auxiliaryFailures: 0,
-  exceptions: [],
-  auxiliaryExceptions: [],
-  auxiliarySignal: 'Test signal',
-  auxiliaryDuration: 15,
-  auxiliaryCompletionTrigger: 'Test completion',
-  isDurationless: false,
-  createdAt: new Date(),
-  ...overrides,
-});
+const createMockChain = (overrides: Partial<Chain> = {}): Chain => {
+  const fields: Partial<ChainRecord> = {
+    id: 'test-id',
+    name: 'Test Chain',
+    parentId: undefined,
+    type: 'unit',
+    sortOrder: 0,
+    trigger: 'Test trigger',
+    duration: 30,
+    description: 'Test description',
+    currentStreak: 0,
+    auxiliaryStreak: 0,
+    totalCompletions: 0,
+    totalFailures: 0,
+    auxiliaryFailures: 0,
+    exceptions: [],
+    auxiliaryExceptions: [],
+    auxiliarySignal: 'Test signal',
+    auxiliaryDuration: 15,
+    auxiliaryCompletionTrigger: 'Test completion',
+    isDurationless: false,
+    createdAt: new Date(),
+    ...overrides,
+  };
+  return {
+    ...createFixtureChain(fields.type === 'group' ? 'group' : 'unit', fields),
+  };
+};
 
 describe('chainTree utilities', () => {
   describe('buildChainTree', () => {

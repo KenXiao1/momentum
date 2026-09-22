@@ -6,10 +6,24 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  actions: read
 
 jobs:
+  verify-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - name: Require successful CI for the release commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node tools/quality/release-gate.mjs
+
   build-desktop:
+    needs: verify-ci
     strategy:
       fail-fast: false
       matrix:
@@ -133,6 +147,7 @@ jobs:
             src-tauri/target/release/bundle/appimage/*.AppImage.sig
 
   build-android:
+    needs: verify-ci
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -171,7 +186,7 @@ jobs:
             "platforms;android-34" \
             "build-tools;34.0.0" \
             "ndk;25.2.9519653"
-          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
+          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> "$GITHUB_ENV"
 
       - name: Setup Rust with Android targets
         uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
@@ -238,11 +253,18 @@ jobs:
             src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk
 
   create-release:
-    needs: [build-desktop, build-android]
+    needs: [verify-ci, build-desktop, build-android]
+    permissions:
+      contents: write
+      actions: read
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
 
     steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
       - name: Download all artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
@@ -301,7 +323,7 @@ jobs:
           LINUX_URL="$REPO/$(basename "$LINUX_FILE")"
           MAC_URL="$REPO/$(basename "$MAC_FILE")"
           MAC_PLATFORM_KEY="darwin-aarch64"
-          if echo "$(basename "$MAC_FILE")" | grep -Eq '(x64|x86_64|amd64)'; then
+          if basename "$MAC_FILE" | grep -Eq '(x64|x86_64|amd64)'; then
             MAC_PLATFORM_KEY="darwin-x86_64"
           fi
 
@@ -320,6 +342,11 @@ jobs:
 
           echo "=== latest.json ==="
           cat artifacts/latest.json
+
+      - name: Recheck CI immediately before publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node tools/quality/release-gate.mjs
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
