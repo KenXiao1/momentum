@@ -491,8 +491,8 @@ def main():
         else:
             if not (BIN / 'initdb').exists():
                 raise SystemExit('Local PostgreSQL server binaries required when no MOMENTUM_TEST_DATABASE_URL is set.')
-            env.update(PGHOST=directory, PGPORT='55439', PGUSER=os.environ.get('USER','postgres'), PGDATABASE='postgres')
-            subprocess.run([str(BIN / 'initdb'), '-D',str(cluster/'data'),'-A','trust','--no-locale','-E','UTF8'],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE)
+            env.update(PGHOST=directory, PGPORT='55439', PGUSER='postgres', PGDATABASE='postgres')
+            subprocess.run([str(BIN / 'initdb'), '-D',str(cluster/'data'),'-A','trust','--username=postgres','--no-locale','-E','UTF8'],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE)
             subprocess.run([str(BIN / 'pg_ctl'), '-D',str(cluster/'data'), '-l',str(cluster/'server.log'),'-o',f'-k {directory} -p 55439 -h ""', '-w','start'],check=True,stdout=subprocess.DEVNULL)
             started = True
         admin = Database(env)

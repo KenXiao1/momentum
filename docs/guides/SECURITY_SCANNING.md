@@ -16,6 +16,12 @@ complete history. Reports redact credentials. The runner treats every nonzero ex
 code as a failure and rejects missing or invalid reports. It never posts pull request comments.
 A passing change-range scan does not certify the full repository history.
 
+The sole scanner false-positive allowance matches the exact public localStorage
+namespace `momentum_diagnostics_v1` in the diagnostics module and its test fixture.
+It applies only to the generic API-key rule and those two paths; default rules
+remain enabled. A full-history scan still detects the historical Supabase token
+below. No credential, directory, or entire rule is exempted.
+
 `npm run security:npm-audit` audits development and runtime dependencies. The
 September 2026 dependency refresh has no known npm audit findings or exemptions.
 The lockfile and narrow same-major overrides carry the patched transitive

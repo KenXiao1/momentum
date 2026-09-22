@@ -2,6 +2,7 @@
   "through": "20260211000000",
   "origin": "repository historical migrations; not a production schema dump",
   "extra_adjustments": [
+    "Default privileges target the executing migration owner rather than the local dump role",
     "Added completion_history.metadata jsonb default {} required by historical complete_task_with_betting RPC"
   ],
   "sources": [
@@ -163,7 +164,7 @@
       ]
     }
   ],
-  "baseline_sha256": "fecd62a5dc4845ab66139b8184057b8a9c772657b2b37baab077bb2a0b6d0ec4",
+  "baseline_sha256": "00a1b669b1ab5cdb720e65dfd5761ed925effc04ee792feb33f9a34a8bc3f289",
   "snapshot_adjustments": [
     "Removed pg_dump restriction token",
     "Made public schema creation conditional",
