@@ -86,8 +86,10 @@ export function useImportExportDomain({
   ): void {
     const hasOtherData =
       options &&
-      Object.values(options).some((value) =>
-        Array.isArray(value) ? value.length > 0 : value != null,
+      Object.entries(options).some(
+        ([key, value]) =>
+          key !== 'expectedUserId' &&
+          (Array.isArray(value) ? value.length > 0 : value != null),
       );
     if (
       !Array.isArray(importedChains) ||

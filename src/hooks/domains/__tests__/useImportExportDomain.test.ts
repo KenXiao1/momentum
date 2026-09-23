@@ -9,6 +9,7 @@ import {
 } from '../../../test/factories';
 import { ok, err } from '../../../domain/result';
 import type { AppState } from '../../../types';
+import { createNewPet } from '../../../utils/petLogic';
 
 vi.mock('../../../i18n', () => ({
   useI18n: () => ({ tr: (_zh: string, en: string) => en }),
@@ -68,6 +69,7 @@ describe('transactional import orchestration', () => {
     });
     expect(context.safelySaveChains).not.toHaveBeenCalled();
     expect(storage.saveCompletionHistory).not.toHaveBeenCalled();
+    expect(context.onPetImported).not.toHaveBeenCalled();
     expect(context.getState()).toMatchObject({
       chains: [chain],
       completionHistory: history,
@@ -115,6 +117,67 @@ describe('transactional import orchestration', () => {
     expect(context.storage.importData).not.toHaveBeenCalled();
   });
 
+  it('does not treat empty optional collections or account metadata as importable data', async () => {
+    const context = setup();
+    await expect(
+      context.result.current.handleImportChains([], {
+        expectedUserId: 'account',
+        history: [],
+        rsipNodes: [],
+        rsipMeta: undefined,
+      }),
+    ).rejects.toThrow('No valid chains');
+    expect(context.storage.importData).not.toHaveBeenCalled();
+  });
+
+  it('accepts metadata alongside empty optional collections', async () => {
+    const context = setup();
+    const options = {
+      rsipMeta: { currentRunNumber: 2 },
+      history: [],
+      petState: undefined,
+    };
+    await context.result.current.handleImportChains([], options);
+    expect(context.storage.importData).toHaveBeenCalledExactlyOnceWith({
+      chains: [],
+      ...options,
+    });
+    expect(context.onPetImported).not.toHaveBeenCalled();
+  });
+
+  it('turns an unstructured storage failure into a visible error while reloading persisted data', async () => {
+    const context = setup(
+      createLocalStorageMock({ importData: vi.fn().mockRejectedValue(null) }),
+    );
+    await expect(
+      context.result.current.handleImportChains([createUnitChain()]),
+    ).rejects.toThrow('Unknown error');
+    expect(context.storage.getCompletionHistory).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    ok({ isAuthenticated: false, user: { id: 'a' } }),
+    ok({ isAuthenticated: true, user: null }),
+    err({
+      code: 'STORAGE' as const,
+      message: 'authentication service unavailable',
+    }),
+  ])(
+    'rejects incomplete or failed authentication results',
+    async (authResult) => {
+      const context = setup(
+        createSupabaseStorageMock({
+          isUserAuthenticated: vi.fn(async () => ok(false)),
+          waitForAuthentication: vi.fn(async () => authResult),
+        }),
+      );
+      await expect(
+        context.result.current.handleImportChains([createUnitChain()]),
+      ).rejects.toThrow('Authentication failed');
+      expect(context.storage.importData).not.toHaveBeenCalled();
+    },
+  );
+
   it('accepts a history-only import', async () => {
     const context = setup();
     const history = [
@@ -129,6 +192,25 @@ describe('transactional import orchestration', () => {
     expect(context.storage.importData).toHaveBeenCalledExactlyOnceWith({
       chains: [],
       history,
+    });
+  });
+
+  it('supports a pet-only import without requiring a UI observer', async () => {
+    const storage = createLocalStorageMock();
+    const { result } = renderHook(() =>
+      useImportExportDomain({
+        storage,
+        safelySaveChains: vi.fn(async () => undefined),
+        setState: vi.fn(),
+      }),
+    );
+    const petState = createNewPet('Restored pet');
+    await expect(
+      result.current.handleImportChains([], { petState }),
+    ).resolves.toBeUndefined();
+    expect(storage.importData).toHaveBeenCalledExactlyOnceWith({
+      chains: [],
+      petState,
     });
   });
 

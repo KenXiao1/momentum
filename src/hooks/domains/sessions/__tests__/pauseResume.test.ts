@@ -112,7 +112,7 @@ describe('createPauseResumeHandlers', () => {
     );
   });
 
-  it('should no-op without active session or without pausedAt', () => {
+  it('rejects transitions without an active session or the pause timestamp', async () => {
     const storage = createLocalStorageMock({
       saveActiveSession: vi.fn(async () => undefined),
     });
@@ -131,24 +131,24 @@ describe('createPauseResumeHandlers', () => {
       }),
     );
 
-    createPauseResumeHandlers({
+    const missingSession = createPauseResumeHandlers({
       state: noSession.getState(),
       setState: noSession.setState,
       storage,
-    }).handlePauseSession();
-    createPauseResumeHandlers({
-      state: noSession.getState(),
-      setState: noSession.setState,
-      storage,
-    }).handleResumeSession();
-    createPauseResumeHandlers({
+    });
+    const missingPause = createPauseResumeHandlers({
       state: noPausedAt.getState(),
       setState: noPausedAt.setState,
       storage,
-    }).handleResumeSession();
+    });
+
+    await expect(missingSession.handlePauseSession()).resolves.toBe(false);
+    await expect(missingSession.handleResumeSession()).resolves.toBe(false);
+    await expect(missingPause.handleResumeSession()).resolves.toBe(false);
 
     expect(storage.saveActiveSession).not.toHaveBeenCalled();
     expect(noSession.setState).not.toHaveBeenCalled();
+    expect(noPausedAt.setState).not.toHaveBeenCalled();
   });
 
   function sessionState(paused = false) {
@@ -165,6 +165,74 @@ describe('createPauseResumeHandlers', () => {
       }),
     );
   }
+
+  it.each([false, true])(
+    'accepts the already confirmed paused=%s state without another write or timestamp change',
+    async (paused) => {
+      const stateRef = sessionState(paused);
+      const original = stateRef.getState().activeSession;
+      const storage = createLocalStorageMock();
+      const handlers = createPauseResumeHandlers({ ...stateRef, storage });
+      const action = paused
+        ? handlers.handlePauseSession
+        : handlers.handleResumeSession;
+
+      await expect(action()).resolves.toBe(true);
+      expect(storage.saveActiveSession).not.toHaveBeenCalled();
+      expect(stateRef.setState).not.toHaveBeenCalled();
+      expect(stateRef.getState().activeSession).toBe(original);
+    },
+  );
+
+  it('keeps pending transitions for different sessions of the same chain independent', async () => {
+    const stateRef = sessionState();
+    const firstSession = stateRef.getState().activeSession!;
+    let finishFirst!: () => void;
+    const storage = createLocalStorageMock({
+      saveActiveSession: vi
+        .fn()
+        .mockImplementationOnce(
+          () =>
+            new Promise<void>((resolve) => {
+              finishFirst = resolve;
+            }),
+        )
+        .mockResolvedValue(undefined),
+    });
+    const handlers = createPauseResumeHandlers({ ...stateRef, storage });
+    const first = handlers.handlePauseSession();
+    const nextSession = {
+      ...firstSession,
+      startedAt: new Date('2026-09-20T11:00:00Z'),
+    };
+    stateRef.setState((state) => ({ ...state, activeSession: nextSession }));
+    const second = handlers.handlePauseSession();
+
+    expect(second).not.toBe(first);
+    expect(storage.saveActiveSession).toHaveBeenCalledTimes(2);
+    await expect(second).resolves.toBe(true);
+    const confirmed = stateRef.getState().activeSession;
+    expect(confirmed).toMatchObject({
+      startedAt: nextSession.startedAt,
+      isPaused: true,
+    });
+    finishFirst();
+    await first;
+    expect(stateRef.getState().activeSession).toBe(confirmed);
+  });
+
+  it('gives a retry instruction when persistence fails without a custom message', async () => {
+    const stateRef = sessionState();
+    const storage = createLocalStorageMock({
+      saveActiveSession: vi.fn().mockRejectedValue(new Error('offline')),
+    });
+    const handlers = createPauseResumeHandlers({ ...stateRef, storage });
+
+    await expect(handlers.handlePauseSession()).resolves.toBe(false);
+    expect(toast.error).toHaveBeenCalledWith(
+      'Pause or resume was not saved. Please try again.',
+    );
+  });
 
   it.each([false, true])(
     'publishes the %s transition only after persistence, and coalesces double clicks',
