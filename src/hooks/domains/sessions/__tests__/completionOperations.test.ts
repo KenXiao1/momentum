@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../../i18n/translate';
 import { describe, expect, it, vi } from 'vitest';
 import { createCompletionHandlers } from '../completion';
 import {
@@ -40,7 +41,7 @@ function context() {
     onNavigateToDashboard: navigate,
     onPetTaskCompleted: pet,
     onTaskLifecycleEvent: lifecycle,
-    tr: (_zh, en) => en,
+    t: createTranslator('en'),
   });
   return {
     handlers,

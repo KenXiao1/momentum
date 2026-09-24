@@ -22,7 +22,7 @@ export function useRecycleBinModal({
   onRestore,
   onPermanentDelete,
 }: UseRecycleBinModalOptions) {
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const storage = useStorage();
 
   const [deletedChains, setDeletedChains] = useState<DeletedChain[]>([]);
@@ -50,9 +50,8 @@ export function useRecycleBinModal({
         normalizeUnknownError(error),
       );
       toast.error(
-        tr(
-          '加载回收箱失败，请重试',
-          'Failed to load recycle bin. Please try again.',
+        t(
+          'recycleBinModal.useRecycleBinModal.failedToLoadRecycleBinPleaseTryAgain',
         ),
       );
     } finally {
@@ -60,7 +59,7 @@ export function useRecycleBinModal({
         setIsLoading(false);
       }
     }
-  }, [storage, tr]);
+  }, [storage, t]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -170,7 +169,7 @@ export function useRecycleBinModal({
         onRestore,
         onPermanentDelete,
         language,
-        tr,
+        t,
       });
 
       logger.debug('RECYCLE_BIN', 'Refreshing local recycle bin data', {
@@ -198,10 +197,11 @@ export function useRecycleBinModal({
       const safeDetail = getSafeErrorDetailFromUnknown(error, language);
       toast.error(
         safeDetail
-          ? tr(`操作失败: ${safeDetail}`, `Operation failed: ${safeDetail}`)
-          : tr(
-              '操作失败，请重试（详情见控制台）',
-              'Operation failed. Check the console for details, then try again.',
+          ? t('recycleBinModal.useRecycleBinModal.operationFailedSafeDetail', {
+              safeDetail: safeDetail,
+            })
+          : t(
+              'recycleBinModal.useRecycleBinModal.operationFailedCheckTheConsoleForDetailsThenTry',
             ),
       );
     } finally {
@@ -220,7 +220,7 @@ export function useRecycleBinModal({
     onRestore,
     loadDeletedChains,
     language,
-    tr,
+    t,
   ]);
 
   const handleCancelConfirm = useCallback(() => {
@@ -228,8 +228,8 @@ export function useRecycleBinModal({
   }, []);
 
   const formatDeletedTimeForDisplay = useCallback(
-    (deletedAt: Date) => formatDeletedTime({ deletedAt, language, tr }),
-    [language, tr],
+    (deletedAt: Date) => formatDeletedTime({ deletedAt, language, t }),
+    [language, t],
   );
 
   return {
@@ -238,7 +238,7 @@ export function useRecycleBinModal({
     isLoading,
     showConfirmDialog,
     language,
-    tr,
+    t,
     formatDeletedTime: formatDeletedTimeForDisplay,
     handleSelectChain,
     handleSelectAll,

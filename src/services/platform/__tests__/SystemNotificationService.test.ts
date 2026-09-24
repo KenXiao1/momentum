@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 type PermissionState = 'default' | 'granted' | 'denied';
@@ -71,7 +72,7 @@ async function loadService(options: LoadServiceOptions = {}) {
   }));
   vi.doMock('../../../utils/runtimeI18n', () => ({
     getCurrentLanguage: vi.fn(() => 'en'),
-    tr: (zh: string, en: string) => en,
+    t: createTranslator('en'),
   }));
   vi.doMock('../../../utils/random', () => ({
     randomId: vi.fn((prefix: string) => `${prefix}-test-id`),

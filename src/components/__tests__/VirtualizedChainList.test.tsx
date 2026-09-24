@@ -1,3 +1,4 @@
+import { createTranslator } from '../../i18n/translate';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChainTreeNode, ScheduledSession } from '../../types';
@@ -39,7 +40,7 @@ vi.mock('../../utils/env', () => ({
 vi.mock('../../i18n', () => ({
   useI18n: () => ({
     language: 'en',
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
   }),
 }));
 

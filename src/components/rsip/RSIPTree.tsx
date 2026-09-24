@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import React from 'react';
 import { CornerUpLeft, X } from 'lucide-react';
 import {
@@ -55,7 +56,7 @@ interface RSIPTreeProps {
   setNodeRef: (nodeId: string, el: HTMLDivElement | null) => void;
   formatRemaining: (ms: number) => string;
   formatMinutesLabel: (minutes: number) => string;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 export const RSIPTree: React.FC<RSIPTreeProps> = ({
@@ -90,16 +91,13 @@ export const RSIPTree: React.FC<RSIPTreeProps> = ({
   setNodeRef,
   formatRemaining,
   formatMinutesLabel,
-  tr,
+  t,
 }) => {
   return (
     <div ref={viewportRef} className="relative h-[60vh] min-h-[400px] w-full">
       {tree.length === 0 ? (
         <div className="absolute inset-0 flex items-center justify-center font-chinese text-gray-600 dark:text-slate-400">
-          {tr(
-            '尚无国策，先从上方表单添加一个吧。',
-            'No policies yet. Add one from the form above.',
-          )}
+          {t('rsip.rsipTree.noPoliciesYetAddOneFromTheFormAbove')}
         </div>
       ) : (
         <TransformWrapper
@@ -188,9 +186,8 @@ export const RSIPTree: React.FC<RSIPTreeProps> = ({
                           if (reparentingId) {
                             if (isInvalidParentTarget) {
                               onSetRelationError(
-                                tr(
-                                  '不能选择该节点作为父节点（会形成循环）。',
-                                  'Cannot choose this node as parent (would create a cycle).',
+                                t(
+                                  'rsip.rsipTree.cannotChooseThisNodeAsParentWouldCreateA',
                                 ),
                               );
                               return;
@@ -213,7 +210,7 @@ export const RSIPTree: React.FC<RSIPTreeProps> = ({
                         }}
                         formatRemaining={formatRemaining}
                         formatMinutesLabel={formatMinutesLabel}
-                        tr={tr}
+                        t={t}
                       />
                     );
                   })}
@@ -225,17 +222,14 @@ export const RSIPTree: React.FC<RSIPTreeProps> = ({
                   <div className="pointer-events-auto flex flex-col gap-3 rounded-2xl border border-white/50 bg-white/70 px-4 py-3 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.5)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/50 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <div className="font-chinese text-sm text-gray-900 dark:text-slate-100">
-                        {tr('选择新的父节点', 'Select a new parent')}
+                        {t('rsip.rsipTree.selectANewParent')}
                       </div>
                       <div className="font-chinese text-xs text-gray-600 dark:text-slate-300">
-                        {tr('正在移动：', 'Moving: ')}
+                        {t('rsip.rsipTree.moving')}
                         <span className="font-semibold">
                           {reparentingTitle ?? reparentingId}
                         </span>
-                        {tr(
-                          '。点击目标节点作为父节点，或设为根。',
-                          '. Tap a node to set as parent, or make it a root.',
-                        )}
+                        {t('rsip.rsipTree.tapANodeToSetAsParentOr')}
                       </div>
                       {relationError && (
                         <div className="mt-1 font-chinese text-xs text-red-600 dark:text-red-300">
@@ -253,7 +247,7 @@ export const RSIPTree: React.FC<RSIPTreeProps> = ({
                       >
                         <CornerUpLeft size={16} />
                         <span className="font-chinese text-sm">
-                          {tr('设为根', 'Make root')}
+                          {t('rsip.rsipTree.makeRoot')}
                         </span>
                       </button>
                       <button
@@ -263,7 +257,7 @@ export const RSIPTree: React.FC<RSIPTreeProps> = ({
                       >
                         <X size={16} />
                         <span className="font-chinese text-sm">
-                          {tr('取消', 'Cancel')}
+                          {t('bettingModal.bettingFormSections.cancel')}
                         </span>
                       </button>
                     </div>
@@ -275,7 +269,7 @@ export const RSIPTree: React.FC<RSIPTreeProps> = ({
                 onZoomIn={zoomIn}
                 onZoomOut={zoomOut}
                 onFitToContent={onFitToContent}
-                tr={tr}
+                t={t}
               />
             </>
           )}

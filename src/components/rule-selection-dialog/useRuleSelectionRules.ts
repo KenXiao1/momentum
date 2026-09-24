@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import { useCallback, useState } from 'react';
 import type { ExceptionRule } from '../../types';
 import { ExceptionRuleType } from '../../types';
@@ -13,9 +14,9 @@ export function useRuleSelectionRules(params: {
   chainId: string;
   actionType: RuleActionType;
   language: Language;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }) {
-  const { actionType, chainId, language, tr } = params;
+  const { actionType, chainId, language, t } = params;
   const [rules, setRules] = useState<ExceptionRule[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -90,12 +91,12 @@ export function useRuleSelectionRules(params: {
     } catch (error) {
       setError(
         getSafeErrorDetailFromUnknown(error, language) ??
-          tr('加载规则失败', 'Failed to load rules'),
+          t('ruleManager.useRuleManagerData.failedToLoadRules'),
       );
     } finally {
       setLoading(false);
     }
-  }, [fetchRules, language, tr]);
+  }, [fetchRules, language, t]);
 
   const addRule = useCallback(
     (rule: ExceptionRule) => {

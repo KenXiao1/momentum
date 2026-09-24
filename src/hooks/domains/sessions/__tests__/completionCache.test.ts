@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../../i18n/translate';
 import { describe, expect, it, vi } from 'vitest';
 import {
   createAppState,
@@ -43,7 +44,7 @@ describe('group completion and rendered tree consistency', () => {
       safelySaveChains: vi.fn(async () => undefined),
       activeSessionId: null,
       setActiveSessionId: vi.fn(),
-      tr: (_zh, en) => en,
+      t: createTranslator('en'),
     });
     await handlers.handleCompleteSession();
     const tree = buildChainTree(state.chains);

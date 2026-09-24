@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 /**
  * DashboardRecommendSection — 今日推荐区域
  *
@@ -12,7 +13,7 @@ import type { ChainTreeNode } from '../../types';
 interface DashboardRecommendSectionProps {
   chains: ChainTreeNode[];
   onStartChain: (chainId: string) => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 type Urgency = 'at-risk' | 'active' | 'new';
@@ -64,25 +65,25 @@ function computeRecommendations(chains: ChainTreeNode[]): RecommendItem[] {
 const urgencyConfig: Record<
   Urgency,
   {
-    label: (tr: DashboardRecommendSectionProps['tr']) => string;
+    label: (t: DashboardRecommendSectionProps['t']) => string;
     icon: React.ReactNode;
     color: string;
   }
 > = {
   'at-risk': {
-    label: (tr) => tr('条纹快断了！', 'Streak at risk!'),
+    label: (t) => t('dashboard.dashboardRecommendSection.streakAtRisk'),
     icon: <AlertTriangle size={13} aria-hidden="true" />,
     color:
       'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/40',
   },
   active: {
-    label: (tr) => tr('保持势头', 'Keep the streak'),
+    label: (t) => t('dashboard.dashboardRecommendSection.keepTheStreak'),
     icon: <Flame size={13} aria-hidden="true" />,
     color:
       'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-700/40',
   },
   new: {
-    label: (tr) => tr('新任务', 'New chain'),
+    label: (t) => t('dashboard.dashboardRecommendSection.newChain'),
     icon: <Sparkles size={13} aria-hidden="true" />,
     color:
       'text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-800/60 border-gray-200 dark:border-slate-700',
@@ -91,7 +92,7 @@ const urgencyConfig: Record<
 
 const DashboardRecommendSectionComponent: React.FC<
   DashboardRecommendSectionProps
-> = ({ chains, onStartChain, tr }) => {
+> = ({ chains, onStartChain, t }) => {
   const recommendations = computeRecommendations(chains);
   if (recommendations.length === 0) return null;
 
@@ -104,12 +105,12 @@ const DashboardRecommendSectionComponent: React.FC<
   return (
     <section
       className="mb-10 animate-fade-in"
-      aria-label={tr('今日推荐', "Today's picks")}
+      aria-label={t('dashboard.dashboardRecommendSection.todaySPicks')}
     >
       <div className="mb-3 flex items-center gap-2">
         <Zap size={15} className="text-primary-500" aria-hidden="true" />
         <h2 className="font-chinese text-sm font-semibold text-gray-600 dark:text-slate-400">
-          {tr('今日推荐先做', "Today's picks")}
+          {t('dashboard.dashboardRecommendSection.todaySPicksVariant2')}
         </h2>
       </div>
 
@@ -129,7 +130,7 @@ const DashboardRecommendSectionComponent: React.FC<
                 </p>
                 <div className="mt-1 flex items-center gap-1.5 text-xs">
                   {cfg.icon}
-                  <span>{cfg.label(tr)}</span>
+                  <span>{cfg.label(t)}</span>
                   {chain.currentStreak > 0 && (
                     <span className="ml-1 font-mono font-bold">
                       #{chain.currentStreak}

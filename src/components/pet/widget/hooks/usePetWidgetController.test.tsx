@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../../i18n/translate';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FeedResult, PetState } from '../../../../types/pet';
@@ -59,7 +60,7 @@ function createParams(
     onUpdateMinimizedPosition: vi.fn(async () => undefined),
     onMinimize: vi.fn(async () => undefined),
     onExpand: vi.fn(async () => undefined),
-    tr: (_zh, en) => en,
+    t: createTranslator('en'),
     ...overrides,
   };
 }

@@ -1,3 +1,5 @@
+import { translate } from '../../../i18n/translate';
+import { type Translator } from '../../../i18n';
 import React from 'react';
 import { CheckSquare, RotateCcw, Square, Trash2 } from 'lucide-react';
 
@@ -5,7 +7,7 @@ interface BulkActionsBarProps {
   deletedChainsCount: number;
   selectedChainsCount: number;
   language: 'zh' | 'en';
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   onSelectAll: () => void;
   onBulkRestore: () => void;
   onBulkPermanentDelete: () => void;
@@ -15,7 +17,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
   deletedChainsCount,
   selectedChainsCount,
   language,
-  tr,
+  t,
   onSelectAll,
   onBulkRestore,
   onBulkPermanentDelete,
@@ -31,8 +33,8 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
             onClick={onSelectAll}
             aria-label={
               selectedChainsCount === deletedChainsCount
-                ? tr('取消全选', 'Clear selection')
-                : tr('全选', 'Select all')
+                ? t('recycleBinModal.bulkActionsBar.clearSelection')
+                : t('recycleBinModal.bulkActionsBar.selectAll')
             }
             className="flex items-center space-x-2 text-sm text-gray-600 transition-colors hover:text-gray-800 dark:text-slate-400 dark:hover:text-slate-200"
           >
@@ -43,15 +45,17 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
             )}
             <span>
               {selectedChainsCount === deletedChainsCount
-                ? tr('取消全选', 'Clear selection')
-                : tr('全选', 'Select all')}
+                ? t('recycleBinModal.bulkActionsBar.clearSelection')
+                : t('recycleBinModal.bulkActionsBar.selectAll')}
             </span>
           </button>
           {selectedChainsCount > 0 && (
             <span className="text-sm text-gray-500 dark:text-slate-400">
-              {language === 'zh'
-                ? `已选择 ${selectedChainsCount} 项`
-                : `${selectedChainsCount} selected`}
+              {translate(
+                language === 'zh' ? 'zh' : 'en',
+                'recycleBinModal.bulkActionsBar.selectedChainsCountSelected',
+                { selectedChainsCount: selectedChainsCount },
+              )}
             </span>
           )}
         </div>
@@ -61,20 +65,22 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
             <button
               type="button"
               onClick={onBulkRestore}
-              aria-label={tr('批量恢复', 'Restore selected')}
+              aria-label={t('recycleBinModal.bulkActionsBar.restoreSelected')}
               className="flex items-center space-x-2 rounded-xl bg-green-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-600"
             >
               <RotateCcw size={16} />
-              <span>{tr('批量恢复', 'Restore selected')}</span>
+              <span>{t('recycleBinModal.bulkActionsBar.restoreSelected')}</span>
             </button>
             <button
               type="button"
               onClick={onBulkPermanentDelete}
-              aria-label={tr('永久删除', 'Delete permanently')}
+              aria-label={t('recycleBinModal.bulkActionsBar.deletePermanently')}
               className="flex items-center space-x-2 rounded-xl bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600"
             >
               <Trash2 size={16} />
-              <span>{tr('永久删除', 'Delete permanently')}</span>
+              <span>
+                {t('recycleBinModal.bulkActionsBar.deletePermanently')}
+              </span>
             </button>
           </div>
         )}

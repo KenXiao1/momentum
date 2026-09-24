@@ -27,7 +27,7 @@ export function useAccountModalController(params: {
   const storageMode = useStorageMode();
   const i18n = useI18n();
   const diagnostics = useDiagnosticsExport();
-  const { language, tr } = i18n;
+  const { language, t } = i18n;
   const canUseAuth = hasStorageCapability(storage, 'auth');
   const canUseBetting = hasStorageCapability(storage, 'betting');
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -57,9 +57,8 @@ export function useAccountModalController(params: {
         setUser(null);
         setError(
           getSafeErrorDetail(result.error.message || '', language) ??
-            tr(
-              '获取用户信息失败，请重试（详情见控制台）',
-              'Failed to load user info. Check the console for details, then try again.',
+            t(
+              'accountModal.useAccountModalController.failedToLoadUserInfoCheckTheConsoleFor',
             ),
         );
       }
@@ -70,11 +69,13 @@ export function useAccountModalController(params: {
         undefined,
         normalizeUnknownError(error),
       );
-      setError(tr('获取用户信息失败', 'Failed to load user info'));
+      setError(
+        t('accountModal.useAccountModalController.failedToLoadUserInfo'),
+      );
     } finally {
       setLoading(false);
     }
-  }, [canUseAuth, language, storage, tr]);
+  }, [canUseAuth, language, storage, t]);
 
   const loadGamblingSettings = useCallback(async () => {
     if (!canUseBetting) return;
@@ -85,9 +86,8 @@ export function useAccountModalController(params: {
       else {
         setGamblingError(
           getSafeErrorDetail(result.error.message || '', language) ??
-            tr(
-              '获取设置失败，请重试（详情见控制台）',
-              'Failed to load settings. Check the console for details, then try again.',
+            t(
+              'accountModal.useAccountModalController.failedToLoadSettingsCheckTheConsoleForDetails',
             ),
         );
       }
@@ -98,9 +98,11 @@ export function useAccountModalController(params: {
         undefined,
         normalizeUnknownError(error),
       );
-      setGamblingError(tr('获取设置失败', 'Failed to load settings'));
+      setGamblingError(
+        t('accountModal.useAccountModalController.failedToLoadSettings'),
+      );
     }
-  }, [canUseBetting, language, storage, tr]);
+  }, [canUseBetting, language, storage, t]);
 
   useEffect(() => {
     if (!params.isOpen) return;
@@ -128,17 +130,16 @@ export function useAccountModalController(params: {
         }));
         setGamblingSuccess(
           nextEnabled
-            ? tr('Gambling mode enabled', 'Gambling mode enabled')
-            : tr('Gambling mode disabled', 'Gambling mode disabled'),
+            ? t('accountModal.useAccountModalController.gamblingModeEnabled')
+            : t('accountModal.useAccountModalController.gamblingModeDisabled'),
         );
         setTimeout(() => setGamblingSuccess(null), 3000);
       } else {
         const message = result.ok ? result.value.message : result.error.message;
         setGamblingError(
           getSafeErrorDetail(message || '', language) ??
-            tr(
-              '设置更新失败，请重试（详情见控制台）',
-              'Failed to update settings. Check the console for details, then try again.',
+            t(
+              'accountModal.useAccountModalController.failedToUpdateSettingsCheckTheConsoleForDetails',
             ),
         );
       }
@@ -151,9 +152,8 @@ export function useAccountModalController(params: {
       );
       setGamblingError(
         getSafeErrorDetailFromUnknown(error, language) ??
-          tr(
-            '设置更新失败，请重试（详情见控制台）',
-            'Failed to update settings. Check the console for details, then try again.',
+          t(
+            'accountModal.useAccountModalController.failedToUpdateSettingsCheckTheConsoleForDetails',
           ),
       );
     } finally {
@@ -170,9 +170,8 @@ export function useAccountModalController(params: {
       if (!result.ok) {
         setError(
           getSafeErrorDetail(result.error.message || '', language) ??
-            tr(
-              'Sign out failed. Check the console for details, then try again.',
-              'Sign out failed. Check the console for details, then try again.',
+            t(
+              'accountModal.useAccountModalController.signOutFailedCheckTheConsoleForDetailsThen',
             ),
         );
         return;
@@ -186,10 +185,7 @@ export function useAccountModalController(params: {
         normalizeUnknownError(error),
       );
       setError(
-        tr(
-          'Sign out failed. Please try again.',
-          'Sign out failed. Please try again.',
-        ),
+        t('accountModal.useAccountModalController.signOutFailedPleaseTryAgain'),
       );
     } finally {
       setSigningOut(false);

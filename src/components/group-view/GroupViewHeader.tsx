@@ -1,3 +1,4 @@
+import { translate } from '../../i18n/translate';
 import { Import, Pencil, Play, Plus } from 'lucide-react';
 import { BackButton } from '../BackButton';
 import { Icon } from '../../utils/iconMap';
@@ -12,7 +13,7 @@ type Props = Pick<
   | 'onStartChain'
   | 'setShowImportModal'
   | 'language'
-  | 'tr'
+  | 't'
   | 'unitProgress'
   | 'nextUnit'
   | 'typeConfig'
@@ -24,7 +25,7 @@ export function GroupViewHeader(props: Props) {
       <div className="flex min-w-0 items-center gap-3 md:space-x-4">
         <BackButton
           onClick={props.onBack}
-          label={props.tr('返回', 'Back')}
+          label={props.t('common.back')}
           className="rounded-2xl p-3 text-gray-400 transition-colors hover:bg-white/50 hover:text-[#161615] dark:hover:bg-slate-700/50 dark:hover:text-slate-200"
         />
         <div className="flex min-w-0 items-center gap-3 md:space-x-4">
@@ -48,19 +49,27 @@ export function GroupViewHeader(props: Props) {
                     <span className="text-lg font-bold">
                       #{props.group.totalCompletions}
                     </span>
-                    <span className="text-sm">{props.tr('轮', 'cycles')}</span>
+                    <span className="text-sm">
+                      {props.t('groupView.groupViewHeader.cycles')}
+                    </span>
                   </div>
                 </div>
               )}
             </div>
             <p className="font-mono text-sm uppercase text-gray-500 md:tracking-wider">
               {props.typeConfig.name} · {props.unitProgress.completed}/
-              {props.unitProgress.total} {props.tr('已完成', 'completed')}
+              {props.unitProgress.total}{' '}
+              {props.t('groupView.groupOverview.completed')}
               {props.group.totalCompletions > 0 && (
                 <span className="ml-2 text-amber-600 dark:text-amber-400">
-                  {props.language === 'zh'
-                    ? `🔄 第${props.group.totalCompletions + 1}轮进行中`
-                    : `🔄 Cycle ${props.group.totalCompletions + 1} in progress`}
+                  {translate(
+                    props.language === 'zh' ? 'zh' : 'en',
+                    'groupView.groupViewHeader.cyclePropsGroupTotalCompletions1InProgress',
+                    {
+                      propsGroupTotalCompletions1:
+                        props.group.totalCompletions + 1,
+                    },
+                  )}
                 </span>
               )}
             </p>
@@ -73,22 +82,22 @@ export function GroupViewHeader(props: Props) {
           className="flex items-center justify-center gap-2 rounded-2xl bg-gray-100 px-3 py-3 font-chinese text-sm font-medium text-gray-700 transition duration-300 hover:scale-105 hover:bg-gray-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 md:px-4 md:text-base"
         >
           <Plus size={16} />
-          <span>{props.tr('添加单元', 'Add unit')}</span>
+          <span>{props.t('groupView.groupViewHeader.addUnit')}</span>
         </button>
         <button
           onClick={() => props.setShowImportModal(true)}
           className="flex items-center justify-center gap-2 rounded-2xl bg-blue-100 px-3 py-3 font-chinese text-sm font-medium text-blue-700 transition duration-300 hover:scale-105 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 md:px-4 md:text-base"
         >
           <Import size={16} />
-          <span>{props.tr('导入单元', 'Import units')}</span>
+          <span>{props.t('groupView.groupViewHeader.importUnits')}</span>
         </button>
         <button
           onClick={() => props.onEditChain(props.group.id)}
           className="flex items-center justify-center gap-2 rounded-2xl bg-gray-100 px-3 py-3 font-chinese text-sm font-medium text-gray-700 transition duration-300 hover:scale-105 hover:bg-gray-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 md:px-4 md:text-base"
-          title={props.tr('编辑任务群', 'Edit group')}
+          title={props.t('groupView.groupViewHeader.editGroup')}
         >
           <Pencil size={16} />
-          <span>{props.tr('编辑任务群', 'Edit group')}</span>
+          <span>{props.t('groupView.groupViewHeader.editGroup')}</span>
         </button>
         <button
           onClick={() => props.onStartChain(props.group.id)}
@@ -97,8 +106,8 @@ export function GroupViewHeader(props: Props) {
           <Play size={16} />
           <span>
             {props.nextUnit
-              ? props.tr('开始下一个', 'Start next')
-              : props.tr('开始新一轮', 'Start new cycle')}
+              ? props.t('groupCard.groupCardActions.startNext')
+              : props.t('groupView.groupViewHeader.startNewCycle')}
           </span>
         </button>
       </div>

@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { RSIPSplitModeSection } from '../RSIPSplitModeSection';
@@ -10,7 +11,7 @@ describe('RSIPSplitModeSection', () => {
     const onApplySplitTemplate = vi.fn();
     const onAddSplitRow = vi.fn();
     const onSubmitSplit = vi.fn();
-    const tr = (zh: string, en: string) => en;
+    const t = createTranslator('en');
 
     render(
       <RSIPSplitModeSection
@@ -27,7 +28,7 @@ describe('RSIPSplitModeSection', () => {
         onAddSplitRow={onAddSplitRow}
         onSubmitSplit={onSubmitSplit}
         canAddToday={true}
-        tr={tr}
+        t={t}
       />,
     );
 
@@ -65,7 +66,7 @@ describe('RSIPSplitModeSection', () => {
         onAddSplitRow={vi.fn()}
         onSubmitSplit={vi.fn()}
         canAddToday={false}
-        tr={(zh, en) => en}
+        t={createTranslator('en')}
       />,
     );
 

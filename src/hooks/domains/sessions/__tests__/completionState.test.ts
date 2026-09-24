@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../../i18n/translate';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createGroupChain, createUnitChain } from '../../../../test/factories';
 import {
@@ -70,7 +71,7 @@ describe('completionState', () => {
       const result = maybeIncrementGroupCycleCompletion(
         chains,
         completed,
-        (zh, en) => (language === 'zh' ? zh : en),
+        createTranslator(language === 'zh' ? 'zh' : 'en'),
       );
 
       expect(result.completedGroupId).toBe(group.id);
@@ -96,7 +97,7 @@ describe('completionState', () => {
     const result = maybeIncrementGroupCycleCompletion(
       chains,
       completed,
-      (_zh, en) => en,
+      createTranslator('en'),
       false,
     );
 
@@ -120,7 +121,7 @@ describe('completionState', () => {
     const result = maybeIncrementGroupCycleCompletion(
       chains,
       completed,
-      (_zh, en) => en,
+      createTranslator('en'),
     );
 
     expect(result).toEqual({ updatedChains: chains });
@@ -139,7 +140,7 @@ describe('completionState', () => {
     const result = maybeIncrementGroupCycleCompletion(
       chains,
       childGroup,
-      (_zh, en) => en,
+      createTranslator('en'),
     );
 
     expect(result).toEqual({ updatedChains: chains });
@@ -163,7 +164,7 @@ describe('completionState', () => {
       const result = maybeIncrementGroupCycleCompletion(
         chains,
         completed,
-        (_zh, en) => en,
+        createTranslator('en'),
       );
 
       expect(result).toEqual({ updatedChains: chains });

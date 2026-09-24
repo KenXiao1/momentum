@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import type { Dispatch, SetStateAction } from 'react';
 import type {
   ActiveSession,
@@ -32,7 +33,7 @@ interface CreateStartChainHandlerParams {
   setShowAuxiliaryJudgment?: (chainId: string | null) => void;
   onNavigateToFocus?: () => void;
   onTaskLifecycleEvent?: (event: TaskLifecycleEvent) => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 function buildActiveSession(params: {
@@ -64,7 +65,7 @@ export function createStartChainHandler({
   setShowAuxiliaryJudgment,
   onNavigateToFocus,
   onTaskLifecycleEvent,
-  tr,
+  t,
 }: CreateStartChainHandlerParams) {
   const readState = resolveAppStateReader({ state, getState });
 
@@ -100,10 +101,7 @@ export function createStartChainHandler({
         normalizeUnknownError(error),
       );
       toast.error(
-        tr(
-          '无法保存任务会话：数据库可能处于只读状态或写入被拒绝（查看控制台）',
-          'Failed to persist session: database may be read-only or write is denied (check console).',
-        ),
+        t('sessions.start.failedToPersistSessionDatabaseMayBeReadOnlyOr'),
       );
     });
   }
@@ -141,10 +139,7 @@ export function createStartChainHandler({
           message: sessionId.error.message,
         });
         toast.error(
-          tr(
-            '无法创建押注会话：数据库可能处于只读状态（查看控制台）',
-            'Failed to create betting session: database may be read-only (check console).',
-          ),
+          t('sessions.start.failedToCreateBettingSessionDatabaseMayBeReadOnly'),
         );
         return true;
       }
@@ -191,7 +186,7 @@ export function createStartChainHandler({
       notifyTaskCompleted(
         chain.name,
         chain.auxiliaryStreak + 1,
-        tr('预约已完成', 'Schedule completed'),
+        t('sessions.scheduling.scheduleCompleted'),
       );
     }
 
@@ -217,7 +212,7 @@ export function createStartChainHandler({
     safelySaveChains,
     startChain: (chainId) => handleStartChain(chainId),
     onTaskLifecycleEvent,
-    tr,
+    t,
   });
 
   async function handleStartChain(chainId: string): Promise<void> {

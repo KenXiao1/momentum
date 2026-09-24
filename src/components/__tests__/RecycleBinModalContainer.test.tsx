@@ -1,3 +1,4 @@
+import { createTranslator } from '../../i18n/translate';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RecycleBinModalContainer } from '../RecycleBinModalContainer';
@@ -56,7 +57,7 @@ describe('RecycleBinModalContainer', () => {
       isLoading: false,
       showConfirmDialog: false,
       language: 'en',
-      tr: (_zh: string, en: string) => en,
+      t: createTranslator('en'),
       formatDeletedTime: vi.fn(() => '1h ago'),
       ...modalHandlers,
     });

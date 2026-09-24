@@ -35,7 +35,7 @@ export function useChainCard({
   scheduledSession,
   onDelete,
 }: UseChainCardOptions) {
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const storage = useStorage();
 
   // 状态
@@ -120,7 +120,7 @@ export function useChainCard({
         fireAndForget(
           systemNotificationService.notifyScheduleWarning(
             chain.name,
-            tr(`${minutes}分钟`, `${minutes} min`),
+            t('chainCard.useChainCard.minutesMin', { minutes: minutes }),
           ),
           { label: 'schedule-warning-notification' },
         );
@@ -152,7 +152,7 @@ export function useChainCard({
     hasShownWarning,
     chain.name,
     chain.auxiliaryDuration,
-    tr,
+    t,
   ]);
 
   // 重置警告状态当预约会话改变时
@@ -189,7 +189,7 @@ export function useChainCard({
     // Memoized values
     typeConfig,
     language,
-    tr,
+    t,
 
     // Handlers
     handleToggleMenu,

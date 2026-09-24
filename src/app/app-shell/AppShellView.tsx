@@ -26,7 +26,7 @@ export function AppShellView({
   session,
   pet,
 }: AppShellViewProps) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const shouldShowPetWidget =
     app.isInitialized && app.currentView === 'dashboard';
 
@@ -62,10 +62,10 @@ export function AppShellView({
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
             </div>
             <h2 className="mb-2 font-chinese text-2xl font-bold text-gray-900 dark:text-slate-100">
-              {tr('正在初始化…', 'Initializing…')}
+              {t('app.appShell.appShellView.initializing')}
             </h2>
             <p className="font-mono text-sm text-gray-600 dark:text-slate-400">
-              {tr('正在初始化应用', 'INITIALIZING APPLICATION')}
+              {t('app.appShell.appShellView.initializingApplication')}
             </p>
           </div>
         </div>
@@ -251,7 +251,7 @@ export function AppShellView({
         onClick={() => document.getElementById('main')?.focus()}
         className="focus-ring sr-only z-[200] rounded-xl bg-white/95 px-4 py-2 text-sm font-medium text-gray-900 shadow-lg focus:not-sr-only focus:fixed focus:left-4 focus:top-4 dark:bg-slate-900/90 dark:text-slate-100"
       >
-        {tr('跳转到主要内容', 'Skip to main content')}
+        {t('app.appShell.appShellView.skipToMainContent')}
       </a>
 
       <main id="main" tabIndex={-1}>
@@ -286,7 +286,8 @@ export function AppShellView({
             onBetPlaced={session.handleBetPlaced}
             sessionId={session.bettingModal.sessionId}
             chainName={
-              session.bettingModal.chainName ?? tr('未知任务', 'Unknown Task')
+              session.bettingModal.chainName ??
+              t('app.appShell.appShellView.unknownTask')
             }
             taskDuration={session.bettingModal.taskDuration}
           />

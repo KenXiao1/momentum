@@ -46,7 +46,7 @@ export const RuleSelectionDialog: React.FC<RuleSelectionDialogProps> = ({
   onCreateNewRule,
   onCancel,
 }) => {
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [duration, setDuration] = useState<number | undefined>(15);
@@ -60,7 +60,7 @@ export const RuleSelectionDialog: React.FC<RuleSelectionDialogProps> = ({
     chainId: sessionContext.chainId,
     actionType,
     language,
-    tr,
+    t,
   });
   const search = useRuleSearchResults(ruleState.rules, searchQuery);
   const {
@@ -106,10 +106,7 @@ export const RuleSelectionDialog: React.FC<RuleSelectionDialogProps> = ({
         onRuleSelected(rule, pauseOptions);
       } catch (err) {
         const safe = getSafeErrorDetailFromUnknown(err, language);
-        setRuleError(
-          safe ??
-            tr('\u9009\u62e9\u89c4\u5219\u5931\u8d25', 'Failed to select rule'),
-        );
+        setRuleError(safe ?? t('ruleSelectionDialog.failedToSelectRule'));
       }
     },
     [
@@ -119,7 +116,7 @@ export const RuleSelectionDialog: React.FC<RuleSelectionDialogProps> = ({
       language,
       onRuleSelected,
       setRuleError,
-      tr,
+      t,
     ],
   );
 
@@ -137,10 +134,9 @@ export const RuleSelectionDialog: React.FC<RuleSelectionDialogProps> = ({
         const duplicateCheck = detectDuplicates(cleanName);
         if (duplicateCheck.hasExactMatch) {
           setRuleError(
-            tr(
-              `Rule name "${cleanName}" already exists`,
-              `Rule name "${cleanName}" already exists`,
-            ),
+            t('ruleSelectionDialog.ruleNameCleanNameAlreadyExists', {
+              cleanName: cleanName,
+            }),
           );
           return;
         }
@@ -166,10 +162,7 @@ export const RuleSelectionDialog: React.FC<RuleSelectionDialogProps> = ({
         onCreateNewRule(cleanName, ruleType);
       } catch (err) {
         const safe = getSafeErrorDetailFromUnknown(err, language);
-        setRuleError(
-          safe ??
-            tr('\u521b\u5efa\u89c4\u5219\u5931\u8d25', 'Failed to create rule'),
-        );
+        setRuleError(safe ?? t('ruleSelectionDialog.failedToCreateRule'));
       }
     },
     [
@@ -180,7 +173,7 @@ export const RuleSelectionDialog: React.FC<RuleSelectionDialogProps> = ({
       onCreateNewRule,
       setRuleError,
       sessionContext.chainId,
-      tr,
+      t,
     ],
   );
 
@@ -191,7 +184,7 @@ export const RuleSelectionDialog: React.FC<RuleSelectionDialogProps> = ({
       actionType={actionType}
       sessionContext={sessionContext}
       language={language}
-      tr={tr}
+      t={t}
       containerRef={containerRef}
       searchInputRef={searchInputRef}
       searchQuery={searchQuery}

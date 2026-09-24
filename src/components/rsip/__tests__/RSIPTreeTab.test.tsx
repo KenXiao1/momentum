@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { createState } from '../hooks/__tests__/testHelpers';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
@@ -111,7 +112,7 @@ function createModel(overrides: Partial<RSIPViewModel> = {}): RSIPViewModel {
   return {
     ...createState(),
     language: 'en',
-    tr: (_zh, en) => en,
+    t: createTranslator('en'),
     nodes: [node],
     meta: {},
     groups: [],

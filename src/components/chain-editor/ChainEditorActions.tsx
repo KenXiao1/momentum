@@ -13,15 +13,15 @@ export function ChainEditorActions({
   onCancel,
   form,
 }: ChainEditorActionsProps) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
 
   let saveButtonLabel: string;
   if (form.isCopyMode) {
-    saveButtonLabel = tr('创建副本', 'Create copy');
+    saveButtonLabel = t('chainEditor.chainEditorActions.createCopy');
   } else if (isEditing) {
-    saveButtonLabel = tr('保存更改', 'Save changes');
+    saveButtonLabel = t('chainEditor.chainEditorActions.saveChanges');
   } else {
-    saveButtonLabel = tr('创建链条', 'Create chain');
+    saveButtonLabel = t('chainEditor.chainEditorActions.createChain');
   }
 
   const containerClassName =
@@ -40,7 +40,7 @@ export function ChainEditorActions({
         onClick={onCancel}
         className={cancelButtonClassName}
       >
-        <span>{tr('取消', 'Cancel')}</span>
+        <span>{t('bettingModal.bettingFormSections.cancel')}</span>
       </button>
 
       {isEditing && (
@@ -50,7 +50,7 @@ export function ChainEditorActions({
           className={copyButtonClassName}
         >
           <Copy size={20} />
-          <span>{tr('另存为副本', 'Save as copy')}</span>
+          <span>{t('chainEditor.chainEditorActions.saveAsCopy')}</span>
         </button>
       )}
 

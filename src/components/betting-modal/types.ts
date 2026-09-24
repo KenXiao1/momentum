@@ -1,11 +1,12 @@
+import { type Translator } from '../../i18n';
 type LocalizedLanguage = 'zh' | 'en';
-export type TranslationFn = (zh: string, en: string) => string;
+export type TranslationFn = Translator;
 
 export interface BettingFormProps {
   chainName: string;
   taskDuration: number;
   language: LocalizedLanguage;
-  tr: TranslationFn;
+  t: TranslationFn;
   betAmount: string;
   availablePoints: number;
   todayBetAmount: number;
@@ -21,20 +22,20 @@ export interface BettingFormProps {
 export interface TaskInfoProps {
   chainName: string;
   taskDuration: number;
-  tr: TranslationFn;
+  t: TranslationFn;
 }
 
 export interface PointsInfoProps {
   availablePoints: number;
   todayBetAmount: number;
-  tr: TranslationFn;
+  t: TranslationFn;
 }
 
 export interface BetAmountInputProps {
   betAmount: string;
   availablePoints: number;
   language: LocalizedLanguage;
-  tr: TranslationFn;
+  t: TranslationFn;
   quickBetOptions: number[];
   onBetAmountChange: (value: string) => void;
   onQuickBetAmount: (amount: number) => void;
@@ -45,7 +46,7 @@ export interface BetButtonsProps {
   availablePoints: number;
   isPlacingBet: boolean;
   validationError: string | null;
-  tr: TranslationFn;
+  t: TranslationFn;
   onPlaceBet: () => void;
   onClose: () => void;
 }

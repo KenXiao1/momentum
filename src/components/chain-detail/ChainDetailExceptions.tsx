@@ -4,7 +4,7 @@ import { ExceptionsSectionProps } from './types';
 
 export const ChainDetailExceptions: React.FC<ExceptionsSectionProps> = ({
   chain,
-  tr,
+  t,
 }) => {
   if (chain.exceptions.length === 0 && chain.auxiliaryExceptions.length === 0) {
     return null;
@@ -17,9 +17,9 @@ export const ChainDetailExceptions: React.FC<ExceptionsSectionProps> = ({
           <AlertCircle size={20} className="text-yellow-500" />
         </div>
         <div>
-          <span>{tr('规则手册', 'Rule handbook')}</span>
+          <span>{t('chainDetail.chainDetailExceptions.ruleHandbook')}</span>
           <p className="font-mono text-xs tracking-wide text-gray-500 dark:text-slate-400">
-            {tr('规则手册', 'RULE HANDBOOK')}
+            {t('chainDetail.chainDetailExceptions.ruleHandbookVariant2')}
           </p>
         </div>
       </h3>
@@ -28,7 +28,9 @@ export const ChainDetailExceptions: React.FC<ExceptionsSectionProps> = ({
         <div className="mb-6">
           <h4 className="mb-3 flex items-center space-x-2 font-chinese font-medium text-[#161615] dark:text-slate-100">
             <Flame className="text-primary-500" size={20} />
-            <span>{tr('主链例外规则：', 'Main chain exceptions:')}</span>
+            <span>
+              {t('chainDetail.chainDetailExceptions.mainChainExceptions')}
+            </span>
           </h4>
           <div className="space-y-3">
             {chain.exceptions.map((exception, index) => (
@@ -49,7 +51,9 @@ export const ChainDetailExceptions: React.FC<ExceptionsSectionProps> = ({
         <div>
           <h4 className="mb-3 flex items-center space-x-2 font-chinese font-medium text-[#161615] dark:text-slate-100">
             <Calendar className="text-blue-500" size={20} />
-            <span>{tr('预约链例外规则：', 'Booking exceptions:')}</span>
+            <span>
+              {t('chainDetail.chainDetailExceptions.bookingExceptions')}
+            </span>
           </h4>
           <div className="space-y-3">
             {chain.auxiliaryExceptions.map((exception, index) => (

@@ -1,26 +1,27 @@
+import { type Translator } from '../../i18n';
 import React from 'react';
 import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 
 export const LoadingState: React.FC<{
-  tr: (zh: string, en: string) => string;
-}> = ({ tr }) => (
+  t: Translator;
+}> = ({ t }) => (
   <div className="py-8 text-center">
     <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-primary-500" />
     <p className="text-gray-600 dark:text-gray-300">
-      {tr('加载押注数据...', 'Loading betting data...')}
+      {t('bettingModal.bettingStates.loadingBettingData')}
     </p>
   </div>
 );
 
 interface ErrorStateProps {
   error: string;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   onReload: () => void;
 }
 
 export const ErrorState: React.FC<ErrorStateProps> = ({
   error,
-  tr,
+  t,
   onReload,
 }) => (
   <div className="py-8 text-center">
@@ -29,27 +30,27 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
     <button
       type="button"
       onClick={onReload}
-      aria-label={tr('重新加载数据', 'Reload data')}
+      aria-label={t('bettingModal.bettingStates.reloadData')}
       className="focus-ring rounded font-medium text-primary-500 transition-colors hover:text-primary-600"
     >
-      {tr('重新加载', 'Reload')}
+      {t('bettingModal.bettingStates.reload')}
     </button>
   </div>
 );
 
 interface SuccessStateProps {
   successMessage: string;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 export const SuccessState: React.FC<SuccessStateProps> = ({
   successMessage,
-  tr,
+  t,
 }) => (
   <div className="py-8 text-center">
     <CheckCircle className="mx-auto mb-4 h-12 w-12 text-green-500" />
     <p className="mb-2 text-lg font-medium text-green-700 dark:text-green-300">
-      {tr('押注成功！', 'Bet placed!')}
+      {t('bettingModal.bettingStates.betPlaced')}
     </p>
     <p className="text-sm text-gray-600 dark:text-gray-400">{successMessage}</p>
   </div>

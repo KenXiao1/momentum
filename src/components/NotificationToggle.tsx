@@ -12,7 +12,7 @@ interface NotificationToggleProps {
 export const NotificationToggle: React.FC<NotificationToggleProps> = ({
   placement,
 }) => {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const notificationState = useSystemNotificationState();
 
   if (
@@ -41,14 +41,14 @@ export const NotificationToggle: React.FC<NotificationToggleProps> = ({
         <span
           className={`font-chinese text-sm ${placement === 'topbar' ? 'hidden sm:inline' : ''}`}
         >
-          {tr('系统通知', 'System notifications')}
+          {t('notificationToggle.systemNotifications')}
         </span>
       </div>
 
       <Switch
         checked={notificationState.enabled}
         onCheckedChange={handleToggle}
-        aria-label={tr('切换系统通知', 'Toggle system notifications')}
+        aria-label={t('notificationToggle.toggleSystemNotifications')}
       />
     </div>
   );

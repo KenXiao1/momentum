@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { createChain as createFixtureChain } from '../../../test/factories/chainFactory';
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
@@ -74,7 +75,7 @@ function makeProps(overrides?: {
         name: 'Unit',
       },
       language: 'en' as const,
-      tr: (_zh: string, en: string) => en,
+      t: createTranslator('en'),
       timeRemaining: 60,
       isScheduled: overrides?.isScheduled ?? false,
       showMenu: overrides?.showMenu ?? false,

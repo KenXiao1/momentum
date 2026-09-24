@@ -1,8 +1,9 @@
+import { type Translator } from '../../../i18n';
 import React from 'react';
 import { MessageSquare } from 'lucide-react';
 
 export const NotesSection: React.FC<{
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   isVisible: boolean;
   notes: string;
   onNotesChange: (value: string) => void;
@@ -10,7 +11,7 @@ export const NotesSection: React.FC<{
   notesTextareaRef: React.RefObject<HTMLTextAreaElement>;
   onShowNotes: () => void;
 }> = ({
-  tr,
+  t,
   isVisible,
   notes,
   onNotesChange,
@@ -27,7 +28,7 @@ export const NotesSection: React.FC<{
             size={16}
           />
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {tr('备注（可选）', 'Notes (optional)')}
+            {t('taskCompletionDialog.notesSection.notesOptional')}
           </label>
         </div>
         <textarea
@@ -36,18 +37,16 @@ export const NotesSection: React.FC<{
           value={notes}
           onChange={(event) => onNotesChange(event.target.value)}
           onKeyDown={onNotesKeyDown}
-          placeholder={tr(
-            '添加更多详细信息或感想…',
-            'Add more details or thoughts…',
+          placeholder={t(
+            'taskCompletionDialog.notesSection.addMoreDetailsOrThoughts',
           )}
           rows={3}
-          aria-label={tr('备注', 'Notes')}
+          aria-label={t('chainDetail.chainDetailHistory.notes')}
           className="w-full resize-none rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 transition focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500"
         />
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          {tr(
-            '按 Ctrl+Enter 完成，按 Esc 取消',
-            'Ctrl+Enter to complete, Esc to cancel',
+          {t(
+            'taskCompletionDialog.notesSection.ctrlEnterToCompleteEscToCancel',
           )}
         </p>
       </div>
@@ -58,10 +57,10 @@ export const NotesSection: React.FC<{
     <button
       type="button"
       onClick={onShowNotes}
-      aria-label={tr('添加备注', 'Add notes')}
+      aria-label={t('taskCompletionDialog.notesSection.addNotes')}
       className="text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
     >
-      {tr('+ 添加备注', '+ Add notes')}
+      {t('taskCompletionDialog.notesSection.addNotesVariant2')}
     </button>
   );
 };

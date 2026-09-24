@@ -25,7 +25,7 @@ export function useDashboardController({
   const storage = useStorage();
   const { canUseSupabase, isChoicePending, setMode, dismissFirstLaunchHint } =
     useStorageMode();
-  const { t, tr, language } = useI18n();
+  const { t, language } = useI18n();
   const canUseCheckin = hasStorageCapability(storage, 'checkin');
 
   if (isDev) {
@@ -106,7 +106,6 @@ export function useDashboardController({
 
   return {
     t,
-    tr,
     language,
     topLevelChains,
     recycleBinCount,

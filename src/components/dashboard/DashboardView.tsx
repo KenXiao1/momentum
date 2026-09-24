@@ -98,7 +98,6 @@ export function DashboardView({
   petState,
   userPreferences,
   t,
-  tr,
   language,
   topLevelChains,
   recycleBinCount,
@@ -134,18 +133,17 @@ export function DashboardView({
         <DashboardHero
           language={language}
           nextStepLabel={t('dashboard.hero.nextStep')}
-          tr={tr}
+          t={t}
         />
 
         {isChoicePending && (
           <section className="mb-8 rounded-2xl border border-blue-200 bg-blue-50 p-6 shadow-sm dark:border-blue-800/60 dark:bg-blue-900/20">
             <h3 className="mb-2 font-chinese text-lg font-semibold text-blue-900 dark:text-blue-100">
-              {tr('选择你的数据模式', 'Choose your data mode')}
+              {t('dashboard.dashboardView.chooseYourDataMode')}
             </h3>
             <p className="mb-4 text-sm text-blue-800 dark:text-blue-200">
-              {tr(
-                '默认是本地模式。你也可以连接 Supabase 开启登录与多端同步。',
-                'Local mode is the default. You can also connect Supabase for sign-in and multi-device sync.',
+              {t(
+                'dashboard.dashboardView.localModeIsTheDefaultYouCanAlsoConnect',
               )}
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -154,7 +152,7 @@ export function DashboardView({
                 onClick={keepLocalMode}
                 className="rounded-xl border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 transition hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
               >
-                {tr('继续本地模式', 'Continue with local mode')}
+                {t('dashboard.dashboardView.continueWithLocalMode')}
               </button>
               <button
                 type="button"
@@ -162,7 +160,7 @@ export function DashboardView({
                 disabled={!canUseSupabase}
                 className="rounded-xl bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {tr('连接云端同步', 'Connect cloud sync')}
+                {t('dashboard.dashboardView.connectCloudSync')}
               </button>
             </div>
           </section>
@@ -193,7 +191,7 @@ export function DashboardView({
             onCreateChain={onCreateChain}
             onShowImportExport={showImportExportModal}
             onOpenRSIP={onOpenRSIP}
-            tr={tr}
+            t={t}
           />
         )}
 
@@ -202,7 +200,7 @@ export function DashboardView({
             <DashboardRecommendSection
               chains={topLevelChains}
               onStartChain={onStartChain}
-              tr={tr}
+              t={t}
             />
             <DashboardChainsSection
               topLevelChains={topLevelChains}
@@ -219,7 +217,7 @@ export function DashboardView({
               onOpenRSIP={onOpenRSIP}
               onCreateChain={onCreateChain}
               onCreateTaskGroup={onCreateTaskGroup}
-              tr={tr}
+              t={t}
             />
           </>
         )}

@@ -1,3 +1,4 @@
+import { translate } from '../../i18n/translate';
 import type { Chain } from '../../types';
 import type { IconName } from '../iconMap';
 
@@ -48,24 +49,24 @@ export const getChainTypeConfig = (
 
   const names: Record<'en' | 'zh', Record<Chain['type'], string>> = {
     en: {
-      unit: 'Unit',
-      group: 'Group',
-      assault: 'Assault',
-      recon: 'Recon',
-      command: 'Command',
-      special_ops: 'Special ops',
-      engineering: 'Engineering',
-      quartermaster: 'Quartermaster',
+      unit: translate('en', 'chainTree.types.unit'),
+      group: translate('en', 'chainTree.types.group'),
+      assault: translate('en', 'chainTree.types.assault'),
+      recon: translate('en', 'chainTree.types.recon'),
+      command: translate('en', 'chainTree.types.command'),
+      special_ops: translate('en', 'chainTree.types.special_ops'),
+      engineering: translate('en', 'chainTree.types.engineering'),
+      quartermaster: translate('en', 'chainTree.types.quartermaster'),
     },
     zh: {
-      unit: '基础单元',
-      group: '任务群',
-      assault: '突击单元',
-      recon: '侦查单元',
-      command: '指挥单元',
-      special_ops: '特勤单元',
-      engineering: '工程单元',
-      quartermaster: '炊事单元',
+      unit: translate('zh', 'chainTree.types.unit'),
+      group: translate('zh', 'chainTree.types.group'),
+      assault: translate('zh', 'chainTree.types.assault'),
+      recon: translate('zh', 'chainTree.types.recon'),
+      command: translate('zh', 'chainTree.types.command'),
+      special_ops: translate('zh', 'chainTree.types.special_ops'),
+      engineering: translate('zh', 'chainTree.types.engineering'),
+      quartermaster: translate('zh', 'chainTree.types.quartermaster'),
     },
   };
 

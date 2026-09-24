@@ -67,7 +67,7 @@ export function useSessionsDomain({
   onPetTaskCompleted,
   onTaskLifecycleEvent,
 }: UseSessionsDomainParams) {
-  const { tr, t } = useI18n();
+  const { t } = useI18n();
   const readState = resolveAppStateReader({ state, getState });
 
   const {
@@ -81,7 +81,7 @@ export function useSessionsDomain({
     storage,
     safelySaveChains,
     setShowAuxiliaryJudgment,
-    tr,
+    t,
   });
 
   const handleStartChain = createStartChainHandler({
@@ -98,7 +98,7 @@ export function useSessionsDomain({
     setShowAuxiliaryJudgment,
     onNavigateToFocus,
     onTaskLifecycleEvent,
-    tr,
+    t,
   });
 
   const { handleCompleteSession, handleInterruptSession } =
@@ -113,7 +113,7 @@ export function useSessionsDomain({
       onNavigateToDashboard,
       onPetTaskCompleted,
       onTaskLifecycleEvent,
-      tr,
+      t,
     });
 
   const { handlePauseSession, handleResumeSession } = createPauseResumeHandlers(

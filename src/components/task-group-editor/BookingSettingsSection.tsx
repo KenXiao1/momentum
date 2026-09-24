@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import React from 'react';
 import { Calendar, CheckCircle } from 'lucide-react';
 
@@ -24,7 +25,7 @@ interface BookingSettingsSectionProps {
   onAuxiliaryDurationChange: (value: number) => void;
   onAuxiliaryDurationModeChange: (isCustom: boolean, value: number) => void;
   onAuxiliaryCompletionTriggerChange: (value: string) => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 export const BookingSettingsSection: React.FC<BookingSettingsSectionProps> =
@@ -42,14 +43,13 @@ export const BookingSettingsSection: React.FC<BookingSettingsSectionProps> =
       onAuxiliaryDurationChange,
       onAuxiliaryDurationModeChange,
       onAuxiliaryCompletionTriggerChange,
-      tr,
+      t,
     }) => (
       <SettingSection
-        title={tr('预约功能设置', 'Booking settings')}
+        title={t('taskGroupEditor.bookingSettingsSection.bookingSettings')}
         icon={<Calendar className="text-blue-500" size={20} />}
-        description={tr(
-          '配置预约信号、时长和完成条件',
-          'Configure booking signal, duration, and completion condition',
+        description={t(
+          'taskGroupEditor.bookingSettingsSection.configureBookingSignalDurationAndCompletionCondition',
         )}
       >
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -60,7 +60,7 @@ export const BookingSettingsSection: React.FC<BookingSettingsSectionProps> =
             language={language}
             onAuxiliarySignalSelect={onAuxiliarySignalSelect}
             onCustomAuxiliarySignalChange={onCustomAuxiliarySignalChange}
-            tr={tr}
+            t={t}
           />
 
           <DurationSection
@@ -68,7 +68,7 @@ export const BookingSettingsSection: React.FC<BookingSettingsSectionProps> =
             isCustomAuxiliaryDuration={isCustomAuxiliaryDuration}
             onAuxiliaryDurationChange={onAuxiliaryDurationChange}
             onAuxiliaryDurationModeChange={onAuxiliaryDurationModeChange}
-            tr={tr}
+            t={t}
           />
 
           {/* 预约完成条件 */}
@@ -77,10 +77,14 @@ export const BookingSettingsSection: React.FC<BookingSettingsSectionProps> =
               <CheckCircle className="text-blue-500" size={18} />
               <div className="min-w-0">
                 <h4 className="font-chinese text-base font-semibold text-gray-900 dark:text-slate-100">
-                  {tr('预约完成条件', 'Completion condition')}
+                  {t(
+                    'taskGroupEditor.bookingSettingsSection.completionCondition',
+                  )}
                 </h4>
                 <p className="font-mono text-[11px] text-gray-500">
-                  {tr('完成条件', 'COMPLETION CONDITION')}
+                  {t(
+                    'chainEditor.auxiliaryChainSettingsSection.completionCondition',
+                  )}
                 </p>
               </div>
             </div>
@@ -93,9 +97,8 @@ export const BookingSettingsSection: React.FC<BookingSettingsSectionProps> =
               onChange={(e) =>
                 onAuxiliaryCompletionTriggerChange(e.target.value)
               }
-              placeholder={tr(
-                '例如：打开第一个子任务、准备好工作材料',
-                'e.g. Open the first subtask, prepare your materials',
+              placeholder={t(
+                'taskGroupEditor.bookingSettingsSection.eGOpenTheFirstSubtaskPrepareYourMaterials',
               )}
               className={`w-full border bg-gray-50 dark:bg-slate-700 ${
                 errors.auxiliaryCompletionTrigger
@@ -113,12 +116,11 @@ export const BookingSettingsSection: React.FC<BookingSettingsSectionProps> =
 
             <details className="mt-3 text-xs text-gray-500 dark:text-slate-400">
               <summary className="cursor-pointer font-chinese">
-                {tr('说明', 'Note')}
+                {t('chainEditor.auxiliaryChainSettingsSection.note')}
               </summary>
               <p className="mt-2 leading-relaxed">
-                {tr(
-                  '这是你在预约时间内必须完成的动作，标志着正式开始执行任务群。',
-                  'This is the action you must complete during booking—signaling the start of the group execution.',
+                {t(
+                  'taskGroupEditor.bookingSettingsSection.thisIsTheActionYouMustCompleteDuringBookingSignaling',
                 )}
               </p>
             </details>

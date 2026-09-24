@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import type {
   Chain,
   CompletionHistory,
@@ -65,20 +66,20 @@ export class ImportService {
     options: ImportExportImportOptions;
     existingRsipNodes?: RSIPNode[];
     existingRsipGroups?: RSIPNodeGroup[];
-    tr: (zh: string, en: string) => string;
+    t: Translator;
   }): ParsedImportData {
-    const { json, options, existingRsipNodes, existingRsipGroups, tr } = params;
+    const { json, options, existingRsipNodes, existingRsipGroups, t } = params;
 
-    const parsed = parseImportPayload(json, tr);
-    const rawChains = getRawChainsFromPayload(parsed, tr);
-    const { chainEntries, idMap } = buildChainEntriesAndIdMap(rawChains, tr);
+    const parsed = parseImportPayload(json, t);
+    const rawChains = getRawChainsFromPayload(parsed, t);
+    const { chainEntries, idMap } = buildChainEntriesAndIdMap(rawChains, t);
 
     const importChains = buildImportChains({
       chainEntries,
       idMap,
       preserveStatistics: Boolean(options.preserveStatistics),
       preserveTimestamps: Boolean(options.preserveTimestamps),
-      tr,
+      t,
     });
 
     const importHistory = parseImportHistory(
@@ -93,7 +94,7 @@ export class ImportService {
     const { nodes: importedRsipNodes, rsipIdMap } = parseImportRsipNodes(
       parsed.rsipNodes,
       existingRsipNodes,
-      tr,
+      t,
       groupIdMap,
     );
     const rsipMeta = parseImportRsipMeta(parsed.rsipMeta);

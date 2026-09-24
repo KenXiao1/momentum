@@ -1,4 +1,5 @@
-﻿import { act, renderHook } from '@testing-library/react';
+import { createTranslator } from '../../../../i18n/translate';
+import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ExceptionRuleError,
@@ -96,7 +97,7 @@ function createArgs(overrides?: {
   return {
     args: {
       language: 'en' as const,
-      tr: (_zh: string, en: string) => en,
+      t: createTranslator('en'),
       loadRules,
       setError: errorState.set,
       formData: {

@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
@@ -108,7 +109,7 @@ function createProps(
   return {
     isOpen: true,
     language: 'en',
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
     deletedChains: [],
     selectedChains: new Set<string>(),
     isLoading: false,

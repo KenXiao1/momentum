@@ -1,3 +1,4 @@
+import { translate } from '../../i18n/translate';
 export const rsipTypeEmojiMap: Record<string, string> = {
   policy: '📝',
   habit: '🔄',
@@ -9,21 +10,21 @@ export const rsipTypeEmojiMap: Record<string, string> = {
   reminder: '⏰',
 };
 
-const rsipTypeLabelMap: Record<string, { zh: string; en: string }> = {
-  policy: { zh: '国策', en: 'Policy' },
-  habit: { zh: '习惯', en: 'Habit' },
-  reward: { zh: '奖励', en: 'Reward' },
-  penalty: { zh: '惩罚', en: 'Penalty' },
-  ritual: { zh: '仪式', en: 'Ritual' },
-  goal: { zh: '目标', en: 'Goal' },
-  trigger: { zh: '触发器', en: 'Trigger' },
-  reminder: { zh: '提醒', en: 'Reminder' },
-};
-
 export function getRsipTypeLabel(language: string, type: string): string {
-  const label = rsipTypeLabelMap[type];
-  if (!label) return type;
-  return language === 'zh' ? label.zh : label.en;
+  const locale = language === 'zh' ? 'zh' : 'en';
+  const labels: Record<string, string> = {
+    policy: translate(locale, 'rsip.type.policy'),
+    habit: translate(locale, 'rsip.type.habit'),
+    reward: translate(locale, 'rsip.type.reward'),
+    penalty: translate(locale, 'rsip.type.penalty'),
+    ritual: translate(locale, 'rsip.type.ritual'),
+    goal: translate(locale, 'rsip.type.goal'),
+    trigger: translate(locale, 'rsip.type.trigger'),
+    reminder: translate(locale, 'rsip.type.reminder'),
+  };
+  return Object.prototype.hasOwnProperty.call(labels, type)
+    ? labels[type]
+    : type;
 }
 
 export const rsipTypeColorMap: Record<

@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ActiveSession, Chain } from '../../../types';
@@ -44,7 +45,7 @@ vi.mock('../hooks/useFullscreen', () => ({
 
 vi.mock('../../../i18n', () => ({
   useI18n: () => ({
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
   }),
 }));
 

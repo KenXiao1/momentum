@@ -1,16 +1,17 @@
+import { type Translator } from '../../i18n';
 import type React from 'react';
 import { X } from 'lucide-react';
 
 export function RepeatCountModal({
   isOpen,
-  tr,
+  t,
   repeatCount,
   setRepeatCount,
   onClose,
   onSave,
 }: {
   isOpen: boolean;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   repeatCount: number;
   setRepeatCount: React.Dispatch<React.SetStateAction<number>>;
   onClose: () => void;
@@ -23,7 +24,7 @@ export function RepeatCountModal({
       <div className="w-full max-w-md animate-scale-in rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-slate-600 dark:bg-slate-800">
         <div className="mb-6 flex items-center justify-between">
           <h3 className="font-chinese text-xl font-bold text-gray-900 dark:text-slate-100">
-            {tr('设置重复次数', 'Set repeat count')}
+            {t('groupView.repeatCountModal.setRepeatCount')}
           </h3>
           <button
             onClick={onClose}
@@ -35,7 +36,7 @@ export function RepeatCountModal({
 
         <div className="mb-6">
           <label className="mb-3 block font-chinese text-sm font-medium text-gray-700 dark:text-slate-300">
-            {tr('重复次数 (1-99)', 'Repeat count (1-99)')}
+            {t('groupView.repeatCountModal.repeatCount199')}
           </label>
           <div className="flex items-center space-x-4">
             <button
@@ -68,9 +69,8 @@ export function RepeatCountModal({
           </div>
 
           <p className="mt-2 font-chinese text-xs text-gray-500 dark:text-slate-400">
-            {tr(
-              '设置该任务单元在任务群中需要重复执行的次数',
-              'Set how many times this unit must be repeated in the group',
+            {t(
+              'groupView.repeatCountModal.setHowManyTimesThisUnitMustBeRepeated',
             )}
           </p>
         </div>
@@ -80,13 +80,13 @@ export function RepeatCountModal({
             onClick={onClose}
             className="flex-1 rounded-xl border border-gray-300 px-4 py-3 font-chinese text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
           >
-            {tr('取消', 'Cancel')}
+            {t('bettingModal.bettingFormSections.cancel')}
           </button>
           <button
             onClick={onSave}
             className="flex-1 rounded-xl bg-primary-500 px-4 py-3 font-chinese font-medium text-white transition-colors hover:bg-primary-600"
           >
-            {tr('确认设置', 'Save')}
+            {t('groupView.repeatCountModal.save')}
           </button>
         </div>
       </div>

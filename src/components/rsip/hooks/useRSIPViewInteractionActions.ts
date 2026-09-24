@@ -1,3 +1,4 @@
+import { translate } from '../../../i18n/translate';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { RSIPNode, RSIPTaskLink } from '../../../types';
 import { logger } from '../../../utils/logger';
@@ -27,9 +28,11 @@ function confirmLinkedTaskAction(params: {
   }
 
   return window.confirm(
-    params.language.startsWith('zh')
-      ? `国策已执行，是否联动任务「${params.targetChainName}」？`
-      : `Policy executed. Trigger linked task "${params.targetChainName}"?`,
+    translate(
+      params.language.startsWith('zh') ? 'zh' : 'en',
+      'rsip.interaction.message1',
+      { targetChainName: params.targetChainName },
+    ),
   );
 }
 
@@ -204,15 +207,19 @@ export function useRSIPViewInteractionActions({
       }
       if (assessment.status === 'tolerated') {
         setViolationGroupMessage(
-          language.startsWith('zh')
-            ? `国策组「${assessment.groupTitle}」仍有容错余量，本次违反不会导致整组崩溃。`
-            : `Group "${assessment.groupTitle}" still has tolerance remaining. This violation will not collapse the whole group.`,
+          translate(
+            language.startsWith('zh') ? 'zh' : 'en',
+            'rsip.interaction.message2',
+            { groupTitle: assessment.groupTitle },
+          ),
         );
       } else {
         setViolationGroupMessage(
-          language.startsWith('zh')
-            ? `国策组「${assessment.groupTitle}」容错已耗尽，本次违反会触发整组崩溃。`
-            : `Group "${assessment.groupTitle}" has exhausted tolerance. This violation will collapse the group.`,
+          translate(
+            language.startsWith('zh') ? 'zh' : 'en',
+            'rsip.interaction.message3',
+            { groupTitle: assessment.groupTitle },
+          ),
         );
       }
     },

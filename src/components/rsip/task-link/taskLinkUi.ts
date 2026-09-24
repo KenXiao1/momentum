@@ -1,7 +1,8 @@
+import { type Translator } from '../../../i18n';
 import type { RSIPTaskLink } from '../../../types';
 
 export type TaskLinkMode = 'task_to_rsip' | 'rsip_to_task';
-export type Tr = (zh: string, en: string) => string;
+export type Tr = Translator;
 
 export const EVENTS: Record<TaskLinkMode, RSIPTaskLink['triggerEvent'][]> = {
   task_to_rsip: ['task_completed', 'task_interrupted', 'group_cycle_completed'],
@@ -12,27 +13,28 @@ export const EFFECTS: Record<TaskLinkMode, RSIPTaskLink['effect'][]> = {
   rsip_to_task: ['prompt_start_chain', 'prompt_schedule_chain'],
 };
 
-export function eventLabel(event: RSIPTaskLink['triggerEvent'], tr: Tr) {
-  if (event === 'task_completed') return tr('任务完成', 'Task completed');
-  if (event === 'task_interrupted') return tr('任务中断', 'Task interrupted');
+export function eventLabel(event: RSIPTaskLink['triggerEvent'], t: Tr) {
+  if (event === 'task_completed')
+    return t('rsip.taskLink.taskLinkUi.taskCompleted');
+  if (event === 'task_interrupted')
+    return t('rsip.taskLink.taskLinkUi.taskInterrupted');
   if (event === 'group_cycle_completed')
-    return tr('任务组周期完成', 'Group cycle completed');
-  return tr('RSIP 标记已执行', 'RSIP marked executed');
+    return t('rsip.taskLink.taskLinkUi.groupCycleCompleted');
+  return t('rsip.taskLink.taskLinkUi.rsipMarkedExecuted');
 }
 
-export function effectLabel(effect: RSIPTaskLink['effect'], tr: Tr) {
+export function effectLabel(effect: RSIPTaskLink['effect'], t: Tr) {
   if (effect === 'mark_rsip_executed')
-    return tr('标记国策已执行', 'Mark RSIP executed');
+    return t('rsip.taskLink.taskLinkUi.markRsipExecuted');
   if (effect === 'mark_rsip_violated')
-    return tr('标记国策已违反', 'Mark RSIP violated');
+    return t('rsip.taskLink.taskLinkUi.markRsipViolated');
   if (effect === 'prompt_start_chain')
-    return tr('提示立即开始任务', 'Prompt start task');
-  return tr('提示安排任务', 'Prompt schedule task');
+    return t('rsip.taskLink.taskLinkUi.promptStartTask');
+  return t('rsip.taskLink.taskLinkUi.promptScheduleTask');
 }
 
-export function automationLabel(
-  automation: RSIPTaskLink['automation'],
-  tr: Tr,
-) {
-  return automation === 'auto' ? tr('自动', 'Auto') : tr('需确认', 'Confirm');
+export function automationLabel(automation: RSIPTaskLink['automation'], t: Tr) {
+  return automation === 'auto'
+    ? t('rsip.taskLink.taskLinkUi.auto')
+    : t('rsip.taskLink.taskLinkUi.confirm');
 }

@@ -1,3 +1,4 @@
+import { createTranslator } from '../../i18n/translate';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StorageProvider } from '../StorageContext';
@@ -79,7 +80,7 @@ vi.mock('../../utils/toast', () => ({
 }));
 
 vi.mock('../../i18n', () => ({
-  useI18n: () => ({ tr: (_zh: string, en: string) => en }),
+  useI18n: () => ({ t: createTranslator('en') }),
 }));
 
 function StorageConsumer() {

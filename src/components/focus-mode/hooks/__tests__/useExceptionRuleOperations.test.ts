@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../../i18n/translate';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -79,7 +80,7 @@ function createParams(
     clearAutoResumeSchedule: vi.fn(),
     onRuleUsed: vi.fn(),
     finishFlow: vi.fn(),
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
   };
 }
 

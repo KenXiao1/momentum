@@ -1,11 +1,12 @@
+import { type Translator } from '../../../i18n';
 import React from 'react';
 import { CheckCircle, X } from 'lucide-react';
 
 export const TaskCompletionDialogHeader: React.FC<{
   chainName: string;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   onCancel: () => void;
-}> = ({ chainName, tr, onCancel }) => {
+}> = ({ chainName, t, onCancel }) => {
   return (
     <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
       <div className="flex items-center space-x-3">
@@ -20,7 +21,7 @@ export const TaskCompletionDialogHeader: React.FC<{
             id="task-completion-dialog-title"
             className="text-xl font-bold text-gray-900 dark:text-white"
           >
-            {tr('完成任务', 'Complete task')}
+            {t('taskCompletionDialog.taskCompletionDialogFooter.completeTask')}
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {chainName}
@@ -31,7 +32,7 @@ export const TaskCompletionDialogHeader: React.FC<{
       <button
         type="button"
         onClick={onCancel}
-        aria-label={tr('关闭', 'Close')}
+        aria-label={t('accountModal.close')}
         className="rounded-xl bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
       >
         <X size={20} />

@@ -52,7 +52,13 @@ browser/native boundary and why Tauri disables the PWA plugin.
 
 The [Tauri release workflow](../../.github/workflows/tauri-build.yml) runs for
 `v*` tags or manual dispatch and builds Windows, macOS, and Linux packages.
-Mobile code paths exist, but mobile release packaging is still in progress.
+Only a pushed `v*` tag can publish a GitHub release. Manual dispatch produces
+workflow artifacts only, even when dispatched at an existing version tag.
+Android also builds in CI and keeps its original APK filenames in the
+`android-development-artifacts` workflow artifact. Android release signing is
+not configured, so these development artifacts are excluded from GitHub releases
+and are not advertised as installable packages. Mobile release packaging remains
+in progress.
 
 Both tag and manual runs first require successful `CI` for the exact checked-out
 commit from a push to the default branch, including its `required` job. The

@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import { Dices, LogOut, User, X } from 'lucide-react';
 import type { AuthUser } from '../../domain/auth';
 import type { GamblingSettings } from '../../domain/userSettings';
@@ -7,7 +8,7 @@ interface AccountModalUserContentProps {
   user: AuthUser;
   userFullName: string | null;
   locale: Intl.LocalesArgument;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   gamblingSettings: GamblingSettings;
   gamblingLoading: boolean;
   gamblingError: string | null;
@@ -30,7 +31,7 @@ export function AccountModalUserContent({
   user,
   userFullName,
   locale,
-  tr,
+  t,
   gamblingSettings,
   gamblingLoading,
   gamblingError,
@@ -49,7 +50,7 @@ export function AccountModalUserContent({
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="mb-1 font-chinese text-lg font-medium text-gray-900 dark:text-slate-100">
-            {tr('当前账号', 'Account')}
+            {t('accountModal.accountModalUserContent.account')}
           </h3>
           <p className="truncate text-sm text-gray-600 dark:text-slate-400">
             {user.email}
@@ -66,7 +67,7 @@ export function AccountModalUserContent({
       <div className="space-y-3">
         <div className="flex items-center justify-between py-2">
           <span className="font-chinese text-sm text-gray-600 dark:text-slate-400">
-            {tr('注册时间', 'Created')}
+            {t('accountModal.accountModalUserContent.created')}
           </span>
           <span className="text-sm text-gray-900 dark:text-slate-100">
             {formatLocaleDateOrDash(user.createdAt, locale)}
@@ -74,12 +75,12 @@ export function AccountModalUserContent({
         </div>
         <div className="flex items-center justify-between py-2">
           <span className="font-chinese text-sm text-gray-600 dark:text-slate-400">
-            {tr('最后登录', 'Last sign in')}
+            {t('accountModal.accountModalUserContent.lastSignIn')}
           </span>
           <span className="text-sm text-gray-900 dark:text-slate-100">
             {user.lastSignInAt
               ? new Date(user.lastSignInAt).toLocaleDateString(locale)
-              : tr('首次登录', 'First sign in')}
+              : t('accountModal.accountModalUserContent.firstSignIn')}
           </span>
         </div>
       </div>
@@ -93,12 +94,11 @@ export function AccountModalUserContent({
             </div>
             <div>
               <h4 className="font-chinese text-base font-medium text-gray-900 dark:text-slate-100">
-                {tr('狂赌模式', 'Gambling mode')}
+                {t('accountModal.accountModalUserContent.gamblingMode')}
               </h4>
               <p className="text-xs text-gray-500 dark:text-slate-400">
-                {tr(
-                  '在任务上押注积分以获得额外奖励',
-                  'Bet points on tasks for extra rewards',
+                {t(
+                  'accountModal.accountModalUserContent.betPointsOnTasksForExtraRewards',
                 )}
               </p>
             </div>
@@ -110,7 +110,9 @@ export function AccountModalUserContent({
             disabled={gamblingLoading}
             loading={gamblingLoading}
             variant="danger"
-            aria-label={tr('切换狂赌模式', 'Toggle gambling mode')}
+            aria-label={t(
+              'accountModal.accountModalUserContent.toggleGamblingMode',
+            )}
           />
         </div>
 
@@ -120,9 +122,8 @@ export function AccountModalUserContent({
             <div className="flex items-center space-x-2">
               <div className="h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
               <span>
-                {tr(
-                  '已启用 - 可在任务开始时进行押注',
-                  'Enabled — you can bet when starting a task',
+                {t(
+                  'accountModal.accountModalUserContent.enabledYouCanBetWhenStartingATask',
                 )}
               </span>
             </div>
@@ -130,9 +131,8 @@ export function AccountModalUserContent({
             <div className="flex items-center space-x-2">
               <div className="h-2 w-2 rounded-full bg-gray-400"></div>
               <span>
-                {tr(
-                  '已禁用 - 无法进行任务押注',
-                  'Disabled — betting is unavailable',
+                {t(
+                  'accountModal.accountModalUserContent.disabledBettingIsUnavailable',
                 )}
               </span>
             </div>
@@ -158,7 +158,9 @@ export function AccountModalUserContent({
               <button
                 type="button"
                 onClick={onDismissGamblingError}
-                aria-label={tr('关闭错误消息', 'Dismiss error')}
+                aria-label={t(
+                  'accountModal.accountModalUserContent.dismissError',
+                )}
                 className="text-red-400 hover:text-red-600 dark:hover:text-red-300"
               >
                 <X size={14} />
@@ -173,18 +175,18 @@ export function AccountModalUserContent({
         type="button"
         onClick={onSignOut}
         disabled={signingOut}
-        aria-label={tr('退出登录', 'Sign out')}
+        aria-label={t('accountModal.accountModalUserContent.signOut')}
         className="flex w-full items-center justify-center space-x-3 rounded-2xl border border-red-200 bg-red-50 px-6 py-4 font-chinese font-medium text-red-600 shadow-sm transition duration-300 hover:scale-105 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
       >
         {signingOut ? (
           <>
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-red-400/30 border-t-red-400"></div>
-            <span>{tr('正在退出...', 'Signing out...')}</span>
+            <span>{t('accountModal.accountModalUserContent.signingOut')}</span>
           </>
         ) : (
           <>
             <LogOut size={20} />
-            <span>{tr('退出登录', 'Sign out')}</span>
+            <span>{t('accountModal.accountModalUserContent.signOut')}</span>
           </>
         )}
       </button>

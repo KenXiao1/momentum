@@ -9,15 +9,14 @@ interface BasicInfoSectionProps {
 }
 
 export function BasicInfoSection({ form }: BasicInfoSectionProps) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
 
   return (
     <SettingSection
-      title={tr('基础信息', 'Basic info')}
+      title={t('chainEditor.basicInfoSection.basicInfo')}
       icon={<Tag className="text-primary-500" size={20} />}
-      description={tr(
-        '设置链条的基本信息',
-        'Set the basic details of this chain',
+      description={t(
+        'chainEditor.basicInfoSection.setTheBasicDetailsOfThisChain',
       )}
     >
       <div className="bento-card animate-scale-in">
@@ -26,12 +25,11 @@ export function BasicInfoSection({ form }: BasicInfoSectionProps) {
             htmlFor="chain-name"
             className="mb-2 block font-chinese text-lg font-semibold text-gray-900 dark:text-slate-100"
           >
-            {tr('链名称', 'Chain name')}
+            {t('chainEditor.basicInfoSection.chainName')}
           </label>
           <p className="mb-4 font-chinese text-sm text-gray-500 dark:text-slate-400">
-            {tr(
-              '为您的链条起一个清晰易懂的名称',
-              'Give your chain a clear and recognizable name',
+            {t(
+              'chainEditor.basicInfoSection.giveYourChainAClearAndRecognizableName',
             )}
           </p>
         </div>
@@ -41,9 +39,8 @@ export function BasicInfoSection({ form }: BasicInfoSectionProps) {
           name="chainName"
           value={form.name}
           onChange={(e) => form.setName(e.target.value)}
-          placeholder={tr(
-            '例如：学习 Python、健身 30 分钟、无干扰写作',
-            'e.g. Learn Python, Workout 30 minutes, Distraction-free writing',
+          placeholder={t(
+            'chainEditor.basicInfoSection.eGLearnPythonWorkout30MinutesDistractionFreeWriting',
           )}
           className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-6 py-4 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
           required
@@ -56,10 +53,10 @@ export function BasicInfoSection({ form }: BasicInfoSectionProps) {
             htmlFor="chain-type"
             className="mb-2 block font-chinese text-lg font-semibold text-gray-900 dark:text-slate-100"
           >
-            {tr('任务类型', 'Task type')}
+            {t('chainEditor.basicInfoSection.taskType')}
           </label>
           <p className="mb-4 font-chinese text-sm text-gray-500 dark:text-slate-400">
-            {tr('选择最适合的任务类型', 'Choose the most suitable task type')}
+            {t('chainEditor.basicInfoSection.chooseTheMostSuitableTaskType')}
           </p>
         </div>
         <select
@@ -69,30 +66,26 @@ export function BasicInfoSection({ form }: BasicInfoSectionProps) {
           onChange={(e) => form.setType(e.target.value as UnitChainType)}
           className="w-full rounded-2xl border border-gray-200 bg-white px-6 py-4 font-chinese text-gray-900 transition duration-300 hover:border-primary-300 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-primary-400"
         >
-          <option value="unit">{tr('基础单元', 'Unit')}</option>
+          <option value="unit">{t('chainEditor.basicInfoSection.unit')}</option>
           <option value="assault">
-            {tr(
-              '突击单元（学习、实验、论文）',
-              'Assault (study, experiments, papers)',
-            )}
+            {t('chainEditor.basicInfoSection.assaultStudyExperimentsPapers')}
           </option>
           <option value="recon">
-            {tr(
-              '侦查单元（信息搜集）',
-              'Recon (research, information gathering)',
+            {t(
+              'chainEditor.basicInfoSection.reconResearchInformationGathering',
             )}
           </option>
           <option value="command">
-            {tr('指挥单元（制定计划）', 'Command (planning, strategy)')}
+            {t('chainEditor.basicInfoSection.commandPlanningStrategy')}
           </option>
           <option value="special_ops">
-            {tr('特勤单元（处理杂事）', 'Special ops (miscellaneous tasks)')}
+            {t('chainEditor.basicInfoSection.specialOpsMiscellaneousTasks')}
           </option>
           <option value="engineering">
-            {tr('工程单元（运动锻炼）', 'Engineering (exercise, training)')}
+            {t('chainEditor.basicInfoSection.engineeringExerciseTraining')}
           </option>
           <option value="quartermaster">
-            {tr('炊事单元（备餐做饭）', 'Quartermaster (cooking, meal prep)')}
+            {t('chainEditor.basicInfoSection.quartermasterCookingMealPrep')}
           </option>
         </select>
       </div>
@@ -104,12 +97,11 @@ export function BasicInfoSection({ form }: BasicInfoSectionProps) {
               <Layers className="text-blue-500" size={24} />
               <div>
                 <h4 className="font-chinese text-lg font-bold text-gray-900 dark:text-slate-100">
-                  {tr('任务群归属', 'Group membership')}
+                  {t('chainEditor.basicInfoSection.groupMembership')}
                 </h4>
                 <p className="font-chinese text-sm text-gray-600 dark:text-slate-400">
-                  {tr(
-                    '当前属于一个任务群',
-                    'This task currently belongs to a group',
+                  {t(
+                    'chainEditor.basicInfoSection.thisTaskCurrentlyBelongsToAGroup',
                   )}
                 </p>
               </div>
@@ -122,25 +114,23 @@ export function BasicInfoSection({ form }: BasicInfoSectionProps) {
                   form.setIsCopyMode(true);
                 }}
                 className="flex items-center space-x-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-indigo-500 shadow-sm transition-colors hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-800"
-                title={tr(
-                  '复制此任务并移出任务群（原任务保留）',
-                  'Duplicate this task and remove it from the group (original stays)',
+                title={t(
+                  'chainEditor.basicInfoSection.duplicateThisTaskAndRemoveItFromTheGroup',
                 )}
               >
                 <Copy size={14} />
-                <span>{tr('复制出群', 'Copy out')}</span>
+                <span>{t('chainEditor.basicInfoSection.copyOut')}</span>
               </button>
               <button
                 type="button"
                 onClick={() => form.setParentId(undefined)}
                 className="flex items-center space-x-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-red-500 shadow-sm transition-colors hover:text-red-600 dark:border-slate-700 dark:bg-slate-800"
-                title={tr(
-                  '将此任务移出任务群',
-                  'Remove this task from the group',
+                title={t(
+                  'chainEditor.basicInfoSection.removeThisTaskFromTheGroup',
                 )}
               >
                 <Layers size={14} className="rotate-180" />
-                <span>{tr('移出', 'Remove')}</span>
+                <span>{t('chainEditor.basicInfoSection.remove')}</span>
               </button>
             </div>
           </div>

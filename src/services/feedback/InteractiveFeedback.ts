@@ -1,10 +1,11 @@
+import { translate } from '../../i18n/translate';
 /**
  * 交互式反馈
  * 负责确认对话框、恢复选项、批量操作反馈
  */
 
 import type { RecoveryAction } from '../ErrorRecoveryManager';
-import { getCurrentLanguage, tr } from '../../utils/runtimeI18n';
+import { getCurrentLanguage, t } from '../../utils/runtimeI18n';
 import { MessageStore } from './MessageStore';
 import { FeedbackPresenter } from './FeedbackPresenter';
 import type { FeedbackMessage, FeedbackAction } from './types';
@@ -33,7 +34,7 @@ export class InteractiveFeedback {
 
       actions.push({
         id: 'cancel',
-        label: tr('取消', 'Cancel'),
+        label: t('bettingModal.bettingFormSections.cancel'),
         type: 'secondary',
         handler: () => {
           this.store.removeMessage(messageId);
@@ -44,11 +45,8 @@ export class InteractiveFeedback {
       const feedbackMessage: FeedbackMessage = {
         id: messageId,
         type: 'warning',
-        title: tr('选择恢复操作', 'Choose a recovery action'),
-        message: tr(
-          '请选择如何处理这个问题：',
-          'Choose how to handle this issue:',
-        ),
+        title: t('feedback.interactiveFeedback.chooseARecoveryAction'),
+        message: t('feedback.interactiveFeedback.chooseHowToHandleThisIssue'),
         actions,
         persistent: true,
         timestamp: new Date(),
@@ -66,8 +64,10 @@ export class InteractiveFeedback {
   ): Promise<boolean> {
     return new Promise((resolve) => {
       const messageId = this.store.generateMessageId();
-      const finalConfirmLabel = confirmLabel ?? tr('确认', 'Confirm');
-      const finalCancelLabel = cancelLabel ?? tr('取消', 'Cancel');
+      const finalConfirmLabel =
+        confirmLabel ?? t('feedback.interactiveFeedback.confirm');
+      const finalCancelLabel =
+        cancelLabel ?? t('bettingModal.bettingFormSections.cancel');
 
       const actions: FeedbackAction[] = [
         {
@@ -112,16 +112,23 @@ export class InteractiveFeedback {
     errors?: string[],
   ): string {
     const language = getCurrentLanguage();
-    const title =
-      language === 'zh' ? `${operation}完成` : `${operation} completed`;
-    let message =
-      language === 'zh'
-        ? `总计 ${total} 项，成功 ${success} 项`
-        : `Total ${total}, succeeded ${success}`;
+    const title = translate(
+      language === 'zh' ? 'zh' : 'en',
+      'feedback.interactiveFeedback.operationCompleted',
+      { operation: operation },
+    );
+    let message = translate(
+      language === 'zh' ? 'zh' : 'en',
+      'feedback.interactiveFeedback.totalTotalSucceededSuccess',
+      { total: total, success: success },
+    );
 
     if (failed > 0) {
-      message +=
-        language === 'zh' ? `，失败 ${failed} 项` : `, failed ${failed}`;
+      message += translate(
+        language === 'zh' ? 'zh' : 'en',
+        'feedback.interactiveFeedback.failedFailed',
+        { failed: failed },
+      );
     }
 
     const actions: FeedbackAction[] = [];
@@ -129,11 +136,15 @@ export class InteractiveFeedback {
     if (errors && errors.length > 0) {
       actions.push({
         id: 'show_errors',
-        label: tr('查看错误详情', 'View error details', language),
+        label: t(
+          'feedback.interactiveFeedback.viewErrorDetails',
+          undefined,
+          language,
+        ),
         type: 'secondary',
         handler: () => {
           this.presenter.showInfo(
-            tr('错误详情', 'Error details', language),
+            t('feedback.interactiveFeedback.errorDetails', undefined, language),
             errors.join('\n'),
             false,
           );

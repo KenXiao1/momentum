@@ -26,7 +26,7 @@ export function RSIPTaskLinkForm(props: {
   onAutomationChange: (automation: RSIPTaskLink['automation']) => void;
   canCreate: boolean;
   onCreate: () => void;
-  tr: Tr;
+  t: Tr;
 }) {
   const selectClass =
     'rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100';
@@ -38,7 +38,7 @@ export function RSIPTaskLinkForm(props: {
         className={selectClass}
       >
         <option value="">
-          {props.tr('选择 RSIP 节点', 'Select RSIP node')}
+          {props.t('rsip.taskLink.rsipTaskLinkForm.selectRsipNode')}
         </option>
         {props.nodes.map((node) => (
           <option key={node.id} value={node.id}>
@@ -56,13 +56,13 @@ export function RSIPTaskLinkForm(props: {
           className={selectClass}
         >
           <option value="">
-            {props.tr('选择任务/任务组', 'Select task/group')}
+            {props.t('rsip.taskLink.rsipTaskLinkForm.selectTaskGroup')}
           </option>
           {props.chains.map((chain) => (
             <option key={chain.id} value={chain.id}>
               {chain.type === 'group'
-                ? props.tr('任务组', 'Group')
-                : props.tr('任务', 'Task')}
+                ? props.t('rsip.taskLink.rsipTaskLinkForm.group')
+                : props.t('rsip.taskLink.rsipTaskLinkForm.task')}
               : {chain.name}
             </option>
           ))}
@@ -79,7 +79,7 @@ export function RSIPTaskLinkForm(props: {
       >
         {EVENTS[props.mode].map((event) => (
           <option key={event} value={event}>
-            {eventLabel(event, props.tr)} ({event})
+            {eventLabel(event, props.t)} ({event})
           </option>
         ))}
       </select>
@@ -92,7 +92,7 @@ export function RSIPTaskLinkForm(props: {
       >
         {EFFECTS[props.mode].map((effect) => (
           <option key={effect} value={effect}>
-            {effectLabel(effect, props.tr)} ({effect})
+            {effectLabel(effect, props.t)} ({effect})
           </option>
         ))}
       </select>
@@ -105,8 +105,8 @@ export function RSIPTaskLinkForm(props: {
         }
         className={selectClass}
       >
-        <option value="auto">{automationLabel('auto', props.tr)}</option>
-        <option value="confirm">{automationLabel('confirm', props.tr)}</option>
+        <option value="auto">{automationLabel('auto', props.t)}</option>
+        <option value="confirm">{automationLabel('confirm', props.t)}</option>
       </select>
       <button
         type="button"
@@ -114,7 +114,7 @@ export function RSIPTaskLinkForm(props: {
         onClick={props.onCreate}
         className={`rounded-xl px-3 py-2 text-sm font-medium transition ${props.canCreate ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'cursor-not-allowed bg-gray-200 text-gray-500 dark:bg-slate-700 dark:text-slate-500'}`}
       >
-        {props.tr('新增联动', 'Add link')}
+        {props.t('rsip.taskLink.rsipTaskLinkForm.addLink')}
       </button>
     </div>
   );

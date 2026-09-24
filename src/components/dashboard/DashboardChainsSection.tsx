@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import React from 'react';
 import { Download, Layers, Plus, Trash2, TreePine } from 'lucide-react';
 
@@ -19,7 +20,7 @@ interface DashboardChainsSectionProps {
   onOpenRSIP?: () => void;
   onCreateChain: () => void;
   onCreateTaskGroup?: () => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 const DashboardChainsSectionComponent: React.FC<
@@ -39,18 +40,17 @@ const DashboardChainsSectionComponent: React.FC<
   onOpenRSIP,
   onCreateChain,
   onCreateTaskGroup,
-  tr,
+  t,
 }) => (
   <div className="animate-slide-up">
     <div className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div className="min-w-0">
         <h2 className="mb-1 font-chinese text-2xl font-bold tracking-tight text-gray-950 dark:text-slate-100 sm:text-3xl">
-          {tr('你的任务链', 'Your Task Chains')}
+          {t('dashboard.dashboardChainsSection.yourTaskChains')}
         </h2>
         <p className="font-chinese text-sm text-gray-500 dark:text-slate-400">
-          {tr(
-            '选择当前要推进的任务',
-            'Choose what you want to move forward now',
+          {t(
+            'dashboard.dashboardChainsSection.chooseWhatYouWantToMoveForwardNow',
           )}
         </p>
       </div>
@@ -58,36 +58,36 @@ const DashboardChainsSectionComponent: React.FC<
         <button
           type="button"
           onClick={onCreateChain}
-          aria-label={tr('新建链', 'New Chain')}
+          aria-label={t('dashboard.dashboardChainsSection.newChain')}
           className="focus-ring flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-gray-950 px-5 py-2.5 font-medium text-white transition-colors hover:bg-primary-700 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-primary-200"
         >
           <Plus size={16} aria-hidden="true" />
           <span className="font-chinese font-semibold">
-            {tr('新建链', 'New Chain')}
+            {t('dashboard.dashboardChainsSection.newChain')}
           </span>
         </button>
         {onCreateTaskGroup && (
           <button
             type="button"
             onClick={onCreateTaskGroup}
-            aria-label={tr('新建任务群', 'New Group')}
+            aria-label={t('dashboard.dashboardChainsSection.newGroup')}
             className="focus-ring flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-800 transition-colors hover:border-primary-300 hover:text-primary-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-primary-500"
           >
             <Layers size={16} aria-hidden="true" />
             <span className="font-chinese font-medium">
-              {tr('新建任务群', 'New Group')}
+              {t('dashboard.dashboardChainsSection.newGroup')}
             </span>
           </button>
         )}
         <button
           type="button"
           onClick={onShowRecycleBin}
-          aria-label={tr('回收箱', 'Recycle bin')}
+          aria-label={t('dashboard.dashboardChainsSection.recycleBin')}
           className="focus-ring relative flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
         >
           <Trash2 size={16} aria-hidden="true" />
           <span className="font-chinese font-medium">
-            {tr('回收箱', 'Recycle bin')}
+            {t('dashboard.dashboardChainsSection.recycleBin')}
           </span>
           {recycleBinCount > 0 && (
             <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
@@ -98,23 +98,23 @@ const DashboardChainsSectionComponent: React.FC<
         <button
           type="button"
           onClick={onShowImportExport}
-          aria-label={tr('数据管理', 'Data')}
+          aria-label={t('dashboard.dashboardChainsSection.data')}
           className="focus-ring flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
         >
           <Download size={16} aria-hidden="true" />
           <span className="font-chinese font-medium">
-            {tr('数据管理', 'Data')}
+            {t('dashboard.dashboardChainsSection.data')}
           </span>
         </button>
         <button
           type="button"
           onClick={onOpenRSIP}
-          aria-label={tr('国策树', 'RSIP Tree')}
+          aria-label={t('dashboard.dashboardChainsSection.rsipTree')}
           className="focus-ring flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-emerald-50 hover:text-emerald-700 dark:text-slate-300 dark:hover:bg-emerald-900/20 dark:hover:text-emerald-300"
         >
           <TreePine size={16} aria-hidden="true" />
           <span className="font-chinese font-medium">
-            {tr('国策树', 'RSIP Tree')}
+            {t('dashboard.dashboardChainsSection.rsipTree')}
           </span>
         </button>
       </div>

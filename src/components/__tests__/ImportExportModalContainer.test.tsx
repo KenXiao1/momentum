@@ -1,4 +1,5 @@
-﻿import {
+import { createTranslator } from '../../i18n/translate';
+import {
   act,
   fireEvent,
   render,
@@ -25,7 +26,7 @@ vi.mock('../../storage/useStorage', () => ({
 vi.mock('../../i18n', () => ({
   useI18n: () => ({
     language: 'en',
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
   }),
 }));
 

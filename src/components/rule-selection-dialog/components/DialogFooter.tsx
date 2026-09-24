@@ -1,19 +1,18 @@
+import { type Translator } from '../../../i18n';
 export function DialogFooter({
-  language,
-  tr,
+  t,
   count,
   onCancel,
 }: {
   language: string;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   count: number;
   onCancel: () => void;
 }) {
-  const ruleLabel = count === 1 ? 'rule' : 'rules';
   const availableRulesText =
-    language === 'zh'
-      ? `${count} 个可用规则`
-      : `${count} available ${ruleLabel}`;
+    count === 1
+      ? t('counts.ruleAvailable', { count })
+      : t('counts.rulesAvailable', { count });
 
   return (
     <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-700/50">
@@ -25,7 +24,7 @@ export function DialogFooter({
           onClick={onCancel}
           className="px-4 py-2 text-gray-600 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
         >
-          {tr('取消操作', 'Cancel')}
+          {t('ruleSelectionDialog.dialogFooter.cancel')}
         </button>
       </div>
     </div>

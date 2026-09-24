@@ -49,7 +49,7 @@ export function GroupView({
   onReorderUnit,
   onViewDetail,
 }: GroupViewProps) {
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const progress = getGroupProgress(group);
   const unitProgress = getGroupUnitProgress(group);
   const nextUnit = getNextUnitInGroup(group);
@@ -105,7 +105,7 @@ export function GroupView({
       onViewDetail={onViewDetail}
       getScheduledSession={getScheduledSession}
       language={language}
-      tr={tr}
+      t={t}
       progress={progress}
       unitProgress={unitProgress}
       nextUnit={nextUnit}

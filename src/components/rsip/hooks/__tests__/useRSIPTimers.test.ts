@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../../i18n/translate';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useRSIPTimers } from '../useRSIPTimers';
@@ -20,7 +21,7 @@ describe('useRSIPTimers', () => {
   });
 
   it('requests permission when a timer starts', () => {
-    const { result } = renderHook(() => useRSIPTimers((_zh, en) => en));
+    const { result } = renderHook(() => useRSIPTimers(createTranslator('en')));
 
     act(() => {
       result.current.handleStartTimer('node-1', 1);
@@ -30,7 +31,7 @@ describe('useRSIPTimers', () => {
   });
 
   it('emits completion notification when timer expires', () => {
-    const { result } = renderHook(() => useRSIPTimers((_zh, en) => en));
+    const { result } = renderHook(() => useRSIPTimers(createTranslator('en')));
 
     act(() => {
       result.current.handleStartTimer('node-1', 1);

@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import React from 'react';
 import { Hourglass } from 'lucide-react';
 
@@ -9,7 +10,7 @@ interface DurationSectionProps {
   isCustomAuxiliaryDuration: boolean;
   onAuxiliaryDurationChange: (value: number) => void;
   onAuxiliaryDurationModeChange: (isCustom: boolean, value: number) => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 const DurationSectionComponent: React.FC<DurationSectionProps> = ({
@@ -17,7 +18,7 @@ const DurationSectionComponent: React.FC<DurationSectionProps> = ({
   isCustomAuxiliaryDuration,
   onAuxiliaryDurationChange,
   onAuxiliaryDurationModeChange,
-  tr,
+  t,
 }) => (
   <div
     data-testid="task-group-editor-duration"
@@ -27,10 +28,10 @@ const DurationSectionComponent: React.FC<DurationSectionProps> = ({
       <Hourglass className="text-blue-500" size={18} />
       <div className="min-w-0">
         <h4 className="font-chinese text-base font-semibold text-gray-900 dark:text-slate-100">
-          {tr('预约时长', 'Booking duration')}
+          {t('chainDetail.chainDetailStats.bookingDuration')}
         </h4>
         <p className="font-mono text-[11px] text-gray-500">
-          {tr('预约时长', 'BOOKING DURATION')}
+          {t('chainEditor.auxiliaryChainSettingsSection.bookingDuration')}
         </p>
       </div>
     </div>
@@ -56,41 +57,45 @@ const DurationSectionComponent: React.FC<DurationSectionProps> = ({
             value={preset}
             className="bg-white text-gray-900 dark:bg-slate-700 dark:text-slate-100"
           >
-            {tr(`${preset}分钟`, `${preset} min`)}
+            {t('chainEditor.auxiliaryChainSettingsSection.presetMin', {
+              preset: preset,
+            })}
           </option>
         ))}
         <option
           value="custom"
           className="bg-white text-gray-900 dark:bg-slate-700 dark:text-slate-100"
         >
-          {tr('自定义时长', 'Custom duration')}
+          {t('chainEditor.auxiliaryChainSettingsSection.customDuration')}
         </option>
       </select>
 
       {isCustomAuxiliaryDuration && (
         <NumericSliderField
           id="auxiliary-duration-slider"
-          label={tr('自定义预约时长', 'Custom booking duration')}
-          description={tr(
-            '设置预约阶段的持续时间',
-            'Set how long the booking phase lasts',
+          label={t(
+            'chainEditor.auxiliaryChainSettingsSection.customBookingDuration',
+          )}
+          description={t(
+            'chainEditor.auxiliaryChainSettingsSection.setHowLongTheBookingPhaseLasts',
           )}
           value={auxiliaryDuration}
           onChange={onAuxiliaryDurationChange}
           min={1}
           max={120}
-          unit={tr('分钟', 'min')}
+          unit={t('chainEditor.auxiliaryChainSettingsSection.min')}
           formatValue={(nextValue) =>
-            tr(`${nextValue}分钟`, `${nextValue} min`)
+            t('chainEditor.auxiliaryChainSettingsSection.nextValueMin', {
+              nextValue: nextValue,
+            })
           }
           debounceMs={50}
         />
       )}
 
       <p className="text-xs leading-relaxed text-gray-500">
-        {tr(
-          '预约阶段的持续时间，用于准备和调整状态',
-          'How long the booking phase lasts for preparation and alignment',
+        {t(
+          'taskGroupEditor.durationSection.howLongTheBookingPhaseLastsForPreparationAnd',
         )}
       </p>
     </div>

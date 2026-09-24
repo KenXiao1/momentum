@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import type { Dispatch, SetStateAction } from 'react';
 import type { AppState, TaskLifecycleEvent } from '../../../types';
 import type { MomentumStorage } from '../../../storage/MomentumStorage';
@@ -30,7 +31,7 @@ interface CreateGroupStartFlowParams {
   safelySaveChains: SafelySaveChains;
   startChain: (chainId: string) => Promise<void>;
   onTaskLifecycleEvent?: (event: TaskLifecycleEvent) => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 export function createGroupStartFlow({
@@ -40,7 +41,7 @@ export function createGroupStartFlow({
   safelySaveChains,
   startChain,
   onTaskLifecycleEvent,
-  tr,
+  t,
 }: CreateGroupStartFlowParams) {
   function replaceGroup(groupId: string, update: (chain: Chain) => Chain) {
     const updatedChains = readState().chains.map((chain) =>
@@ -54,7 +55,7 @@ export function createGroupStartFlow({
 
   function resetExpiredGroup(group: Chain): void {
     replaceGroup(group.id, resetGroupProgress);
-    notifyTaskFailed(group.name, tr('任务群已超时', 'Group has expired'));
+    notifyTaskFailed(group.name, t('sessions.groupStartFlow.groupHasExpired'));
   }
 
   function scheduleNextCycle(params: {
@@ -101,9 +102,12 @@ export function createGroupStartFlow({
       notifyTaskCompleted(
         updatedGroup.name,
         updatedGroup.totalCompletions,
-        tr(
-          `第${updatedGroup.totalCompletions}轮已完成，正在开始第${updatedGroup.totalCompletions + 1}轮`,
-          `Cycle ${updatedGroup.totalCompletions} completed. Starting cycle ${updatedGroup.totalCompletions + 1}.`,
+        t(
+          'sessions.groupStartFlow.cycleUpdatedGroupTotalCompletionsCompletedStartingCycleUpdatedGroupTotalCompletionsNext',
+          {
+            updatedGroupTotalCompletions: updatedGroup.totalCompletions,
+            updatedGroupTotalCompletionsNext: updatedGroup.totalCompletions + 1,
+          },
         ),
       );
     }

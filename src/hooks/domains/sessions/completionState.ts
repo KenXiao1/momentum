@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import type { AppState } from '../../../types';
 import {
   incrementGroupCompletionCount,
@@ -62,7 +63,7 @@ interface GroupCycleIncrementResult {
 export function maybeIncrementGroupCycleCompletion(
   chains: AppState['chains'],
   completedChain: Chain,
-  tr: (zh: string, en: string) => string,
+  t: Translator,
   notify = true,
 ): GroupCycleIncrementResult {
   if (!completedChain.parentId || completedChain.type === 'group') {
@@ -97,7 +98,7 @@ export function maybeIncrementGroupCycleCompletion(
     notifyTaskCompleted(
       parentChain.name,
       parentChain.currentStreak,
-      tr('任务群完成一轮', 'Group completed a cycle'),
+      t('sessions.completion.groupCompletedACycle'),
     );
   }
 

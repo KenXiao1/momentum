@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChainTreeNode, ScheduledSession } from '../../../types';
@@ -55,7 +56,7 @@ describe('useGroupCardScheduleCountdown', () => {
       useGroupCardScheduleCountdown({
         group: createGroup(),
         nextUnit: null,
-        tr: (_zh, en) => en,
+        t: createTranslator('en'),
       }),
     );
 
@@ -72,7 +73,7 @@ describe('useGroupCardScheduleCountdown', () => {
         scheduledSession: session,
         group: createGroup(),
         nextUnit: null,
-        tr: (_zh, en) => en,
+        t: createTranslator('en'),
       }),
     );
 
@@ -101,7 +102,7 @@ describe('useGroupCardScheduleCountdown', () => {
         scheduledSession: createSession(1),
         group: createGroup({ auxiliaryDuration: 3 }),
         nextUnit: null,
-        tr: (_zh, en) => en,
+        t: createTranslator('en'),
       }),
     );
 
@@ -129,7 +130,7 @@ describe('useGroupCardScheduleCountdown', () => {
         scheduledSession: session,
         group: createGroup(),
         nextUnit: null,
-        tr: (_zh, en) => en,
+        t: createTranslator('en'),
       }),
     );
 
@@ -155,7 +156,7 @@ describe('useGroupCardScheduleCountdown', () => {
         scheduledSession: createSession(70),
         group: createGroup(),
         nextUnit: null,
-        tr: (_zh, en) => en,
+        t: createTranslator('en'),
       }),
     );
 

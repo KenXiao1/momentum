@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import React from 'react';
 import type { DeletedChain } from '../../types';
 import type { ConfirmDialogState } from '../useRecycleBinModal';
@@ -12,7 +13,7 @@ import { DialogShell } from '../shared/DialogShell';
 interface RecycleBinModalViewProps {
   isOpen: boolean;
   language: 'zh' | 'en';
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   deletedChains: DeletedChain[];
   selectedChains: Set<string>;
   isLoading: boolean;
@@ -32,7 +33,7 @@ interface RecycleBinModalViewProps {
 const RecycleBinModalViewComponent: React.FC<RecycleBinModalViewProps> = ({
   isOpen,
   language,
-  tr,
+  t,
   deletedChains,
   selectedChains,
   isLoading,
@@ -52,9 +53,9 @@ const RecycleBinModalViewComponent: React.FC<RecycleBinModalViewProps> = ({
 
   let content: React.ReactNode;
   if (isLoading) {
-    content = <LoadingState tr={tr} />;
+    content = <LoadingState t={t} />;
   } else if (deletedChains.length === 0) {
-    content = <EmptyState tr={tr} />;
+    content = <EmptyState t={t} />;
   } else {
     content = (
       <>
@@ -62,7 +63,7 @@ const RecycleBinModalViewComponent: React.FC<RecycleBinModalViewProps> = ({
           deletedChainsCount={deletedChains.length}
           selectedChainsCount={selectedChains.size}
           language={language}
-          tr={tr}
+          t={t}
           onSelectAll={onSelectAll}
           onBulkRestore={onBulkRestore}
           onBulkPermanentDelete={onBulkPermanentDelete}
@@ -89,7 +90,7 @@ const RecycleBinModalViewComponent: React.FC<RecycleBinModalViewProps> = ({
         <Header
           deletedChainsCount={deletedChains.length}
           language={language}
-          tr={tr}
+          t={t}
           onClose={onClose}
         />
         <div className="flex flex-1 flex-col overflow-hidden">{content}</div>
@@ -98,7 +99,7 @@ const RecycleBinModalViewComponent: React.FC<RecycleBinModalViewProps> = ({
       {showConfirmDialog && (
         <ConfirmDialog
           showConfirmDialog={showConfirmDialog}
-          tr={tr}
+          t={t}
           onConfirm={onConfirmAction}
           onCancel={onCancelConfirm}
         />

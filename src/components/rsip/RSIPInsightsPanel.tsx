@@ -16,26 +16,26 @@ function priorityClass(priority: 'high' | 'medium' | 'low'): string {
 }
 
 export function RSIPInsightsPanel({ insights }: RSIPInsightsPanelProps) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
 
   const toPercent = (value: number | null): string => {
-    if (value == null) return tr('无数据', 'N/A');
+    if (value == null) return t('rsip.rsipinsightsPanel.nA');
     return `${Math.round(value * 100)}%`;
   };
 
   const trendLabel = (
     value: 'up' | 'down' | 'flat' | 'insufficient_data',
   ): string => {
-    if (value === 'up') return tr('上升', 'Up');
-    if (value === 'down') return tr('下降', 'Down');
-    if (value === 'flat') return tr('持平', 'Flat');
-    return tr('数据不足', 'Insufficient data');
+    if (value === 'up') return t('rsip.rsipinsightsPanel.up');
+    if (value === 'down') return t('rsip.rsipinsightsPanel.down');
+    if (value === 'flat') return t('rsip.rsipinsightsPanel.flat');
+    return t('rsip.rsipinsightsPanel.insufficientData');
   };
 
   const priorityLabel = (value: 'high' | 'medium' | 'low'): string => {
-    if (value === 'high') return tr('高', 'High');
-    if (value === 'medium') return tr('中', 'Medium');
-    return tr('低', 'Low');
+    if (value === 'high') return t('rsip.rsipinsightsPanel.high');
+    if (value === 'medium') return t('rsip.rsipinsightsPanel.medium');
+    return t('rsip.rsipinsightsPanel.low');
   };
 
   return (
@@ -43,7 +43,7 @@ export function RSIPInsightsPanel({ insights }: RSIPInsightsPanelProps) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="bento-card">
           <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">
-            {tr('活跃国策数', 'Active Policies')}
+            {t('rsip.rsipinsightsPanel.activePolicies')}
           </p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-slate-100">
             {insights.summary.activeNodeCount}
@@ -51,7 +51,7 @@ export function RSIPInsightsPanel({ insights }: RSIPInsightsPanelProps) {
         </div>
         <div className="bento-card">
           <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">
-            {tr('近14天成功率', '14d Success Rate')}
+            {t('rsip.rsipinsightsPanel.14dSuccessRate')}
           </p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-slate-100">
             {toPercent(insights.summary.successRate14d)}
@@ -59,7 +59,7 @@ export function RSIPInsightsPanel({ insights }: RSIPInsightsPanelProps) {
         </div>
         <div className="bento-card">
           <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">
-            {tr('被动覆盖率', 'Passive Coverage')}
+            {t('rsip.rsipinsightsPanel.passiveCoverage')}
           </p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-slate-100">
             {toPercent(insights.summary.passiveNodeRatio)}
@@ -67,7 +67,7 @@ export function RSIPInsightsPanel({ insights }: RSIPInsightsPanelProps) {
         </div>
         <div className="bento-card">
           <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">
-            {tr('强化覆盖率', 'Reinforcement Coverage')}
+            {t('rsip.rsipinsightsPanel.reinforcementCoverage')}
           </p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-slate-100">
             {toPercent(insights.summary.reinforcementCoverage)}
@@ -78,7 +78,7 @@ export function RSIPInsightsPanel({ insights }: RSIPInsightsPanelProps) {
       <div className="grid gap-4 md:grid-cols-3">
         <div className="bento-card">
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            {tr('节点规模趋势', 'Max-node trend')}
+            {t('rsip.rsipinsightsPanel.maxNodeTrend')}
           </p>
           <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-slate-100">
             {trendLabel(insights.trends.maxNodeTrend)}
@@ -86,7 +86,7 @@ export function RSIPInsightsPanel({ insights }: RSIPInsightsPanelProps) {
         </div>
         <div className="bento-card">
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            {tr('轮次时长趋势', 'Run-duration trend')}
+            {t('rsip.rsipinsightsPanel.runDurationTrend')}
           </p>
           <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-slate-100">
             {trendLabel(insights.trends.runDurationTrend)}
@@ -94,7 +94,7 @@ export function RSIPInsightsPanel({ insights }: RSIPInsightsPanelProps) {
         </div>
         <div className="bento-card">
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            {tr('近14天崩溃次数', 'Collapses in 14 days')}
+            {t('rsip.rsipinsightsPanel.collapsesIn14Days')}
           </p>
           <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-slate-100">
             {insights.trends.collapseFrequency14d}
@@ -104,14 +104,11 @@ export function RSIPInsightsPanel({ insights }: RSIPInsightsPanelProps) {
 
       <div className="bento-card space-y-3">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
-          {tr('农村包围城市候选队列', 'Rural-first candidate queue')}
+          {t('rsip.rsipinsightsPanel.ruralFirstCandidateQueue')}
         </h3>
         {insights.ruralFirstCandidates.length === 0 ? (
           <p className="text-sm text-gray-600 dark:text-slate-300">
-            {tr(
-              '暂未检测到低成本候选。',
-              'No low-cost candidates detected yet.',
-            )}
+            {t('rsip.rsipinsightsPanel.noLowCostCandidatesDetectedYet')}
           </p>
         ) : (
           <div className="space-y-2">
@@ -124,8 +121,8 @@ export function RSIPInsightsPanel({ insights }: RSIPInsightsPanelProps) {
                   {node.title}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-slate-400">
-                  {tr('失败成本', 'Failure cost')} {node.failureCost} |{' '}
-                  {tr('违约率', 'Violation rate')}{' '}
+                  {t('rsip.rsipinsightsPanel.failureCost')} {node.failureCost} |{' '}
+                  {t('rsip.rsipinsightsPanel.violationRate')}{' '}
                   {toPercent(node.violationRate)}
                 </p>
               </div>
@@ -136,13 +133,12 @@ export function RSIPInsightsPanel({ insights }: RSIPInsightsPanelProps) {
 
       <div className="space-y-3">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
-          {tr('推荐助手', 'Recommendation assistant')}
+          {t('rsip.rsipinsightsPanel.recommendationAssistant')}
         </h3>
         {insights.recommendations.length === 0 ? (
           <div className="rounded-xl border border-dashed border-gray-300 p-4 text-sm text-gray-600 dark:border-slate-700 dark:text-slate-300">
-            {tr(
-              '暂时没有建议，继续执行以积累更多信号。',
-              'No recommendation yet. Continue execution to collect more signal.',
+            {t(
+              'rsip.rsipinsightsPanel.noRecommendationYetContinueExecutionToCollectMoreSignal',
             )}
           </div>
         ) : (

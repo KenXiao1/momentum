@@ -1,12 +1,11 @@
+import { type Translator } from '../../i18n';
 /**
  * ChainDetail 组件共享类型定义
  */
 
 import { Chain, CompletionHistory } from '../../types';
 
-export interface TranslationFn {
-  (zh: string, en: string): string;
-}
+export type TranslationFn = Translator;
 
 export interface ChainDetailViewProps {
   chain: Chain;
@@ -16,7 +15,7 @@ export interface ChainDetailViewProps {
   showDeleteConfirm: boolean;
   language: 'zh' | 'en';
   locale: string;
-  tr: TranslationFn;
+  t: TranslationFn;
   formatFailureReason: (reason: string) => string;
   onBack: () => void;
   onEdit: () => void;
@@ -27,7 +26,7 @@ export interface ChainDetailViewProps {
 
 export interface HeaderProps {
   chainName: string;
-  tr: TranslationFn;
+  t: TranslationFn;
   onBack: () => void;
   onEdit: () => void;
   onDeleteClick: () => void;
@@ -37,7 +36,7 @@ export interface MainStatsProps {
   chain: Chain;
   successRate: number;
   language: 'zh' | 'en';
-  tr: TranslationFn;
+  t: TranslationFn;
 }
 
 export interface StatRowProps {
@@ -51,19 +50,19 @@ export interface StatRowProps {
 
 export interface ExceptionsSectionProps {
   chain: Chain;
-  tr: TranslationFn;
+  t: TranslationFn;
 }
 
 export interface DescriptionSectionProps {
   description: string;
-  tr: TranslationFn;
+  t: TranslationFn;
 }
 
 export interface HistorySectionProps {
   recentHistory: CompletionHistory[];
   locale: string;
   language: 'zh' | 'en';
-  tr: TranslationFn;
+  t: TranslationFn;
   formatFailureReason: (reason: string) => string;
 }
 
@@ -71,7 +70,7 @@ export interface HistoryRecordProps {
   record: CompletionHistory;
   locale: string;
   language: 'zh' | 'en';
-  tr: TranslationFn;
+  t: TranslationFn;
   formatFailureReason: (reason: string) => string;
 }
 
@@ -80,7 +79,7 @@ export interface DeleteConfirmModalProps {
   chainHistoryCount: number;
   successRate: number;
   language: 'zh' | 'en';
-  tr: TranslationFn;
+  t: TranslationFn;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -90,7 +89,7 @@ export interface DeleteDataSummaryProps {
   chainHistoryCount: number;
   successRate: number;
   language: 'zh' | 'en';
-  tr: TranslationFn;
+  t: TranslationFn;
 }
 
 export interface DeleteDataCardProps {

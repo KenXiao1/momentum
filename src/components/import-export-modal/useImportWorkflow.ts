@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import { useCallback, useRef, useState } from 'react';
 import type React from 'react';
 import type { RSIPNode, RSIPNodeGroup } from '../../types';
@@ -16,37 +17,35 @@ import type { ImportCallback, ImportStatus } from './types';
 function getImportErrorMessage(
   error: unknown,
   language: Language,
-  tr: (zh: string, en: string) => string,
+  t: Translator,
 ) {
   if (error instanceof SyntaxError) {
-    return tr(
-      '导入数据格式错误：请确保上传的是有效的JSON格式文件。',
-      'Invalid import format: please make sure you uploaded a valid JSON file.',
+    return t(
+      'importExportModal.useImportWorkflow.invalidImportFormatPleaseMakeSureYouUploadedA',
     );
   }
   if (!(error instanceof Error))
-    return tr('导入失败：未知错误', 'Import failed: unknown error');
+    return t('importExportModal.useImportWorkflow.importFailedUnknownError');
   if (
     error.message.includes('身份验证失败') ||
     error.message.includes('Authentication failed')
   ) {
-    return tr(
-      '用户身份验证失败：请确保您已正确登录，然后重试导入操作。',
-      'Authentication failed: please make sure you are signed in and try importing again.',
+    return t(
+      'importExportModal.useImportWorkflow.authenticationFailedPleaseMakeSureYouAreSignedIn',
     );
   }
   if (error.message.includes('导入数据格式错误')) {
-    return tr(
-      '导入数据格式错误：文件中未找到有效的链条数据。请确保文件是从Momentum导出的有效数据。',
-      'Invalid import format: no valid chains found. Please make sure this file was exported from Momentum.',
+    return t(
+      'importExportModal.useImportWorkflow.invalidImportFormatNoValidChainsFoundPleaseMake',
     );
   }
   const detail = getSafeErrorDetail(error.message, language);
   return detail
-    ? tr(`导入失败：${detail}`, `Import failed: ${detail}`)
-    : tr(
-        '导入失败，请重试（详情见控制台）',
-        'Import failed. Check the console for details, then try again.',
+    ? t('importExportModal.useImportWorkflow.importFailedDetail', {
+        detail: detail,
+      })
+    : t(
+        'importExportModal.useImportWorkflow.importFailedCheckTheConsoleForDetailsThenTry',
       );
 }
 
@@ -57,7 +56,7 @@ export function useImportWorkflow(params: {
   onClose: () => void;
 }) {
   const storage = useStorage();
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const file = getPlatformCapabilityCenter().file;
   const [importData, setImportData] = useState('');
   const [importStatus, setImportStatus] = useState<ImportStatus>('idle');
@@ -83,9 +82,8 @@ export function useImportWorkflow(params: {
         const result = await storage.waitForAuthentication(10000);
         if (!result.ok || !result.value.isAuthenticated || !result.value.user) {
           throw new Error(
-            tr(
-              '用户身份验证失败。请确保您已正确登录，然后重试导入操作。',
-              'Authentication failed. Please make sure you are signed in and try importing again.',
+            t(
+              'importExportModal.useImportWorkflow.authenticationFailedPleaseMakeSureYouAreSignedInVariant2',
             ),
           );
         }
@@ -98,7 +96,7 @@ export function useImportWorkflow(params: {
         options: importOptions,
         existingRsipNodes: params.existingRsipNodes,
         existingRsipGroups: params.existingRsipGroups,
-        tr,
+        t,
       });
       const parsed = plan.parsed;
       if (
@@ -147,12 +145,12 @@ export function useImportWorkflow(params: {
         undefined,
         normalizeUnknownError(error),
       );
-      setImportError(getImportErrorMessage(error, language, tr));
+      setImportError(getImportErrorMessage(error, language, t));
       setImportStatus('error');
     } finally {
       importing.current = false;
     }
-  }, [importData, importOptions, language, params, storage, tr]);
+  }, [importData, importOptions, language, params, storage, t]);
 
   const handleFileUpload = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {

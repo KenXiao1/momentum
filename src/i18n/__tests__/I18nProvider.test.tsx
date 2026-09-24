@@ -52,13 +52,16 @@ describe('I18nProvider', () => {
     });
   });
 
-  it('normalizes mojibake-style zh inline translations when language is zh', () => {
-    localStorage.setItem('language', 'zh');
+  it('uses English when no stored or Chinese browser language exists', () => {
+    localStorage.removeItem('language');
+    Object.defineProperty(navigator, 'languages', {
+      configurable: true,
+      value: ['fr-FR', 'en-US'],
+    });
     const { result } = renderHook(() => useI18n(), {
       wrapper: createWrapper(),
     });
-
-    expect(result.current.tr('ä½ å¥½', 'Hello')).toBe('你好');
-    expect(result.current.tr('你好', 'Hello')).toBe('你好');
+    expect(result.current.language).toBe('en');
+    expect(result.current.t('common.back')).toBe('Back');
   });
 });

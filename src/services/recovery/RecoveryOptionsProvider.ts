@@ -4,7 +4,7 @@
  */
 
 import { ExceptionRuleError, ExceptionRuleException } from '../../types';
-import { tr } from '../../utils/runtimeI18n';
+import { t } from '../../utils/runtimeI18n';
 import { RecoveryAction } from './RecoveryStrategy';
 import { recoveryHandlers } from './RecoveryHandlers';
 
@@ -26,20 +26,18 @@ class RecoveryOptionsProvider {
         actions.push(
           {
             id: 'create_new_rule',
-            label: tr('创建新规则', 'Create new rule'),
-            description: tr(
-              '创建一个新的规则来替代缺失的规则',
-              'Create a new rule to replace the missing one',
+            label: t('recovery.recoveryOptionsProvider.createNewRule'),
+            description: t(
+              'recovery.recoveryOptionsProvider.createANewRuleToReplaceTheMissingOne',
             ),
             type: 'primary',
             handler: async () => recoveryHandlers.handleCreateNewRule(error),
           },
           {
             id: 'select_existing_rule',
-            label: tr('选择现有规则', 'Select existing rule'),
-            description: tr(
-              '从现有规则中选择一个',
-              'Choose one from existing rules',
+            label: t('recovery.recoveryOptionsProvider.selectExistingRule'),
+            description: t(
+              'recovery.recoveryOptionsProvider.chooseOneFromExistingRules',
             ),
             type: 'secondary',
             handler: async () =>
@@ -52,20 +50,20 @@ class RecoveryOptionsProvider {
         actions.push(
           {
             id: 'use_existing_rule',
-            label: tr('使用现有规则', 'Use existing rule'),
-            description: tr(
-              '使用已存在的同名规则',
-              'Use the existing rule with the same name',
+            label: t(
+              'duplication.enhancedHandler.suggestionHelpers.useExistingRule',
+            ),
+            description: t(
+              'recovery.recoveryOptionsProvider.useTheExistingRuleWithTheSameName',
             ),
             type: 'primary',
             handler: async () => recoveryHandlers.handleUseExistingRule(error),
           },
           {
             id: 'rename_rule',
-            label: tr('重命名规则', 'Rename rule'),
-            description: tr(
-              '为新规则生成一个不同的名称',
-              'Generate a different name for the new rule',
+            label: t('recovery.recoveryOptionsProvider.renameRule'),
+            description: t(
+              'recovery.recoveryOptionsProvider.generateADifferentNameForTheNewRule',
             ),
             type: 'secondary',
             handler: async () => recoveryHandlers.handleRenameRule(error),
@@ -77,10 +75,9 @@ class RecoveryOptionsProvider {
         actions.push(
           {
             id: 'create_correct_type',
-            label: tr('创建正确类型的规则', 'Create correct type'),
-            description: tr(
-              '创建一个类型匹配的新规则',
-              'Create a new rule with a matching type',
+            label: t('recovery.recoveryOptionsProvider.createCorrectType'),
+            description: t(
+              'recovery.recoveryOptionsProvider.createANewRuleWithAMatchingType',
             ),
             type: 'primary',
             handler: async () =>
@@ -88,10 +85,9 @@ class RecoveryOptionsProvider {
           },
           {
             id: 'select_matching_rule',
-            label: tr('选择匹配的规则', 'Select matching rule'),
-            description: tr(
-              '选择一个类型匹配的现有规则',
-              'Select an existing rule with a matching type',
+            label: t('recovery.recoveryOptionsProvider.selectMatchingRule'),
+            description: t(
+              'recovery.recoveryOptionsProvider.selectAnExistingRuleWithAMatchingType',
             ),
             type: 'secondary',
             handler: async () =>
@@ -104,17 +100,18 @@ class RecoveryOptionsProvider {
         actions.push(
           {
             id: 'retry_operation',
-            label: tr('重试操作', 'Retry'),
-            description: tr('重新尝试执行操作', 'Try the operation again'),
+            label: t('focusMode.useExceptionRuleOperations.retry'),
+            description: t(
+              'recovery.recoveryOptionsProvider.tryTheOperationAgain',
+            ),
             type: 'primary',
             handler: async () => recoveryHandlers.handleRetryOperation(error),
           },
           {
             id: 'check_data_integrity',
-            label: tr('检查数据完整性', 'Check data integrity'),
-            description: tr(
-              '运行数据完整性检查和修复',
-              'Run a data integrity check and auto-fix if possible',
+            label: t('recovery.defaultStrategies.checkDataIntegrity'),
+            description: t(
+              'recovery.recoveryOptionsProvider.runADataIntegrityCheckAndAutoFixIfPossible',
             ),
             type: 'secondary',
             handler: async () =>
@@ -126,8 +123,8 @@ class RecoveryOptionsProvider {
       default:
         actions.push({
           id: 'check_data_integrity',
-          label: tr('检查数据完整性', 'Check data integrity'),
-          description: tr('检查并修复规则数据', 'Check and repair rule data'),
+          label: t('recovery.defaultStrategies.checkDataIntegrity'),
+          description: t('recovery.defaultStrategies.checkAndRepairRuleData'),
           type: 'secondary',
           handler: async () => recoveryHandlers.handleDataIntegrityCheck(error),
         });

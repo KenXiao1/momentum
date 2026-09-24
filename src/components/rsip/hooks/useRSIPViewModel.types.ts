@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import type { Dispatch, SetStateAction } from 'react';
 import type {
   Chain,
@@ -14,7 +15,7 @@ import type { RSIPInsightsResult } from '../../../services/rsip-insights/rsipIns
 
 export interface RSIPViewStateSlice {
   language: string;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   nodes: RSIPNode[];
   meta: RSIPMeta;
   groups: RSIPNodeGroup[];

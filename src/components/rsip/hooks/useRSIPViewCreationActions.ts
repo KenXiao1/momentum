@@ -49,7 +49,7 @@ export function useRSIPViewCreationActions({
     setRule,
     setSplitGoal,
     setSplitItems,
-    tr,
+    t,
   } = state;
   const { onSaveMeta, onCreateNodes, onSaveGroups, onCreateGroup } = props;
   const nodeCreationInFlightRef = useRef(false);
@@ -113,14 +113,14 @@ export function useRSIPViewCreationActions({
       return;
     }
     const titleInput = window.prompt(
-      tr('请输入国策组名称', 'Enter policy group name'),
+      t('rsip.useRsipviewCreationActions.enterPolicyGroupName'),
     );
     if (!titleInput?.trim()) {
       return;
     }
 
     const toleranceInput = window.prompt(
-      tr('请输入容错值（整数）', 'Enter fault tolerance (integer)'),
+      t('rsip.useRsipviewCreationActions.enterFaultToleranceInteger'),
       '1',
     );
     const parsedFaultTolerance = Number(toleranceInput ?? '1');
@@ -130,7 +130,7 @@ export function useRSIPViewCreationActions({
     const emoji =
       window
         .prompt(
-          tr('可选：输入国策组 Emoji', 'Optional: input group emoji'),
+          t('rsip.useRsipviewCreationActions.optionalInputGroupEmoji'),
           '🧱',
         )
         ?.trim() || undefined;
@@ -168,7 +168,7 @@ export function useRSIPViewCreationActions({
     } finally {
       groupCreationInFlightRef.current = false;
     }
-  }, [groups, onCreateGroup, onSaveGroups, setSelectedGroupId, tr]);
+  }, [groups, onCreateGroup, onSaveGroups, setSelectedGroupId, t]);
 
   const handleAddSingle = useCallback(async () => {
     if (
@@ -253,9 +253,8 @@ export function useRSIPViewCreationActions({
     }
     if (!meta.allowMultiplePerDay && validItems.length > 1) {
       toast.error(
-        tr(
-          '严格模式每天最多新增一条国策，请只保留一条有效条目，或切换自由模式。',
-          'Strict mode allows one new policy per day. Keep one valid item or switch to free mode.',
+        t(
+          'rsip.useRsipviewCreationActions.strictModeAllowsOneNewPolicyPerDayKeep',
         ),
       );
       return;
@@ -283,7 +282,7 @@ export function useRSIPViewCreationActions({
   }, [
     canAddToday,
     meta.allowMultiplePerDay,
-    tr,
+    t,
     createEmoji,
     createType,
     submitDraft,

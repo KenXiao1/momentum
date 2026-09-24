@@ -1,9 +1,10 @@
+import { createTranslator } from '../../i18n/translate';
 import { describe, expect, it } from 'vitest';
 import type { GamblingSettings } from '../../domain/userSettings';
 import { getBetPlacementValidationError } from './betPlacementRules';
 
-const tr = (_zh: string, en: string) => en;
-const trZh = (zh: string, _en: string) => zh;
+const t = createTranslator('en');
+const trZh = createTranslator('zh');
 
 function validate(
   amount: string,
@@ -18,7 +19,7 @@ function validate(
     availablePoints: overrides.availablePoints ?? 100,
     todayBetAmount: overrides.todayBetAmount ?? 0,
     settings: overrides.settings ?? null,
-    tr,
+    t,
   });
 }
 
@@ -35,7 +36,7 @@ function validateZh(
     availablePoints: overrides.availablePoints ?? 100,
     todayBetAmount: overrides.todayBetAmount ?? 0,
     settings: overrides.settings ?? null,
-    tr: trZh,
+    t: trZh,
   });
 }
 

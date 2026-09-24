@@ -60,7 +60,7 @@
     "typecheck:tests": "tsc -p tsconfig.tests.json --noEmit",
     "test:e2e": "playwright test",
     "security:npm-audit:production": "npm audit --omit=dev --audit-level=high",
-    "quality:delivery": "node --test tools/quality/__tests__/delivery-gates.test.mjs",
+    "quality:delivery": "node --test tools/quality/__tests__/*.test.mjs",
     "quality:ci:static": "npm run format:check && npm run lint && npm run lint:css && npm run quality:css-structure && npm run lint:md && npm run lint:spell && npm run lint:spell:docs && npm run typecheck && npm run typecheck:tests && npm run quality:i18n && npm run quality:type-coverage && npm run quality:knip && npm run quality:arch-gate && npm run quality:delivery",
     "quality:ci:tests": "npm run quality:test:lint && npm run quality:test:assertions && npm run quality:test:mutation-scope && npm run test:coverage && npm run quality:test:coverage-hotspots",
     "test:database": "python3 scripts/database/run-tests.py",

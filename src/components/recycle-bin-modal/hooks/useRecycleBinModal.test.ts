@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DeletedChain } from '../../../types';
@@ -16,7 +17,7 @@ const loggerMocks = vi.hoisted(() => ({
 }));
 const i18nMock = vi.hoisted(() => ({
   language: 'en' as const,
-  tr: (_zh: string, en: string) => en,
+  t: vi.fn(),
 }));
 
 vi.mock('../../../storage/useStorage', () => ({
@@ -105,6 +106,7 @@ describe('useRecycleBinModal', () => {
   let getDeletedChains: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    i18nMock.t.mockImplementation(createTranslator('en'));
     vi.clearAllMocks();
     getDeletedChains = vi.fn().mockResolvedValue(chains);
     useStorageMock.mockReturnValue({ getDeletedChains });

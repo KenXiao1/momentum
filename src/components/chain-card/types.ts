@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 /**
  * ChainCard 组件类型定义
  */
@@ -22,7 +23,7 @@ export interface ChainCardViewProps {
   chain: Chain | ChainTreeNode;
   typeConfig: ChainTypeConfig;
   language: 'zh' | 'en';
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 
   // 状态
   timeRemaining: number;

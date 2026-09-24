@@ -1,3 +1,5 @@
+import { createTranslationMock } from '../../../../test/i18n';
+import { createTranslator } from '../../../../i18n/translate';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import type { Dispatch, SetStateAction } from 'react';
 import type { AppState } from '../../../../types';
@@ -72,7 +74,7 @@ function createStateContainer(initialState: AppState) {
 }
 
 describe('createCompletionHandlers', () => {
-  const tr = vi.fn((zh: string, _en: string) => zh);
+  const t = createTranslationMock('zh');
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -137,7 +139,7 @@ describe('createCompletionHandlers', () => {
       setActiveSessionId,
       onNavigateToDashboard,
       onTaskLifecycleEvent,
-      tr,
+      t,
     });
 
     handleCompleteSession('desc', 'notes');
@@ -193,10 +195,7 @@ describe('createCompletionHandlers', () => {
       expect.any(Number),
       '任务群完成一轮',
     );
-    expect(tr).toHaveBeenCalledWith(
-      expect.any(String),
-      'Group completed a cycle',
-    );
+    expect(t).toHaveBeenCalledWith('sessions.completion.groupCompletedACycle');
     expect(emitPointsChanged).not.toHaveBeenCalled();
     expect(onTaskLifecycleEvent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -248,7 +247,7 @@ describe('createCompletionHandlers', () => {
       safelySaveChains: vi.fn(async () => undefined),
       activeSessionId: null,
       setActiveSessionId: vi.fn(),
-      tr,
+      t,
     });
 
     handleCompleteSession();
@@ -257,7 +256,7 @@ describe('createCompletionHandlers', () => {
     expect(buildChainTree).not.toHaveBeenCalled();
     expect(isGroupFullyCompleted).not.toHaveBeenCalled();
     expect(incrementGroupCompletionCount).not.toHaveBeenCalled();
-    expect(tr).not.toHaveBeenCalled();
+    expect(t).not.toHaveBeenCalled();
   });
 
   it('should not increment group cycle when parent group is incomplete', async () => {
@@ -299,7 +298,7 @@ describe('createCompletionHandlers', () => {
       safelySaveChains: vi.fn(async () => undefined),
       activeSessionId: null,
       setActiveSessionId: vi.fn(),
-      tr,
+      t,
     });
 
     handleCompleteSession();
@@ -309,7 +308,7 @@ describe('createCompletionHandlers', () => {
       expect.objectContaining({ id: group.id }),
     );
     expect(incrementGroupCompletionCount).not.toHaveBeenCalled();
-    expect(tr).not.toHaveBeenCalled();
+    expect(t).not.toHaveBeenCalled();
   });
 
   it('should skip parent group completion notification when parent chain is missing after increment', async () => {
@@ -362,7 +361,7 @@ describe('createCompletionHandlers', () => {
       safelySaveChains: vi.fn(async () => undefined),
       activeSessionId: null,
       setActiveSessionId: vi.fn(),
-      tr,
+      t,
     });
 
     handleCompleteSession();
@@ -379,7 +378,7 @@ describe('createCompletionHandlers', () => {
     expect(systemNotificationService.notifyTaskCompleted).toHaveBeenCalledTimes(
       1,
     );
-    expect(tr).not.toHaveBeenCalled();
+    expect(t).not.toHaveBeenCalled();
   });
 
   it('should only update the completed chain and keep sibling chains untouched', async () => {
@@ -422,7 +421,7 @@ describe('createCompletionHandlers', () => {
       safelySaveChains: vi.fn(async () => undefined),
       activeSessionId: null,
       setActiveSessionId: vi.fn(),
-      tr,
+      t,
     });
 
     handleCompleteSession();
@@ -485,7 +484,7 @@ describe('createCompletionHandlers', () => {
       activeSessionId: null,
       setActiveSessionId: vi.fn(),
       onPetTaskCompleted,
-      tr,
+      t,
     });
 
     handleCompleteSession();
@@ -533,7 +532,7 @@ describe('createCompletionHandlers', () => {
       activeSessionId: null,
       setActiveSessionId: vi.fn(),
       onPetTaskCompleted,
-      tr,
+      t,
     });
 
     handleCompleteSession();
@@ -572,7 +571,7 @@ describe('createCompletionHandlers', () => {
       safelySaveChains,
       activeSessionId: 'session-id',
       setActiveSessionId,
-      tr,
+      t,
     });
 
     handleCompleteSession();
@@ -629,7 +628,7 @@ describe('createCompletionHandlers', () => {
       safelySaveChains: vi.fn(async () => undefined),
       activeSessionId: null,
       setActiveSessionId,
-      tr,
+      t,
     });
 
     handleCompleteSession();
@@ -683,7 +682,7 @@ describe('createCompletionHandlers', () => {
       safelySaveChains: vi.fn(async () => undefined),
       activeSessionId: 'local-session-id',
       setActiveSessionId: vi.fn(),
-      tr,
+      t,
     });
 
     handleCompleteSession();
@@ -733,7 +732,7 @@ describe('createCompletionHandlers', () => {
       safelySaveChains: vi.fn(async () => undefined),
       activeSessionId: 'supabase-session-id',
       setActiveSessionId: vi.fn(),
-      tr,
+      t,
     });
 
     handleCompleteSession();
@@ -791,7 +790,7 @@ describe('createCompletionHandlers', () => {
       setActiveSessionId: vi.fn(),
       onNavigateToDashboard,
       onTaskLifecycleEvent,
-      tr,
+      t,
     });
 
     handleInterruptSession('manual-stop');
@@ -868,7 +867,7 @@ describe('createCompletionHandlers', () => {
       activeSessionId: null,
       setActiveSessionId: vi.fn(),
       onNavigateToDashboard,
-      tr,
+      t,
     });
 
     handleInterruptSession();
@@ -912,7 +911,7 @@ describe('createCompletionHandlers', () => {
       safelySaveChains: vi.fn(async () => undefined),
       activeSessionId: null,
       setActiveSessionId: vi.fn(),
-      tr,
+      t,
     });
 
     handleInterruptSession('group-fail');
@@ -938,7 +937,7 @@ describe('createCompletionHandlers', () => {
       safelySaveChains: vi.fn(async () => undefined),
       activeSessionId: null,
       setActiveSessionId: vi.fn(),
-      tr,
+      t,
     });
 
     noSessionHandlers.handleCompleteSession();
@@ -967,7 +966,7 @@ describe('createCompletionHandlers', () => {
       safelySaveChains: vi.fn(async () => undefined),
       activeSessionId: null,
       setActiveSessionId: vi.fn(),
-      tr,
+      t,
     });
 
     missingChainHandlers.handleCompleteSession();
@@ -1017,7 +1016,7 @@ describe('createCompletionHandlers', () => {
       safelySaveChains: vi.fn(async () => undefined),
       activeSessionId: 'local-active-id',
       setActiveSessionId: vi.fn(),
-      tr,
+      t,
     });
 
     handleInterruptSession('manual-stop');
@@ -1074,7 +1073,7 @@ describe('createCompletionHandlers', () => {
       safelySaveChains: vi.fn(async () => undefined),
       activeSessionId: 'supabase-session-id',
       setActiveSessionId,
-      tr,
+      t,
     });
 
     handleInterruptSession('manual-stop');

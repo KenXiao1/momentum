@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import type { Language } from '../../../i18n';
 import { logger } from '../../../utils/logger';
 import { toast } from '../../../utils/toast';
@@ -20,9 +21,9 @@ async function performRestoreOperation(params: {
   chainIds: string[];
   onRestore: (chainIds: string[]) => AsyncOrSyncVoid;
   language: Language;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }): Promise<OperationResult> {
-  const { chainIds, onRestore, language, tr } = params;
+  const { chainIds, onRestore, language, t } = params;
 
   const startTime = Date.now();
   try {
@@ -31,9 +32,9 @@ async function performRestoreOperation(params: {
 
     const result: OperationResult = {
       success: true,
-      message: tr(
-        `成功恢复 ${chainIds.length} 个链条（耗时 ${duration}ms）`,
-        `Restored ${chainIds.length} chain(s) (took ${duration}ms)`,
+      message: t(
+        'recycleBinModal.operations.restoredChainIdsCountChainSTookDurationMs',
+        { chainIdsCount: chainIds.length, duration: duration },
       ),
       details: { count: chainIds.length, duration },
     };
@@ -41,14 +42,17 @@ async function performRestoreOperation(params: {
     return result;
   } catch (error) {
     const rawErrorMessage =
-      error instanceof Error ? error.message : tr('未知错误', 'Unknown error');
+      error instanceof Error
+        ? error.message
+        : t('focusMode.useExceptionRuleOperations.unknownError');
     const safeDetail = getSafeErrorDetailFromUnknown(error, language);
 
     const defaultMessage = safeDetail
-      ? tr(`恢复失败: ${safeDetail}`, `Restore failed: ${safeDetail}`)
-      : tr(
-          '恢复失败，请重试（详情见控制台）',
-          'Restore failed. Check the console for details, then try again.',
+      ? t('recycleBinModal.operations.restoreFailedSafeDetail', {
+          safeDetail: safeDetail,
+        })
+      : t(
+          'recycleBinModal.operations.restoreFailedCheckTheConsoleForDetailsThenTry',
         );
 
     const result: OperationResult = {
@@ -64,9 +68,8 @@ async function performRestoreOperation(params: {
     );
 
     if (isPartialRestoreFailureMessage(rawErrorMessage)) {
-      result.message = tr(
-        '部分链条恢复可能失败，请检查主界面确认结果。如有问题请刷新页面。',
-        'Some chains may not have been restored. Please check the dashboard. If needed, refresh the page.',
+      result.message = t(
+        'recycleBinModal.operations.someChainsMayNotHaveBeenRestoredPleaseCheck',
       );
       toast.warning(result.message);
       return result;
@@ -81,9 +84,9 @@ async function performPermanentDeleteOperation(params: {
   chainIds: string[];
   onPermanentDelete: (chainIds: string[]) => AsyncOrSyncVoid;
   language: Language;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }): Promise<OperationResult> {
-  const { chainIds, onPermanentDelete, language, tr } = params;
+  const { chainIds, onPermanentDelete, language, t } = params;
 
   const startTime = Date.now();
   try {
@@ -92,9 +95,9 @@ async function performPermanentDeleteOperation(params: {
 
     const result: OperationResult = {
       success: true,
-      message: tr(
-        `成功永久删除 ${chainIds.length} 个链条（耗时 ${duration}ms）`,
-        `Permanently deleted ${chainIds.length} chain(s) (took ${duration}ms)`,
+      message: t(
+        'recycleBinModal.operations.permanentlyDeletedChainIdsCountChainSTookDurationMs',
+        { chainIdsCount: chainIds.length, duration: duration },
       ),
       details: { count: chainIds.length, duration },
     };
@@ -102,17 +105,17 @@ async function performPermanentDeleteOperation(params: {
     return result;
   } catch (error) {
     const rawErrorMessage =
-      error instanceof Error ? error.message : tr('未知错误', 'Unknown error');
+      error instanceof Error
+        ? error.message
+        : t('focusMode.useExceptionRuleOperations.unknownError');
     const safeDetail = getSafeErrorDetailFromUnknown(error, language);
 
     const message = safeDetail
-      ? tr(
-          `永久删除失败: ${safeDetail}`,
-          `Permanent delete failed: ${safeDetail}`,
-        )
-      : tr(
-          '永久删除失败，请重试（详情见控制台）',
-          'Permanent delete failed. Check the console for details, then try again.',
+      ? t('recycleBinModal.operations.permanentDeleteFailedSafeDetail', {
+          safeDetail: safeDetail,
+        })
+      : t(
+          'recycleBinModal.operations.permanentDeleteFailedCheckTheConsoleForDetailsThen',
         );
 
     const result: OperationResult = {
@@ -136,16 +139,16 @@ export async function performRecycleBinOperation(params: {
   onRestore: (chainIds: string[]) => AsyncOrSyncVoid;
   onPermanentDelete: (chainIds: string[]) => AsyncOrSyncVoid;
   language: Language;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }): Promise<OperationResult> {
-  const { dialog, onRestore, onPermanentDelete, language, tr } = params;
+  const { dialog, onRestore, onPermanentDelete, language, t } = params;
 
   if (dialog.type === 'restore') {
     return performRestoreOperation({
       chainIds: dialog.chainIds,
       onRestore,
       language,
-      tr,
+      t,
     });
   }
 
@@ -153,6 +156,6 @@ export async function performRecycleBinOperation(params: {
     chainIds: dialog.chainIds,
     onPermanentDelete,
     language,
-    tr,
+    t,
   });
 }

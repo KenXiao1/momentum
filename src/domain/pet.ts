@@ -1,3 +1,4 @@
+import { translate } from '../i18n/translate';
 import type {
   PetConfig,
   PetMood,
@@ -220,15 +221,15 @@ export function getStageName(
   stage: PetStage,
   language: 'zh' | 'en' = 'zh',
 ): string {
-  const names: Record<PetStage, { zh: string; en: string }> = {
-    egg: { zh: '蛋', en: 'Egg' },
-    baby: { zh: '幼崽', en: 'Baby' },
-    child: { zh: '幼年', en: 'Child' },
-    teen: { zh: '少年', en: 'Teen' },
-    adult: { zh: '成年', en: 'Adult' },
-    elder: { zh: '元老', en: 'Elder' },
+  const names: Record<PetStage, string> = {
+    egg: translate(language, 'pet.stage.egg'),
+    baby: translate(language, 'pet.stage.baby'),
+    child: translate(language, 'pet.stage.child'),
+    teen: translate(language, 'pet.stage.teen'),
+    adult: translate(language, 'pet.stage.adult'),
+    elder: translate(language, 'pet.stage.elder'),
   };
-  return names[stage][language];
+  return names[stage];
 }
 
 /**

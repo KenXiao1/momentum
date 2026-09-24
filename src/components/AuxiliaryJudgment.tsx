@@ -29,7 +29,7 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
   onJudgmentAllow,
   onCancel,
 }) => {
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const [reason, setReason] = useState('');
   const [selectedExistingRule, setSelectedExistingRule] = useState('');
   const [useExistingRule, setUseExistingRule] = useState(false);
@@ -68,16 +68,15 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
           </div>
           <div className="mb-6">
             <h2 className="mb-2 font-chinese text-3xl font-bold text-gray-900 dark:text-slate-100">
-              {tr('辅助链规则判定', 'Booking rule adjudication')}
+              {t('auxiliaryJudgment.bookingRuleAdjudication')}
             </h2>
             <p className="font-mono text-sm tracking-wider text-gray-500">
-              {tr('辅助链规则判定', 'BOOKING RULE ADJUDICATION')}
+              {t('auxiliaryJudgment.bookingRuleAdjudicationVariant2')}
             </p>
           </div>
           <p className="mb-6 font-chinese leading-relaxed text-gray-600 dark:text-slate-300">
-            {tr(
-              '你似乎做出了与预约承诺不符的行为。请描述具体情况并选择处理方式：',
-              'It looks like your behavior didn’t match the booking commitment. Please describe what happened and choose how to handle it:',
+            {t(
+              'auxiliaryJudgment.itLooksLikeYourBehaviorDidNotMatchTheBooking',
             )}
           </p>
           <div className="rounded-2xl border border-blue-200 bg-blue-50 p-6 dark:border-blue-700/50 dark:bg-blue-900/20">
@@ -86,7 +85,7 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
                 <div className="mb-2 flex items-center justify-center space-x-2">
                   <Bell className="text-blue-500" size={16} />
                   <span className="font-chinese font-medium">
-                    {tr('预约信号', 'Signal')}
+                    {t('auxiliaryJudgment.signal')}
                   </span>
                 </div>
                 <p className="font-mono text-sm">
@@ -97,7 +96,7 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
                 <div className="mb-2 flex items-center justify-center space-x-2">
                   <CheckCircle className="text-blue-500" size={16} />
                   <span className="font-chinese font-medium">
-                    {tr('完成条件', 'Completion')}
+                    {t('auxiliaryJudgment.completion')}
                   </span>
                 </div>
                 <p className="font-chinese text-sm">
@@ -108,14 +107,13 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
                 <div className="mb-2 flex items-center justify-center space-x-2">
                   <Clock className="text-blue-500" size={16} />
                   <span className="font-chinese font-medium">
-                    {tr('预约时长', 'Duration')}
+                    {t('auxiliaryJudgment.duration')}
                   </span>
                 </div>
                 <p className="font-mono text-sm">
-                  {tr(
-                    `${chain.auxiliaryDuration}分钟`,
-                    `${chain.auxiliaryDuration} min`,
-                  )}
+                  {t('auxiliaryJudgment.chainAuxiliaryDurationMin', {
+                    chainAuxiliaryDuration: chain.auxiliaryDuration,
+                  })}
                 </p>
               </div>
             </div>
@@ -129,7 +127,7 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
           onSelectedExistingRuleChange={setSelectedExistingRule}
           reason={reason}
           onReasonChange={setReason}
-          tr={tr}
+          t={t}
         />
         <AuxiliaryJudgmentActions
           chain={chain}
@@ -139,12 +137,12 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
           selectedExistingRule={selectedExistingRule}
           onFailure={() =>
             onJudgmentFailure(
-              reason || tr('用户主动中断预约', 'User interrupted booking'),
+              reason || t('auxiliaryJudgment.userInterruptedBooking'),
             )
           }
           onAllow={handleAllow}
           onCancel={onCancel}
-          tr={tr}
+          t={t}
         />
       </div>
     </div>

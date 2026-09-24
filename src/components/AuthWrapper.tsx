@@ -15,7 +15,7 @@ interface AuthWrapperProps {
 }
 
 export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const storage = useStorage();
   const { setMode } = useStorageMode();
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -87,10 +87,10 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
             <Loader2 className="animate-spin text-white" size={24} />
           </div>
           <h2 className="mb-2 font-chinese text-2xl font-bold text-gray-900 dark:text-slate-100">
-            {tr('正在验证身份…', 'Authenticating…')}
+            {t('authWrapper.authenticating')}
           </h2>
           <p className="font-mono text-sm text-gray-600 dark:text-slate-400">
-            {tr('验证中', 'AUTHENTICATING')}
+            {t('authWrapper.authenticatingVariant2')}
           </p>
         </div>
       </div>

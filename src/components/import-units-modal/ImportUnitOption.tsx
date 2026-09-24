@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import { CheckCircle, Clock, Flame } from 'lucide-react';
 import type { Chain } from '../../types';
 import { getChainTypeConfig } from '../../utils/chainTree';
@@ -9,7 +10,7 @@ interface ImportUnitOptionProps {
   selected: boolean;
   language: 'zh' | 'en';
   onToggle: () => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 export function ImportUnitOption({
@@ -17,23 +18,20 @@ export function ImportUnitOption({
   selected,
   language,
   onToggle,
-  tr: translate,
+  t: t,
 }: ImportUnitOptionProps) {
   const typeConfig = getChainTypeConfig(unit.type, language);
-  const completionNoun =
-    unit.totalCompletions === 1 ? 'completion' : 'completions';
   const completionsText =
-    language === 'zh'
-      ? `${unit.totalCompletions} 次完成`
-      : `${unit.totalCompletions} ${completionNoun}`;
+    unit.totalCompletions === 1
+      ? t('counts.completion', { count: unit.totalCompletions })
+      : t('counts.completions', { count: unit.totalCompletions });
 
   return (
     <button
       type="button"
-      aria-label={translate(
-        `选择任务单元：${unit.name}`,
-        `Select unit: ${unit.name}`,
-      )}
+      aria-label={t('importUnitsModal.importUnitOption.selectUnitUnitName', {
+        unitName: unit.name,
+      })}
       aria-pressed={selected}
       className={`w-full cursor-pointer rounded-2xl border-2 p-4 text-left transition duration-300 ${
         selected

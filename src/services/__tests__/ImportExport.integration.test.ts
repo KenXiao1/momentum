@@ -1,3 +1,4 @@
+import { createTranslator } from '../../i18n/translate';
 import type {
   Chain,
   CompletionHistory,
@@ -12,7 +13,7 @@ import type { PetState } from '../../types/pet';
 import { importExportService } from '../ImportExportService';
 
 describe('ImportExportService integration', () => {
-  const tr = (zh: string, _en: string) => zh;
+  const t = createTranslator('zh');
 
   test('roundtrips V3 payload with extended RSIP and pet data', () => {
     const parentChain: Chain = {
@@ -197,7 +198,7 @@ describe('ImportExportService integration', () => {
       },
       existingRsipNodes: [],
       existingRsipGroups: [],
-      tr,
+      t,
     });
 
     expect(imported.chains).toHaveLength(2);
@@ -287,7 +288,7 @@ describe('ImportExportService integration', () => {
         preserveTimestamps: true,
         importCompletionHistory: true,
       },
-      tr,
+      t,
     });
 
     expect(imported.chains).toHaveLength(1);
@@ -396,7 +397,7 @@ describe('ImportExportService integration', () => {
         preserveTimestamps: true,
         importCompletionHistory: true,
       },
-      tr,
+      t,
     });
 
     expect(imported.rsipExecutionRecords).toHaveLength(1);

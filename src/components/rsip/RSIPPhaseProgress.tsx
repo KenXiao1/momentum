@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import type { RSIPStabilityPhase } from '../../types';
 
 interface RSIPPhaseProgressProps {
@@ -21,6 +22,7 @@ export function RSIPPhaseProgress({
   phase,
   consecutiveDays,
 }: RSIPPhaseProgressProps) {
+  const { t } = useI18n();
   const threshold = PHASE_THRESHOLDS[phase];
   const isMaxPhase = phase === 'E2';
   const progress = isMaxPhase
@@ -31,7 +33,7 @@ export function RSIPPhaseProgress({
 
   let phaseStatusText: string;
   if (isMaxPhase) {
-    phaseStatusText = '已内化';
+    phaseStatusText = t('rsip.rsipPhaseProgress.internalized');
   } else if (phase === 'E0') {
     phaseStatusText = '→ E1';
   } else {
@@ -45,7 +47,12 @@ export function RSIPPhaseProgress({
           {phaseStatusText}
         </span>
         <span className="font-medium text-slate-800 dark:text-white/70">
-          {isMaxPhase ? '完成' : `${consecutiveDays}/${threshold} 天`}
+          {isMaxPhase
+            ? t('rsip.rsipPhaseProgress.complete')
+            : t('rsip.rsipPhaseProgress.days', {
+                days: consecutiveDays,
+                threshold,
+              })}
         </span>
       </div>
 

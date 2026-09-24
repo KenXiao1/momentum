@@ -6,7 +6,7 @@
 import { ExceptionRuleException } from '../../types';
 import { dataIntegrityChecker } from '../DataIntegrityChecker';
 import { enhancedDuplicationHandler } from '../EnhancedDuplicationHandler';
-import { tr } from '../../utils/runtimeI18n';
+import { t } from '../../utils/runtimeI18n';
 import { ignoreUnused } from '../../utils/ignoreUnused';
 import { RecoveryResult } from './RecoveryStrategy';
 
@@ -24,7 +24,7 @@ export const recoveryHandlers = {
     ignoreUnused(error);
     return {
       success: false,
-      message: tr('请创建新规则', 'Please create a new rule'),
+      message: t('recovery.recoveryHandlers.pleaseCreateANewRule'),
       requiresUserAction: true,
     };
   },
@@ -38,7 +38,7 @@ export const recoveryHandlers = {
     ignoreUnused(error);
     return {
       success: false,
-      message: tr('请选择现有规则', 'Please select an existing rule'),
+      message: t('recovery.recoveryHandlers.pleaseSelectAnExistingRule'),
       requiresUserAction: true,
     };
   },
@@ -59,7 +59,7 @@ export const recoveryHandlers = {
       if (rules.length > 0) {
         return {
           success: true,
-          message: tr('使用现有规则', 'Using existing rule'),
+          message: t('recovery.recoveryHandlers.usingExistingRule'),
           recoveredData: rules[0],
         };
       }
@@ -69,7 +69,7 @@ export const recoveryHandlers = {
 
     return {
       success: false,
-      message: tr('无法找到可用的现有规则', 'No usable existing rule found'),
+      message: t('recovery.recoveryHandlers.noUsableExistingRuleFound'),
     };
   },
 
@@ -90,9 +90,9 @@ export const recoveryHandlers = {
         if (suggestions.length > 0) {
           return {
             success: true,
-            message: tr(
-              `建议使用名称: ${suggestions[0]}`,
-              `Suggested name: ${suggestions[0]}`,
+            message: t(
+              'recovery.recoveryHandlers.suggestedNameSuggestionsItem',
+              { suggestionsItem: suggestions[0] },
             ),
             recoveredData: { suggestedName: suggestions[0] },
           };
@@ -104,7 +104,7 @@ export const recoveryHandlers = {
 
     return {
       success: false,
-      message: tr('无法生成新的规则名称', 'Unable to generate a new rule name'),
+      message: t('recovery.recoveryHandlers.unableToGenerateANewRuleName'),
     };
   },
 
@@ -117,9 +117,8 @@ export const recoveryHandlers = {
     ignoreUnused(error);
     return {
       success: false,
-      message: tr(
-        '请创建正确类型的规则',
-        'Please create a rule with the correct type',
+      message: t(
+        'recovery.recoveryHandlers.pleaseCreateARuleWithTheCorrectType',
       ),
       requiresUserAction: true,
     };
@@ -134,9 +133,8 @@ export const recoveryHandlers = {
     ignoreUnused(error);
     return {
       success: false,
-      message: tr(
-        '请选择类型匹配的规则',
-        'Please select a rule with a matching type',
+      message: t(
+        'recovery.recoveryHandlers.pleaseSelectARuleWithAMatchingType',
       ),
       requiresUserAction: true,
     };
@@ -151,7 +149,7 @@ export const recoveryHandlers = {
     ignoreUnused(error);
     return {
       success: false,
-      message: tr('请重试操作', 'Please retry the operation'),
+      message: t('recovery.recoveryHandlers.pleaseRetryTheOperation'),
       requiresUserAction: true,
     };
   },
@@ -169,7 +167,7 @@ export const recoveryHandlers = {
       if (report.issues.length === 0) {
         return {
           success: true,
-          message: tr('数据完整性检查通过', 'Data integrity check passed'),
+          message: t('recovery.recoveryHandlers.dataIntegrityCheckPassed'),
         };
       }
 
@@ -178,17 +176,19 @@ export const recoveryHandlers = {
       ).length;
       return {
         success: false,
-        message: tr(
-          `发现 ${report.issues.length} 个问题，其中 ${autoFixableCount} 个可自动修复`,
-          `Found ${report.issues.length} issue(s), ${autoFixableCount} can be auto-fixed`,
+        message: t(
+          'recovery.recoveryHandlers.foundReportIssuesCountIssueSAutoFixableCountCanBeAutoFixed',
+          {
+            reportIssuesCount: report.issues.length,
+            autoFixableCount: autoFixableCount,
+          },
         ),
         actions: [
           {
             id: 'auto_fix_issues',
-            label: tr('自动修复', 'Auto-fix'),
-            description: tr(
-              '自动修复可修复的问题',
-              'Automatically fix the fixable issues',
+            label: t('recovery.recoveryHandlers.autoFix'),
+            description: t(
+              'recovery.recoveryHandlers.automaticallyFixTheFixableIssues',
             ),
             type: 'primary',
             handler: async () => {
@@ -198,9 +198,9 @@ export const recoveryHandlers = {
               const successCount = fixResults.filter((r) => r.success).length;
               return {
                 success: successCount > 0,
-                message: tr(
-                  `已修复 ${successCount} 个问题`,
-                  `Fixed ${successCount} issue(s)`,
+                message: t(
+                  'recovery.recoveryHandlers.fixedSuccessCountIssueS',
+                  { successCount: successCount },
                 ),
               };
             },
@@ -210,7 +210,7 @@ export const recoveryHandlers = {
     } catch {
       return {
         success: false,
-        message: tr('数据完整性检查失败', 'Data integrity check failed'),
+        message: t('recovery.recoveryHandlers.dataIntegrityCheckFailed'),
       };
     }
   },
@@ -224,10 +224,7 @@ export const recoveryHandlers = {
     ignoreUnused(error);
     return {
       success: false,
-      message: tr(
-        '验证修复需要用户输入',
-        'Fixing validation requires your input',
-      ),
+      message: t('recovery.recoveryHandlers.fixingValidationRequiresYourInput'),
       requiresUserAction: true,
     };
   },
@@ -241,9 +238,8 @@ export const recoveryHandlers = {
     ignoreUnused(error);
     return {
       success: false,
-      message: tr(
-        '系统重置是危险操作，需要用户确认',
-        'System reset is risky and requires confirmation',
+      message: t(
+        'recovery.recoveryHandlers.systemResetIsRiskyAndRequiresConfirmation',
       ),
       requiresUserAction: true,
     };

@@ -18,7 +18,7 @@ export function useChainDetail({
   history,
   onDelete,
 }: UseChainDetailOptions) {
-  const { language, locale, tr } = useI18n();
+  const { language, locale, t } = useI18n();
 
   // 状态
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -47,12 +47,12 @@ export function useChainDetail({
   const formatFailureReason = useCallback(
     (reason: string): string => {
       if (reason === '用户主动中断')
-        return tr('用户主动中断', 'Interrupted by user');
+        return t('useChainDetail.interruptedByUser');
       if (reason === 'Interrupted by user')
-        return tr('用户主动中断', 'Interrupted by user');
+        return t('useChainDetail.interruptedByUser');
       return reason;
     },
-    [tr],
+    [t],
   );
 
   // 事件处理器
@@ -82,7 +82,7 @@ export function useChainDetail({
     // 国际化
     language,
     locale,
-    tr,
+    t,
 
     // 工具函数
     formatFailureReason,

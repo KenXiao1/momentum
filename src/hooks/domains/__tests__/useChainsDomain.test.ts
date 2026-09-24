@@ -1,3 +1,5 @@
+import { createTranslationMock } from '../../../test/i18n';
+import { createTranslator } from '../../../i18n/translate';
 import type { SafelySaveChains } from '../useChainsDomain';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -14,12 +16,12 @@ import { toast } from '../../../utils/toast';
 import { logger } from '../../../utils/logger';
 import { getSafeErrorDetailFromUnknown } from '../../../utils/errorMessage';
 
-const trMock = vi.fn((zh: string, en: string) => en);
+const trMock = createTranslationMock('en');
 
 vi.mock('../../../i18n', () => ({
   useI18n: vi.fn(() => ({
     language: 'en',
-    tr: trMock,
+    t: trMock,
   })),
 }));
 
@@ -133,8 +135,8 @@ describe('useChainsDomain', () => {
       language: 'en',
       locale: 'en-US',
       setLanguage: vi.fn(),
-      t: vi.fn((key) => key),
-      tr: trMock,
+
+      t: trMock,
     });
   });
 
@@ -723,8 +725,8 @@ describe('useChainsDomain', () => {
       expect.any(Error),
     );
     expect(trMock).toHaveBeenCalledWith(
-      expect.any(String),
-      'Save failed: disk is full',
+      'useChainsDomain.saveFailedSafeDetail',
+      { safeDetail: 'disk is full' },
     );
   });
 
@@ -814,8 +816,7 @@ describe('useChainsDomain', () => {
       'Save failed. Check the console for details, then try again.',
     );
     expect(trMock).toHaveBeenCalledWith(
-      expect.any(String),
-      'Save failed. Check the console for details, then try again.',
+      'useChainsDomain.saveFailedCheckTheConsoleForDetailsThenTry',
     );
   });
 
@@ -901,8 +902,8 @@ describe('useChainsDomain', () => {
       language: 'zh',
       locale: 'zh-CN',
       setLanguage: vi.fn(),
-      t: vi.fn((key) => key),
-      tr: (zh: string) => zh,
+
+      t: createTranslator('zh'),
     });
     const editing = createUnitChain({ id: 'editing-zh', name: 'Editing Zh' });
     const stateRef = createStateContainer(

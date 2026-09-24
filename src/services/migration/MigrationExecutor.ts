@@ -13,7 +13,7 @@ import { MigrationStorage } from './MigrationStorage';
 import { MigrationAnalyzer } from './MigrationAnalyzer';
 import { exceptionRuleManager } from '../ExceptionRuleManager';
 import { logger } from '../../utils/logger';
-import { getCurrentLanguage, tr } from '../../utils/runtimeI18n';
+import { getCurrentLanguage, t } from '../../utils/runtimeI18n';
 import { getSafeErrorDetail, toError } from '../../utils/errorMessage';
 
 export class MigrationExecutor {
@@ -60,7 +60,7 @@ export class MigrationExecutor {
         totalChains: 0,
         currentChainName: '',
         phase: 'analyzing',
-        message: tr('分析现有数据...', 'Analyzing existing data...'),
+        message: t('migration.migrationExecutor.analyzingExistingData'),
       });
 
       const chains = await this.migrationStorage.getLegacyChains();
@@ -76,7 +76,7 @@ export class MigrationExecutor {
           totalChains: 0,
           currentChainName: '',
           phase: 'complete',
-          message: tr('没有需要迁移的数据', 'No data to migrate'),
+          message: t('migration.migrationExecutor.noDataToMigrate'),
         });
         return result;
       }
@@ -86,9 +86,9 @@ export class MigrationExecutor {
         totalChains: result.totalChains,
         currentChainName: '',
         phase: 'migrating',
-        message: tr(
-          `开始迁移 ${result.totalChains} 个链条的例外规则...`,
-          `Starting migration for exception rules from ${result.totalChains} chain(s)...`,
+        message: t(
+          'migration.migrationExecutor.startingMigrationForExceptionRulesFromResultTotalChainsChainS',
+          { resultTotalChains: result.totalChains },
         ),
       });
 
@@ -104,9 +104,8 @@ export class MigrationExecutor {
         totalChains: result.totalChains,
         currentChainName: '',
         phase: 'cleanup',
-        message: tr(
-          '完成迁移，保存迁移信息...',
-          'Migration done. Saving migration info...',
+        message: t(
+          'migration.migrationExecutor.migrationDoneSavingMigrationInfo',
         ),
       });
 
@@ -124,9 +123,9 @@ export class MigrationExecutor {
         totalChains: result.totalChains,
         currentChainName: '',
         phase: 'complete',
-        message: tr(
-          `迁移完成！创建了 ${result.migratedRules} 个规则`,
-          `Migration completed! Created ${result.migratedRules} rule(s)`,
+        message: t(
+          'migration.migrationExecutor.migrationCompletedCreatedResultMigratedRulesRuleS',
+          { resultMigratedRules: result.migratedRules },
         ),
       });
 
@@ -171,14 +170,19 @@ export class MigrationExecutor {
         totalChains: uniqueRules.size,
         currentChainName: ruleName,
         phase: 'migrating',
-        message: tr(`创建规则: ${ruleName}`, `Creating rule: ${ruleName}`),
+        message: t('migration.migrationExecutor.creatingRuleRuleName', {
+          ruleName: ruleName,
+        }),
       });
 
       try {
         const createResult = await exceptionRuleManager.createRule(
           ruleName,
           ExceptionRuleType.PAUSE_ONLY,
-          tr(LEGACY_MIGRATED_DESCRIPTION_ZH, LEGACY_MIGRATED_DESCRIPTION_EN),
+          // These stored markers identify legacy rules during later rollback.
+          getCurrentLanguage() === 'zh'
+            ? LEGACY_MIGRATED_DESCRIPTION_ZH
+            : LEGACY_MIGRATED_DESCRIPTION_EN,
         );
 
         result.createdRules.push(createResult.rule);
@@ -209,7 +213,7 @@ export class MigrationExecutor {
       if (!migrationInfo) {
         return {
           success: false,
-          message: tr('没有找到迁移记录', 'No migration record found'),
+          message: t('migration.migrationExecutor.noMigrationRecordFound'),
           deletedRules: 0,
         };
       }
@@ -240,9 +244,9 @@ export class MigrationExecutor {
 
       return {
         success: true,
-        message: tr(
-          `成功回滚迁移，删除了 ${deletedCount} 个规则`,
-          `Rollback succeeded. Deleted ${deletedCount} rule(s)`,
+        message: t(
+          'migration.migrationExecutor.rollbackSucceededDeletedDeletedCountRuleS',
+          { deletedCount: deletedCount },
         ),
         deletedRules: deletedCount,
       };
@@ -251,7 +255,7 @@ export class MigrationExecutor {
       logger.error('MIGRATION_EXECUTOR', 'Rollback failed', undefined, err);
       return {
         success: false,
-        message: tr('回滚失败', 'Rollback failed'),
+        message: t('migration.migrationExecutor.rollbackFailed'),
         deletedRules: 0,
       };
     }
@@ -261,12 +265,9 @@ export class MigrationExecutor {
       const safe = getSafeErrorDetail(error.message, getCurrentLanguage());
       return (
         safe ??
-        tr(
-          '操作失败，请查看控制台',
-          'Operation failed. Check console for details.',
-        )
+        t('migration.migrationExecutor.operationFailedCheckConsoleForDetails')
       );
     }
-    return tr('未知错误', 'Unknown error');
+    return t('focusMode.useExceptionRuleOperations.unknownError');
   }
 }

@@ -1,4 +1,4 @@
-import { tr } from '../utils/runtimeI18n';
+import { t } from '../utils/runtimeI18n';
 
 // 例外规则错误类型
 export enum ExceptionRuleError {
@@ -105,12 +105,9 @@ export class EnhancedExceptionRuleException extends ExceptionRuleException {
       message,
       context,
       false,
-      [tr('联系技术支持', 'Contact support')],
+      [t('types.exceptionRuleErrors.contactSupport')],
       'critical',
-      tr(
-        '系统遇到严重错误，请联系技术支持',
-        'A critical error occurred. Please contact support.',
-      ),
+      t('types.exceptionRuleErrors.aCriticalErrorOccurredPleaseContactSupport'),
       { originalMessage: message },
     );
   }

@@ -27,7 +27,7 @@ export const TaskCompletionDialog: React.FC<TaskCompletionDialogProps> = ({
   onComplete,
   onCancel,
 }) => {
-  const { tr } = useI18n();
+  const { t } = useI18n();
 
   const {
     description,
@@ -69,13 +69,13 @@ export const TaskCompletionDialog: React.FC<TaskCompletionDialogProps> = ({
     >
       <TaskCompletionDialogHeader
         chainName={chainName}
-        tr={tr}
+        t={t}
         onCancel={handleCancel}
       />
 
       <div className="flex-1 space-y-4 overflow-y-auto p-6">
         <TaskDescriptionSection
-          tr={tr}
+          t={t}
           isDurationless={isDurationless}
           description={description}
           onDescriptionChange={setDescription}
@@ -88,7 +88,7 @@ export const TaskCompletionDialog: React.FC<TaskCompletionDialogProps> = ({
         />
 
         <NotesSection
-          tr={tr}
+          t={t}
           isVisible={isNotesVisible}
           notes={notes}
           onNotesChange={setNotes}
@@ -99,7 +99,7 @@ export const TaskCompletionDialog: React.FC<TaskCompletionDialogProps> = ({
       </div>
 
       <TaskCompletionDialogFooter
-        tr={tr}
+        t={t}
         disableComplete={disableComplete}
         onCancel={handleCancel}
         onSubmit={handleSubmit}

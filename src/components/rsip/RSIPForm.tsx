@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import React, { useMemo } from 'react';
 import { Clock, Plus } from 'lucide-react';
 import type { RSIPMeta, RSIPNodeGroup, RSIPTreeNode } from '../../types';
@@ -28,7 +29,7 @@ interface RSIPFormProps {
   onCreateGroup?: () => void;
   onAdd: () => void;
   language: string;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 export const RSIPForm: React.FC<RSIPFormProps> = ({
@@ -56,7 +57,7 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
   onCreateGroup,
   onAdd,
   language,
-  tr,
+  t,
 }) => {
   const parentOptions = useMemo(() => {
     const res: RSIPTreeNode[] = [];
@@ -75,19 +76,14 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="md:col-span-1">
           <label className="mb-2 block font-chinese text-sm font-medium text-gray-700 dark:text-slate-300">
-            {tr(
-              '父节点（可空，表示新分支）',
-              'Parent (optional; empty = new branch)',
-            )}
+            {t('rsip.rsipForm.parentOptionalEmptyNewBranch')}
           </label>
           <select
             value={selectedParentId || ''}
             onChange={(e) => setSelectedParentId(e.target.value || undefined)}
             className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
           >
-            <option value="">
-              {tr('（无父节点，建立新根）', '(No parent; create new root)')}
-            </option>
+            <option value="">{t('rsip.rsipForm.noParentCreateNewRoot')}</option>
             {parentOptions.map((n) => (
               <option key={n.id} value={n.id}>
                 {'—'.repeat(n.depth)}
@@ -98,28 +94,26 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
         </div>
         <div>
           <label className="mb-2 block font-chinese text-sm font-medium text-gray-700 dark:text-slate-300">
-            {tr('国策标题', 'Policy title')}
+            {t('rsip.rsipForm.policyTitle')}
           </label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder={tr(
-              '例如：进门5分钟内开始洗澡',
-              'e.g. Start showering within 15 minutes of getting home',
+            placeholder={t(
+              'rsip.rsipForm.eGStartShoweringWithin15MinutesOfGettingHome',
             )}
             className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
           />
         </div>
         <div>
           <label className="mb-2 block font-chinese text-sm font-medium text-gray-700 dark:text-slate-300">
-            {tr('精准规则', 'Rule')}
+            {t('rsip.rsipForm.rule')}
           </label>
           <input
             value={rule}
             onChange={(e) => setRule(e.target.value)}
-            placeholder={tr(
-              '例如：回家即启动15分钟计时，计时内进浴室',
-              'e.g. Start a 15-minute timer when home; enter the bathroom before it ends',
+            placeholder={t(
+              'rsip.rsipForm.eGStartA15MinuteTimerWhenHomeEnterThe',
             )}
             className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
           />
@@ -132,12 +126,12 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
           <div className="flex items-center space-x-2">
             <Clock size={16} className="text-emerald-600" />
             <span className="font-chinese text-sm text-gray-700 dark:text-slate-300">
-              {tr('启用计时', 'Enable timer')}
+              {t('rsip.rsipForm.enableTimer')}
             </span>
           </div>
           <label
             className="relative inline-flex cursor-pointer items-center"
-            aria-label={tr('启用计时', 'Enable timer')}
+            aria-label={t('rsip.rsipForm.enableTimer')}
           >
             <input
               type="checkbox"
@@ -151,7 +145,7 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
 
         <div className={`${createUseTimer ? '' : 'opacity-60'}`}>
           <label className="mb-2 block font-chinese text-sm font-medium text-gray-700 dark:text-slate-300">
-            {tr('计时分钟数', 'Timer minutes')}
+            {t('rsip.rsipForm.timerMinutes')}
           </label>
           <input
             type="number"
@@ -173,7 +167,7 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
         <div>
           <label className="mb-2 block font-chinese text-sm font-medium text-gray-700 dark:text-slate-300">
-            {tr('节点类型', 'Node type')}
+            {t('rsip.rsipForm.nodeType')}
           </label>
           <select
             value={createType}
@@ -194,7 +188,7 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
 
         <div>
           <label className="mb-2 block font-chinese text-sm font-medium text-gray-700 dark:text-slate-300">
-            {tr('所属国策组', 'Policy group')}
+            {t('rsip.rsipForm.policyGroup')}
           </label>
           <div className="flex items-center gap-2">
             <select
@@ -204,11 +198,11 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
               }
               className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-2 font-chinese text-gray-900 transition duration-200 focus:outline-none dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
             >
-              <option value="">{tr('不分组', 'No group')}</option>
+              <option value="">{t('rsip.rsipForm.noGroup')}</option>
               {(groups ?? []).map((group) => (
                 <option key={group.id} value={group.id}>
                   {group.emoji ? `${group.emoji} ` : ''}
-                  {group.title} ({tr('容错', 'Tolerance')}{' '}
+                  {group.title} ({t('rsip.rsipForm.tolerance')}{' '}
                   {group.faultTolerance})
                 </option>
               ))}
@@ -219,7 +213,7 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
                 onClick={onCreateGroup}
                 className="rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-700 transition hover:bg-gray-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
               >
-                {tr('新建组', 'New group')}
+                {t('rsip.rsipForm.newGroup')}
               </button>
             )}
           </div>
@@ -227,11 +221,11 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
 
         <div className="bento-subtle flex items-center justify-between rounded-2xl px-4 py-3">
           <span className="font-chinese text-sm text-gray-700 dark:text-slate-300">
-            {tr('被动国策', 'Passive policy')}
+            {t('rsip.rsipForm.passivePolicy')}
           </span>
           <label
             className="relative inline-flex cursor-pointer items-center"
-            aria-label={tr('被动国策', 'Passive policy')}
+            aria-label={t('rsip.rsipForm.passivePolicy')}
           >
             <input
               type="checkbox"
@@ -247,21 +241,12 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
       <div className="mt-4 flex items-center justify-between">
         <div className="font-chinese text-sm text-gray-600 dark:text-slate-400">
           {meta.allowMultiplePerDay
-            ? tr(
-                '已开启“一天可多条”。今日可继续新增。',
-                'Multiple per day is enabled. You can add more today.',
-              )
-            : tr(
-                '每天最多新增一个国策。',
-                'Add at most one policy per day.',
-              )}{' '}
+            ? t('rsip.rsipForm.multiplePerDayIsEnabledYouCanAddMore')
+            : t('rsip.rsipForm.addAtMostOnePolicyPerDay')}{' '}
           {!meta.allowMultiplePerDay &&
             (canAddToday
-              ? tr('今日可新增。', 'You can add today.')
-              : tr(
-                  '今日已新增，明日继续。',
-                  'Already added today. Try again tomorrow.',
-                ))}
+              ? t('rsip.rsipForm.youCanAddToday')
+              : t('rsip.rsipForm.alreadyAddedTodayTryAgainTomorrow'))}
         </div>
         <button
           onClick={onAdd}
@@ -269,7 +254,7 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
           className={`flex items-center space-x-2 rounded-2xl px-6 py-3 font-medium shadow-lg transition duration-300 ${isAddDisabled ? 'bg-gray-200 text-gray-400 dark:bg-slate-700 dark:text-slate-500' : 'gradient-primary text-white hover:scale-105 hover:shadow-xl'}`}
         >
           <Plus size={18} />
-          <span className="font-chinese">{tr('新增国策', 'Add policy')}</span>
+          <span className="font-chinese">{t('rsip.rsipForm.addPolicy')}</span>
         </button>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import React from 'react';
 import { Clock, Link2, Play, Trash2, X } from 'lucide-react';
 import type { RSIPTreeNode } from '../../types';
@@ -25,7 +26,7 @@ interface RSIPNodeCardProps {
   };
   formatRemaining: (ms: number) => string;
   formatMinutesLabel: (minutes: number) => string;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 export const RSIPNodeCard: React.FC<RSIPNodeCardProps> = ({
@@ -44,7 +45,7 @@ export const RSIPNodeCard: React.FC<RSIPNodeCardProps> = ({
   timer,
   formatRemaining,
   formatMinutesLabel,
-  tr,
+  t,
 }) => {
   const ntype = node.type || 'policy';
   const color = rsipTypeColorMap[ntype] || rsipTypeColorMap.policy;
@@ -136,13 +137,13 @@ export const RSIPNodeCard: React.FC<RSIPNodeCardProps> = ({
             className={`rounded-lg p-1.5 transition-colors ${isReparentingSelected ? 'bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-200' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100'}`}
             title={
               isReparentingSelected
-                ? tr('取消更改继承', 'Cancel reparent')
-                : tr('更改继承关系', 'Change parent')
+                ? t('rsip.rsipNodeCard.cancelReparent')
+                : t('rsip.rsipNodeCard.changeParent')
             }
             aria-label={
               isReparentingSelected
-                ? tr('取消更改继承', 'Cancel reparent')
-                : tr('更改继承关系', 'Change parent')
+                ? t('rsip.rsipNodeCard.cancelReparent')
+                : t('rsip.rsipNodeCard.changeParent')
             }
           >
             {isReparentingSelected ? <X size={14} /> : <Link2 size={14} />}
@@ -154,11 +155,12 @@ export const RSIPNodeCard: React.FC<RSIPNodeCardProps> = ({
               onMarkFailed();
             }}
             className="rounded-lg p-1.5 text-red-500 transition-colors hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400"
-            title={tr(
-              '判定失败（删除此节点及其所有子节点）',
-              'Mark as failed (delete this node and all descendants)',
+            title={t(
+              'rsip.rsipNodeCard.markAsFailedDeleteThisNodeAndAllDescendants',
             )}
-            aria-label={tr('判定失败', 'Mark as failed')}
+            aria-label={t(
+              'auxiliaryJudgment.auxiliaryJudgmentActions.markAsFailed',
+            )}
           >
             <Trash2 size={14} />
           </button>

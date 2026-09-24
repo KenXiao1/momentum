@@ -32,7 +32,7 @@ export function PetWidget({
   onMinimize,
   onExpand,
 }: PetWidgetProps) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
 
   const {
     isDragging,
@@ -60,7 +60,7 @@ export function PetWidget({
     onUpdateMinimizedPosition,
     onMinimize,
     onExpand,
-    tr,
+    t,
   });
 
   if (isLoading) return null;
@@ -76,18 +76,18 @@ export function PetWidget({
           type="button"
           onClick={() => setShowCreationDialog(true)}
           className="fixed bottom-4 right-4 z-40 flex items-center gap-3 rounded-full border border-gray-200/60 bg-white/90 px-3 py-2 shadow-lg shadow-black/5 backdrop-blur-md transition hover:-translate-y-0.5 hover:shadow-xl dark:border-gray-700/60 dark:bg-gray-800/90"
-          title={tr('领养宠物', 'Adopt a pet')}
-          aria-label={tr('领养宠物', 'Adopt a pet')}
+          title={t('pet.widget.petWidget.adoptAPet')}
+          aria-label={t('pet.widget.petWidget.adoptAPet')}
         >
           <div className="flex h-12 w-12 select-none items-center justify-center rounded-full bg-gradient-to-br from-green-100 to-blue-100 text-3xl dark:from-green-900/30 dark:to-blue-900/30">
             🥚
           </div>
           <div className="pr-1 text-left leading-tight">
             <div className="text-sm font-medium text-gray-800 dark:text-gray-100">
-              {tr('领养一只宠物', 'Adopt a pet')}
+              {t('pet.widget.petWidget.adoptAPetVariant2')}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              {tr('给新伙伴起个名字', 'Name your new companion')}
+              {t('pet.widget.petWidget.nameYourNewCompanion')}
             </div>
           </div>
         </button>
@@ -116,8 +116,8 @@ export function PetWidget({
                 }
               }}
               className="cursor-grab rounded-full border border-gray-200/50 bg-white/95 p-2 shadow-lg backdrop-blur-md transition hover:scale-105 hover:shadow-xl active:cursor-grabbing dark:border-gray-700/50 dark:bg-gray-800/95"
-              title={tr('展开宠物', 'Expand pet')}
-              aria-label={tr('展开宠物', 'Expand pet')}
+              title={t('pet.widget.petWidget.expandPet')}
+              aria-label={t('pet.widget.petWidget.expandPet')}
             >
               <PetAvatar stage={pet.stage} mood={mood} size="sm" />
             </button>
@@ -129,8 +129,8 @@ export function PetWidget({
                   onMouseDown={handleMouseDown}
                   onTouchStart={handleTouchStart}
                   className="min-w-0 flex-1 cursor-grab text-left active:cursor-grabbing"
-                  aria-label={tr('拖拽移动宠物', 'Drag to move pet')}
-                  title={tr('拖拽移动', 'Drag to move')}
+                  aria-label={t('pet.widget.petWidget.dragToMovePet')}
+                  title={t('pet.widget.petWidget.dragToMove')}
                 >
                   <span className="block max-w-24 truncate text-sm font-medium text-gray-700 dark:text-gray-200">
                     {pet.name}
@@ -144,8 +144,8 @@ export function PetWidget({
                       void handleMinimize();
                     }}
                     className="rounded p-1 transition-colors hover:bg-white/50 dark:hover:bg-gray-700/50"
-                    title={tr('最小化', 'Minimize')}
-                    aria-label={tr('最小化', 'Minimize')}
+                    title={t('pet.widget.petWidget.minimize')}
+                    aria-label={t('pet.widget.petWidget.minimize')}
                   >
                     <Minimize2 size={14} aria-hidden="true" />
                   </button>
@@ -166,7 +166,7 @@ export function PetWidget({
                   type="button"
                   onClick={handleFeed}
                   disabled={isFeeding || pet.hunger <= 5}
-                  aria-label={tr('喂食', 'Feed')}
+                  aria-label={t('pet.widget.petWidget.feed')}
                   className={`mb-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 ${
                     pet.hunger <= 5
                       ? 'cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700'
@@ -175,8 +175,8 @@ export function PetWidget({
                 >
                   <Cookie size={16} aria-hidden="true" />
                   {isFeeding
-                    ? tr('喂食中...', 'Feeding...')
-                    : tr('喂食', 'Feed')}
+                    ? t('pet.widget.petWidget.feeding')
+                    : t('pet.widget.petWidget.feed')}
                 </button>
 
                 <PetStatsBar

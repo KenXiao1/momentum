@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import React from 'react';
 import { Bell } from 'lucide-react';
 
@@ -20,7 +21,7 @@ interface AuxiliarySignalSectionProps {
   language: 'zh' | 'en';
   onAuxiliarySignalSelect: (value: string) => void;
   onCustomAuxiliarySignalChange: (value: string) => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 const AuxiliarySignalSectionComponent: React.FC<
@@ -32,7 +33,7 @@ const AuxiliarySignalSectionComponent: React.FC<
   language,
   onAuxiliarySignalSelect,
   onCustomAuxiliarySignalChange,
-  tr,
+  t,
 }) => (
   <div
     data-testid="task-group-editor-auxiliary-signal"
@@ -42,10 +43,10 @@ const AuxiliarySignalSectionComponent: React.FC<
       <Bell className="text-blue-500" size={18} />
       <div className="min-w-0">
         <h4 className="font-chinese text-base font-semibold text-gray-900 dark:text-slate-100">
-          {tr('预约信号', 'Booking signal')}
+          {t('chainDetail.chainDetailStats.bookingSignal')}
         </h4>
         <p className="font-mono text-[11px] text-gray-500">
-          {tr('预约信号', 'BOOKING SIGNAL')}
+          {t('chainEditor.auxiliaryChainSettingsSection.bookingSignal')}
         </p>
       </div>
     </div>
@@ -63,7 +64,7 @@ const AuxiliarySignalSectionComponent: React.FC<
       required
     >
       <option value="" disabled className="text-gray-400">
-        {tr('选择预约信号', 'Choose a booking signal')}
+        {t('chainEditor.auxiliaryChainSettingsSection.chooseABookingSignal')}
       </option>
       {AUXILIARY_SIGNAL_TEMPLATES.map((template, index) => (
         <option
@@ -83,9 +84,8 @@ const AuxiliarySignalSectionComponent: React.FC<
         name="customAuxiliarySignal"
         value={customAuxiliarySignal}
         onChange={(e) => onCustomAuxiliarySignalChange(e.target.value)}
-        placeholder={tr(
-          '输入你的自定义预约信号',
-          'Enter your custom booking signal',
+        placeholder={t(
+          'chainEditor.auxiliaryChainSettingsSection.enterYourCustomBookingSignal',
         )}
         className={`mt-3 w-full border bg-gray-50 dark:bg-slate-700 ${
           errors.auxiliarySignal

@@ -38,7 +38,7 @@ export function useImportExportDomain({
   setState,
   onPetImported,
 }: UseImportExportDomainParams) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const canUseAuth = hasStorageCapability(storage, 'auth');
 
   async function ensureAuthenticatedForImport(): Promise<void> {
@@ -68,9 +68,8 @@ export function useImportExportDomain({
       !authResult.value.user
     ) {
       throw new Error(
-        tr(
-          '导入时身份验证失败：请确保您已正确登录，然后重试导入操作。',
-          'Authentication failed during import. Please make sure you are signed in and try again.',
+        t(
+          'useImportExportDomain.authenticationFailedDuringImportPleaseMakeSureYouAre',
         ),
       );
     }
@@ -95,9 +94,7 @@ export function useImportExportDomain({
       !Array.isArray(importedChains) ||
       (importedChains.length === 0 && !hasOtherData)
     ) {
-      throw new Error(
-        tr('没有有效的链条数据可导入', 'No valid chains found to import'),
-      );
+      throw new Error(t('useImportExportDomain.noValidChainsFoundToImport'));
     }
   }
 
@@ -125,7 +122,7 @@ export function useImportExportDomain({
       const errorMessage =
         error instanceof Error
           ? error.message
-          : tr('未知错误', 'Unknown error');
+          : t('focusMode.useExceptionRuleOperations.unknownError');
       logger.error(
         'IMPORT',
         'Failed to import data',

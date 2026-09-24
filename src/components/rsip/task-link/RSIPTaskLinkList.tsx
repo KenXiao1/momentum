@@ -12,13 +12,13 @@ export function RSIPTaskLinkList(props: {
   chainLabelById: Map<string, string>;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  tr: Tr;
+  t: Tr;
 }) {
   return (
     <div className="space-y-2">
       {props.links.length === 0 && (
         <div className="rounded-xl border border-dashed border-gray-300 p-4 text-sm text-gray-600 dark:border-slate-700 dark:text-slate-400">
-          {props.tr('尚未配置任何联动。', 'No integration links yet.')}
+          {props.t('rsip.taskLink.rsipTaskLinkList.noIntegrationLinksYet')}
         </div>
       )}
       {props.links.map((link) => (
@@ -28,20 +28,20 @@ export function RSIPTaskLinkList(props: {
         >
           <div>
             <p className="font-medium">
-              {eventLabel(link.triggerEvent, props.tr)} {'->'}{' '}
-              {effectLabel(link.effect, props.tr)}
+              {eventLabel(link.triggerEvent, props.t)} {'->'}{' '}
+              {effectLabel(link.effect, props.t)}
             </p>
             <p className="text-xs text-gray-500 dark:text-slate-400">
-              {props.tr('节点', 'Node')}:{' '}
+              {props.t('rsip.taskLink.rsipTaskLinkList.node')}:{' '}
               {props.nodeTitleById.get(link.rsipNodeId) ?? link.rsipNodeId}
             </p>
             <p className="text-xs text-gray-500 dark:text-slate-400">
-              {props.tr('目标', 'Target')}:{' '}
+              {props.t('rsip.taskLink.rsipTaskLinkList.target')}:{' '}
               {props.chainLabelById.get(link.chainId) ?? link.chainId} |{' '}
               {link.chainKind === 'group'
-                ? props.tr('任务组', 'Group')
-                : props.tr('任务', 'Task')}{' '}
-              | {automationLabel(link.automation, props.tr)}
+                ? props.t('rsip.taskLink.rsipTaskLinkForm.group')
+                : props.t('rsip.taskLink.rsipTaskLinkForm.task')}{' '}
+              | {automationLabel(link.automation, props.t)}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -51,15 +51,15 @@ export function RSIPTaskLinkList(props: {
               className={`rounded-lg px-3 py-1.5 text-xs transition ${link.isActive ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-slate-300'}`}
             >
               {link.isActive
-                ? props.tr('已启用', 'Enabled')
-                : props.tr('已禁用', 'Disabled')}
+                ? props.t('rsip.taskLink.rsipTaskLinkList.enabled')
+                : props.t('rsip.taskLink.rsipTaskLinkList.disabled')}
             </button>
             <button
               type="button"
               onClick={() => props.onDelete(link.id)}
               className="rounded-lg bg-red-500/20 px-3 py-1.5 text-xs text-red-700 transition hover:bg-red-500/30 dark:text-red-300"
             >
-              {props.tr('删除', 'Delete')}
+              {props.t('deletedChainCard.delete')}
             </button>
           </div>
         </div>

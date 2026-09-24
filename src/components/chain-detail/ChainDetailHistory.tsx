@@ -14,16 +14,16 @@ import {
 } from './types';
 import { formatTime, formatActualDuration } from '../../utils/time';
 
-const EmptyHistory: React.FC<{ tr: TranslationFn }> = ({ tr }) => (
+const EmptyHistory: React.FC<{ t: TranslationFn }> = ({ t }) => (
   <div className="py-16 text-center text-gray-500 dark:text-slate-400">
     <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gray-100">
       <Calendar size={32} className="text-gray-400" />
     </div>
     <p className="font-chinese text-lg">
-      {tr('还没有完成记录', 'No completion records yet')}
+      {t('chainDetail.chainDetailHistory.noCompletionRecordsYet')}
     </p>
     <p className="mt-2 font-mono text-sm text-gray-400 dark:text-slate-500">
-      {tr('暂无记录', 'NO COMPLETION RECORDS YET')}
+      {t('chainDetail.chainDetailHistory.noCompletionRecordsYetVariant2')}
     </p>
   </div>
 );
@@ -32,7 +32,7 @@ const HistoryRecord: React.FC<HistoryRecordProps> = ({
   record,
   locale,
   language,
-  tr,
+  t,
   formatFailureReason,
 }) => (
   <div className="rounded-2xl bg-gray-50 p-6 transition-colors duration-200 hover:bg-gray-100 dark:bg-slate-700/50 dark:hover:bg-slate-700">
@@ -54,8 +54,8 @@ const HistoryRecord: React.FC<HistoryRecordProps> = ({
         <div>
           <p className="font-chinese text-lg font-medium text-[#161615] dark:text-slate-100">
             {record.wasSuccessful
-              ? tr('任务完成', 'Completed')
-              : tr('任务失败', 'Failed')}
+              ? t('chainDetail.chainDetailHistory.completed')
+              : t('chainDetail.chainDetailHistory.failed')}
           </p>
           {!record.wasSuccessful && record.reasonForFailure && (
             <p className="mt-1 font-chinese text-sm text-red-500 dark:text-red-400">
@@ -84,15 +84,15 @@ const HistoryRecord: React.FC<HistoryRecordProps> = ({
     </div>
 
     {(record.description || record.notes) && (
-      <HistoryRecordDetails record={record} tr={tr} />
+      <HistoryRecordDetails record={record} t={t} />
     )}
   </div>
 );
 
 const HistoryRecordDetails: React.FC<{
   record: HistoryRecordProps['record'];
-  tr: TranslationFn;
-}> = ({ record, tr }) => (
+  t: TranslationFn;
+}> = ({ record, t }) => (
   <div className="space-y-3">
     {record.description && (
       <div className="rounded-xl border border-gray-200/50 bg-white p-4 dark:border-slate-500/30 dark:bg-slate-600/30">
@@ -101,7 +101,7 @@ const HistoryRecordDetails: React.FC<{
             <ListTodo className="text-blue-500" size={14} />
           </div>
           <span className="font-chinese text-xs font-medium text-blue-600 dark:text-blue-400">
-            {tr('任务描述', 'Task description')}
+            {t('chainEditor.description.title')}
           </span>
         </div>
         <p className="font-chinese text-sm leading-relaxed text-gray-700 dark:text-slate-200">
@@ -117,7 +117,7 @@ const HistoryRecordDetails: React.FC<{
             <StickyNote className="text-amber-500" size={14} />
           </div>
           <span className="font-chinese text-xs font-medium text-amber-600 dark:text-amber-400">
-            {tr('备注', 'Notes')}
+            {t('chainDetail.chainDetailHistory.notes')}
           </span>
         </div>
         <p className="font-chinese text-sm leading-relaxed text-gray-700 dark:text-slate-200">
@@ -132,7 +132,7 @@ export const ChainDetailHistory: React.FC<HistorySectionProps> = ({
   recentHistory,
   locale,
   language,
-  tr,
+  t,
   formatFailureReason,
 }) => (
   <div className="bento-card animate-scale-in">
@@ -141,15 +141,15 @@ export const ChainDetailHistory: React.FC<HistorySectionProps> = ({
         <Calendar size={20} className="text-primary-500" />
       </div>
       <div>
-        <span>{tr('最近记录', 'Recent history')}</span>
+        <span>{t('chainDetail.chainDetailHistory.recentHistory')}</span>
         <p className="font-mono text-xs tracking-wide text-gray-500 dark:text-slate-400">
-          {tr('最近记录', 'RECENT HISTORY')}
+          {t('chainDetail.chainDetailHistory.recentHistoryVariant2')}
         </p>
       </div>
     </h3>
 
     {recentHistory.length === 0 ? (
-      <EmptyHistory tr={tr} />
+      <EmptyHistory t={t} />
     ) : (
       <div className="space-y-4">
         {recentHistory.map((record, index) => (
@@ -158,7 +158,7 @@ export const ChainDetailHistory: React.FC<HistorySectionProps> = ({
             record={record}
             locale={locale}
             language={language}
-            tr={tr}
+            t={t}
             formatFailureReason={formatFailureReason}
           />
         ))}

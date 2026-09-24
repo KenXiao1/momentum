@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import { Layers, Minus } from 'lucide-react';
 import type { ChainTreeNode } from '../../../types';
 import { DeleteConfirmDialogShell } from '../../shared/DeleteConfirmDialogShell';
@@ -5,13 +6,13 @@ import { DeleteConfirmDialogShell } from '../../shared/DeleteConfirmDialogShell'
 export function GroupDeleteConfirmDialog({
   isOpen,
   group,
-  tr,
+  t,
   onCancel,
   onConfirm,
 }: {
   isOpen: boolean;
   group: ChainTreeNode;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   onCancel: () => void;
   onConfirm: () => void;
 }) {
@@ -23,24 +24,22 @@ export function GroupDeleteConfirmDialog({
       headerIcon={
         <Layers className="text-red-500" size={24} aria-hidden="true" />
       }
-      title={tr('Delete group?', 'Delete group?')}
+      title={t('groupCard.groupDeleteConfirmDialog.deleteGroup')}
       description={
         <>
-          {tr(
-            'Are you sure you want to delete the group "',
-            'Are you sure you want to delete the group "',
+          {t(
+            'groupCard.groupDeleteConfirmDialog.areYouSureYouWantToDeleteTheGroup',
           )}
           <span className="font-semibold text-primary-500">{group.name}</span>
-          {tr('"?', '"?')}
+          {t('chainCard.chainDeleteConfirmModal.label')}
         </>
       }
       warningContent={
         <div className="mb-8 rounded-2xl border border-red-200/60 bg-red-50/80 p-6 dark:border-red-800/40 dark:bg-red-900/20">
           <div className="mb-6 text-center">
             <p className="font-chinese text-sm font-medium text-red-600 dark:text-red-400">
-              {tr(
-                'This will delete the entire group and all child tasks:',
-                'This will delete the entire group and all child tasks:',
+              {t(
+                'groupCard.groupDeleteConfirmDialog.thisWillDeleteTheEntireGroupAndAllChild',
               )}
             </p>
           </div>
@@ -57,8 +56,8 @@ export function GroupDeleteConfirmDialog({
           </div>
         </div>
       }
-      cancelLabel={tr('Cancel', 'Cancel')}
-      confirmLabel={tr('Delete', 'Delete')}
+      cancelLabel={t('chainCard.chainDeleteConfirmModal.cancel')}
+      confirmLabel={t('chainCard.chainDeleteConfirmModal.delete')}
       onCancel={onCancel}
       onConfirm={onConfirm}
     />

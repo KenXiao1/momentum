@@ -123,7 +123,7 @@ export function useChainsDomain({
   onNavigateToDashboard = () => undefined,
 }: UseChainsDomainParams) {
   const readState = resolveAppStateReader({ state, getState });
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const handleCreateChain = (parentId?: unknown) => {
     // React event handlers pass the event object as the first argument.
     // If we treat it as a parentId, it can leak `Window` into persisted data and break JSON serialization.
@@ -239,11 +239,10 @@ export function useChainsDomain({
       const safeDetail = getSafeErrorDetailFromUnknown(error, language);
       toast.error(
         safeDetail
-          ? tr(`保存失败: ${safeDetail}`, `Save failed: ${safeDetail}`)
-          : tr(
-              '保存失败，请重试（详情见控制台）',
-              'Save failed. Check the console for details, then try again.',
-            ),
+          ? t('useChainsDomain.saveFailedSafeDetail', {
+              safeDetail: safeDetail,
+            })
+          : t('useChainsDomain.saveFailedCheckTheConsoleForDetailsThenTry'),
       );
 
       try {

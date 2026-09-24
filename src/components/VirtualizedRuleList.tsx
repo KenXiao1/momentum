@@ -51,7 +51,7 @@ export const VirtualizedRuleList: React.FC<VirtualizedRuleListProps> = ({
   containerHeight = 400,
   overscan = 5,
 }) => {
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const [scrollTop, setScrollTop] = useState(0);
   const [containerSize, setContainerSize] = useState({
     width: 0,
@@ -149,19 +149,19 @@ export const VirtualizedRuleList: React.FC<VirtualizedRuleListProps> = ({
   }, []);
 
   const formatLastUsedLabel = useCallback(
-    (date: Date) => formatLastUsed(date, language, tr),
-    [language, tr],
+    (date: Date) => formatLastUsed(date, language, t),
+    [language, t],
   );
 
   const matchTypeLabel = useCallback(
-    (matchType: string) => getMatchTypeLabel(matchType, tr),
-    [tr],
+    (matchType: string) => getMatchTypeLabel(matchType, t),
+    [t],
   );
 
   if (isLoading) {
     return (
       <div ref={containerRef} style={{ height: containerHeight }}>
-        <LoadingState tr={tr} />
+        <LoadingState t={t} />
       </div>
     );
   }
@@ -169,11 +169,7 @@ export const VirtualizedRuleList: React.FC<VirtualizedRuleListProps> = ({
   if (visibleRange.totalItems === 0) {
     return (
       <div ref={containerRef} style={{ height: containerHeight }}>
-        <EmptyState
-          searchQuery={searchQuery}
-          onCreateNew={onCreateNew}
-          tr={tr}
-        />
+        <EmptyState searchQuery={searchQuery} onCreateNew={onCreateNew} t={t} />
       </div>
     );
   }
@@ -217,7 +213,7 @@ export const VirtualizedRuleList: React.FC<VirtualizedRuleListProps> = ({
                       itemHeight={itemHeight}
                       onCreateNew={onCreateNew}
                       searchQuery={searchQuery}
-                      tr={tr}
+                      t={t}
                     />
                   )}
                 </div>

@@ -1,3 +1,4 @@
+import { translate } from '../../../i18n/translate';
 import type { SessionContext } from '../../../types';
 import type { ActionType } from '../types';
 import { getActionBgClass, getActionColorClass } from '../utils';
@@ -22,14 +23,26 @@ export function ChainInfoCard({
             {sessionContext.chainName}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {language === 'zh'
-              ? `已进行 ${Math.floor(sessionContext.elapsedTime / 60)} 分钟`
-              : `Elapsed ${Math.floor(sessionContext.elapsedTime / 60)} min`}
+            {translate(
+              language === 'zh' ? 'zh' : 'en',
+              'ruleSelectionDialog.chainInfoCard.elapsedMathFloorSessionContextElapsedTime60Min',
+              {
+                mathFloorSessionContextElapsedTime60: Math.floor(
+                  sessionContext.elapsedTime / 60,
+                ),
+              },
+            )}
             {sessionContext.remainingTime && (
               <span>
-                {language === 'zh'
-                  ? `，剩余 ${Math.floor(sessionContext.remainingTime / 60)} 分钟`
-                  : `, ${Math.floor(sessionContext.remainingTime / 60)} min remaining`}
+                {translate(
+                  language === 'zh' ? 'zh' : 'en',
+                  'ruleSelectionDialog.chainInfoCard.mathFloorSessionContextRemainingTime60MinRemaining',
+                  {
+                    mathFloorSessionContextRemainingTime60: Math.floor(
+                      sessionContext.remainingTime / 60,
+                    ),
+                  },
+                )}
               </span>
             )}
           </p>

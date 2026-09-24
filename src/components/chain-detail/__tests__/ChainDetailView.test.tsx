@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
@@ -71,7 +72,7 @@ function createProps(
     showDeleteConfirm: false,
     language: 'en' as const,
     locale: 'en-US',
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
     formatFailureReason: (reason: string) => reason,
     onBack: vi.fn(),
     onEdit: vi.fn(),

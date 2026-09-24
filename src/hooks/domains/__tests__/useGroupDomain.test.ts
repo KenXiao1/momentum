@@ -1,3 +1,5 @@
+import { createTranslationMock } from '../../../test/i18n';
+import { createTranslator } from '../../../i18n/translate';
 import type { SafelySaveChains } from '../useChainsDomain';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -13,12 +15,12 @@ import { logger } from '../../../utils/logger';
 import { toast } from '../../../utils/toast';
 import { useGroupDomain } from '../useGroupDomain';
 
-const trMock = vi.fn((zh: string, en: string) => en);
+const trMock = createTranslationMock('en');
 
 vi.mock('../../../i18n', () => ({
   useI18n: vi.fn(() => ({
     language: 'en',
-    tr: trMock,
+    t: trMock,
   })),
 }));
 
@@ -356,8 +358,7 @@ describe('useGroupDomain', () => {
       expect.any(Error),
     );
     expect(trMock).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.stringContaining('Failed to update repeat count'),
+      'useGroupDomain.failedToUpdateRepeatCount',
     );
   });
 
@@ -407,16 +408,8 @@ describe('useGroupDomain', () => {
       undefined,
       expect.any(Error),
     );
-    const importFailureTranslation = vi
-      .mocked(trMock)
-      .mock.calls.find(
-        (call) =>
-          typeof call[1] === 'string' &&
-          call[1].includes('Import failed: safe import detail'),
-      );
-    expect(importFailureTranslation?.[0]).toEqual(expect.any(String));
-    expect(importFailureTranslation?.[1]).toEqual(
-      expect.stringContaining('Import failed: safe import detail'),
+    expect(trMock).toHaveBeenCalledWith(
+      'importExportModal.importStatusControls.importFailed',
     );
   });
 
@@ -451,8 +444,7 @@ describe('useGroupDomain', () => {
       'Failed to update repeat count. Check the console for details, then try again.',
     );
     expect(trMock).toHaveBeenCalledWith(
-      expect.any(String),
-      'Failed to update repeat count. Check the console for details, then try again.',
+      'useGroupDomain.failedToUpdateRepeatCountCheckTheConsoleFor',
     );
   });
 });

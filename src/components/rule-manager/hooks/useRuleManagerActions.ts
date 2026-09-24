@@ -17,7 +17,7 @@ import {
 export function useRuleManagerActions(args: UseRuleManagerActionsArgs) {
   const {
     language,
-    tr,
+    t,
     loadRules,
     setError,
     formData,
@@ -101,9 +101,8 @@ export function useRuleManagerActions(args: UseRuleManagerActionsArgs) {
             const safe = getSafeErrorDetail(error.message, language);
             setFormErrors([
               safe ??
-                tr(
-                  '创建规则失败，请重试',
-                  'Failed to create rule. Please try again.',
+                t(
+                  'ruleManager.useRuleManagerActions.failedToCreateRulePleaseTryAgain',
                 ),
             ]);
 
@@ -116,9 +115,8 @@ export function useRuleManagerActions(args: UseRuleManagerActionsArgs) {
             }
           } else {
             setFormErrors([
-              tr(
-                '创建规则失败，请重试',
-                'Failed to create rule. Please try again.',
+              t(
+                'ruleManager.useRuleManagerActions.failedToCreateRulePleaseTryAgain',
               ),
             ]);
           }
@@ -131,7 +129,7 @@ export function useRuleManagerActions(args: UseRuleManagerActionsArgs) {
         newMap.delete(operationId);
         return newMap;
       });
-      setFormErrors([tr('创建规则失败', 'Failed to create rule')]);
+      setFormErrors([t('ruleSelectionDialog.failedToCreateRule')]);
     } finally {
       setSavingOperations((prev) => {
         const newSet = new Set(prev);
@@ -150,7 +148,7 @@ export function useRuleManagerActions(args: UseRuleManagerActionsArgs) {
     setFormWarnings,
     setRules,
     setShowCreateForm,
-    tr,
+    t,
   ]);
 
   const handleUpdateRule = useCallback(async () => {
@@ -200,16 +198,14 @@ export function useRuleManagerActions(args: UseRuleManagerActionsArgs) {
             const safe = getSafeErrorDetail(error.message, language);
             setFormErrors([
               safe ??
-                tr(
-                  '更新规则失败，请重试',
-                  'Failed to update rule. Please try again.',
+                t(
+                  'ruleManager.useRuleManagerActions.failedToUpdateRulePleaseTryAgain',
                 ),
             ]);
           } else {
             setFormErrors([
-              tr(
-                '更新规则失败，请重试',
-                'Failed to update rule. Please try again.',
+              t(
+                'ruleManager.useRuleManagerActions.failedToUpdateRulePleaseTryAgain',
               ),
             ]);
           }
@@ -217,7 +213,9 @@ export function useRuleManagerActions(args: UseRuleManagerActionsArgs) {
       });
     } catch {
       setRules((prev) => replaceRuleById(prev, originalRule.id, originalRule));
-      setFormErrors([tr('更新规则失败', 'Failed to update rule')]);
+      setFormErrors([
+        t('ruleManager.useRuleManagerActions.failedToUpdateRule'),
+      ]);
     } finally {
       setSavingOperations((prev) => {
         const newSet = new Set(prev);
@@ -236,7 +234,7 @@ export function useRuleManagerActions(args: UseRuleManagerActionsArgs) {
     setFormErrors,
     setFormWarnings,
     setRules,
-    tr,
+    t,
   ]);
 
   const handleDeleteRule = useCallback((rule: ExceptionRule) => {
@@ -253,9 +251,11 @@ export function useRuleManagerActions(args: UseRuleManagerActionsArgs) {
       await loadRules();
     } catch (err) {
       const safe = getSafeErrorDetailFromUnknown(err, language);
-      setError(safe ?? tr('删除规则失败', 'Failed to delete rule'));
+      setError(
+        safe ?? t('ruleManager.useRuleManagerActions.failedToDeleteRule'),
+      );
     }
-  }, [deleteConfirmationRule, language, loadRules, setError, tr]);
+  }, [deleteConfirmationRule, language, loadRules, setError, t]);
 
   const handleEditRule = useCallback(
     (rule: ExceptionRule) => {
@@ -272,9 +272,9 @@ export function useRuleManagerActions(args: UseRuleManagerActionsArgs) {
         `exception-rules-${new Date().toISOString().split('T')[0]}.json`,
       );
     } catch {
-      setError(tr('导出规则失败', 'Failed to export rules'));
+      setError(t('ruleManager.useRuleManagerActions.failedToExportRules'));
     }
-  }, [capabilityCenter.file, setError, tr]);
+  }, [capabilityCenter.file, setError, t]);
 
   return {
     deleteConfirmationRule,

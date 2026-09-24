@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { describe, expect, it, vi } from 'vitest';
 import { prepareImportPlan } from '../importPlan';
 import { createUnitChain } from '../../../test/factories';
@@ -10,7 +11,7 @@ describe('saved import plans', () => {
       preserveTimestamps: true,
       importCompletionHistory: true,
     },
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
   });
 
   it('retains generated IDs, dates and stage across retries and reopening the workflow', async () => {

@@ -16,7 +16,7 @@ import { errorClassificationService } from '../ErrorClassificationService';
 import { errorRecoveryManager } from '../ErrorRecoveryManager';
 import { logger } from '../../utils/logger';
 import { isDev } from '../../utils/env';
-import { tr } from '../../utils/runtimeI18n';
+import { t } from '../../utils/runtimeI18n';
 
 export interface RuleCreationResult {
   rule: ExceptionRule;
@@ -172,7 +172,7 @@ class RuleCreator {
           return {
             rule,
             warnings: [
-              tr('通过错误恢复创建了规则', 'Rule created via error recovery'),
+              t('ruleManager.ruleCreator.ruleCreatedViaErrorRecovery'),
             ],
           };
       }

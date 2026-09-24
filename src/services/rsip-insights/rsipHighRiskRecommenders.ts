@@ -3,7 +3,8 @@ import type {
   RSIPInsightsLocale,
   RSIPRecommendation,
 } from './rsipInsightsTypes';
-import { joinList, localize } from './rsipLocalization';
+import { translate } from '../../i18n/translate';
+import { joinList } from './rsipLocalization';
 
 function fallbackAlternative(
   nodeTitle: string,
@@ -16,11 +17,7 @@ function fallbackAlternative(
     nodeTitle.includes('睡') ||
     nodeTitle.includes('作息')
   ) {
-    return localize(
-      locale,
-      '替代方案：先固定起床时间，再逐步提前入睡。',
-      'Fallback: lock wake-up time first, then shift bedtime.',
-    );
+    return translate(locale, 'rsipInsights.recommendations.fallback.sleep');
   }
 
   if (
@@ -29,11 +26,7 @@ function fallbackAlternative(
     nodeTitle.includes('运动') ||
     nodeTitle.includes('锻炼')
   ) {
-    return localize(
-      locale,
-      '替代方案：使用 5 分钟最低运动版本。',
-      'Fallback: use a 5-minute minimum exercise version.',
-    );
+    return translate(locale, 'rsipInsights.recommendations.fallback.exercise');
   }
 
   if (
@@ -42,18 +35,10 @@ function fallbackAlternative(
     nodeTitle.includes('饮食') ||
     nodeTitle.includes('进食')
   ) {
-    return localize(
-      locale,
-      '替代方案：每天先替换 1 个高糖项目。',
-      'Fallback: replace one high-sugar item per day.',
-    );
+    return translate(locale, 'rsipInsights.recommendations.fallback.diet');
   }
 
-  return localize(
-    locale,
-    '替代方案：先降级为 10 分钟版本，持续 7 天。',
-    'Fallback: reduce to a 10-minute version for 7 days.',
-  );
+  return translate(locale, 'rsipInsights.recommendations.fallback.default');
 }
 
 export function buildRuralFirstRecommendation(
@@ -73,44 +58,36 @@ export function buildRuralFirstRecommendation(
     id: 'rural-first-reboot',
     kind: 'rural_first',
     priority: 'high',
-    title: localize(
+    title: translate(locale, 'rsipInsights.recommendations.ruralFirst.title'),
+    rationale: translate(
       locale,
-      '农村包围城市重启：先稳住低成本国策',
-      'Rural-first reboot: stabilize low-cost policies first',
-    ),
-    rationale: localize(
-      locale,
-      '近期违约/崩溃表明高成本中心节点不稳定，应从低成本、高成功率的边缘国策重建。',
-      'Recent violations/collapses suggest central high-cost nodes are unstable. Rebuild from low-cost, high-success edge policies.',
+      'rsipInsights.recommendations.ruralFirst.rationale',
     ),
     actions: [
       primaryRisks.length > 0
-        ? localize(
+        ? translate(
             locale,
-            `临时冻结高风险节点：${joinList(
-              primaryRisks.map((node) => node.title),
-              locale,
-            )}`,
-            `Temporarily freeze high-risk nodes: ${joinList(
-              primaryRisks.map((node) => node.title),
-              locale,
-            )}`,
+            'rsipInsights.recommendations.ruralFirst.freezeNodes',
+            {
+              nodes: joinList(
+                primaryRisks.map((node) => node.title),
+                locale,
+              ),
+            },
           )
-        : localize(
+        : translate(
             locale,
-            '先冻结 1 个不稳定核心国策 3-7 天。',
-            'Freeze one unstable central policy for 3-7 days.',
+            'rsipInsights.recommendations.ruralFirst.freezeUnstablePolicy',
           ),
       candidateTitles.length > 0
-        ? localize(
+        ? translate(
             locale,
-            `优先推进这些低成本候选：${joinList(candidateTitles, locale)}`,
-            `Prioritize these low-cost candidates: ${joinList(candidateTitles, locale)}`,
+            'rsipInsights.recommendations.ruralFirst.prioritizeCandidates',
+            { nodes: joinList(candidateTitles, locale) },
           )
-        : localize(
+        : translate(
             locale,
-            '优先推进 2-3 个 failure cost <= 2.5 的低成本国策。',
-            'Promote 2-3 low-cost policies with failure cost <= 2.5.',
+            'rsipInsights.recommendations.ruralFirst.promoteLowCostPolicies',
           ),
       ...primaryRisks.map(
         (node) => `${node.title}: ${fallbackAlternative(node.title, locale)}`,
@@ -132,31 +109,27 @@ export function buildSplitRecommendation(
     id: 'split-high-risk',
     kind: 'split',
     priority: 'high',
-    title: localize(
+    title: translate(
       context.locale,
-      `拆分高风险国策：${top.title}`,
-      `Split high-risk policy: ${top.title}`,
+      'rsipInsights.recommendations.split.title',
+      { title: top.title },
     ),
-    rationale: localize(
+    rationale: translate(
       context.locale,
-      '高失败成本叠加高违约频率，说明该国策粒度过大。',
-      'High failure cost combined with frequent violations indicates this policy is oversized.',
+      'rsipInsights.recommendations.split.rationale',
     ),
     actions: [
-      localize(
+      translate(
         context.locale,
-        '使用拆分流程拆成 3-5 条微国策。',
-        'Use split workflow to break into 3-5 micro policies.',
+        'rsipInsights.recommendations.split.microPolicies',
       ),
-      localize(
+      translate(
         context.locale,
-        '至少包含 1 条被动护栏型国策。',
-        'Ensure at least one passive guardrail is included.',
+        'rsipInsights.recommendations.split.passiveGuardrail',
       ),
-      localize(
+      translate(
         context.locale,
-        '确保每条子国策能在 10-20 分钟内执行。',
-        'Keep each sub-policy executable within 10-20 minutes.',
+        'rsipInsights.recommendations.split.executionTime',
       ),
     ],
     relatedNodeIds: [top.nodeId],

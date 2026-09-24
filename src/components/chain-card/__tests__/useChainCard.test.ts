@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { createChain as createFixtureChain } from '../../../test/factories/chainFactory';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -64,7 +65,7 @@ vi.mock('../../../utils/logger', () => ({
 vi.mock('../../../i18n', () => ({
   useI18n: () => ({
     language: 'en' as const,
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
   }),
 }));
 

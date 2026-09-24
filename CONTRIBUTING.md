@@ -53,16 +53,27 @@ match the security lane. Local quality commands do not change GitHub settings.
 
 ## Diagnostics
 
-New interface text should use typed keys in `src/i18n/translations.ts` through
-`useI18n().t`, with both English and Chinese entries and named interpolation
-parameters. Migrate existing inline translations by complete screen or workflow
-when changing it: task editing first, then focus/completion, import/export, and
-RSIP. Keep localized strings out of persisted business identities and receipts.
-The loading screen, editor header/description, and diagnostics settings now use
-central keys. The remaining inline `tr` calls are a migration backlog; they are
-not all centralized by this change. Ratchet `tools/quality/i18n-tr-baseline.json`
-down after each migration, and run `quality:i18n` plus the affected language/UI
-tests. Do not increase the budgets to make a new screen pass.
+Interface text uses typed keys in `src/i18n/translations.ts` through
+`useI18n().t`, or `t` from `src/utils/runtimeI18n.ts` outside React. Add both
+English and Chinese entries with identical named placeholders, for example
+`{count}`. Pass the corresponding named object to `t`; TypeScript requires
+parameters inferred from the English template, and `quality:i18n` checks the
+actual argument names as well as dictionary parity. Use literal semantic keys
+so the gate can identify missing translations. Keep localized strings out of
+persisted business identities and receipts.
+
+The inline `tr(zh, en)` API has been removed. Its call and file budgets are
+zero, and the gate rejects increasing them. Run `npm run quality:i18n`,
+`npm run typecheck`, `npm run typecheck:tests`, and the affected language/UI
+tests when adding or changing translations. Shared translator tests verify
+interpolation and language selection; workflow tests should verify the text
+that matters to the user in both languages.
+
+The gate also rejects common local bilingual dictionaries and inline language
+branches or Chinese JSX copy. Shared domain formatting can use the pure
+`translate(language, key, params)` helper. Canonical stored preset values,
+migration markers, and compatibility error-matching strings stay stable;
+centralizing labels does not rewrite historical or user-provided data.
 
 `npm run quality:smell-audit` collects Knip, duplication, and SonarJS findings.
 These are investigation inputs, not instructions to split files or create

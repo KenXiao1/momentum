@@ -1,9 +1,10 @@
+import { createTranslator } from '../../i18n/translate';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { ImportExportModalView } from '../ImportExportModalView';
 import type { ImportExportImportOptions } from '../../services/ImportExportService';
 
-const tr = (_zh: string, en: string) => en;
+const t = createTranslator('en');
 
 function createProps(
   overrides: Partial<React.ComponentProps<typeof ImportExportModalView>> = {},
@@ -29,7 +30,7 @@ function createProps(
     onExport: vi.fn(),
     onImport: vi.fn(),
     onClose: vi.fn(),
-    tr,
+    t,
     ...overrides,
   };
 }

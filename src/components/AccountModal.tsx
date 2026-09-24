@@ -32,10 +32,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
           <User className="text-gray-400 dark:text-slate-500" size={24} />
         </div>
         <p className="font-chinese text-gray-600 dark:text-slate-400">
-          {controller.tr(
-            '当前使用本地存储模式，无需账号登录',
-            'Using local storage - no account required.',
-          )}
+          {controller.t('accountModal.usingLocalStorageNoAccountRequired')}
         </p>
       </div>
     );
@@ -46,7 +43,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
         </div>
         <p className="font-chinese text-gray-600 dark:text-slate-400">
-          {controller.tr('正在获取账号信息...', 'Loading account...')}
+          {controller.t('accountModal.loadingAccount')}
         </p>
       </div>
     );
@@ -66,13 +63,10 @@ export const AccountModal: React.FC<AccountModalProps> = ({
               label: 'ACCOUNT reload user',
             })
           }
-          aria-label={controller.tr(
-            '重试加载用户信息',
-            'Retry loading user info',
-          )}
+          aria-label={controller.t('accountModal.retryLoadingUserInfo')}
           className="font-chinese font-medium text-primary-500 transition-colors hover:text-primary-600"
         >
-          {controller.tr('重试', 'Retry')}
+          {controller.t('accountModal.retry')}
         </button>
       </div>
     );
@@ -82,7 +76,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
         user={controller.user}
         userFullName={controller.userFullName}
         locale={controller.locale}
-        tr={controller.tr}
+        t={controller.t}
         gamblingSettings={controller.gamblingSettings}
         gamblingLoading={controller.gamblingLoading}
         gamblingError={controller.gamblingError}
@@ -106,7 +100,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
           <User className="text-gray-400 dark:text-slate-500" size={24} />
         </div>
         <p className="font-chinese text-gray-600 dark:text-slate-400">
-          {controller.tr('User info not found', 'User info not found')}
+          {controller.t('accountModal.userInfoNotFound')}
         </p>
       </div>
     );
@@ -124,7 +118,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
       >
         <AccountModalHeader
           title={controller.t('settings.title')}
-          closeLabel={controller.tr('关闭', 'Close')}
+          closeLabel={controller.t('accountModal.close')}
           onClose={onClose}
         />
         <div className="space-y-6 p-6">
@@ -137,7 +131,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
             <AccountModalStorageSection
               mode={controller.mode}
               canUseSupabase={controller.canUseSupabase}
-              tr={controller.tr}
+              t={controller.t}
               onSwitchToLocal={() => controller.setMode('local')}
               onSwitchToSupabase={() => controller.setMode('supabase')}
             />

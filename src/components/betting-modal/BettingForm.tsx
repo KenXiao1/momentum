@@ -13,7 +13,7 @@ export const BettingForm: React.FC<BettingFormProps> = ({
   chainName,
   taskDuration,
   language,
-  tr,
+  t,
   betAmount,
   availablePoints,
   todayBetAmount,
@@ -26,19 +26,19 @@ export const BettingForm: React.FC<BettingFormProps> = ({
   onClose,
 }) => (
   <div className="space-y-6">
-    <TaskInfo chainName={chainName} taskDuration={taskDuration} tr={tr} />
+    <TaskInfo chainName={chainName} taskDuration={taskDuration} t={t} />
 
     <PointsInfo
       availablePoints={availablePoints}
       todayBetAmount={todayBetAmount}
-      tr={tr}
+      t={t}
     />
 
     <BetAmountInput
       betAmount={betAmount}
       availablePoints={availablePoints}
       language={language}
-      tr={tr}
+      t={t}
       quickBetOptions={quickBetOptions}
       onBetAmountChange={onBetAmountChange}
       onQuickBetAmount={onQuickBetAmount}
@@ -46,14 +46,14 @@ export const BettingForm: React.FC<BettingFormProps> = ({
 
     {validationError && <ValidationError error={validationError} />}
 
-    <BettingRules tr={tr} />
+    <BettingRules t={t} />
 
     <BetButtons
       betAmount={betAmount}
       availablePoints={availablePoints}
       isPlacingBet={isPlacingBet}
       validationError={validationError}
-      tr={tr}
+      t={t}
       onPlaceBet={onPlaceBet}
       onClose={onClose}
     />

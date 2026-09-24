@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RSIPViewProps } from '../../../components/RSIPView.types';
@@ -18,8 +19,7 @@ import {
 
 vi.mock('../../../i18n', () => ({
   useI18n: () => ({
-    t: (key: string) => (key === 'common.loading' ? 'Loading…' : key),
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
   }),
 }));
 

@@ -1,7 +1,7 @@
 import { isTauriDesktop } from '../platform';
 import { logger } from '../logger';
 import { normalizeUnknownError } from '../errors/normalizeError';
-import { getCurrentLanguage, tr } from '../runtimeI18n';
+import { getCurrentLanguage, t } from '../runtimeI18n';
 import { toast } from '../toast';
 
 async function checkDesktopUpdates(): Promise<void> {
@@ -13,9 +13,9 @@ async function checkDesktopUpdates(): Promise<void> {
     logger.info('UPDATER', `Update available: ${update.version}`);
     const language = getCurrentLanguage();
     toast.info(
-      tr(
-        '检测到新版本，正在自动更新并重启…',
-        'New version found. Updating and restarting…',
+      t(
+        'platformAdapters.updater.newVersionFoundUpdatingAndRestarting',
+        undefined,
         language,
       ),
     );

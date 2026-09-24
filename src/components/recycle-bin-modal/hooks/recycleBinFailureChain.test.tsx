@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import type { PropsWithChildren } from 'react';
 import { useState } from 'react';
 import { act, renderHook, waitFor } from '@testing-library/react';
@@ -28,8 +29,8 @@ const loggerMocks = vi.hoisted(() => ({
 }));
 const i18nMock = vi.hoisted(() => ({
   language: 'en' as const,
-  t: (key: string) => key,
-  tr: (_zh: string, en: string) => en,
+
+  t: vi.fn(),
 }));
 
 vi.mock('../../../i18n', () => ({
@@ -102,6 +103,7 @@ function useFailureChain(storage: MomentumStorage) {
 
 describe('recycle-bin failure chain', () => {
   beforeEach(() => {
+    i18nMock.t.mockImplementation(createTranslator('en'));
     vi.clearAllMocks();
   });
 

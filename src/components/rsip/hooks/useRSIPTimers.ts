@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import { useCallback, useEffect, useState } from 'react';
 import { systemNotificationService } from '../../../services/platform/SystemNotificationService';
 import { fireAndForget } from '../../../utils/fireAndForget';
@@ -12,9 +13,7 @@ interface UseRSIPTimersResult {
   confirmStopTimer: (nodeId: string) => void;
 }
 
-export function useRSIPTimers(
-  tr: (zh: string, en: string) => string,
-): UseRSIPTimersResult {
+export function useRSIPTimers(t: Translator): UseRSIPTimersResult {
   const [now, setNow] = useState<number>(Date.now());
   const [activeTimers, setActiveTimers] = useState<Record<string, number>>({});
 
@@ -34,14 +33,14 @@ export function useRSIPTimers(
 
         fireAndForget(
           systemNotificationService.notifyTimerCompleted(
-            tr('计时完成', 'Timer complete'),
-            tr('RSIP 定式计时已结束', 'RSIP timer has ended'),
+            t('rsip.useRsiptimers.timerComplete'),
+            t('rsip.useRsiptimers.rsipTimerHasEnded'),
           ),
           { label: 'rsip-timer-completed-notification' },
         );
       }
     });
-  }, [now, activeTimers, tr]);
+  }, [now, activeTimers, t]);
 
   const formatRemaining = useCallback((ms: number) => {
     const s = Math.max(0, Math.floor(ms / 1000));
@@ -53,8 +52,9 @@ export function useRSIPTimers(
   }, []);
 
   const formatMinutesLabel = useCallback(
-    (minutes: number) => tr(`${minutes} 分钟`, `${minutes} min`),
-    [tr],
+    (minutes: number) =>
+      t('rsip.useRsiptimers.minutesMin', { minutes: minutes }),
+    [t],
   );
 
   const handleStartTimer = useCallback((nodeId: string, minutes: number) => {

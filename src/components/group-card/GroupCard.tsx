@@ -34,7 +34,7 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(
     onCompleteBooking,
     onDelete,
   }) => {
-    const { language, tr } = useI18n();
+    const { language, t } = useI18n();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
 
@@ -49,7 +49,7 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(
       scheduledSession,
       group,
       nextUnit,
-      tr,
+      t,
     });
     const activeScheduledSession = useMemo(
       () => (scheduledSession && timeRemaining > 0 ? scheduledSession : null),
@@ -76,10 +76,9 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(
           onClick={() => onViewDetail(group.id)}
           role="button"
           tabIndex={0}
-          aria-label={tr(
-            `查看详情：${group.name}`,
-            `View details: ${group.name}`,
-          )}
+          aria-label={t('groupCard.groupCard.viewDetailsGroupName', {
+            groupName: group.name,
+          })}
           onKeyDown={(event) => {
             if (event.target !== event.currentTarget) return;
             if (event.key === 'Enter' || event.key === ' ') {
@@ -90,8 +89,8 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(
         >
           <CardOverflowMenu
             isOpen={showMenu}
-            moreLabel={tr('更多选项', 'More options')}
-            deleteLabel={tr('删除任务群', 'Delete group')}
+            moreLabel={t('chainCard.chainCardView.moreOptions')}
+            deleteLabel={t('groupCard.groupCard.deleteGroup')}
             onToggle={() => setShowMenu((previous) => !previous)}
             onDelete={handleDeleteClick}
           />
@@ -101,7 +100,7 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(
             progress={progress}
             typeConfig={typeConfig}
             language={language}
-            tr={tr}
+            t={t}
           />
           <GroupCardActions
             group={group}
@@ -112,14 +111,14 @@ export const GroupCard: React.FC<GroupCardProps> = React.memo(
             onScheduleChain={onScheduleChain}
             onCancelScheduledSession={onCancelScheduledSession}
             onCompleteBooking={onCompleteBooking}
-            tr={tr}
+            t={t}
           />
         </div>
 
         <GroupDeleteConfirmDialog
           isOpen={showDeleteConfirm}
           group={group}
-          tr={tr}
+          t={t}
           onCancel={handleCancelDelete}
           onConfirm={handleConfirmDelete}
         />

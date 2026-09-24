@@ -17,7 +17,7 @@ const ChainDetailViewComponent: React.FC<ChainDetailViewProps> = ({
   showDeleteConfirm,
   language,
   locale,
-  tr,
+  t,
   formatFailureReason,
   onBack,
   onEdit,
@@ -30,7 +30,7 @@ const ChainDetailViewComponent: React.FC<ChainDetailViewProps> = ({
       <div className="mx-auto max-w-7xl">
         <ChainDetailHeader
           chainName={chain.name}
-          tr={tr}
+          t={t}
           onBack={onBack}
           onEdit={onEdit}
           onDeleteClick={onDeleteClick}
@@ -42,20 +42,20 @@ const ChainDetailViewComponent: React.FC<ChainDetailViewProps> = ({
               chain={chain}
               successRate={successRate}
               language={language}
-              tr={tr}
+              t={t}
             />
 
-            <ChainDetailExceptions chain={chain} tr={tr} />
+            <ChainDetailExceptions chain={chain} t={t} />
           </div>
 
           <div className="space-y-6 xl:col-span-2">
-            <ChainDetailDescription description={chain.description} tr={tr} />
+            <ChainDetailDescription description={chain.description} t={t} />
 
             <ChainDetailHistory
               recentHistory={recentHistory}
               locale={locale}
               language={language}
-              tr={tr}
+              t={t}
               formatFailureReason={formatFailureReason}
             />
           </div>
@@ -67,7 +67,7 @@ const ChainDetailViewComponent: React.FC<ChainDetailViewProps> = ({
             chainHistoryCount={chainHistoryCount}
             successRate={successRate}
             language={language}
-            tr={tr}
+            t={t}
             onConfirm={onDeleteConfirm}
             onCancel={onDeleteCancel}
           />

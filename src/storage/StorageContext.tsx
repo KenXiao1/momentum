@@ -23,7 +23,7 @@ interface StorageProviderProps {
 }
 
 export function StorageProvider({ storage, children }: StorageProviderProps) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const [mode, setModeState] = useState<StorageMode>(() => {
     if (storage) return storage.kind;
 
@@ -68,9 +68,8 @@ export function StorageProvider({ storage, children }: StorageProviderProps) {
 
       if (nextMode === 'supabase' && !isSupabaseConfigured) {
         toast.error(
-          tr(
-            '未检测到 Supabase 配置，无法切换到云端模式。',
-            'Supabase is not configured, so cloud mode is unavailable.',
+          t(
+            'storage.storageContext.supabaseIsNotConfiguredSoCloudModeIsUnavailable',
           ),
         );
         return;
@@ -83,7 +82,7 @@ export function StorageProvider({ storage, children }: StorageProviderProps) {
 
       logger.info('STORAGE', 'Storage mode switched', { mode: nextMode });
     },
-    [storage, tr],
+    [storage, t],
   );
 
   useEffect(() => {
@@ -134,9 +133,8 @@ export function StorageProvider({ storage, children }: StorageProviderProps) {
         setDynamicStorage(localStorageAdapter);
         localPreferences.setStorageMode('local');
         toast.error(
-          tr(
-            '加载云端存储失败，已自动切回本地模式。',
-            'Failed to load cloud storage. Switched back to local mode.',
+          t(
+            'storage.storageContext.failedToLoadCloudStorageSwitchedBackToLocal',
           ),
         );
       }
@@ -147,7 +145,7 @@ export function StorageProvider({ storage, children }: StorageProviderProps) {
     return () => {
       cancelled = true;
     };
-  }, [storage, mode, dynamicStorage?.kind, tr]);
+  }, [storage, mode, dynamicStorage?.kind, t]);
 
   const resolvedStorage = useMemo<MomentumStorage | null>(() => {
     if (storage) return storage;
@@ -186,7 +184,7 @@ export function StorageProvider({ storage, children }: StorageProviderProps) {
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
           </div>
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            {tr('初始化存储…', 'Initializing storage…')}
+            {t('storage.storageContext.initializingStorage')}
           </p>
         </div>
       </div>

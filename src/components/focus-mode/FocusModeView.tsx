@@ -52,7 +52,7 @@ interface FocusModeViewProps {
 }
 
 export function FocusModeView(props: FocusModeViewProps) {
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const { session, chain } = props;
 
   return (
@@ -66,7 +66,7 @@ export function FocusModeView(props: FocusModeViewProps) {
           isFullscreen={props.isFullscreen}
           onEnterFullscreen={props.onEnterFullscreen}
           onExitFullscreen={props.onExitFullscreen}
-          tr={tr}
+          t={t}
         />
         <FocusTimerPanel
           session={session}
@@ -79,7 +79,7 @@ export function FocusModeView(props: FocusModeViewProps) {
           hasReachedMinimum={props.hasReachedMinimum}
           minimumCountdown={props.minimumCountdown}
           language={language}
-          tr={tr}
+          t={t}
         />
         <FocusModeControls
           session={session}
@@ -97,7 +97,7 @@ export function FocusModeView(props: FocusModeViewProps) {
       </div>
       {!session.isPaused && (
         <LongPressInterruptButton
-          label={tr('长按中断', 'Hold to interrupt')}
+          label={t('focusMode.focusModeView.holdToInterrupt')}
           onInterrupt={props.onInterruptClick}
         />
       )}

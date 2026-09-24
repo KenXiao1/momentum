@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import { useCallback, useEffect, useState } from 'react';
 import type { GamblingSettings } from '../../domain/userSettings';
 import type { Language } from '../../i18n';
@@ -17,9 +18,9 @@ export function useBettingModalData(params: {
   >;
   canUseBetting: boolean;
   language: Language;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }) {
-  const { isOpen, storage, canUseBetting, language, tr } = params;
+  const { isOpen, storage, canUseBetting, language, t } = params;
   const [availablePoints, setAvailablePoints] = useState(0);
   const [todayBetAmount, setTodayBetAmount] = useState(0);
   const [gamblingSettings, setGamblingSettings] =
@@ -32,9 +33,8 @@ export function useBettingModalData(params: {
     if (!canUseBetting) {
       setIsLoading(false);
       setError(
-        tr(
-          '当前存储不支持押注功能',
-          'Betting is not supported for the current storage',
+        t(
+          'bettingModal.useBetPlacementForm.bettingIsNotSupportedForTheCurrentStorage',
         ),
       );
       return;
@@ -56,9 +56,8 @@ export function useBettingModalData(params: {
       if (failedResult && !failedResult.ok) {
         setError(
           getSafeErrorDetail(failedResult.error.message || '', language) ??
-            tr(
-              '加载数据失败，请重试（详情见控制台）',
-              'Failed to load data. Check the console for details, then try again.',
+            t(
+              'bettingModal.useBettingModalData.failedToLoadDataCheckTheConsoleForDetails',
             ),
         );
         return;
@@ -77,15 +76,14 @@ export function useBettingModalData(params: {
       );
       setError(
         getSafeErrorDetailFromUnknown(error, language) ??
-          tr(
-            '加载数据失败，请重试（详情见控制台）',
-            'Failed to load data. Check the console for details, then try again.',
+          t(
+            'bettingModal.useBettingModalData.failedToLoadDataCheckTheConsoleForDetails',
           ),
       );
     } finally {
       setIsLoading(false);
     }
-  }, [canUseBetting, isOpen, language, storage, tr]);
+  }, [canUseBetting, isOpen, language, storage, t]);
 
   useEffect(() => {
     void loadData();

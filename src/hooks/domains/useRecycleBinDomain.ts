@@ -38,7 +38,7 @@ export function useRecycleBinDomain({
   onChainDeleted,
 }: UseRecycleBinDomainParams) {
   const readState = resolveAppStateReader({ state, getState });
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const handleDeleteChain = async (chainId: string) => {
     try {
       const updatedChains = await realTimeSyncService.deleteWithSync(
@@ -91,10 +91,11 @@ export function useRecycleBinDomain({
       );
       toast.error(
         safeDetail
-          ? tr(`删除失败: ${safeDetail}`, `Delete failed: ${safeDetail}`)
-          : tr(
-              '删除失败，请重试（详情见控制台）',
-              'Delete failed. Check the console for details, then try again.',
+          ? t('useRecycleBinDomain.deleteFailedSafeDetail', {
+              safeDetail: safeDetail,
+            })
+          : t(
+              'useRecycleBinDomain.deleteFailedCheckTheConsoleForDetailsThenTry',
             ),
       );
 
@@ -106,9 +107,8 @@ export function useRecycleBinDomain({
         }));
       } catch {
         toast.warning(
-          tr(
-            '发生错误后无法恢复状态，建议刷新页面。',
-            "Couldn't restore state after the error. Refresh the page to recover.",
+          t(
+            'useRecycleBinDomain.couldNotRestoreStateAfterTheErrorRefreshThePage',
           ),
         );
       }

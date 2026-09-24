@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { useImportExportDomain } from '../useImportExportDomain';
@@ -12,7 +13,7 @@ import type { AppState } from '../../../types';
 import { createNewPet } from '../../../utils/petLogic';
 
 vi.mock('../../../i18n', () => ({
-  useI18n: () => ({ tr: (_zh: string, en: string) => en }),
+  useI18n: () => ({ t: createTranslator('en') }),
 }));
 
 function setup(storage = createLocalStorageMock()) {

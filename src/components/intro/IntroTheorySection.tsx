@@ -1,9 +1,7 @@
+import { translate } from '../../i18n/translate';
 import React from 'react';
 import { Brain, Smartphone, Target } from 'lucide-react';
-import {
-  introTranslations as translations,
-  type IntroLang,
-} from './introTranslations';
+import { getIntroTranslations, type IntroLang } from './introTranslations';
 
 interface IntroTheorySectionProps {
   lang: IntroLang;
@@ -12,19 +10,20 @@ interface IntroTheorySectionProps {
 export const IntroTheorySection: React.FC<IntroTheorySectionProps> = ({
   lang,
 }) => {
+  const translations = getIntroTranslations(lang);
   return (
     <section id="theory-section" className="relative z-10 px-6 py-32">
       <div className="mx-auto grid max-w-6xl items-start gap-16 lg:grid-cols-2">
         <div className="sticky top-32 space-y-12">
           <div className="space-y-4">
             <h2 className="pl-1 text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400">
-              {translations.theory.titleEn}
+              {translate('en', 'intro.theory.title')}
             </h2>
             <h3 className="text-4xl font-extrabold tracking-tight text-slate-800 dark:text-white md:text-5xl">
-              {lang === 'zh' ? '用数学重构自制力' : 'Re-engineering Willpower'}
+              {translate(lang, 'intro.theory.heading')}
             </h3>
             <p className="max-w-md text-lg leading-relaxed text-slate-600 dark:text-slate-300">
-              {translations.theory.insightDesc[lang]}
+              {translations.theory.insightDesc}
             </p>
           </div>
 
@@ -38,10 +37,10 @@ export const IntroTheorySection: React.FC<IntroTheorySectionProps> = ({
               </div>
               <div>
                 <h4 className="text-base font-bold text-slate-800 dark:text-white">
-                  {translations.theory.cards.social.title[lang]}
+                  {translations.theory.cards.social.title}
                 </h4>
                 <p className="mt-1 text-xs font-semibold tracking-wide text-[#FF3B30] dark:text-[#FF453A]">
-                  {translations.theory.cards.social.desc[lang]}
+                  {translations.theory.cards.social.desc}
                 </p>
               </div>
             </div>
@@ -55,10 +54,10 @@ export const IntroTheorySection: React.FC<IntroTheorySectionProps> = ({
               </div>
               <div>
                 <h4 className="text-base font-bold text-slate-800 dark:text-white">
-                  {translations.theory.cards.work.title[lang]}
+                  {translations.theory.cards.work.title}
                 </h4>
                 <p className="mt-1 text-xs font-semibold tracking-wide text-[#34C759] dark:text-[#32D74B]">
-                  {translations.theory.cards.work.desc[lang]}
+                  {translations.theory.cards.work.desc}
                 </p>
               </div>
             </div>
@@ -73,7 +72,7 @@ export const IntroTheorySection: React.FC<IntroTheorySectionProps> = ({
           <div className="relative z-10 space-y-12">
             <div className="space-y-2">
               <span className="text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400">
-                {translations.theory.modelTitle[lang]}
+                {translations.theory.modelTitle}
               </span>
               <div className="inline-block w-full rounded-2xl border border-violet-200/50 bg-violet-50/50 p-6 text-center font-serif text-3xl italic text-slate-800 dark:border-violet-500/20 dark:bg-violet-900/10 dark:text-white">
                 I = ∫ V(τ) · W(τ) dτ
@@ -89,10 +88,10 @@ export const IntroTheorySection: React.FC<IntroTheorySectionProps> = ({
                 </div>
                 <div>
                   <h5 className="font-bold text-slate-800 dark:text-white">
-                    {translations.theory.valueFunc.title[lang]}
+                    {translations.theory.valueFunc.title}
                   </h5>
                   <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                    {translations.theory.valueFunc.desc[lang]}
+                    {translations.theory.valueFunc.desc}
                   </p>
                 </div>
               </div>
@@ -104,10 +103,10 @@ export const IntroTheorySection: React.FC<IntroTheorySectionProps> = ({
                 </div>
                 <div>
                   <h5 className="font-bold text-slate-800 dark:text-white">
-                    {translations.theory.weightFunc.title[lang]}
+                    {translations.theory.weightFunc.title}
                   </h5>
                   <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                    {translations.theory.weightFunc.desc[lang]}
+                    {translations.theory.weightFunc.desc}
                   </p>
                 </div>
               </div>

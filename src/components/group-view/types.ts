@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import type React from 'react';
 import type { Chain, ChainTreeNode, ScheduledSession } from '../../types';
 import type { IconName } from '../../utils/iconMap';
@@ -44,7 +45,7 @@ export interface GroupViewViewProps {
   getScheduledSession: (chainId: string) => ScheduledSession | undefined;
 
   language: 'en' | 'zh';
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   progress: ProgressInfo;
   unitProgress: ProgressInfo;
   nextUnit: ChainTreeNode | null;

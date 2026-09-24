@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import type { ExceptionRule, ExceptionRuleType } from '../../types';
 import type { Dispatch, SetStateAction } from 'react';
 
@@ -18,7 +19,7 @@ export interface RuleManagerFormData {
 export interface RuleManagerViewViewProps {
   onClose: () => void;
   onRuleSelected?: (rule: ExceptionRule) => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   loading: boolean;
   error: string | null;
   setError: Dispatch<SetStateAction<string | null>>;

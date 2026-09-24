@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../../i18n/translate';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import type { AppState } from '../../../../types';
 import {
@@ -76,8 +77,8 @@ function flushPromises() {
 }
 
 describe('createStartChainHandler', () => {
-  const tr = (_zh: string, en: string) => en;
-  const zhTr = (zh: string) => zh;
+  const t = createTranslator('en');
+  const zhTr = createTranslator('zh');
 
   afterEach(() => vi.useRealTimers());
 
@@ -109,7 +110,7 @@ describe('createStartChainHandler', () => {
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
       onNavigateToFocus,
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -148,7 +149,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: 'bet-session-123',
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -198,7 +199,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -245,7 +246,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId,
       setShowBettingModal,
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -286,7 +287,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: 'current',
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -318,7 +319,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: 'should-not-be-used',
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -355,7 +356,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -392,7 +393,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId,
       setShowBettingModal,
-      tr,
+      t,
     });
 
     await handleStartChain('missing-chain');
@@ -426,7 +427,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -468,7 +469,7 @@ describe('createStartChainHandler', () => {
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
       onNavigateToFocus,
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -506,7 +507,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -541,7 +542,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr: zhTr,
+      t: zhTr,
     });
 
     await handleStartChain(group.id);
@@ -602,7 +603,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -659,7 +660,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -702,7 +703,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -771,7 +772,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -818,7 +819,7 @@ describe('createStartChainHandler', () => {
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
       onTaskLifecycleEvent,
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -867,7 +868,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -901,7 +902,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -941,7 +942,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -978,7 +979,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -1012,7 +1013,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr: zhTr,
+      t: zhTr,
     });
 
     await handleStartChain(chain.id);
@@ -1051,7 +1052,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -1100,7 +1101,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -1153,7 +1154,7 @@ describe('createStartChainHandler', () => {
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
       onNavigateToFocus,
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -1202,7 +1203,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -1256,7 +1257,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -1291,7 +1292,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain('missing-local-chain');

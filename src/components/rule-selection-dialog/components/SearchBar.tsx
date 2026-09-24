@@ -1,13 +1,14 @@
+import { type Translator } from '../../../i18n';
 import React from 'react';
 import { Search } from 'lucide-react';
 
 export function SearchBar({
-  tr,
+  t,
   searchInputRef,
   value,
   onChange,
 }: {
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   searchInputRef: React.RefObject<HTMLInputElement>;
   value: string;
   onChange: (value: string) => void;
@@ -21,10 +22,9 @@ export function SearchBar({
       <input
         ref={searchInputRef}
         type="text"
-        aria-label={tr('搜索规则', 'Search rules')}
-        placeholder={tr(
-          '搜索规则或输入新规则名称...',
-          'Search rules or type a new rule name...',
+        aria-label={t('ruleSelectionDialog.searchBar.searchRules')}
+        placeholder={t(
+          'ruleSelectionDialog.searchBar.searchRulesOrTypeANewRuleName',
         )}
         value={value}
         onChange={(event) => onChange(event.target.value)}

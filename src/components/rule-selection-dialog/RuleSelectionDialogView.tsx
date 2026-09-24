@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import React from 'react';
 import type { ExceptionRule, SessionContext } from '../../types';
 import type { SearchResult } from '../../utils/ruleSearchOptimizer';
@@ -15,7 +16,7 @@ interface RuleSelectionDialogViewProps {
   actionType: ActionType;
   sessionContext: SessionContext;
   language: string;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 
   containerRef: React.MutableRefObject<HTMLDivElement | null>;
   searchInputRef: React.RefObject<HTMLInputElement>;
@@ -45,7 +46,7 @@ export const RuleSelectionDialogView: React.FC<
   actionType,
   sessionContext,
   language,
-  tr,
+  t,
   containerRef,
   searchInputRef,
   searchQuery,
@@ -73,7 +74,7 @@ export const RuleSelectionDialogView: React.FC<
   >
     <DialogHeader
       actionType={actionType}
-      tr={tr}
+      t={t}
       language={language}
       onCancel={onCancel}
     />
@@ -87,7 +88,7 @@ export const RuleSelectionDialogView: React.FC<
 
       {actionType === 'pause' && (
         <PauseDurationCard
-          tr={tr}
+          t={t}
           durationMinutes={durationMinutes}
           onDurationMinutesChange={onDurationMinutesChange}
           isIndefinite={isIndefinite}
@@ -95,15 +96,13 @@ export const RuleSelectionDialogView: React.FC<
         />
       )}
 
-      {error && (
-        <ErrorBanner tr={tr} error={error} onDismiss={onDismissError} />
-      )}
+      {error && <ErrorBanner t={t} error={error} onDismiss={onDismissError} />}
     </div>
 
     <div className="flex-1 overflow-y-auto" data-scroll-container>
       <div className="p-6">
         <SearchBar
-          tr={tr}
+          t={t}
           searchInputRef={searchInputRef}
           value={searchQuery}
           onChange={onSearchQueryChange}
@@ -125,7 +124,7 @@ export const RuleSelectionDialogView: React.FC<
 
     <DialogFooter
       language={language}
-      tr={tr}
+      t={t}
       count={searchResults.length}
       onCancel={onCancel}
     />

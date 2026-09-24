@@ -1,4 +1,5 @@
-﻿import { useMemo } from 'react';
+import type { Translator } from '../../i18n/translate';
+import { useMemo } from 'react';
 import type { RSIPRunRecord } from '../../types';
 import { useI18n } from '../../i18n';
 
@@ -6,13 +7,13 @@ interface RSIPRunHistoryProps {
   records: RSIPRunRecord[];
 }
 
-function formatCollapseNodeTitle(title: string | undefined, language: string) {
+function formatCollapseNodeTitle(title: string | undefined, t: Translator) {
   if (!title) return '';
-  return language.startsWith('zh') ? `（${title}）` : ` (${title})`;
+  return t('rsip.rsipRunHistory.collapseNodeTitle', { title });
 }
 
 export function RSIPRunHistory({ records }: RSIPRunHistoryProps) {
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
 
   const sorted = useMemo(
     () => [...records].sort((a, b) => b.runNumber - a.runNumber),
@@ -45,12 +46,11 @@ export function RSIPRunHistory({ records }: RSIPRunHistoryProps) {
     return (
       <div className="bento-card">
         <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-slate-100">
-          {tr('轮次历史', 'Run History')}
+          {t('rsip.rsipRunHistory.runHistory')}
         </h2>
         <p className="text-sm text-gray-600 dark:text-slate-300">
-          {tr(
-            '暂无崩溃轮次记录。出现重大回滚后会在这里沉淀历史数据。',
-            'No collapse records yet. Significant rollbacks will be recorded here.',
+          {t(
+            'rsip.rsipRunHistory.noCollapseRecordsYetSignificantRollbacksWillBeRecorded',
           )}
         </p>
       </div>
@@ -62,7 +62,7 @@ export function RSIPRunHistory({ records }: RSIPRunHistoryProps) {
       <div className="grid gap-4 md:grid-cols-3">
         <div className="bento-card">
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            {tr('总轮次', 'Total runs')}
+            {t('rsip.rsipRunHistory.totalRuns')}
           </p>
           <p className="text-2xl font-bold text-gray-900 dark:text-slate-100">
             {stats.totalRuns}
@@ -70,17 +70,17 @@ export function RSIPRunHistory({ records }: RSIPRunHistoryProps) {
         </div>
         <div className="bento-card">
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            {tr('最长持续', 'Longest duration')}
+            {t('rsip.rsipRunHistory.longestDuration')}
           </p>
           <p className="text-2xl font-bold text-gray-900 dark:text-slate-100">
-            {language.startsWith('zh')
-              ? `${stats.longestDuration} 天`
-              : `${stats.longestDuration} days`}
+            {t('rsip.rsipRunHistory.durationDays', {
+              days: stats.longestDuration,
+            })}
           </p>
         </div>
         <div className="bento-card">
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            {tr('平均峰值节点', 'Avg. peak nodes')}
+            {t('rsip.rsipRunHistory.avgPeakNodes')}
           </p>
           <p className="text-2xl font-bold text-gray-900 dark:text-slate-100">
             {stats.averageMaxNodeCount}
@@ -96,26 +96,27 @@ export function RSIPRunHistory({ records }: RSIPRunHistoryProps) {
           >
             <div className="mb-2 flex items-center justify-between">
               <h3 className="font-semibold text-gray-900 dark:text-slate-100">
-                {language.startsWith('zh')
-                  ? `第 ${record.runNumber} 轮`
-                  : `Run #${record.runNumber}`}
+                {t('rsip.rsipRunHistory.runNumber', {
+                  number: record.runNumber,
+                })}
               </h3>
               <span className="text-xs text-gray-500 dark:text-slate-400">
                 {record.startedAt.toLocaleDateString(dateLocale)} -{' '}
                 {record.endedAt?.toLocaleDateString(dateLocale) ??
-                  tr('进行中', 'In progress')}
+                  t('rsip.rsipRunHistory.inProgress')}
               </span>
             </div>
             <p className="text-sm text-gray-600 dark:text-slate-300">
-              {language.startsWith('zh')
-                ? `持续 ${record.durationDays} 天 · 峰值节点 ${record.maxNodeCount}`
-                : `Duration ${record.durationDays} days · Peak nodes ${record.maxNodeCount}`}
+              {t('rsip.rsipRunHistory.runSummary', {
+                days: record.durationDays,
+                count: record.maxNodeCount,
+              })}
             </p>
             {record.collapseReason && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-300">
-                {tr('崩溃原因：', 'Collapse reason:')}
+                {t('rsip.rsipRunHistory.collapseReason')}
                 {record.collapseReason}
-                {formatCollapseNodeTitle(record.collapseNodeTitle, language)}
+                {formatCollapseNodeTitle(record.collapseNodeTitle, t)}
               </p>
             )}
           </div>

@@ -6,7 +6,7 @@ import { localPreferences } from '../utils/localPreferences';
 type Theme = 'light' | 'dark';
 
 export const ThemeToggle: React.FC = () => {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
       const stored = localPreferences.getTheme();
@@ -37,8 +37,8 @@ export const ThemeToggle: React.FC = () => {
     <button
       onClick={cycleTheme}
       className="rounded-xl p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10"
-      aria-label={tr('切换主题', 'Toggle theme')}
-      title={tr('切换主题', 'Toggle theme')}
+      aria-label={t('themeToggle.toggleTheme')}
+      title={t('themeToggle.toggleTheme')}
     >
       {theme === 'light' && <Sun size={18} strokeWidth={2} />}
       {theme === 'dark' && <Moon size={18} strokeWidth={2} />}

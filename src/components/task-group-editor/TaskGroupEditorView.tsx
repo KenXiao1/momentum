@@ -41,7 +41,7 @@ export const TaskGroupEditorView: React.FC<TaskGroupEditorViewProps> =
       rsipTaskLinks,
       onUpsertRSIPTaskLinks,
     }) => {
-      const { language, tr } = useI18n();
+      const { language, t } = useI18n();
       const canEditRsipLinks = Boolean(
         chain?.id && rsipNodes && rsipTaskLinks && onUpsertRSIPTaskLinks,
       );
@@ -62,19 +62,23 @@ export const TaskGroupEditorView: React.FC<TaskGroupEditorViewProps> =
               <div className="flex items-center space-x-4">
                 <BackButton
                   onClick={onCancel}
-                  label={tr('返回', 'Back')}
+                  label={t('common.back')}
                   className="rounded-2xl p-3 text-gray-400 transition-colors hover:bg-white/50 hover:text-[#161615]"
                 />
                 <div>
                   <h1 className="mb-2 font-chinese text-4xl font-bold text-[#161615] dark:text-slate-100 md:text-5xl">
                     {isEditing
-                      ? tr('编辑任务组', 'Edit group')
-                      : tr('新建任务组', 'Create group')}
+                      ? t('taskGroupEditor.taskGroupEditorView.editGroup')
+                      : t('taskGroupEditor.taskGroupEditorView.createGroup')}
                   </h1>
                   <p className="font-mono text-sm uppercase tracking-wider text-gray-500">
                     {isEditing
-                      ? tr('编辑任务组', 'EDIT GROUP')
-                      : tr('新建任务组', 'CREATE GROUP')}
+                      ? t(
+                          'taskGroupEditor.taskGroupEditorView.editGroupVariant2',
+                        )
+                      : t(
+                          'taskGroupEditor.taskGroupEditorView.createGroupVariant2',
+                        )}
                   </p>
                 </div>
               </div>
@@ -91,7 +95,7 @@ export const TaskGroupEditorView: React.FC<TaskGroupEditorViewProps> =
                     </span>
                   </div>
                   <p className="mt-1 font-chinese text-xs text-primary-600 dark:text-primary-400">
-                    {tr('完成次数', 'Completions')}
+                    {t('groupView.unitCard.completions')}
                   </p>
                 </div>
               )}
@@ -107,7 +111,7 @@ export const TaskGroupEditorView: React.FC<TaskGroupEditorViewProps> =
                 errors={errors}
                 onNameChange={onNameChange}
                 onDescriptionChange={onDescriptionChange}
-                tr={tr}
+                t={t}
               />
 
               <BookingSettingsSection
@@ -125,7 +129,7 @@ export const TaskGroupEditorView: React.FC<TaskGroupEditorViewProps> =
                 onAuxiliaryCompletionTriggerChange={
                   onAuxiliaryCompletionTriggerChange
                 }
-                tr={tr}
+                t={t}
               />
 
               <section
@@ -133,7 +137,7 @@ export const TaskGroupEditorView: React.FC<TaskGroupEditorViewProps> =
                 data-testid="task-group-editor-rsip-links"
               >
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
-                  {tr('RSIP 流程联动', 'RSIP Integration')}
+                  {t('chainEditor.chainEditorView.rsipIntegration')}
                 </h2>
                 {canEditRsipLinks ? (
                   <RSIPTaskLinkPanel
@@ -141,28 +145,24 @@ export const TaskGroupEditorView: React.FC<TaskGroupEditorViewProps> =
                     nodes={rsipNodes ?? []}
                     chains={chain ? [chain] : []}
                     fixedChainId={chain?.id}
-                    title={tr('任务组侧 RSIP 联动', 'Group-side RSIP links')}
-                    description={tr(
-                      '可在编辑器中直接为该任务组配置联动。冲突采用最后写入生效（LWW）。',
-                      'Configure links for this task group directly in the editor. Conflicts use last-write-wins.',
+                    title={t(
+                      'taskGroupEditor.taskGroupEditorView.groupSideRsipLinks',
+                    )}
+                    description={t(
+                      'taskGroupEditor.taskGroupEditorView.configureLinksForThisTaskGroupDirectlyInThe',
                     )}
                     onUpsertLinks={onUpsertRSIPTaskLinks!}
                   />
                 ) : (
                   <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-3 text-sm text-gray-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
-                    {tr(
-                      '请先保存任务组，再在这里配置 RSIP 联动。',
-                      'Save this task group first, then configure RSIP links here.',
+                    {t(
+                      'taskGroupEditor.taskGroupEditorView.saveThisTaskGroupFirstThenConfigureRsipLinks',
                     )}
                   </div>
                 )}
               </section>
 
-              <ActionButtons
-                isEditing={isEditing}
-                onCancel={onCancel}
-                tr={tr}
-              />
+              <ActionButtons isEditing={isEditing} onCancel={onCancel} t={t} />
             </form>
           </ResponsiveContainer>
         </div>

@@ -40,7 +40,7 @@ export function FocusMode({
   onResume,
   onRuleUsed,
 }: FocusModeProps) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const storage = useStorage();
   const isDurationless = !!chain.isDurationless || session.duration === 0;
 
@@ -125,7 +125,9 @@ export function FocusMode({
   };
 
   const handleConfirmInterrupt = async () => {
-    const result = await onInterrupt(tr('用户主动中断', 'User interrupted'));
+    const result = await onInterrupt(
+      t('focusMode.focusModeContainer.userInterrupted'),
+    );
     if (result !== false) setShowInterruptDialog(false);
   };
 

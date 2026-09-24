@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../../i18n';
 import type {
   Chain,
   RSIPNode,
@@ -59,7 +60,7 @@ export function createState(
 
   return {
     language: 'en',
-    tr: (_zh, en) => en,
+    t: createTranslator('en'),
     nodes: [],
     meta: {},
     groups: [],

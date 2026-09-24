@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import type { Dispatch, SetStateAction } from 'react';
 import type { AppState, CompletionHistory } from '../../../types';
 import type { MomentumStorage } from '../../../storage/MomentumStorage';
@@ -33,7 +34,7 @@ interface CreateCompletionHandlersParams {
   onNavigateToDashboard?: () => void;
   onPetTaskCompleted?: (duration: number, wasSuccessful: boolean) => void;
   onTaskLifecycleEvent?: (event: TaskLifecycleEvent) => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 export function createCompletionHandlers({
@@ -46,7 +47,7 @@ export function createCompletionHandlers({
   onNavigateToDashboard,
   onPetTaskCompleted,
   onTaskLifecycleEvent,
-  tr,
+  t,
 }: CreateCompletionHandlersParams) {
   const readState = resolveAppStateReader({ state, getState });
 
@@ -119,10 +120,7 @@ export function createCompletionHandlers({
             normalizeUnknownError(error),
           );
           toast.error(
-            tr(
-              '保存尚未确认，请重试完成操作；任务已保留。',
-              'Save is not confirmed. Your task is retained; retry completion.',
-            ),
+            t('sessions.completion.saveIsNotConfirmedYourTaskIsRetainedRetry'),
             { durationMs: 12000 },
           );
           return false;
@@ -167,7 +165,7 @@ export function createCompletionHandlers({
     const groupCycleResult = maybeIncrementGroupCycleCompletion(
       updatedChains,
       chain,
-      tr,
+      t,
       false,
     );
     updatedChains = groupCycleResult.updatedChains;
@@ -198,7 +196,7 @@ export function createCompletionHandlers({
             notifyTaskCompleted(
               group.name,
               group.currentStreak,
-              tr('任务群完成一轮', 'Group completed a cycle'),
+              t('sessions.completion.groupCompletedACycle'),
             );
         }
 

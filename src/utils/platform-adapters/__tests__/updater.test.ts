@@ -1,3 +1,5 @@
+import { createTranslationMock } from '../../../test/i18n';
+import { createTranslator } from '../../../i18n/translate';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 interface LoadUpdaterOptions {
@@ -39,7 +41,7 @@ async function loadUpdater(options: LoadUpdaterOptions) {
   }));
   vi.doMock('../../runtimeI18n', () => ({
     getCurrentLanguage: vi.fn(() => 'en'),
-    tr: vi.fn((zh: string, en: string) => en),
+    t: createTranslationMock('en'),
   }));
   vi.doMock('@tauri-apps/plugin-updater', () => ({
     check,

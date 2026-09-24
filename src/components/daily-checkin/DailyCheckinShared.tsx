@@ -1,6 +1,7 @@
+import { type Translator } from '../../i18n';
 import { CheckCircle, Flame, Gift, Star } from 'lucide-react';
 
-type TranslateFn = (zh: string, en: string) => string;
+type TranslateFn = Translator;
 
 type CheckinStatsSummary = {
   total_points: number;
@@ -10,10 +11,10 @@ type CheckinStatsSummary = {
 
 export function DailyCheckinStatsGrid({
   stats,
-  tr,
+  t,
 }: {
   stats: CheckinStatsSummary;
-  tr: TranslateFn;
+  t: TranslateFn;
 }) {
   return (
     <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3">
@@ -22,7 +23,7 @@ export function DailyCheckinStatsGrid({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
-              {tr('总积分', 'Total points')}
+              {t('dailyCheckin.dailyCheckinShared.totalPoints')}
             </p>
             <p className="text-2xl font-bold text-yellow-800 dark:text-yellow-200">
               {stats.total_points}
@@ -37,7 +38,7 @@ export function DailyCheckinStatsGrid({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-red-700 dark:text-red-300">
-              {tr('连续天数', 'Streak')}
+              {t('dailyCheckin.dailyCheckinShared.streak')}
             </p>
             <p className="text-2xl font-bold text-red-800 dark:text-red-200">
               {stats.current_streak}
@@ -52,7 +53,7 @@ export function DailyCheckinStatsGrid({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-green-700 dark:text-green-300">
-              {tr('总签到', 'Total check-ins')}
+              {t('dailyCheckin.dailyCheckinShared.totalCheckIns')}
             </p>
             <p className="text-2xl font-bold text-green-800 dark:text-green-200">
               {stats.total_checkins}
@@ -65,15 +66,15 @@ export function DailyCheckinStatsGrid({
   );
 }
 
-export function DailyCheckinCheckedInState({ tr }: { tr: TranslateFn }) {
+export function DailyCheckinCheckedInState({ t }: { t: TranslateFn }) {
   return (
     <div className="py-4 text-center">
       <CheckCircle className="mx-auto mb-3 h-16 w-16 text-green-500" />
       <p className="text-lg font-semibold text-green-700 dark:text-green-300">
-        {tr('今天已签到', 'Checked in today')}
+        {t('dailyCheckin.dailyCheckinShared.checkedInToday')}
       </p>
       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-        {tr('明天再来获取更多积分吧！', 'Come back tomorrow for more points!')}
+        {t('dailyCheckin.dailyCheckinShared.comeBackTomorrowForMorePoints')}
       </p>
     </div>
   );

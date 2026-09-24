@@ -40,8 +40,7 @@ test('cancels a policy deletion, then removes only that policy and preserves the
   await expect(
     page.getByRole('heading', { name: 'RSIP Policy Tree', exact: true }),
   ).toBeVisible();
-  // The existing mode control currently uses Chinese text in both locales.
-  await page.getByRole('button', { name: '自由', exact: true }).click();
+  await page.getByRole('button', { name: 'Free', exact: true }).click();
   await addPolicy(page, 'Keep this policy');
   await addPolicy(page, 'Remove this policy');
   const survivor = page.getByRole('button', { name: /Keep this policy$/ });

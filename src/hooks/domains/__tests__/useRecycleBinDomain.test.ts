@@ -1,3 +1,5 @@
+import { createTranslationMock } from '../../../test/i18n';
+import { createTranslator } from '../../../i18n/translate';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppState } from '../../../types';
@@ -12,12 +14,12 @@ import { toast } from '../../../utils/toast';
 import { getSafeErrorDetailFromUnknown } from '../../../utils/errorMessage';
 import { useRecycleBinDomain } from '../useRecycleBinDomain';
 
-const trMock = vi.fn((zh: string, en: string) => en);
+const trMock = createTranslationMock('en');
 
 vi.mock('../../../i18n', () => ({
   useI18n: vi.fn(() => ({
     language: 'en',
-    tr: trMock,
+    t: trMock,
   })),
 }));
 
@@ -296,8 +298,8 @@ describe('useRecycleBinDomain', () => {
       expect.any(Error),
     );
     expect(trMock).toHaveBeenCalledWith(
-      expect.stringContaining('network down'),
-      'Delete failed: network down',
+      'useRecycleBinDomain.deleteFailedSafeDetail',
+      { safeDetail: 'network down' },
     );
   });
 
@@ -329,8 +331,7 @@ describe('useRecycleBinDomain', () => {
       "Couldn't restore state after the error. Refresh the page to recover.",
     );
     expect(trMock).toHaveBeenCalledWith(
-      expect.any(String),
-      "Couldn't restore state after the error. Refresh the page to recover.",
+      'useRecycleBinDomain.couldNotRestoreStateAfterTheErrorRefreshThePage',
     );
   });
 

@@ -12,7 +12,7 @@ export function InterruptConfirmDialog({
   onCancel,
   onConfirm,
 }: InterruptConfirmDialogProps) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   if (!isOpen) return null;
 
   return (
@@ -24,13 +24,12 @@ export function InterruptConfirmDialog({
           </div>
 
           <h3 className="mb-4 font-chinese text-2xl font-bold text-gray-900 dark:text-white">
-            {tr('确认中断任务', 'Interrupt task?')}
+            {t('focusMode.interruptConfirmDialog.interruptTask')}
           </h3>
 
           <p className="mb-8 font-chinese leading-relaxed text-gray-600 dark:text-gray-300">
-            {tr(
-              '中断任务将导致任务失败，主链记录将清空为零。你确定要中断当前任务吗？',
-              'Interrupting will fail the task and reset your main streak to zero. Are you sure you want to interrupt?',
+            {t(
+              'focusMode.interruptConfirmDialog.interruptingWillFailTheTaskAndResetYourMain',
             )}
           </p>
 
@@ -39,13 +38,13 @@ export function InterruptConfirmDialog({
               onClick={onCancel}
               className="flex-1 rounded-2xl bg-gray-100 px-6 py-3 font-chinese text-gray-900 transition duration-300 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
             >
-              {tr('取消', 'Cancel')}
+              {t('bettingModal.bettingFormSections.cancel')}
             </button>
             <button
               onClick={onConfirm}
               className="flex-1 rounded-2xl bg-red-500 px-6 py-3 font-chinese text-white shadow-lg transition duration-300 hover:bg-red-600"
             >
-              {tr('确认中断', 'Interrupt')}
+              {t('focusMode.interruptConfirmDialog.interrupt')}
             </button>
           </div>
         </div>

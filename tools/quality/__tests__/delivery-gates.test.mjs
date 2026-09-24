@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { validateSemgrepReport } from '../semgrep-report.mjs';
 import {
@@ -92,4 +93,57 @@ test('secret scan uses complete event SHAs without a paginated commit list', () 
     secretScanRange('push', { before: '--all', after: head }),
   );
   assert.throws(() => secretScanRange('unexpected', {}));
+});
+
+test('native releases collect only desktop packages and updater metadata', () => {
+  const workflow = readFileSync(
+    new URL('../../../.github/workflows/tauri-build.yml', import.meta.url),
+    'utf8',
+  );
+  const publication = workflow.split('\n  create-release:\n')[1];
+  assert.ok(publication, 'release job must exist');
+  assert.match(
+    publication,
+    /^    if: github\.event_name == 'push' && startsWith\(github\.ref, 'refs\/tags\/v'\)$/m,
+    'manual dispatch must not publish a release, including a dispatch at a tag',
+  );
+  const downloads = publication
+    .split(/\n      - /)
+    .filter((step) => step.includes('uses: actions/download-artifact@'));
+  assert.equal(downloads.length, 3);
+  assert.deepEqual(
+    downloads.map((step) => step.match(/^          name: (.+)$/m)?.[1]).sort(),
+    ['linux-artifacts', 'macos-artifacts', 'windows-artifacts'],
+  );
+  const files = publication.match(
+    /^          files: \|\n((?:            .+\n)+)/m,
+  )?.[1];
+  assert.ok(files, 'release assets must use an explicit allowlist');
+  const patterns = files
+    .trim()
+    .split('\n')
+    .map((line) => line.trim());
+  assert.ok(patterns.includes('artifacts/latest.json'));
+  // upload-artifact preserves bundle subdirectories across its multiple paths.
+  for (const extension of [
+    'exe',
+    'msi',
+    'dmg',
+    'app.tar.gz',
+    'deb',
+    'AppImage',
+  ]) {
+    assert.ok(patterns.includes(`artifacts/**/*.${extension}`));
+  }
+  for (const pattern of patterns) {
+    assert.match(
+      pattern,
+      /^artifacts\/(?:\*\*\/\*\.(?:exe|msi|dmg|app\.tar\.gz|deb|AppImage)(?:\.sig)?|latest\.json)$/,
+      `unexpected public release asset pattern: ${pattern}`,
+    );
+  }
+  assert.doesNotMatch(publication, /Sideload install|\*\*Android\*\*/);
+  assert.match(workflow, /name: android-development-artifacts/);
+  assert.match(workflow, /app-universal-release-unsigned\.apk/);
+  assert.doesNotMatch(workflow, /TARGET_APK=/);
 });

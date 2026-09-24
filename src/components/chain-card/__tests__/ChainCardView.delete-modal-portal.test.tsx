@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { createChain as createFixtureChain } from '../../../test/factories/chainFactory';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -59,7 +60,7 @@ describe('ChainCardView delete modal', () => {
             name: 'Unit',
           }}
           language="en"
-          tr={(_zh, en) => en}
+          t={createTranslator('en')}
           timeRemaining={0}
           isScheduled={false}
           showMenu={false}

@@ -1,3 +1,4 @@
+import { createTranslator } from '../../i18n/translate';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BettingModalContainer } from '../BettingModalContainer';
@@ -55,7 +56,7 @@ describe('BettingModalContainer', () => {
       successMessage: '',
       quickBetOptions: [10, 20],
       language: 'en',
-      tr: (_zh: string, en: string) => en,
+      t: createTranslator('en'),
       ...hookState,
     });
   });

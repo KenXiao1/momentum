@@ -1,3 +1,4 @@
+import { translate } from '../i18n/translate';
 import { Chain } from '../types';
 import type { TimeLanguage } from './time';
 
@@ -53,7 +54,7 @@ const formatRemainingTime = (
   language: TimeLanguage = 'en',
 ): string => {
   if (remainingMs <= 0) {
-    return language === 'zh' ? '已过期' : 'Expired';
+    return translate(language, 'time.expired');
   }
 
   const hours = Math.floor(remainingMs / (1000 * 60 * 60));
@@ -61,15 +62,11 @@ const formatRemainingTime = (
   const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
 
   if (hours > 0) {
-    return language === 'zh'
-      ? `${hours}小时${minutes}分钟`
-      : `${hours}h ${minutes}m`;
+    return translate(language, 'time.hoursMinutes', { hours, minutes });
   } else if (minutes > 0) {
-    return language === 'zh'
-      ? `${minutes}分钟${seconds}秒`
-      : `${minutes}m ${seconds}s`;
+    return translate(language, 'time.minutesSeconds', { minutes, seconds });
   } else {
-    return language === 'zh' ? `${seconds}秒` : `${seconds}s`;
+    return translate(language, 'time.seconds', { seconds });
   }
 };
 
@@ -138,7 +135,7 @@ export const getGroupTimeStatus = (
     return {
       isExpired: false,
       remainingTime: 0,
-      formattedTime: language === 'zh' ? '无时间限制' : 'No time limit',
+      formattedTime: translate(language, 'time.unlimited'),
       progress: 0,
     };
   }

@@ -13,7 +13,7 @@ interface DailyCheckinDemoProps {
 export const DailyCheckinDemo: React.FC<DailyCheckinDemoProps> = ({
   className = '',
 }) => {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [stats, setStats] = useState({
@@ -47,7 +47,7 @@ export const DailyCheckinDemo: React.FC<DailyCheckinDemoProps> = ({
       {/* 演示标签 */}
       <div className="mb-4 text-center">
         <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-          {tr('🚀 演示模式', '🚀 Demo mode')}
+          {t('dailyCheckinDemo.demoMode')}
         </span>
       </div>
 
@@ -55,13 +55,13 @@ export const DailyCheckinDemo: React.FC<DailyCheckinDemoProps> = ({
       <div className="mb-6 flex items-center justify-between">
         <h2 className="flex items-center text-xl font-semibold text-gray-900 dark:text-gray-100">
           <Calendar className="mr-2 h-5 w-5 text-primary-500" />
-          {tr('每日签到', 'Daily Check-in')}
+          {t('dailyCheckin.dailyCheckIn')}
         </h2>
         <button
           type="button"
-          aria-label={tr('刷新数据', 'Refresh')}
+          aria-label={t('dailyCheckin.refresh')}
           className="p-1 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
-          title={tr('刷新数据', 'Refresh')}
+          title={t('dailyCheckin.refresh')}
         >
           <svg
             className="h-4 w-4"
@@ -80,12 +80,12 @@ export const DailyCheckinDemo: React.FC<DailyCheckinDemoProps> = ({
       </div>
 
       {/* 统计信息 */}
-      <DailyCheckinStatsGrid stats={stats} tr={tr} />
+      <DailyCheckinStatsGrid stats={stats} t={t} />
 
       {/* 签到按钮 */}
       <div className="space-y-4">
         {stats.has_checked_in_today || hasCheckedIn ? (
-          <DailyCheckinCheckedInState tr={tr} />
+          <DailyCheckinCheckedInState t={t} />
         ) : (
           <button
             onClick={handleCheckin}
@@ -100,14 +100,12 @@ export const DailyCheckinDemo: React.FC<DailyCheckinDemoProps> = ({
               {isCheckingIn ? (
                 <>
                   <Loader2 className="h-6 w-6 animate-spin" />
-                  <span>{tr('签到中...', 'Checking in...')}</span>
+                  <span>{t('dailyCheckin.checkingIn')}</span>
                 </>
               ) : (
                 <>
                   <Gift className="h-6 w-6" />
-                  <span>
-                    {tr('每日签到 +10 积分', 'Daily check-in +10 points')}
-                  </span>
+                  <span>{t('dailyCheckinDemo.dailyCheckIn10Points')}</span>
                 </>
               )}
             </div>
@@ -117,10 +115,7 @@ export const DailyCheckinDemo: React.FC<DailyCheckinDemoProps> = ({
         {/* 说明文字 */}
         <div className="text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {tr(
-              '每日签到获得 10 积分，连续签到获得更多奖励',
-              'Check in daily to earn 10 points. Streaks earn more rewards.',
-            )}
+            {t('dailyCheckinDemo.checkInDailyToEarn10PointsStreaksEarn')}
           </p>
         </div>
       </div>
@@ -131,13 +126,10 @@ export const DailyCheckinDemo: React.FC<DailyCheckinDemoProps> = ({
           <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-500" />
           <div>
             <p className="mb-1 text-sm font-medium text-blue-800 dark:text-blue-200">
-              {tr('演示模式说明', 'Demo notes')}
+              {t('dailyCheckinDemo.demoNotes')}
             </p>
             <p className="text-xs leading-relaxed text-blue-600 dark:text-blue-300">
-              {tr(
-                '这是签到功能的演示版本。要使用真实功能，请配置 Supabase 环境变量并运行数据库迁移。配置完成后，此演示版本将被正式版本自动替换。',
-                'This is a demo version of Daily Check-in. To use the real feature, configure Supabase env vars and run the database migrations. Once configured, this demo will be replaced automatically.',
-              )}
+              {t('dailyCheckinDemo.thisIsADemoVersionOfDailyCheckInTo')}
             </p>
           </div>
         </div>

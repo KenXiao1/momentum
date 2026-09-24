@@ -1,3 +1,4 @@
+import { translate } from '../i18n/translate';
 export type TimeLanguage = 'en' | 'zh';
 
 export const formatTime = (
@@ -8,17 +9,10 @@ export const formatTime = (
   const hours = Math.floor(totalMinutes / 60);
   const mins = totalMinutes % 60;
 
-  if (language === 'zh') {
-    if (hours > 0) {
-      return `${hours}小时${mins}分钟`;
-    }
-    return `${mins}分钟`;
-  }
-
   if (hours > 0) {
-    return `${hours}h ${mins}m`;
+    return translate(language, 'time.hoursMinutes', { hours, minutes: mins });
   }
-  return `${mins}m`;
+  return translate(language, 'time.minutes', { minutes: mins });
 };
 
 export const formatDuration = (seconds: number): string => {
@@ -66,31 +60,20 @@ export const formatTimeDescriptionByLanguage = (
   language: TimeLanguage = 'en',
 ): string => {
   if (minutes < 1) {
-    return language === 'zh' ? '不到1分钟' : 'less than 1 minute';
+    return translate(language, 'time.lessThanMinute');
   }
 
   const totalMinutes = Math.floor(minutes);
   const hours = Math.floor(totalMinutes / 60);
   const mins = totalMinutes % 60;
 
-  if (language === 'zh') {
-    if (hours > 0) {
-      if (mins > 0) {
-        return `${hours}小时${mins}分钟`;
-      }
-      return `${hours}小时`;
-    }
-    return `${mins}分钟`;
-  }
-
   if (hours > 0) {
     if (mins > 0) {
-      return `${hours}h ${mins}m`;
+      return translate(language, 'time.hoursMinutes', { hours, minutes: mins });
     }
-    return `${hours}h`;
+    return translate(language, 'time.hours', { hours });
   }
-
-  return `${mins}m`;
+  return translate(language, 'time.minutes', { minutes: mins });
 };
 
 /**
@@ -106,8 +89,9 @@ export const formatActualDuration = (
   language: TimeLanguage = 'en',
 ): string => {
   if (isForwardTimed) {
-    const prefix = language === 'zh' ? '完成用时：' : 'Time spent: ';
-    return `${prefix}${formatTimeDescriptionByLanguage(minutes, language)}`;
+    return translate(language, 'time.spent', {
+      duration: formatTimeDescriptionByLanguage(minutes, language),
+    });
   }
   return formatTime(minutes, language);
 };
@@ -123,9 +107,10 @@ export const formatLastCompletionReference = (
   language: TimeLanguage = 'en',
 ): string => {
   if (minutes === null) {
-    return language === 'zh' ? '首次执行' : 'First time';
+    return translate(language, 'time.first');
   }
 
-  const prefix = language === 'zh' ? '上次用时：' : 'Last time: ';
-  return `${prefix}${formatTimeDescriptionByLanguage(minutes, language)}`;
+  return translate(language, 'time.last', {
+    duration: formatTimeDescriptionByLanguage(minutes, language),
+  });
 };

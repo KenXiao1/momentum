@@ -17,14 +17,14 @@ export function useBettingModal({
   onBetPlaced,
 }: UseBettingModalOptions) {
   const storage = useStorage();
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const canUseBetting = hasStorageCapability(storage, 'betting');
   const data = useBettingModalData({
     isOpen,
     storage,
     canUseBetting,
     language,
-    tr,
+    t,
   });
   const form = useBetPlacementForm({
     isOpen,
@@ -33,7 +33,7 @@ export function useBettingModal({
     storage,
     canUseBetting,
     language,
-    tr,
+    t,
     availablePoints: data.availablePoints,
     setAvailablePoints: data.setAvailablePoints,
     todayBetAmount: data.todayBetAmount,
@@ -49,7 +49,7 @@ export function useBettingModal({
     isLoading: data.isLoading,
     error: data.error,
     language,
-    tr,
+    t,
     loadData: data.loadData,
   };
 }

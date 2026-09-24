@@ -1,3 +1,4 @@
+import { translate } from '../../i18n/translate';
 import React from 'react';
 import { ThemeToggle } from '../ThemeToggle';
 import {
@@ -11,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import {
-  introTranslations as translations,
+  getIntroTranslations,
   type IntroLang as Lang,
 } from './introTranslations';
 import { IntroHeroSection } from './IntroHeroSection';
@@ -29,8 +30,9 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
   onSignUp,
   onUseLocalMode,
 }) => {
-  const { language, setLanguage } = useI18n();
+  const { language, setLanguage, t } = useI18n();
   const lang: Lang = language;
+  const translations = getIntroTranslations(lang);
   const githubUrl = 'https://github.com/KenXiao1/momentum';
 
   const scrollToNext = () => {
@@ -54,7 +56,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
           <div
             className="inline-flex items-center rounded-full border border-black/5 bg-white/60 p-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
             role="radiogroup"
-            aria-label="Language"
+            aria-label={t('settings.language.title')}
           >
             <button
               type="button"
@@ -66,7 +68,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
               }`}
               aria-checked={language === 'en'}
               role="radio"
-              title="English"
+              title={t('language.english')}
             >
               EN
             </button>
@@ -80,7 +82,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
               }`}
               aria-checked={language === 'zh'}
               role="radio"
-              title="Chinese"
+              title={t('language.chinese')}
             >
               CN
             </button>
@@ -89,12 +91,8 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
             href={githubUrl}
             target="_blank"
             rel="noreferrer"
-            aria-label={
-              lang === 'zh' ? '在 GitHub 打开项目' : 'Open project on GitHub'
-            }
-            title={
-              lang === 'zh' ? '在 GitHub 打开项目' : 'Open project on GitHub'
-            }
+            aria-label={translate(lang, 'intro.openProject')}
+            title={translate(lang, 'intro.openProject')}
             className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/5 bg-white/60 text-slate-700 shadow-sm transition hover:bg-white/80 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
           >
             <Github className="h-5 w-5" aria-hidden="true" />
@@ -123,12 +121,10 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
           <div className="mb-16 flex flex-col items-end justify-between gap-8 md:flex-row">
             <div className="space-y-4">
               <h2 className="text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400">
-                {translations.features.titleEn}
+                {translate('en', 'intro.features.title')}
               </h2>
               <h3 className="max-w-md text-4xl font-extrabold leading-tight text-slate-800 dark:text-white">
-                {lang === 'zh'
-                  ? '为心流状态而工程化设计的系统'
-                  : 'Engineered for Flow State'}
+                {translate(lang, 'intro.features.heading')}
               </h3>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -153,10 +149,10 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
                     strokeWidth={1.5}
                   />
                   <h4 className="mb-2 text-base font-bold text-slate-800 dark:text-white">
-                    {lang === 'en' ? item.titleEn : item.titleZh}
+                    {item.title}
                   </h4>
                   <p className="text-xs font-medium leading-relaxed text-slate-500 dark:text-slate-400">
-                    {lang === 'en' ? item.descEn : item.descZh}
+                    {item.desc}
                   </p>
                 </div>
               );
@@ -173,10 +169,10 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
           </div>
           <div className="flex-1 space-y-1">
             <h4 className="text-lg font-bold text-slate-800 dark:text-white">
-              {translations.nav.startJourney[lang]}
+              {translations.nav.startJourney}
             </h4>
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              {translations.nav.startJourneySubtext[lang]}
+              {translations.nav.startJourneySubtext}
             </p>
           </div>
           <button

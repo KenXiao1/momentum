@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { RSIPNode, RSIPTreeNode } from '../../../types';
 import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
@@ -8,7 +9,7 @@ interface UseRSIPReparentParams {
   tree: RSIPTreeNode[];
   nodesById: Map<string, RSIPNode>;
   onSaveNodes: (nodes: RSIPNode[]) => void | Promise<void>;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 interface UseRSIPReparentResult {
@@ -33,7 +34,7 @@ export function useRSIPReparent({
   tree,
   nodesById,
   onSaveNodes,
-  tr,
+  t,
 }: UseRSIPReparentParams): UseRSIPReparentResult {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [pinnedId, setPinnedId] = useState<string | null>(null);
@@ -117,34 +118,26 @@ export function useRSIPReparent({
 
   const commitReparent = useCallback(
     (childId: string, parentId?: string) => {
-      const pendingSaveError = tr(
-        '上一次父子关系保存仍在进行，请稍后重试。',
-        'A previous reparent save is still in progress. Try again when it finishes.',
+      const pendingSaveError = t(
+        'rsip.useRsipreparent.aPreviousReparentSaveIsStillInProgressTry',
       );
       if (!nodesById.has(childId)) {
         setRelationError(
-          tr(
-            '要移动的节点已不存在，请刷新后重试。',
-            'The node to move no longer exists. Refresh and try again.',
-          ),
+          t('rsip.useRsipreparent.theNodeToMoveNoLongerExistsRefreshAnd'),
         );
         return;
       }
       if (parentId && !nodesById.has(parentId)) {
         setRelationError(
-          tr(
-            '所选父节点已不存在，请重新选择。',
-            'The selected parent no longer exists. Choose another parent.',
+          t(
+            'rsip.useRsipreparent.theSelectedParentNoLongerExistsChooseAnotherParent',
           ),
         );
         return;
       }
       if (childId === parentId) {
         setRelationError(
-          tr(
-            '不能选择自身作为父节点。',
-            'Cannot select the node itself as parent.',
-          ),
+          t('rsip.useRsipreparent.cannotSelectTheNodeItselfAsParent'),
         );
         return;
       }
@@ -152,10 +145,7 @@ export function useRSIPReparent({
         const descendants = getDescendantsFromTree(childId);
         if (descendants.includes(parentId)) {
           setRelationError(
-            tr(
-              '不能把节点移动到自己的后代下面。',
-              'Cannot move a node under its descendant.',
-            ),
+            t('rsip.useRsipreparent.cannotMoveANodeUnderItsDescendant'),
           );
           return;
         }
@@ -192,10 +182,7 @@ export function useRSIPReparent({
         );
         if (saveAttemptId !== saveAttemptIdRef.current) return;
         setRelationError(
-          tr(
-            '保存父子关系失败，请重试。',
-            'Could not save the new parent. Try again.',
-          ),
+          t('rsip.useRsipreparent.couldNotSaveTheNewParentTryAgain'),
         );
       };
 
@@ -220,7 +207,7 @@ export function useRSIPReparent({
         handleSaveError(error);
       }
     },
-    [getDescendantsFromTree, nodes, nodesById, onSaveNodes, tr],
+    [getDescendantsFromTree, nodes, nodesById, onSaveNodes, t],
   );
 
   const cancelReparent = useCallback(() => {

@@ -4,7 +4,7 @@ import { DescriptionSectionProps } from './types';
 
 export const ChainDetailDescription: React.FC<DescriptionSectionProps> = ({
   description,
-  tr,
+  t,
 }) => (
   <div className="bento-card animate-scale-in">
     <h3 className="mb-6 flex items-center space-x-3 font-chinese text-xl font-bold text-[#161615] dark:text-slate-100">
@@ -12,9 +12,9 @@ export const ChainDetailDescription: React.FC<DescriptionSectionProps> = ({
         <AlignLeft className="text-gray-500" size={20} />
       </div>
       <div>
-        <span>{tr('任务描述', 'Task description')}</span>
+        <span>{t('chainEditor.description.title')}</span>
         <p className="font-mono text-xs tracking-wide text-gray-500 dark:text-slate-400">
-          {tr('任务描述', 'TASK DESCRIPTION')}
+          {t('chainDetail.chainDetailDescription.taskDescription')}
         </p>
       </div>
     </h3>

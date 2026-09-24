@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { RSIPLibraryEntry, RSIPTreeNode } from '../../types';
 import { useI18n } from '../../i18n';
 
@@ -31,7 +31,7 @@ export function RSIPPolicyLibrary({
   tree,
   onRestore,
 }: RSIPPolicyLibraryProps) {
-  const { language, tr } = useI18n();
+  const { t } = useI18n();
   const [parentSelections, setParentSelections] = useState<
     Record<string, string | undefined>
   >({});
@@ -49,12 +49,11 @@ export function RSIPPolicyLibrary({
     return (
       <div className="bento-card">
         <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-slate-100">
-          {tr('国策库', 'Policy Library')}
+          {t('rsip.rsipPolicyLibrary.policyLibrary')}
         </h2>
         <p className="text-sm text-gray-600 dark:text-slate-300">
-          {tr(
-            '暂无归档国策。违反后删除的节点会保留在这里，可随时恢复。',
-            'No archived policies yet. Removed nodes will be stored here and can be restored anytime.',
+          {t(
+            'rsip.rsipPolicyLibrary.noArchivedPoliciesYetRemovedNodesWillBeStored',
           )}
         </p>
       </div>
@@ -65,12 +64,11 @@ export function RSIPPolicyLibrary({
     <div className="space-y-4">
       <div className="bento-card">
         <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-slate-100">
-          {tr('国策库', 'Policy Library')}
+          {t('rsip.rsipPolicyLibrary.policyLibrary')}
         </h2>
         <p className="text-sm text-gray-600 dark:text-slate-300">
-          {tr(
-            '归档条目会保留内化进度，恢复时可选择挂接到任意父节点。',
-            'Archived entries preserve internalization progress and can be restored under any parent.',
+          {t(
+            'rsip.rsipPolicyLibrary.archivedEntriesPreserveInternalizationProgressAndCanBeRestored',
           )}
         </p>
       </div>
@@ -81,9 +79,11 @@ export function RSIPPolicyLibrary({
             0,
             Math.min(100, entry.internalizationProgress),
           );
-          const statusText = language.startsWith('zh')
-            ? `内化进度 ${progress}% · 累计执行 ${entry.cumulativeExecutionDays} 天 · 使用 ${entry.timesUsed} 次`
-            : `Internalization ${progress}% · Executed ${entry.cumulativeExecutionDays} days · Used ${entry.timesUsed} times`;
+          const statusText = t('rsip.rsipPolicyLibrary.status', {
+            progress,
+            days: entry.cumulativeExecutionDays,
+            times: entry.timesUsed,
+          });
 
           return (
             <div
@@ -123,7 +123,7 @@ export function RSIPPolicyLibrary({
                   className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                 >
                   <option value="">
-                    {tr('恢复为新根节点', 'Restore as new root')}
+                    {t('rsip.rsipPolicyLibrary.restoreAsNewRoot')}
                   </option>
                   {parentOptions.map((option) => (
                     <option key={option.id} value={option.id}>
@@ -139,7 +139,7 @@ export function RSIPPolicyLibrary({
                   }
                   className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700"
                 >
-                  {tr('恢复', 'Restore')}
+                  {t('deletedChainCard.restore')}
                 </button>
               </div>
             </div>

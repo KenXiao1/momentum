@@ -27,15 +27,13 @@ function getModeButtonClass(
 }
 
 export function RSIPTaskLinkPanel(props: RSIPTaskLinkPanelProps) {
-  const { tr } = useI18n();
-  const editor = useRSIPTaskLinkEditor({ ...props, tr });
-  const title =
-    props.title ?? tr('RSIP × 任务流程协同', 'RSIP <-> Task Integration');
+  const { t } = useI18n();
+  const editor = useRSIPTaskLinkEditor({ ...props, t });
+  const title = props.title ?? t('rsip.rsipTaskLinkPanel.rsipTaskIntegration');
   const description =
     props.description ??
-    tr(
-      '任务事件可自动更新 RSIP；RSIP -> 任务动作默认需确认。冲突采用最后写入生效（LWW）。',
-      'Task events can auto-update RSIP. RSIP->task actions default to confirmation. Link conflicts use last-write-wins (latest update).',
+    t(
+      'rsip.rsipTaskLinkPanel.taskEventsCanAutoUpdateRsipRsipTaskActionsDefaultTo',
     );
 
   return (
@@ -59,8 +57,8 @@ export function RSIPTaskLinkPanel(props: RSIPTaskLinkPanelProps) {
               )}`}
             >
               {mode === 'task_to_rsip'
-                ? tr('任务 -> RSIP', 'Task -> RSIP')
-                : tr('RSIP -> 任务', 'RSIP -> Task')}
+                ? t('rsip.rsipTaskLinkPanel.taskRsip')
+                : t('rsip.rsipTaskLinkPanel.rsipTask')}
             </button>
           ))}
         </div>
@@ -81,7 +79,7 @@ export function RSIPTaskLinkPanel(props: RSIPTaskLinkPanelProps) {
           onAutomationChange={editor.setAutomation}
           canCreate={editor.canCreate}
           onCreate={editor.handleCreate}
-          tr={tr}
+          t={t}
         />
       </div>
       <RSIPTaskLinkList
@@ -90,7 +88,7 @@ export function RSIPTaskLinkPanel(props: RSIPTaskLinkPanelProps) {
         chainLabelById={editor.chainLabelById}
         onToggle={editor.handleToggle}
         onDelete={editor.handleDelete}
-        tr={tr}
+        t={t}
       />
     </div>
   );

@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import { Check, Shield, X } from 'lucide-react';
 import type { RSIPNode, RSIPStabilityPhase } from '../../types';
 import { RSIPConstraintIndicator } from './RSIPConstraintIndicator';
@@ -33,6 +34,7 @@ export function RSIPStrictModeCard({
   onMarkViolated,
   onReinforce,
 }: RSIPStrictModeCardProps) {
+  const { t } = useI18n();
   const phase: RSIPStabilityPhase = node.stabilityPhase ?? 'E0';
   const consecutiveExecutions = node.consecutiveExecutions ?? 0;
   const reinforcementLevel = node.reinforcementLevel ?? 0;
@@ -95,7 +97,7 @@ export function RSIPStrictModeCard({
             onClick={onReinforce}
             className="cursor-pointer rounded-xl bg-amber-500/20 px-3 py-2.5 text-sm font-medium text-amber-700 transition hover:bg-amber-500/30 dark:text-amber-300 dark:hover:bg-amber-500/40"
           >
-            强化 +1
+            {t('rsip.rsipStrictModeCard.reinforce')}
           </button>
         )}
 
@@ -105,7 +107,7 @@ export function RSIPStrictModeCard({
           className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 font-medium text-white shadow-sm transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-emerald-500/20 dark:text-emerald-200 dark:shadow-none dark:hover:bg-emerald-500/30 dark:focus-visible:ring-emerald-500/60 dark:focus-visible:ring-offset-slate-950"
         >
           <Check size={18} />
-          <span>已执行</span>
+          <span>{t('rsip.rsipStrictModeCard.executed')}</span>
         </button>
 
         <button
@@ -114,7 +116,7 @@ export function RSIPStrictModeCard({
           className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-red-600 py-2.5 font-medium text-white shadow-sm transition hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-red-500/20 dark:text-red-200 dark:shadow-none dark:hover:bg-red-500/30 dark:focus-visible:ring-red-500/60 dark:focus-visible:ring-offset-slate-950"
         >
           <X size={18} />
-          <span>已违反</span>
+          <span>{t('rsip.rsipStrictModeCard.violated')}</span>
         </button>
       </div>
     </div>

@@ -16,7 +16,7 @@
 
 import { ExceptionRuleException } from '../types';
 import { logger } from '../utils/logger';
-import { tr } from '../utils/runtimeI18n';
+import { t } from '../utils/runtimeI18n';
 
 import {
   RecoveryResult,
@@ -128,19 +128,18 @@ class ErrorRecoveryManager {
 
       return {
         success: false,
-        message: tr('错误恢复过程失败', 'Error recovery failed'),
+        message: t('errorRecoveryManager.errorRecoveryFailed'),
         actions: [
           {
             id: 'manual_intervention',
-            label: tr('手动处理', 'Manual fix'),
-            description: tr(
-              '需要手动解决此问题',
-              'This requires manual intervention',
+            label: t('errorRecoveryManager.manualFix'),
+            description: t(
+              'errorRecoveryManager.thisRequiresManualIntervention',
             ),
             type: 'danger',
             handler: async () => ({
               success: false,
-              message: tr('需要手动处理', 'Manual intervention required'),
+              message: t('errorRecoveryManager.manualInterventionRequired'),
             }),
           },
         ],
