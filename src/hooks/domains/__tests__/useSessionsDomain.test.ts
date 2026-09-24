@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import {
   createAppState,
@@ -37,7 +38,7 @@ vi.mock('../sessions/pauseResume', () => ({
 
 vi.mock('../../../i18n', () => ({
   useI18n: vi.fn(() => ({
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
   })),
 }));
 

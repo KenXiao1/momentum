@@ -1,19 +1,24 @@
+import { translate } from '../i18n/translate';
 import { useI18n } from '../i18n';
 import type { ImportUnitsModalProps } from './ImportUnitsModal.types';
 import { ImportUnitsModalView } from './import-units-modal/ImportUnitsModalView';
 import { useImportUnitsController } from './import-units-modal/useImportUnitsController';
 
 export function ImportUnitsModal(props: ImportUnitsModalProps) {
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const controller = useImportUnitsController(props);
   const modeLabel =
     controller.importMode === 'copy'
-      ? tr('复制模式', 'Copy')
-      : tr('移动模式', 'Move');
-  const selectionSummary =
-    language === 'zh'
-      ? `已选择 ${controller.selectedUnits.size} 个任务单元（${modeLabel}）`
-      : `${controller.selectedUnits.size} selected (${modeLabel})`;
+      ? t('importUnitsModal.copy')
+      : t('importUnitsModal.move');
+  const selectionSummary = translate(
+    language === 'zh' ? 'zh' : 'en',
+    'importUnitsModal.controllerSelectedUnitsSizeSelectedModeLabel',
+    {
+      controllerSelectedUnitsSize: controller.selectedUnits.size,
+      modeLabel: modeLabel,
+    },
+  );
 
   return (
     <ImportUnitsModalView
@@ -28,7 +33,7 @@ export function ImportUnitsModal(props: ImportUnitsModalProps) {
       onToggleUnit={controller.toggleUnit}
       onSubmit={controller.submit}
       onClose={props.onClose}
-      tr={tr}
+      t={t}
     />
   );
 }

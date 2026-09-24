@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../../i18n/translate';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -7,7 +8,7 @@ import { MainChainSettingsSection } from '../MainChainSettingsSection';
 vi.mock('../../../../i18n', () => ({
   useI18n: () => ({
     language: 'en',
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
   }),
 }));
 

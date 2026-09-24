@@ -16,7 +16,7 @@ import { RuleManagerFormModal } from './components/RuleManagerFormModal';
 export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
   onClose,
   onRuleSelected,
-  tr,
+  t,
   loading,
   error,
   setError,
@@ -54,7 +54,7 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
         <div className="rounded-3xl bg-white p-8 dark:bg-gray-800">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-primary-500"></div>
           <p className="mt-4 text-center text-gray-600 dark:text-gray-400">
-            {tr('加载规则中...', 'Loading rules...')}
+            {t('ruleManager.ruleManagerViewView.loadingRules')}
           </p>
         </div>
       </div>
@@ -65,17 +65,17 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden bg-black/80 p-4 backdrop-blur-sm">
       <ConfirmationDialog
         isOpen={deleteConfirmationRule !== null}
-        title={tr('确认删除', 'Confirm deletion')}
+        title={t('ruleManager.ruleManagerViewView.confirmDeletion')}
         message={
           deleteConfirmationRule
-            ? tr(
-                `确定要删除规则 "${deleteConfirmationRule.name}" 吗？`,
-                `Delete rule "${deleteConfirmationRule.name}"?`,
+            ? t(
+                'ruleManager.ruleManagerViewView.deleteRuleDeleteConfirmationRuleName',
+                { deleteConfirmationRuleName: deleteConfirmationRule.name },
               )
             : ''
         }
-        confirmText={tr('删除', 'Delete')}
-        cancelText={tr('取消', 'Cancel')}
+        confirmText={t('deletedChainCard.delete')}
+        cancelText={t('bettingModal.bettingFormSections.cancel')}
         onConfirm={() => void confirmDeleteRule()}
         onCancel={() => setDeleteConfirmationRule(null)}
       />
@@ -90,12 +90,11 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {tr('例外规则管理', 'Exception Rules')}
+                {t('ruleManager.ruleManagerViewView.exceptionRules')}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {tr(
-                  '管理暂停和提前完成的例外规则',
-                  'Manage exception rules for pausing or early completion',
+                {t(
+                  'ruleManager.ruleManagerViewView.manageExceptionRulesForPausingOrEarlyCompletion',
                 )}
               </p>
             </div>
@@ -107,7 +106,7 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
               className="flex items-center space-x-2 rounded-xl bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
             >
               <Download size={16} />
-              <span>{tr('导出', 'Export')}</span>
+              <span>{t('ruleManager.ruleManagerViewView.export')}</span>
             </button>
 
             <button
@@ -115,14 +114,16 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
               className="flex items-center space-x-2 rounded-xl bg-primary-500 px-4 py-2 text-white transition-colors hover:bg-primary-600"
             >
               <Plus size={16} />
-              <span>{tr('创建链专属规则', 'Create chain-specific rule')}</span>
+              <span>
+                {t('ruleManager.ruleManagerViewView.createChainSpecificRule')}
+              </span>
             </button>
 
             <button
               onClick={onClose}
               className="rounded-xl bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
             >
-              {tr('关闭', 'Close')}
+              {t('accountModal.close')}
             </button>
           </div>
         </div>
@@ -151,9 +152,8 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
                   />
                   <input
                     type="text"
-                    placeholder={tr(
-                      '搜索规则名称或描述...',
-                      'Search rule name or description...',
+                    placeholder={t(
+                      'ruleManager.ruleManagerViewView.searchRuleNameOrDescription',
                     )}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -168,12 +168,14 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
                   }
                   className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
-                  <option value="all">{tr('所有类型', 'All types')}</option>
+                  <option value="all">
+                    {t('ruleManager.ruleManagerViewView.allTypes')}
+                  </option>
                   <option value={ExceptionRuleType.PAUSE_ONLY}>
-                    {tr('仅暂停', 'Pause only')}
+                    {t('ruleItem.pauseOnly')}
                   </option>
                   <option value={ExceptionRuleType.EARLY_COMPLETION_ONLY}>
-                    {tr('仅提前完成', 'Early completion only')}
+                    {t('ruleItem.earlyCompletionOnly')}
                   </option>
                 </select>
 
@@ -182,10 +184,14 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                   className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
-                  <option value="usage">{tr('按使用频率', 'Most used')}</option>
-                  <option value="name">{tr('按名称', 'Name')}</option>
+                  <option value="usage">
+                    {t('ruleManager.ruleManagerViewView.mostUsed')}
+                  </option>
+                  <option value="name">
+                    {t('ruleManager.ruleManagerViewView.name')}
+                  </option>
                   <option value="lastUsed">
-                    {tr('按最近使用', 'Last used')}
+                    {t('ruleManager.ruleManagerViewView.lastUsed')}
                   </option>
                 </select>
               </div>
@@ -199,18 +205,16 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
                   </div>
                   <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
                     {searchQuery || typeFilter !== 'all'
-                      ? tr('没有找到匹配的规则', 'No matching rules')
-                      : tr('还没有规则', 'No rules yet')}
+                      ? t('ruleManager.ruleManagerViewView.noMatchingRules')
+                      : t('ruleManager.ruleManagerViewView.noRulesYet')}
                   </h3>
                   <p className="mb-4 text-gray-500 dark:text-gray-400">
                     {searchQuery || typeFilter !== 'all'
-                      ? tr(
-                          '尝试调整搜索条件或筛选器',
-                          'Try adjusting your search or filters',
+                      ? t(
+                          'ruleManager.ruleManagerViewView.tryAdjustingYourSearchOrFilters',
                         )
-                      : tr(
-                          '创建第一个例外规则来开始使用',
-                          'Create your first exception rule to get started',
+                      : t(
+                          'ruleManager.ruleManagerViewView.createYourFirstExceptionRuleToGetStarted',
                         )}
                   </p>
                   {!searchQuery && typeFilter === 'all' && (
@@ -218,7 +222,7 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
                       onClick={() => setShowCreateForm(true)}
                       className="rounded-xl bg-primary-500 px-6 py-3 text-white transition-colors hover:bg-primary-600"
                     >
-                      {tr('创建规则', 'Create rule')}
+                      {t('ruleManager.ruleManagerViewView.createRule')}
                     </button>
                   )}
                 </div>
@@ -243,7 +247,7 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
         <RuleManagerFormModal
           isOpen={showCreateForm || editingRule !== null}
           editingRule={editingRule}
-          tr={tr}
+          t={t}
           formErrors={formErrors}
           formWarnings={formWarnings}
           duplicateSuggestions={duplicateSuggestions}

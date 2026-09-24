@@ -102,7 +102,8 @@ export async function saveActiveSession(
   session: ActiveSession | null,
 ): Promise<void> {
   const user = await ctx.getCurrentUser();
-  if (!user) return;
+  if (!user)
+    throw new Error('Authentication required to save an active session.');
   const client = ctx.getClient();
   if (!session) {
     const { error } = await client.from(TABLE).delete().eq('user_id', user.id);

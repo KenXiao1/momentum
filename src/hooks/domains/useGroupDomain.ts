@@ -41,22 +41,18 @@ export function useGroupDomain({
   safelySaveChains,
 }: UseGroupDomainParams) {
   const readState = resolveAppStateReader({ state, getState });
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
 
   const handleChainsOperationError = async (
     error: unknown,
     {
       logMessage,
-      toastPrefixZh,
-      toastPrefixEn,
-      toastFallbackZh,
-      toastFallbackEn,
+      toastPrefix,
+      toastFallback,
     }: {
       logMessage: string;
-      toastPrefixZh: string;
-      toastPrefixEn: string;
-      toastFallbackZh: string;
-      toastFallbackEn: string;
+      toastPrefix: string;
+      toastFallback: string;
     },
   ) => {
     logger.error(
@@ -68,11 +64,11 @@ export function useGroupDomain({
     const safeDetail = getSafeErrorDetailFromUnknown(error, language);
     toast.error(
       safeDetail
-        ? tr(
-            `${toastPrefixZh}: ${safeDetail}\n\n请查看控制台了解详细信息，然后重试`,
-            `${toastPrefixEn}: ${safeDetail}\n\nCheck the console for details, then try again.`,
-          )
-        : tr(toastFallbackZh, toastFallbackEn),
+        ? t('useGroupDomain.toastPrefixSafeDetailCheckTheConsoleForDetails', {
+            toastPrefix: toastPrefix,
+            safeDetail: safeDetail,
+          })
+        : toastFallback,
     );
 
     try {
@@ -114,7 +110,7 @@ export function useGroupDomain({
             const copy: Chain = {
               ...chain,
               id: crypto.randomUUID(), // 生成新的ID
-              name: `${chain.name} ${tr('(副本)', '(Copy)')}`, // 添加副本标识
+              name: `${chain.name} ${t('useGroupDomain.copy')}`, // 添加副本标识
               parentId: groupId,
               currentStreak: 0, // 重置记录
               auxiliaryStreak: 0,
@@ -151,11 +147,10 @@ export function useGroupDomain({
     } catch (error) {
       await handleChainsOperationError(error, {
         logMessage: 'Failed to import units',
-        toastPrefixZh: '导入失败',
-        toastPrefixEn: 'Import failed',
-        toastFallbackZh: '导入失败，请重试（详情见控制台）',
-        toastFallbackEn:
-          'Import failed. Check the console for details, then try again.',
+        toastPrefix: t('importExportModal.importStatusControls.importFailed'),
+        toastFallback: t(
+          'importExportModal.useImportWorkflow.importFailedCheckTheConsoleForDetailsThenTry',
+        ),
       });
     }
   };
@@ -186,11 +181,10 @@ export function useGroupDomain({
     } catch (error) {
       await handleChainsOperationError(error, {
         logMessage: 'Failed to update task repeat count',
-        toastPrefixZh: '重复次数更新失败',
-        toastPrefixEn: 'Failed to update repeat count',
-        toastFallbackZh: '重复次数更新失败，请重试（详情见控制台）',
-        toastFallbackEn:
-          'Failed to update repeat count. Check the console for details, then try again.',
+        toastPrefix: t('useGroupDomain.failedToUpdateRepeatCount'),
+        toastFallback: t(
+          'useGroupDomain.failedToUpdateRepeatCountCheckTheConsoleFor',
+        ),
       });
     }
   };

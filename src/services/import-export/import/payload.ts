@@ -3,15 +3,14 @@ import { isRecord } from '../../../serialization/primitives';
 
 export function parseImportPayload(
   json: string,
-  tr: ImportTranslator,
+  t: ImportTranslator,
 ): Record<string, unknown> {
   const parsed = JSON.parse(json) as unknown;
 
   if (!isRecord(parsed)) {
     throw new Error(
-      tr(
-        '导入数据格式错误：文件内容不是对象。',
-        'Invalid import format: file content is not an object.',
+      t(
+        'importExport.import.payload.invalidImportFormatFileContentIsNotAnObject',
       ),
     );
   }

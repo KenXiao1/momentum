@@ -21,16 +21,16 @@ export function RSIPView(props: RSIPViewProps) {
           <div className="flex items-center space-x-3">
             <BackButton
               onClick={props.onBack}
-              label={model.tr('返回', 'Back')}
+              label={model.t('common.back')}
               iconSize={22}
               className="rounded-2xl p-3 text-gray-400 hover:bg-white/60 hover:text-gray-700 dark:hover:bg-slate-800/60 dark:hover:text-slate-200"
             />
             <div>
               <h1 className="font-chinese text-3xl font-bold text-gray-900 dark:text-slate-100 md:text-4xl">
-                {model.tr('国策树 · RSIP', 'RSIP Policy Tree')}
+                {model.t('rsipView.rsipPolicyTree')}
               </h1>
               <p className="font-mono text-xs uppercase tracking-wider text-gray-600 dark:text-slate-400">
-                {model.tr('RSIP 流程协同', 'RSIP PROCESS COLLABORATION')}
+                {model.t('rsipView.rsipProcessCollaboration')}
               </p>
             </div>
           </div>
@@ -46,7 +46,7 @@ export function RSIPView(props: RSIPViewProps) {
                 : 'bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-200'
             }`}
           >
-            {model.tr('国策树', 'Tree')}
+            {model.t('rsipView.tree')}
           </button>
           <button
             type="button"
@@ -57,7 +57,7 @@ export function RSIPView(props: RSIPViewProps) {
                 : 'bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-200'
             }`}
           >
-            {model.tr('国策库', 'Library')}
+            {model.t('rsipView.library')}
           </button>
           <button
             type="button"
@@ -68,7 +68,7 @@ export function RSIPView(props: RSIPViewProps) {
                 : 'bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-200'
             }`}
           >
-            {model.tr('轮次历史', 'Runs')}
+            {model.t('rsipView.runs')}
           </button>
           <button
             type="button"
@@ -79,7 +79,7 @@ export function RSIPView(props: RSIPViewProps) {
                 : 'bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-200'
             }`}
           >
-            {model.tr('高级分析', 'Insights')}
+            {model.t('rsipView.insights')}
           </button>
         </div>
 

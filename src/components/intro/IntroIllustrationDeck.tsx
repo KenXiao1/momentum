@@ -1,3 +1,4 @@
+import { translate } from '../../i18n/translate';
 import React from 'react';
 
 type Lang = 'en' | 'zh';
@@ -14,10 +15,6 @@ export const IntroIllustrationDeck: React.FC<IntroIllustrationDeckProps> = ({
   lang,
   className,
 }) => {
-  const label = {
-    title: { en: 'Proof, not vibes.', zh: 'Proof, not vibes.' },
-  } as const;
-
   return (
     <div className={className}>
       <div className="relative mx-auto w-full max-w-[560px] lg:max-w-none">
@@ -55,7 +52,7 @@ export const IntroIllustrationDeck: React.FC<IntroIllustrationDeckProps> = ({
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/50 via-transparent to-violet-200/20 dark:from-white/10 dark:to-violet-500/10" />
               <img
                 src="/intro/integral-model.svg"
-                alt="CTDP integral model diagram"
+                alt={translate(lang, 'intro.illustration.diagramAlt')}
                 decoding="async"
                 fetchPriority="high"
                 className={`relative z-10 h-full w-full select-none object-contain p-6 ${DARK_MODE_FILTER}`}
@@ -67,7 +64,7 @@ export const IntroIllustrationDeck: React.FC<IntroIllustrationDeckProps> = ({
         <div className="mt-6 flex items-start justify-between gap-6 px-1">
           <div className="space-y-1">
             <div className="text-sm font-extrabold tracking-tight text-slate-800 dark:text-white">
-              {label.title[lang]}
+              {translate(lang, 'intro.illustration.title')}
             </div>
           </div>
 

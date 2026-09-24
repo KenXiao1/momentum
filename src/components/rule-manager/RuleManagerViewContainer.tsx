@@ -11,10 +11,10 @@ export function RuleManagerView({
   initialFilter,
   onRuleSelected,
 }: RuleManagerViewProps) {
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
 
   const { rules, setRules, loading, error, setError, loadRules } =
-    useRuleManagerData({ language, tr });
+    useRuleManagerData({ language, t });
 
   const {
     searchQuery,
@@ -30,7 +30,7 @@ export function RuleManagerView({
 
   const actions = useRuleManagerActions({
     language,
-    tr,
+    t,
     loadRules,
     setError,
     formData: form.formData,
@@ -49,7 +49,7 @@ export function RuleManagerView({
     <RuleManagerViewView
       onClose={onClose}
       onRuleSelected={onRuleSelected}
-      tr={tr}
+      t={t}
       loading={loading}
       error={error}
       setError={setError}

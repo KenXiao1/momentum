@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import {
   ExceptionRuleError,
   ExceptionRuleType,
@@ -30,7 +31,7 @@ function isExceptionRule(value: unknown): value is ExceptionRule {
 export function useExceptionRuleOperations(params: {
   pendingActionType: PendingActionType | null;
   sessionContext: SessionContext;
-  onPause: (duration?: number) => void;
+  onPause: (duration?: number) => void | Promise<boolean | void>;
   onRequestCompletionDialog: () => void;
   scheduleAutoResume: (minutes: number) => void;
   clearAutoResumeSchedule: () => void;
@@ -40,9 +41,9 @@ export function useExceptionRuleOperations(params: {
     pauseOptions?: PauseOptions,
   ) => void;
   finishFlow: () => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }) {
-  const { pendingActionType, sessionContext, tr } = params;
+  const { pendingActionType, sessionContext, t } = params;
 
   async function applyRecoveredRule(
     recovery: RecoveryResult,
@@ -84,7 +85,7 @@ export function useExceptionRuleOperations(params: {
     }
     userFeedbackHandler.removeMessage(messageId);
     userFeedbackHandler.showSuccess(
-      tr('问题已解决', 'Issue resolved'),
+      t('focusMode.useExceptionRuleOperations.issueResolved'),
       recovery.message,
     );
     await applyRecoveredRule(recovery, operation, context);
@@ -105,12 +106,17 @@ export function useExceptionRuleOperations(params: {
           ExceptionRuleError.STORAGE_ERROR,
           error instanceof Error
             ? error.message
-            : tr('未知错误', 'Unknown error'),
+            : t('focusMode.useExceptionRuleOperations.unknownError'),
           context,
           true,
-          [tr('重试操作', 'Retry'), tr('刷新页面', 'Refresh')],
+          [
+            t('focusMode.useExceptionRuleOperations.retry'),
+            t('focusMode.useExceptionRuleOperations.refresh'),
+          ],
           'medium',
-          tr('操作失败，请重试', 'Operation failed. Please try again.'),
+          t(
+            'focusMode.useExceptionRuleOperations.operationFailedPleaseTryAgain',
+          ),
         ),
         context,
       );
@@ -122,10 +128,9 @@ export function useExceptionRuleOperations(params: {
         toError(handlingError),
       );
       userFeedbackHandler.showWarning(
-        tr('系统错误', 'System error'),
-        tr(
-          '处理错误时发生问题，请刷新页面重试',
-          'Something went wrong while handling the error. Refresh the page and try again.',
+        t('focusMode.useExceptionRuleOperations.systemError'),
+        t(
+          'focusMode.useExceptionRuleOperations.somethingWentWrongWhileHandlingTheErrorRefreshThe',
         ),
       );
     }
@@ -148,7 +153,7 @@ export function useExceptionRuleOperations(params: {
         userFeedbackHandler.showErrorMessage(
           new EnhancedExceptionRuleException(
             ExceptionRuleError.RULE_NOT_FOUND,
-            tr('规则对象无效', 'Invalid rule'),
+            t('focusMode.useExceptionRuleOperations.invalidRule'),
             { rule, pendingActionType },
           ),
         );
@@ -156,8 +161,8 @@ export function useExceptionRuleOperations(params: {
       }
       userFeedbackHandler.showProgress(
         pendingActionType === 'pause'
-          ? tr('正在暂停任务...', 'Pausing task...')
-          : tr('正在完成任务...', 'Completing task...'),
+          ? t('focusMode.useExceptionRuleOperations.pausingTask')
+          : t('focusMode.useExceptionRuleOperations.completingTask'),
       );
       await exceptionRuleManager.useRule(
         rule.id,
@@ -165,25 +170,31 @@ export function useExceptionRuleOperations(params: {
         pendingActionType,
         pauseOptions,
       );
+      if (
+        pendingActionType === 'pause' &&
+        (await params.onPause(pauseOptions?.duration)) === false
+      ) {
+        userFeedbackHandler.hideProgress();
+        return;
+      }
       userFeedbackHandler.hideProgress();
       const successMessage =
         pendingActionType === 'pause'
-          ? tr(
-              `已使用规则 "${rule.name}" 暂停任务`,
-              `Applied rule "${rule.name}" to pause the task`,
+          ? t(
+              'focusMode.useExceptionRuleOperations.appliedRuleRuleNameToPauseTheTask',
+              { ruleName: rule.name },
             )
-          : tr(
-              `已使用规则 "${rule.name}" 提前完成任务`,
-              `Applied rule "${rule.name}" to complete the task early`,
+          : t(
+              'focusMode.useExceptionRuleOperations.appliedRuleRuleNameToCompleteTheTask',
+              { ruleName: rule.name },
             );
       userFeedbackHandler.showSuccess(
-        tr('操作成功', 'Success'),
+        t('focusMode.useExceptionRuleOperations.success'),
         successMessage,
       );
       params.onRuleUsed?.(rule, pendingActionType, pauseOptions);
 
       if (pendingActionType === 'pause') {
-        params.onPause(pauseOptions?.duration);
         if (pauseOptions?.duration && pauseOptions.autoResume) {
           params.scheduleAutoResume(Math.floor(pauseOptions.duration / 60));
         }
@@ -218,7 +229,7 @@ export function useExceptionRuleOperations(params: {
         userFeedbackHandler.showErrorMessage(
           new EnhancedExceptionRuleException(
             ExceptionRuleError.VALIDATION_ERROR,
-            tr('规则名称不能为空', 'Rule name cannot be empty'),
+            t('focusMode.useExceptionRuleOperations.ruleNameCannotBeEmpty'),
             { name, type },
           ),
         );
@@ -232,12 +243,12 @@ export function useExceptionRuleOperations(params: {
             : ExceptionRuleType.EARLY_COMPLETION_ONLY;
       }
       userFeedbackHandler.showProgress(
-        tr('正在创建规则...', 'Creating rule...'),
+        t('focusMode.useExceptionRuleOperations.creatingRule'),
         0,
       );
       userFeedbackHandler.updateProgress(
         30,
-        tr('验证规则信息...', 'Validating...'),
+        t('focusMode.useExceptionRuleOperations.validating'),
       );
       const duplicateCheck =
         await exceptionRuleManager.checkRuleNameRealTime(name);
@@ -251,11 +262,14 @@ export function useExceptionRuleOperations(params: {
       if (duplicateCheck.hasConflict) {
         userFeedbackHandler.hideProgress();
         userFeedbackHandler.showProgress(
-          tr('正在创建规则...', 'Creating rule...'),
+          t('focusMode.useExceptionRuleOperations.creatingRule'),
           50,
         );
       }
-      userFeedbackHandler.updateProgress(70, tr('保存规则...', 'Saving...'));
+      userFeedbackHandler.updateProgress(
+        70,
+        t('focusMode.useExceptionRuleOperations.saving'),
+      );
       const result = await exceptionRuleManager.createRule(
         name,
         validType,
@@ -264,15 +278,15 @@ export function useExceptionRuleOperations(params: {
       );
       userFeedbackHandler.hideProgress();
       userFeedbackHandler.showSuccess(
-        tr('规则创建成功', 'Rule created'),
-        tr(
-          `规则 "${result.rule.name}" 已创建并应用`,
-          `Rule "${result.rule.name}" has been created and applied`,
+        t('focusMode.useExceptionRuleOperations.ruleCreated'),
+        t(
+          'focusMode.useExceptionRuleOperations.ruleResultRuleNameHasBeenCreatedAndApplied',
+          { resultRuleName: result.rule.name },
         ),
       );
       if (result.warnings?.length) {
         userFeedbackHandler.showWarning(
-          tr('注意事项', 'Notes'),
+          t('focusMode.useExceptionRuleOperations.notes'),
           result.warnings.join('\n'),
         );
       }

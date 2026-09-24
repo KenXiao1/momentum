@@ -13,7 +13,7 @@ import {
 
 interface UseExceptionRuleFlowParams {
   sessionContext: SessionContext;
-  onPause: (duration?: number) => void;
+  onPause: (duration?: number) => void | Promise<boolean | void>;
   onRequestCompletionDialog: () => void;
   scheduleAutoResume: (minutes: number) => void;
   clearAutoResumeSchedule: () => void;
@@ -25,7 +25,7 @@ interface UseExceptionRuleFlowParams {
 }
 
 export function useExceptionRuleFlow(params: UseExceptionRuleFlowParams) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const [showRuleSelection, setShowRuleSelection] = useState(false);
   const [pendingActionType, setPendingActionType] =
     useState<PendingActionType | null>(null);
@@ -38,7 +38,7 @@ export function useExceptionRuleFlow(params: UseExceptionRuleFlowParams) {
     ...params,
     pendingActionType,
     finishFlow,
-    tr,
+    t,
   });
 
   const openPauseSelection = () => {
@@ -53,10 +53,9 @@ export function useExceptionRuleFlow(params: UseExceptionRuleFlowParams) {
     userFeedbackHandler.hideProgress();
     finishFlow();
     userFeedbackHandler.showInfo(
-      tr('操作已取消', 'Cancelled'),
-      tr(
-        '您可以继续任务或重新选择操作',
-        'You can continue the task or choose another action.',
+      t('focusMode.useExceptionRuleFlow.cancelled'),
+      t(
+        'focusMode.useExceptionRuleFlow.youCanContinueTheTaskOrChooseAnotherAction',
       ),
     );
   };

@@ -1,3 +1,4 @@
+import { translate } from '../../i18n/translate';
 import type { LucideIcon } from 'lucide-react';
 import {
   Bell,
@@ -26,37 +27,55 @@ export const TRIGGER_TEMPLATES: PresetTemplate[] = [
   {
     icon: Headphones,
     value: '戴上降噪耳机',
-    label: { zh: '戴上降噪耳机', en: 'Put on noise-cancelling headphones' },
+    label: {
+      zh: translate('zh', 'chainEditor.presets.trigger.headphones'),
+      en: translate('en', 'chainEditor.presets.trigger.headphones'),
+    },
     color: 'text-primary-500',
   },
   {
     icon: Code,
     value: '打开编程软件',
-    label: { zh: '打开编程软件', en: 'Open your IDE' },
+    label: {
+      zh: translate('zh', 'chainEditor.presets.trigger.ide'),
+      en: translate('en', 'chainEditor.presets.trigger.ide'),
+    },
     color: 'text-green-500',
   },
   {
     icon: BookOpen,
     value: '坐到书房书桌前',
-    label: { zh: '坐到书房书桌前', en: 'Sit at your desk' },
+    label: {
+      zh: translate('zh', 'chainEditor.presets.trigger.desk'),
+      en: translate('en', 'chainEditor.presets.trigger.desk'),
+    },
     color: 'text-blue-500',
   },
   {
     icon: Dumbbell,
     value: '换上运动服',
-    label: { zh: '换上运动服', en: 'Put on workout clothes' },
+    label: {
+      zh: translate('zh', 'chainEditor.presets.trigger.workoutClothes'),
+      en: translate('en', 'chainEditor.presets.trigger.workoutClothes'),
+    },
     color: 'text-red-500',
   },
   {
     icon: Coffee,
     value: '准备一杯咖啡',
-    label: { zh: '准备一杯咖啡', en: 'Make a cup of coffee' },
+    label: {
+      zh: translate('zh', 'chainEditor.presets.trigger.coffee'),
+      en: translate('en', 'chainEditor.presets.trigger.coffee'),
+    },
     color: 'text-yellow-500',
   },
   {
     icon: Target,
     value: CUSTOM_TRIGGER_VALUE,
-    label: { zh: CUSTOM_TRIGGER_VALUE, en: 'Custom trigger' },
+    label: {
+      zh: translate('zh', 'chainEditor.presets.trigger.custom'),
+      en: translate('en', 'chainEditor.presets.trigger.custom'),
+    },
     color: 'text-gray-500',
   },
 ];
@@ -65,31 +84,46 @@ export const AUXILIARY_SIGNAL_TEMPLATES: PresetTemplate[] = [
   {
     icon: Target,
     value: '打响指',
-    label: { zh: '打响指', en: 'Snap your fingers' },
+    label: {
+      zh: translate('zh', 'chainEditor.presets.signal.snapFingers'),
+      en: translate('en', 'chainEditor.presets.signal.snapFingers'),
+    },
     color: 'text-primary-500',
   },
   {
     icon: Clock,
     value: '设置手机闹钟',
-    label: { zh: '设置手机闹钟', en: 'Set a phone alarm' },
+    label: {
+      zh: translate('zh', 'chainEditor.presets.signal.phoneAlarm'),
+      en: translate('en', 'chainEditor.presets.signal.phoneAlarm'),
+    },
     color: 'text-green-500',
   },
   {
     icon: Bell,
     value: '按桌上的铃铛',
-    label: { zh: '按桌上的铃铛', en: 'Ring the desk bell' },
+    label: {
+      zh: translate('zh', 'chainEditor.presets.signal.deskBell'),
+      en: translate('en', 'chainEditor.presets.signal.deskBell'),
+    },
     color: 'text-blue-500',
   },
   {
     icon: Coffee,
     value: '说"开始预约"',
-    label: { zh: '说"开始预约"', en: 'Say “Start booking”' },
+    label: {
+      zh: translate('zh', 'chainEditor.presets.signal.startBooking'),
+      en: translate('en', 'chainEditor.presets.signal.startBooking'),
+    },
     color: 'text-yellow-500',
   },
   {
     icon: Target,
     value: CUSTOM_AUXILIARY_SIGNAL_VALUE,
-    label: { zh: CUSTOM_AUXILIARY_SIGNAL_VALUE, en: 'Custom signal' },
+    label: {
+      zh: translate('zh', 'chainEditor.presets.signal.custom'),
+      en: translate('en', 'chainEditor.presets.signal.custom'),
+    },
     color: 'text-gray-500',
   },
 ];
@@ -102,8 +136,14 @@ export const getTriggerLabel = (
   language: PresetLanguage,
 ): string => {
   const special: Partial<Record<string, Record<PresetLanguage, string>>> = {
-    任务群容器: { zh: '任务群容器', en: 'Task group container' },
-    开始第一个子任务: { zh: '开始第一个子任务', en: 'Start the first subtask' },
+    任务群容器: {
+      zh: translate('zh', 'chainEditor.presets.trigger.taskGroupContainer'),
+      en: translate('en', 'chainEditor.presets.trigger.taskGroupContainer'),
+    },
+    开始第一个子任务: {
+      zh: translate('zh', 'chainEditor.presets.trigger.firstSubtask'),
+      en: translate('en', 'chainEditor.presets.trigger.firstSubtask'),
+    },
   };
 
   return (

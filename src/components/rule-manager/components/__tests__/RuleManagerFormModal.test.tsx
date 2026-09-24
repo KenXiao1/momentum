@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../../i18n/translate';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ExceptionRuleType, type ExceptionRule } from '../../../../types';
@@ -40,7 +41,7 @@ function createProps(overrides?: {
     props: {
       isOpen: overrides?.isOpen ?? true,
       editingRule: overrides?.editingRule ?? null,
-      tr: (_zh: string, en: string) => en,
+      t: createTranslator('en'),
       formErrors: overrides?.formErrors ?? [],
       formWarnings: overrides?.formWarnings ?? [],
       duplicateSuggestions: overrides?.duplicateSuggestions ?? [],

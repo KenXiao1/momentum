@@ -12,11 +12,14 @@ import { onCLS, onFCP, onLCP, onTTFB, onINP } from 'web-vitals';
 import type { Metric } from 'web-vitals';
 import { installChunkLoadRecovery } from './utils/chunkLoadRecovery';
 import { logger } from './utils/logger';
+import {
+  installDiagnosticErrorHandlers,
+  recordWebVital,
+} from './utils/diagnostics';
 
 function reportWebVitals() {
-  if (!import.meta.env.DEV) return;
-
   const logVital = (metric: Metric) => {
+    if (import.meta.env.PROD) recordWebVital(metric);
     logger.debug('WEB_VITALS', metric.name, {
       value: Number(metric.value.toFixed(2)),
       rating: metric.rating,
@@ -30,6 +33,7 @@ function reportWebVitals() {
   onINP(logVital);
 }
 
+if (import.meta.env.PROD) installDiagnosticErrorHandlers();
 reportWebVitals();
 installChunkLoadRecovery();
 

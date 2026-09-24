@@ -5,7 +5,7 @@
 
 import { ExceptionRuleError, ExceptionRuleException } from '../../types';
 import { getSafeErrorDetail } from '../../utils/errorMessage';
-import { getCurrentLanguage, tr } from '../../utils/runtimeI18n';
+import { getCurrentLanguage, t } from '../../utils/runtimeI18n';
 
 export class ErrorMessageFormatter {
   getUserFriendlyMessage(error: ExceptionRuleException): string {
@@ -21,27 +21,31 @@ export class ErrorMessageFormatter {
         return this.formatTypeMismatchMessage();
 
       case ExceptionRuleError.INVALID_RULE_TYPE:
-        return tr(
-          '规则类型无效，请检查规则设置',
-          'Invalid rule type. Please check the rule settings.',
+        return t(
+          'feedback.errorMessageFormatter.invalidRuleTypePleaseCheckTheRuleSettings',
+          undefined,
           language,
         );
 
       case ExceptionRuleError.VALIDATION_ERROR: {
         const safeDetail = getSafeErrorDetail(error.message || '', language);
         return safeDetail
-          ? tr(
-              `输入验证失败：${safeDetail}`,
-              `Validation failed: ${safeDetail}`,
+          ? t(
+              'feedback.errorMessageFormatter.validationFailedSafeDetail',
+              { safeDetail: safeDetail },
               language,
             )
-          : tr('输入验证失败', 'Validation failed', language);
+          : t(
+              'feedback.errorMessageFormatter.validationFailed',
+              undefined,
+              language,
+            );
       }
 
       case ExceptionRuleError.STORAGE_ERROR:
-        return tr(
-          '数据保存失败，请检查网络连接或重试',
-          'Failed to save data. Please check your connection or try again.',
+        return t(
+          'feedback.errorMessageFormatter.failedToSaveDataPleaseCheckYourConnectionOr',
+          undefined,
           language,
         );
 
@@ -49,7 +53,11 @@ export class ErrorMessageFormatter {
         const safeDetail = getSafeErrorDetail(error.message || '', language);
         return (
           safeDetail ??
-          tr('发生了未知错误', 'An unknown error occurred.', language)
+          t(
+            'feedback.errorMessageFormatter.anUnknownErrorOccurred',
+            undefined,
+            language,
+          )
         );
       }
     }
@@ -59,19 +67,47 @@ export class ErrorMessageFormatter {
     const language = getCurrentLanguage();
     switch (errorType) {
       case ExceptionRuleError.RULE_NOT_FOUND:
-        return tr('规则不存在', 'Rule not found', language);
+        return t(
+          'feedback.errorMessageFormatter.ruleNotFound',
+          undefined,
+          language,
+        );
       case ExceptionRuleError.DUPLICATE_RULE_NAME:
-        return tr('规则名称重复', 'Duplicate rule name', language);
+        return t(
+          'feedback.errorMessageFormatter.duplicateRuleName',
+          undefined,
+          language,
+        );
       case ExceptionRuleError.RULE_TYPE_MISMATCH:
-        return tr('规则类型不匹配', 'Rule type mismatch', language);
+        return t(
+          'feedback.errorMessageFormatter.ruleTypeMismatch',
+          undefined,
+          language,
+        );
       case ExceptionRuleError.INVALID_RULE_TYPE:
-        return tr('规则类型无效', 'Invalid rule type', language);
+        return t(
+          'feedback.errorMessageFormatter.invalidRuleType',
+          undefined,
+          language,
+        );
       case ExceptionRuleError.VALIDATION_ERROR:
-        return tr('输入验证失败', 'Validation failed', language);
+        return t(
+          'feedback.errorMessageFormatter.validationFailed',
+          undefined,
+          language,
+        );
       case ExceptionRuleError.STORAGE_ERROR:
-        return tr('数据保存失败', 'Save failed', language);
+        return t(
+          'feedback.errorMessageFormatter.saveFailed',
+          undefined,
+          language,
+        );
       default:
-        return tr('操作失败', 'Operation failed', language);
+        return t(
+          'feedback.errorMessageFormatter.operationFailed',
+          undefined,
+          language,
+        );
     }
   }
 
@@ -80,16 +116,16 @@ export class ErrorMessageFormatter {
     const message = error.message;
 
     if (message.includes('ID')) {
-      return tr(
-        '所选的规则不存在，可能已被删除。请选择其他规则或创建新规则。',
-        'The selected rule no longer exists. It may have been deleted. Please choose another rule or create a new one.',
+      return t(
+        'feedback.errorMessageFormatter.theSelectedRuleNoLongerExistsItMayHave',
+        undefined,
         language,
       );
     }
 
-    return tr(
-      '规则不存在或已被删除，请选择其他规则或创建新规则。',
-      'The rule does not exist or has been deleted. Please choose another rule or create a new one.',
+    return t(
+      'feedback.errorMessageFormatter.theRuleDoesNotExistOrHasBeenDeleted',
+      undefined,
       language,
     );
   }
@@ -104,25 +140,25 @@ export class ErrorMessageFormatter {
       Array.isArray(existingRules) && existingRules.length > 0;
 
     if (hasExistingRules) {
-      return tr(
-        '规则名称已存在。您可以使用现有规则或为新规则选择不同的名称。',
-        'This rule name already exists. You can use the existing rule or choose a different name.',
+      return t(
+        'feedback.errorMessageFormatter.thisRuleNameAlreadyExistsYouCanUseThe',
+        undefined,
         language,
       );
     }
 
-    return tr(
-      '规则名称已存在，请选择不同的名称或使用现有规则。',
-      'This rule name already exists. Please choose a different name or use the existing rule.',
+    return t(
+      'feedback.errorMessageFormatter.thisRuleNameAlreadyExistsPleaseChooseADifferent',
+      undefined,
       language,
     );
   }
 
   private formatTypeMismatchMessage(): string {
     const language = getCurrentLanguage();
-    return tr(
-      '规则类型与当前操作不匹配，请选择正确类型的规则。',
-      'This rule type does not match the current action. Please choose a compatible rule type.',
+    return t(
+      'feedback.errorMessageFormatter.thisRuleTypeDoesNotMatchTheCurrentAction',
+      undefined,
       language,
     );
   }

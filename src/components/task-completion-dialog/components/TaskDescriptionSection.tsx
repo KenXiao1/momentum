@@ -1,8 +1,9 @@
+import { type Translator } from '../../../i18n';
 import React from 'react';
 import { FileText, History, RotateCcw } from 'lucide-react';
 
 export const TaskDescriptionSection: React.FC<{
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   isDurationless: boolean;
   description: string;
   onDescriptionChange: (value: string) => void;
@@ -13,7 +14,7 @@ export const TaskDescriptionSection: React.FC<{
   onToggleQuickFill: () => void;
   onQuickFill: (description: string) => void;
 }> = ({
-  tr,
+  t,
   isDurationless,
   description,
   onDescriptionChange,
@@ -30,8 +31,10 @@ export const TaskDescriptionSection: React.FC<{
         <div className="flex items-center space-x-2">
           <FileText className="text-gray-500 dark:text-gray-400" size={16} />
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {tr('任务描述', 'Task description')}
-            {isDurationless ? ' *' : tr('（可选）', ' (optional)')}
+            {t('chainEditor.description.title')}
+            {isDurationless
+              ? ' *'
+              : t('taskCompletionDialog.taskDescriptionSection.optional')}
           </label>
         </div>
 
@@ -39,12 +42,16 @@ export const TaskDescriptionSection: React.FC<{
           <button
             type="button"
             onClick={onToggleQuickFill}
-            aria-label={tr('显示历史描述', 'Show history')}
+            aria-label={t(
+              'taskCompletionDialog.taskDescriptionSection.showHistory',
+            )}
             aria-expanded={showQuickFill}
             className="flex items-center space-x-1 text-xs text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
           >
             <History size={14} />
-            <span>{tr('历史', 'History')}</span>
+            <span>
+              {t('taskCompletionDialog.taskDescriptionSection.history')}
+            </span>
           </button>
         )}
       </div>
@@ -58,16 +65,14 @@ export const TaskDescriptionSection: React.FC<{
         onKeyDown={onDescriptionKeyDown}
         placeholder={
           isDurationless
-            ? tr(
-                '例如：完成 CS61A 的第一部分（按 Tab 添加备注或自动填充）',
-                'e.g. Finish CS61A Part 1 (Tab to add notes or auto-fill)',
+            ? t(
+                'taskCompletionDialog.taskDescriptionSection.eGFinishCs61aPart1TabToAddNotes',
               )
-            : tr(
-                '例如：完成 CS61A 的第一部分（可选，按 Tab 添加备注）',
-                'e.g. Finish CS61A Part 1 (optional, Tab to add notes)',
+            : t(
+                'taskCompletionDialog.taskDescriptionSection.eGFinishCs61aPart1OptionalTabToAdd',
               )
         }
-        aria-label={tr('任务描述', 'Task description')}
+        aria-label={t('chainEditor.description.title')}
         aria-required={isDurationless}
         className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 transition focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500"
         required={isDurationless}
@@ -78,7 +83,9 @@ export const TaskDescriptionSection: React.FC<{
           <div className="mb-2 flex items-center space-x-2">
             <RotateCcw className="text-blue-600 dark:text-blue-400" size={14} />
             <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
-              {tr('最近的任务描述', 'Recent descriptions')}
+              {t(
+                'taskCompletionDialog.taskDescriptionSection.recentDescriptions',
+              )}
             </span>
           </div>
           <div className="space-y-1">
@@ -99,13 +106,11 @@ export const TaskDescriptionSection: React.FC<{
 
       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
         {isDurationless
-          ? tr(
-              '按 Tab 添加备注或自动填充，按 Shift+Tab 显示历史，按 Enter 完成',
-              'Tab to add notes or auto-fill, Shift+Tab for history, Enter to complete',
+          ? t(
+              'taskCompletionDialog.taskDescriptionSection.tabToAddNotesOrAutoFillShiftTabForHistory',
             )
-          : tr(
-              '任务描述可选，按 Tab 添加备注，按 Enter 完成',
-              'Description optional; Tab to add notes; Enter to complete',
+          : t(
+              'taskCompletionDialog.taskDescriptionSection.descriptionOptionalTabToAddNotesEnterToComplete',
             )}
       </p>
     </div>

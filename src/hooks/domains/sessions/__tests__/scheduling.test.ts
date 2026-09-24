@@ -1,3 +1,5 @@
+import { createTranslationMock } from '../../../../test/i18n';
+import { createTranslator } from '../../../../i18n/translate';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppState } from '../../../../types';
 import {
@@ -50,7 +52,7 @@ function createStateContainer(initialState: AppState) {
 }
 
 describe('createSchedulingHandlers', () => {
-  const tr = (_zh: string, en: string) => en;
+  const t = createTranslator('en');
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -101,7 +103,7 @@ describe('createSchedulingHandlers', () => {
       storage,
       safelySaveChains,
       setShowAuxiliaryJudgment,
-      tr,
+      t,
     });
 
     handleScheduleChain(targetChain.id);
@@ -149,7 +151,7 @@ describe('createSchedulingHandlers', () => {
       storage,
       safelySaveChains,
       setShowAuxiliaryJudgment: vi.fn(),
-      tr,
+      t,
     });
 
     handleScheduleChain(chain.id);
@@ -176,7 +178,7 @@ describe('createSchedulingHandlers', () => {
       storage,
       safelySaveChains,
       setShowAuxiliaryJudgment: vi.fn(),
-      tr,
+      t,
     });
 
     handleScheduleChain('missing-chain');
@@ -195,7 +197,7 @@ describe('createSchedulingHandlers', () => {
       storage: createLocalStorageMock(),
       safelySaveChains: vi.fn(async () => undefined),
       setShowAuxiliaryJudgment,
-      tr,
+      t,
     });
 
     handleCancelScheduledSession('chain-3');
@@ -204,7 +206,7 @@ describe('createSchedulingHandlers', () => {
   });
 
   it('completes only the requested non-first booking and preserves other schedules', async () => {
-    const completionTr = vi.fn((_zh: string, en: string) => en);
+    const completionTr = createTranslationMock('en');
     const otherChain = createUnitChain({
       id: 'other-chain',
       auxiliaryStreak: 7,
@@ -244,7 +246,7 @@ describe('createSchedulingHandlers', () => {
       storage,
       safelySaveChains,
       setShowAuxiliaryJudgment: vi.fn(),
-      tr: completionTr,
+      t: completionTr,
     });
 
     await handleCompleteBooking(targetChain.id);
@@ -265,8 +267,7 @@ describe('createSchedulingHandlers', () => {
     expect(storage.removeScheduledSession).toHaveBeenCalledWith(targetChain.id);
     expect(safelySaveChains).toHaveBeenCalledWith(nextState.chains);
     expect(completionTr).toHaveBeenCalledWith(
-      '预约已完成',
-      'Schedule completed',
+      'sessions.scheduling.scheduleCompleted',
     );
   });
 
@@ -286,7 +287,7 @@ describe('createSchedulingHandlers', () => {
       storage,
       safelySaveChains,
       setShowAuxiliaryJudgment: vi.fn(),
-      tr,
+      t,
     });
 
     expect(() => handleCompleteBooking('missing-chain')).not.toThrow();
@@ -330,7 +331,7 @@ describe('createSchedulingHandlers', () => {
       storage,
       safelySaveChains,
       setShowAuxiliaryJudgment: vi.fn(),
-      tr,
+      t,
     });
 
     await handleCompleteBooking(chain.id);
@@ -348,7 +349,7 @@ describe('createSchedulingHandlers', () => {
   });
 
   it('should show toast when schedule persistence fails', async () => {
-    const failureTr = vi.fn((_zh: string, en: string) => en);
+    const failureTr = createTranslationMock('en');
     const chain = createUnitChain({ id: 'chain-5' });
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
     const storage = createLocalStorageMock({
@@ -366,7 +367,7 @@ describe('createSchedulingHandlers', () => {
       storage,
       safelySaveChains,
       setShowAuxiliaryJudgment: vi.fn(),
-      tr: failureTr,
+      t: failureTr,
     });
 
     handleScheduleChain(chain.id);
@@ -376,8 +377,7 @@ describe('createSchedulingHandlers', () => {
       'Failed to schedule. Please try again.',
     );
     expect(failureTr).toHaveBeenCalledWith(
-      '预约失败，请重试',
-      'Failed to schedule. Please try again.',
+      'sessions.scheduling.failedToSchedulePleaseTryAgain',
     );
     expect(logger.error).toHaveBeenCalledWith(
       'SESSIONS',
@@ -394,7 +394,7 @@ describe('createSchedulingHandlers', () => {
       storage: createLocalStorageMock(),
       safelySaveChains: vi.fn(async () => undefined),
       setShowAuxiliaryJudgment: vi.fn(),
-      tr,
+      t,
     });
     await handlers.handleScheduleChain(chain.id);
     expect(stateRef.getState().chains[0].auxiliaryStreak).toBe(0);
@@ -416,7 +416,7 @@ describe('createSchedulingHandlers', () => {
       storage: createLocalStorageMock(),
       safelySaveChains: vi.fn(async () => undefined),
       setShowAuxiliaryJudgment: judgment,
-      tr,
+      t,
     });
     await handlers.handleScheduleChain(chain.id);
     vi.advanceTimersByTime((chain.auxiliaryDuration + 1) * 60000);
@@ -424,5 +424,64 @@ describe('createSchedulingHandlers', () => {
     expect(judgment).toHaveBeenCalledWith(chain.id);
     expect(stateRef.getState().chains[0].auxiliaryStreak).toBe(0);
     expect(stateRef.getState().scheduledSessions).toHaveLength(1);
+  });
+  it('ignores completion when only another chain has a booking', async () => {
+    const chain = createUnitChain({ id: 'target' });
+    const state = createAppState({
+      chains: [chain],
+      scheduledSessions: [
+        {
+          chainId: 'other',
+          scheduledAt: new Date(),
+          expiresAt: new Date(Date.now() + 60000),
+          auxiliarySignal: 'bell',
+        },
+      ],
+    });
+    const storage = createLocalStorageMock();
+    const safelySaveChains = vi.fn(async () => undefined);
+    const setState = vi.fn();
+    const handlers = createSchedulingHandlers({
+      state,
+      setState,
+      storage,
+      safelySaveChains,
+      setShowAuxiliaryJudgment: vi.fn(),
+      t,
+    });
+    await handlers.handleCompleteBooking(chain.id);
+    expect(safelySaveChains).not.toHaveBeenCalled();
+    expect(storage.removeScheduledSession).not.toHaveBeenCalled();
+    expect(setState).not.toHaveBeenCalled();
+  });
+
+  it('releases the booking lock after a failed save so retry can commit', async () => {
+    const chain = createUnitChain({ id: 'retry' });
+    const stateRef = createStateContainer(createAppState({ chains: [chain] }));
+    const storage = createLocalStorageMock();
+    const save = vi
+      .fn(async () => undefined)
+      .mockRejectedValueOnce(new Error('offline'));
+    const t = createTranslationMock('en');
+    const handlers = createSchedulingHandlers({
+      ...stateRef,
+      storage,
+      safelySaveChains: save,
+      setShowAuxiliaryJudgment: vi.fn(),
+      t: t,
+    });
+    await handlers.handleScheduleChain(chain.id);
+    await handlers.handleCompleteBooking(chain.id);
+    expect(t).toHaveBeenCalledWith(
+      'sessions.scheduling.failedToCompleteBookingPleaseTryAgain',
+    );
+    expect(toast.error).toHaveBeenCalledWith(
+      'Failed to complete booking. Please try again.',
+    );
+    expect(stateRef.getState().scheduledSessions).toHaveLength(1);
+    await handlers.handleCompleteBooking(chain.id);
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(stateRef.getState().chains[0].auxiliaryStreak).toBe(1);
+    expect(stateRef.getState().scheduledSessions).toEqual([]);
   });
 });

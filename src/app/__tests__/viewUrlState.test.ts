@@ -48,7 +48,6 @@ describe('viewUrlState', () => {
     const unitChain = {
       id: 'unit-1',
       type: 'unit',
-      isTaskGroup: false,
     } as Chain;
 
     const groupState = parseViewStateFromSearch({

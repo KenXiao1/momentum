@@ -1,9 +1,10 @@
+import { type Translator } from '../../i18n';
 import type { StorageMode } from '../../storage/storageModeContextValue';
 
 interface AccountModalStorageSectionProps {
   mode: StorageMode;
   canUseSupabase: boolean;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   onSwitchToLocal: () => void;
   onSwitchToSupabase: () => void;
 }
@@ -11,7 +12,7 @@ interface AccountModalStorageSectionProps {
 export function AccountModalStorageSection({
   mode,
   canUseSupabase,
-  tr,
+  t,
   onSwitchToLocal,
   onSwitchToSupabase,
 }: AccountModalStorageSectionProps) {
@@ -19,12 +20,11 @@ export function AccountModalStorageSection({
     <div className="space-y-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-600 dark:bg-slate-700">
       <div>
         <h3 className="font-chinese text-base font-medium text-gray-900 dark:text-slate-100">
-          {tr('数据模式', 'Data mode')}
+          {t('accountModal.accountModalStorageSection.dataMode')}
         </h3>
         <p className="font-chinese text-xs text-gray-500 dark:text-slate-400">
-          {tr(
-            '本地模式离线可用；云端模式支持登录与多端同步',
-            'Local mode works offline; cloud mode enables sign-in and multi-device sync',
+          {t(
+            'accountModal.accountModalStorageSection.localModeWorksOfflineCloudModeEnablesSignInAnd',
           )}
         </p>
       </div>
@@ -32,7 +32,7 @@ export function AccountModalStorageSection({
       <div
         className="flex items-center space-x-2"
         role="radiogroup"
-        aria-label={tr('数据模式', 'Data mode')}
+        aria-label={t('accountModal.accountModalStorageSection.dataMode')}
       >
         <button
           type="button"
@@ -45,7 +45,7 @@ export function AccountModalStorageSection({
           aria-checked={mode === 'local'}
           role="radio"
         >
-          {tr('本地模式', 'Local mode')}
+          {t('accountModal.accountModalStorageSection.localMode')}
         </button>
         <button
           type="button"
@@ -59,15 +59,14 @@ export function AccountModalStorageSection({
           aria-checked={mode === 'supabase'}
           role="radio"
         >
-          {tr('云端模式', 'Cloud mode')}
+          {t('accountModal.accountModalStorageSection.cloudMode')}
         </button>
       </div>
 
       {!canUseSupabase && (
         <p className="text-xs text-amber-700 dark:text-amber-300">
-          {tr(
-            '未检测到 Supabase 配置，当前仅支持本地模式。',
-            'Supabase is not configured, so only local mode is available.',
+          {t(
+            'accountModal.accountModalStorageSection.supabaseIsNotConfiguredSoOnlyLocalModeIs',
           )}
         </p>
       )}

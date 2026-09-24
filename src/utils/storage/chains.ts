@@ -1,9 +1,11 @@
+import { recoverOperationJournal } from './operationJournal';
 import type { Chain, DeletedChain } from '../../types';
 import { decodeChain, type SerializedChain } from '../../serialization';
 import { collectDescendantIds } from './chainHierarchy';
 import { STORAGE_KEYS } from './keys';
 
 export function getChains(): Chain[] {
+  recoverOperationJournal();
   const data = localStorage.getItem(STORAGE_KEYS.CHAINS);
   if (!data) return [];
 
@@ -11,10 +13,12 @@ export function getChains(): Chain[] {
 }
 
 export function saveChains(chains: Chain[]): void {
+  recoverOperationJournal();
   localStorage.setItem(STORAGE_KEYS.CHAINS, JSON.stringify(chains));
 }
 
 export function upsertChain(chain: Chain): void {
+  recoverOperationJournal();
   const chains = getChains();
   const existingIndex = chains.findIndex((item) => item.id === chain.id);
 
@@ -29,10 +33,12 @@ export function upsertChain(chain: Chain): void {
 }
 
 export function getActiveChains(): Chain[] {
+  recoverOperationJournal();
   return getChains().filter((chain) => chain.deletedAt == null);
 }
 
 export function getDeletedChains(): DeletedChain[] {
+  recoverOperationJournal();
   return getChains()
     .filter((chain) => chain.deletedAt != null)
     .map((chain) => ({ ...chain, deletedAt: chain.deletedAt! }))
@@ -40,6 +46,7 @@ export function getDeletedChains(): DeletedChain[] {
 }
 
 export function softDeleteChain(chainId: string): void {
+  recoverOperationJournal();
   const chains = getChains();
   const descendants = collectDescendantIds(chainId, chains);
   const targets = new Set([chainId, ...descendants]);
@@ -55,6 +62,7 @@ export function softDeleteChain(chainId: string): void {
 }
 
 export function restoreChain(chainId: string): void {
+  recoverOperationJournal();
   const chains = getChains();
   const descendants = collectDescendantIds(chainId, chains);
   const targets = new Set([chainId, ...descendants]);
@@ -70,6 +78,7 @@ export function restoreChain(chainId: string): void {
 }
 
 export function permanentlyDeleteChain(chainId: string): void {
+  recoverOperationJournal();
   const chains = getChains();
   const descendants = collectDescendantIds(chainId, chains);
   const targets = new Set([chainId, ...descendants]);
@@ -81,6 +90,7 @@ export function permanentlyDeleteChain(chainId: string): void {
 export function cleanupExpiredDeletedChains(
   olderThanDays: number = 30,
 ): number {
+  recoverOperationJournal();
   const chains = getChains();
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);

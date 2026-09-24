@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../../i18n/translate';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import type { AppState } from '../../../../types';
 import {
@@ -76,8 +77,8 @@ function flushPromises() {
 }
 
 describe('createStartChainHandler', () => {
-  const tr = (_zh: string, en: string) => en;
-  const zhTr = (zh: string) => zh;
+  const t = createTranslator('en');
+  const zhTr = createTranslator('zh');
 
   afterEach(() => vi.useRealTimers());
 
@@ -109,7 +110,7 @@ describe('createStartChainHandler', () => {
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
       onNavigateToFocus,
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -148,7 +149,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: 'bet-session-123',
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -198,7 +199,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -221,9 +222,12 @@ describe('createStartChainHandler', () => {
     const chain = createUnitChain({ id: 'unit-3', duration: 20 });
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
     const storage = createSupabaseStorageMock({
-      isGamblingModeEnabled: vi.fn(async () => ({ ok: true, value: true })),
+      isGamblingModeEnabled: vi.fn(async () => ({
+        ok: true as const,
+        value: true,
+      })),
       createBettingSession: vi.fn(async () => ({
-        ok: true,
+        ok: true as const,
         value: 'bet-session-id',
       })),
       saveActiveSession: vi.fn(async () => undefined),
@@ -242,7 +246,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId,
       setShowBettingModal,
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -261,9 +265,12 @@ describe('createStartChainHandler', () => {
     const chain = createUnitChain({ id: 'unit-pending', duration: 25 });
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
     const storage = createSupabaseStorageMock({
-      isGamblingModeEnabled: vi.fn(async () => ({ ok: true, value: true })),
+      isGamblingModeEnabled: vi.fn(async () => ({
+        ok: true as const,
+        value: true,
+      })),
       createBettingSession: vi.fn(async () => ({
-        ok: true,
+        ok: true as const,
         value: 'new-session',
       })),
       saveActiveSession: vi.fn(async () => undefined),
@@ -280,7 +287,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: 'current',
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -294,7 +301,10 @@ describe('createStartChainHandler', () => {
     const chain = createUnitChain({ id: 'local-unit', duration: 30 });
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
     const storage = createLocalStorageMock({
-      isGamblingModeEnabled: vi.fn(async () => ({ ok: true, value: true })),
+      isGamblingModeEnabled: vi.fn(async () => ({
+        ok: true as const,
+        value: true,
+      })),
       saveActiveSession: vi.fn(async () => undefined),
       saveScheduledSessions: vi.fn(async () => undefined),
     });
@@ -309,7 +319,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: 'should-not-be-used',
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -324,9 +334,12 @@ describe('createStartChainHandler', () => {
     const chain = createUnitChain({ id: 'unit-gambling-off' });
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
     const storage = createSupabaseStorageMock({
-      isGamblingModeEnabled: vi.fn(async () => ({ ok: true, value: false })),
+      isGamblingModeEnabled: vi.fn(async () => ({
+        ok: true as const,
+        value: false,
+      })),
       createBettingSession: vi.fn(async () => ({
-        ok: true,
+        ok: true as const,
         value: 'never-called',
       })),
       saveActiveSession: vi.fn(async () => undefined),
@@ -343,7 +356,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -355,9 +368,12 @@ describe('createStartChainHandler', () => {
   it('should not start when gambling is enabled but target chain is missing', async () => {
     const stateRef = createStateContainer(createAppState({ chains: [] }));
     const storage = createSupabaseStorageMock({
-      isGamblingModeEnabled: vi.fn(async () => ({ ok: true, value: true })),
+      isGamblingModeEnabled: vi.fn(async () => ({
+        ok: true as const,
+        value: true,
+      })),
       createBettingSession: vi.fn(async () => ({
-        ok: true,
+        ok: true as const,
         value: 'unexpected',
       })),
       saveActiveSession: vi.fn(async () => undefined),
@@ -377,7 +393,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId,
       setShowBettingModal,
-      tr,
+      t,
     });
 
     await handleStartChain('missing-chain');
@@ -411,7 +427,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -430,8 +446,12 @@ describe('createStartChainHandler', () => {
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
     const storage = createSupabaseStorageMock({
       isGamblingModeEnabled: vi.fn(async () => ({
-        ok: false,
-        error: { code: 'READ_ONLY', message: 'blocked', recoverable: true },
+        ok: false as const,
+        error: {
+          code: 'STORAGE' as const,
+          message: 'blocked',
+          recoverable: true,
+        },
       })),
       saveActiveSession: vi.fn(async () => undefined),
       saveScheduledSessions: vi.fn(async () => undefined),
@@ -449,7 +469,7 @@ describe('createStartChainHandler', () => {
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
       onNavigateToFocus,
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -487,7 +507,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -522,7 +542,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr: zhTr,
+      t: zhTr,
     });
 
     await handleStartChain(group.id);
@@ -569,6 +589,7 @@ describe('createStartChainHandler', () => {
     } as never);
     vi.mocked(startGroupTimer).mockImplementation((value) => ({
       ...value,
+      type: 'group',
       groupStartedAt: new Date(),
     }));
 
@@ -582,7 +603,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -639,7 +660,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -682,7 +703,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -751,7 +772,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -798,7 +819,7 @@ describe('createStartChainHandler', () => {
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
       onTaskLifecycleEvent,
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -847,7 +868,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -881,7 +902,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -921,7 +942,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(group.id);
@@ -936,10 +957,13 @@ describe('createStartChainHandler', () => {
   it('should show toast when betting session creation returns error', async () => {
     const chain = createUnitChain({ id: 'unit-err' });
     const storage = createSupabaseStorageMock({
-      isGamblingModeEnabled: vi.fn(async () => ({ ok: true, value: true })),
+      isGamblingModeEnabled: vi.fn(async () => ({
+        ok: true as const,
+        value: true,
+      })),
       createBettingSession: vi.fn(async () => ({
-        ok: false,
-        error: { code: 'FAIL', message: 'nope' },
+        ok: false as const,
+        error: { code: 'STORAGE' as const, message: 'nope' },
       })),
       saveActiveSession: vi.fn(async () => undefined),
     });
@@ -955,7 +979,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -969,10 +993,13 @@ describe('createStartChainHandler', () => {
   it('should use chinese copy and exact logger payload when betting session creation fails', async () => {
     const chain = createUnitChain({ id: 'unit-err-zh', duration: 15 });
     const storage = createSupabaseStorageMock({
-      isGamblingModeEnabled: vi.fn(async () => ({ ok: true, value: true })),
+      isGamblingModeEnabled: vi.fn(async () => ({
+        ok: true as const,
+        value: true,
+      })),
       createBettingSession: vi.fn(async () => ({
-        ok: false,
-        error: { code: 'FAIL', message: 'nope' },
+        ok: false as const,
+        error: { code: 'STORAGE' as const, message: 'nope' },
       })),
       saveActiveSession: vi.fn(async () => undefined),
     });
@@ -986,7 +1013,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr: zhTr,
+      t: zhTr,
     });
 
     await handleStartChain(chain.id);
@@ -996,7 +1023,7 @@ describe('createStartChainHandler', () => {
       'Failed to create betting session',
       {
         chainId: chain.id,
-        code: 'FAIL',
+        code: 'STORAGE' as const,
         message: 'nope',
       },
     );
@@ -1025,7 +1052,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -1074,7 +1101,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -1127,7 +1154,7 @@ describe('createStartChainHandler', () => {
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
       onNavigateToFocus,
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -1176,7 +1203,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -1230,7 +1257,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain(chain.id);
@@ -1265,7 +1292,7 @@ describe('createStartChainHandler', () => {
       currentSessionId: null,
       setCurrentSessionId: vi.fn(),
       setShowBettingModal: vi.fn(),
-      tr,
+      t,
     });
 
     await handleStartChain('missing-local-chain');

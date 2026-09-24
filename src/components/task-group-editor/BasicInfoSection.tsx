@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import React from 'react';
 import { Tag } from 'lucide-react';
 
@@ -17,7 +18,7 @@ interface BasicInfoSectionProps {
   errors: FormErrors;
   onNameChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 const BasicInfoSectionComponent: React.FC<BasicInfoSectionProps> = ({
@@ -26,15 +27,14 @@ const BasicInfoSectionComponent: React.FC<BasicInfoSectionProps> = ({
   errors,
   onNameChange,
   onDescriptionChange,
-  tr,
+  t,
 }) => (
   <div data-testid="task-group-editor-basic-info">
     <SettingSection
-      title={tr('基础信息', 'Basic info')}
+      title={t('chainEditor.basicInfoSection.basicInfo')}
       icon={<Tag className="text-primary-500" size={20} />}
-      description={tr(
-        '设置任务群的基本信息',
-        'Set the basic information for this group',
+      description={t(
+        'taskGroupEditor.basicInfoSection.setTheBasicInformationForThisGroup',
       )}
     >
       {/* Task Group Name */}
@@ -44,12 +44,11 @@ const BasicInfoSectionComponent: React.FC<BasicInfoSectionProps> = ({
             htmlFor="taskgroup-name"
             className="mb-2 block font-chinese text-lg font-semibold text-gray-900 dark:text-slate-100"
           >
-            {tr('任务群名称', 'Group name')}
+            {t('taskGroupEditor.basicInfoSection.groupName')}
           </label>
           <p className="mb-4 font-chinese text-sm text-gray-500 dark:text-slate-400">
-            {tr(
-              '为您的任务群起一个清晰易懂的名称',
-              'Give your group a clear and recognizable name',
+            {t(
+              'taskGroupEditor.basicInfoSection.giveYourGroupAClearAndRecognizableName',
             )}
           </p>
         </div>
@@ -59,9 +58,8 @@ const BasicInfoSectionComponent: React.FC<BasicInfoSectionProps> = ({
           name="taskGroupName"
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
-          placeholder={tr(
-            '例如：期末复习计划、网站开发项目、健身训练计划',
-            'e.g. Finals study plan, Website project, Workout plan',
+          placeholder={t(
+            'taskGroupEditor.basicInfoSection.eGFinalsStudyPlanWebsiteProjectWorkoutPlan',
           )}
           className={`w-full border bg-gray-50 dark:bg-slate-700 ${errors.name ? ERROR_INPUT_BORDER_CLASSES : 'border-gray-200 focus:border-primary-500 focus:ring-primary-500/20 dark:border-slate-600'} rounded-2xl px-6 py-4 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:outline-none focus:ring-2 dark:text-slate-100 dark:placeholder-slate-400`}
           required
@@ -80,12 +78,11 @@ const BasicInfoSectionComponent: React.FC<BasicInfoSectionProps> = ({
             htmlFor="taskgroup-description"
             className="mb-2 block font-chinese text-lg font-semibold text-gray-900 dark:text-slate-100"
           >
-            {tr('任务群描述', 'Group description')}
+            {t('taskGroupEditor.basicInfoSection.groupDescription')}
           </label>
           <p className="mb-4 font-chinese text-sm text-gray-500 dark:text-slate-400">
-            {tr(
-              '详细描述这个任务群的目标和范围',
-              'Describe the goal and scope of this group',
+            {t(
+              'taskGroupEditor.basicInfoSection.describeTheGoalAndScopeOfThisGroup',
             )}
           </p>
         </div>
@@ -94,9 +91,8 @@ const BasicInfoSectionComponent: React.FC<BasicInfoSectionProps> = ({
           name="taskGroupDescription"
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          placeholder={tr(
-            '描述这个任务群的目标和范围，例如：期末复习计划，包含各科目的复习、练习题和模拟考试等',
-            'Describe the goal and scope, e.g. Finals study plan with review, practice problems, and mock exams.',
+          placeholder={t(
+            'taskGroupEditor.basicInfoSection.describeTheGoalAndScopeEGFinalsStudyPlan',
           )}
           rows={4}
           className={`w-full border bg-gray-50 dark:bg-slate-700 ${errors.description ? ERROR_INPUT_BORDER_CLASSES : 'border-gray-200 focus:border-primary-500 focus:ring-primary-500/20 dark:border-slate-600'} resize-none rounded-2xl px-6 py-4 font-chinese leading-relaxed text-gray-900 placeholder-gray-400 transition duration-300 focus:outline-none focus:ring-2 dark:text-slate-100 dark:placeholder-slate-400`}

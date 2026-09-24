@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createLocalStorageMock } from '../../../test/factories';
@@ -14,7 +15,7 @@ vi.mock('../../../storage/useStorage', () => ({
 }));
 
 vi.mock('../../../i18n', () => ({
-  useI18n: () => ({ tr: (_zh: string, en: string) => en }),
+  useI18n: () => ({ t: createTranslator('en') }),
 }));
 
 vi.mock('../../../utils/logger', () => ({
@@ -153,7 +154,7 @@ describe('usePetDomain real pet-logic composition', () => {
         preserveTimestamps: true,
         importCompletionHistory: true,
       },
-      tr: (_zh, en) => en,
+      t: createTranslator('en'),
     });
     await act(() =>
       result.current.importer.handleImportChains(parsed.chains, {

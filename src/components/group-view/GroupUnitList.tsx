@@ -6,7 +6,7 @@ type Props = Pick<
   GroupViewViewProps,
   | 'group'
   | 'nextUnit'
-  | 'tr'
+  | 't'
   | 'language'
   | 'onAddUnit'
   | 'getScheduledSession'
@@ -24,11 +24,11 @@ export function GroupUnitList(props: Props) {
     <div className="animate-slide-up space-y-4">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="font-chinese text-2xl font-bold text-gray-900 dark:text-slate-100">
-          {props.tr('任务单元', 'Units')}
+          {props.t('groupView.groupUnitList.units')}
         </h2>
         {props.nextUnit && (
           <p className="font-chinese text-sm text-gray-600 dark:text-slate-400">
-            {props.tr('下一个待执行：', 'Next up: ')}
+            {props.t('groupView.groupUnitList.nextUp')}
             <span className="font-semibold text-primary-500">
               {props.nextUnit.name}
             </span>
@@ -41,14 +41,14 @@ export function GroupUnitList(props: Props) {
             <Users size={32} className="text-gray-400" />
           </div>
           <p className="mb-4 font-chinese text-lg">
-            {props.tr('此任务群还没有子单元', 'This group has no units yet')}
+            {props.t('groupView.groupUnitList.thisGroupHasNoUnitsYet')}
           </p>
           <button
             onClick={props.onAddUnit}
             className="gradient-primary mx-auto flex items-center space-x-2 rounded-2xl px-6 py-3 font-chinese font-medium text-white shadow-lg transition duration-300 hover:scale-105 hover:shadow-xl"
           >
             <Plus size={16} />
-            <span>{props.tr('添加第一个单元', 'Add your first unit')}</span>
+            <span>{props.t('groupView.groupUnitList.addYourFirstUnit')}</span>
           </button>
         </div>
       ) : (
@@ -62,7 +62,7 @@ export function GroupUnitList(props: Props) {
               scheduledSession={props.getScheduledSession(unit.id)}
               nextUnit={props.nextUnit || undefined}
               language={props.language}
-              tr={props.tr}
+              t={props.t}
               onStartChain={props.onStartChain}
               onScheduleChain={props.onScheduleChain}
               onEditChain={props.onEditChain}

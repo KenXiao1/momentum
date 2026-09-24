@@ -3,6 +3,7 @@
  */
 
 import { isDev, isProd } from './env';
+import { recordDiagnosticError } from './diagnostics';
 
 enum LogLevel {
   DEBUG = 0,
@@ -101,6 +102,13 @@ class Logger {
   }
 
   private addLog(entry: LogEntry) {
+    if (this.isProduction && entry.level >= LogLevel.WARN) {
+      recordDiagnosticError(
+        entry.category,
+        entry.error ?? entry.message,
+        entry.level === LogLevel.ERROR ? 'error' : 'warning',
+      );
+    }
     this.logs.push(entry);
 
     // Keep only the most recent logs

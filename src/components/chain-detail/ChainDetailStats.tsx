@@ -36,7 +36,7 @@ export const ChainDetailStats: React.FC<MainStatsProps> = ({
   chain,
   successRate,
   language,
-  tr,
+  t,
 }) => (
   <div className="bento-card animate-scale-in">
     <div className="mb-8 text-center">
@@ -49,7 +49,7 @@ export const ChainDetailStats: React.FC<MainStatsProps> = ({
             #{chain.currentStreak}
           </span>
           <p className="font-chinese text-sm text-gray-500">
-            {tr('主链当前记录', 'Main streak')}
+            {t('chainDetail.chainDetailStats.mainStreak')}
           </p>
         </div>
       </div>
@@ -65,7 +65,7 @@ export const ChainDetailStats: React.FC<MainStatsProps> = ({
             #{chain.auxiliaryStreak}
           </span>
           <p className="font-chinese text-sm text-gray-500">
-            {tr('预约链当前记录', 'Booking streak')}
+            {t('chainDetail.chainDetailStats.bookingStreak')}
           </p>
         </div>
       </div>
@@ -73,54 +73,53 @@ export const ChainDetailStats: React.FC<MainStatsProps> = ({
 
     <div className="space-y-4">
       <StatRow
-        label={tr('触发动作', 'Trigger')}
+        label={t('chainDetail.chainDetailStats.trigger')}
         value={getTriggerLabel(chain.trigger, language)}
       />
       <StatRow
-        label={tr('任务时长', 'Duration')}
+        label={t('chainDetail.chainDetailStats.duration')}
         value={formatChainDuration(chain, language)}
         mono
       />
       <StatRow
-        label={tr('总完成次数', 'Total completions')}
+        label={t('chainDetail.chainDetailStats.totalCompletions')}
         value={chain.totalCompletions}
         mono
         success
       />
       <StatRow
-        label={tr('失败次数', 'Failures')}
+        label={t('chainDetail.chainDetailStats.failures')}
         value={chain.totalFailures}
         mono
         danger
       />
       <StatRow
-        label={tr('预约链失败', 'Booking failures')}
+        label={t('chainDetail.chainDetailStats.bookingFailures')}
         value={chain.auxiliaryFailures}
         mono
         danger
       />
       <StatRow
-        label={tr('预约信号', 'Booking signal')}
+        label={t('chainDetail.chainDetailStats.bookingSignal')}
         value={getAuxiliarySignalLabel(chain.auxiliarySignal, language)}
         blue
       />
       <StatRow
-        label={tr('预约时长', 'Booking duration')}
-        value={tr(
-          `${chain.auxiliaryDuration}分钟`,
-          `${chain.auxiliaryDuration} min`,
-        )}
+        label={t('chainDetail.chainDetailStats.bookingDuration')}
+        value={t('auxiliaryJudgment.chainAuxiliaryDurationMin', {
+          chainAuxiliaryDuration: chain.auxiliaryDuration,
+        })}
         mono
         blue
       />
       <StatRow
-        label={tr('预约完成条件', 'Booking completion trigger')}
+        label={t('chainDetail.chainDetailStats.bookingCompletionTrigger')}
         value={getTriggerLabel(chain.auxiliaryCompletionTrigger, language)}
         blue
       />
       <div className="flex items-center justify-between border-t border-gray-200 pt-4">
         <span className="font-chinese text-gray-500 dark:text-slate-400">
-          {tr('成功率', 'Success rate')}
+          {t('chainDetail.chainDetailStats.successRate')}
         </span>
         <span className="font-mono text-xl font-bold text-primary-500">
           {successRate}%

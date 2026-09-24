@@ -1,3 +1,4 @@
+import type { StorageOperationStore } from './operations';
 import type {
   AuthGateway,
   BettingGateway,
@@ -25,7 +26,8 @@ export interface MomentumStorage
     UserSettingsGateway,
     BettingGateway,
     CheckinGateway,
-    PetStore {
+    PetStore,
+    StorageOperationStore {
   readonly kind: 'local' | 'supabase';
   readonly capabilities?: StorageCapabilities;
 }

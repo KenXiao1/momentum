@@ -15,7 +15,7 @@ export const ChainCardView: React.FC<ChainCardViewProps> = React.memo(
     chain,
     typeConfig,
     language,
-    tr,
+    t,
     timeRemaining,
     isScheduled,
     showMenu,
@@ -54,10 +54,9 @@ export const ChainCardView: React.FC<ChainCardViewProps> = React.memo(
           onClick={onViewDetail}
           role="button"
           tabIndex={0}
-          aria-label={tr(
-            `查看详情：${chain.name}`,
-            `View details: ${chain.name}`,
-          )}
+          aria-label={t('chainCard.chainCardView.viewDetailsChainName', {
+            chainName: chain.name,
+          })}
           onKeyDown={(event) => {
             if (event.target !== event.currentTarget) return;
             if (event.key === 'Enter' || event.key === ' ') {
@@ -68,8 +67,8 @@ export const ChainCardView: React.FC<ChainCardViewProps> = React.memo(
         >
           <CardOverflowMenu
             isOpen={showMenu}
-            moreLabel={tr('更多选项', 'More options')}
-            deleteLabel={tr('删除链条', 'Delete chain')}
+            moreLabel={t('chainCard.chainCardView.moreOptions')}
+            deleteLabel={t('chainCard.chainCardView.deleteChain')}
             onToggle={onToggleMenu}
             onDelete={onShowDeleteConfirm}
           />
@@ -81,20 +80,19 @@ export const ChainCardView: React.FC<ChainCardViewProps> = React.memo(
           <ChainCardMetrics
             chain={chain}
             language={language}
-            tr={tr}
+            t={t}
             lastCompletionTime={lastCompletionTime}
           />
           <ChainExecutionActions
             scheduled={scheduled}
-            signalPrefix={tr('预约信号: ', 'Signal: ')}
-            completionPrefix={tr(
-              '请在时间结束前完成: ',
-              'Complete before time runs out: ',
+            signalPrefix={t('chainCard.chainCardView.signal')}
+            completionPrefix={t(
+              'chainCard.chainCardView.completeBeforeTimeRunsOut',
             )}
-            completeLabel={tr('完成预约', 'Complete booking')}
-            interruptLabel={tr('中断/规则判定', 'Interrupt / Adjudicate')}
-            startLabel={tr('开始任务', 'Start')}
-            scheduleLabel={tr('预约', 'Schedule')}
+            completeLabel={t('chainCard.chainCardView.completeBooking')}
+            interruptLabel={t('chainCard.chainCardView.interruptAdjudicate')}
+            startLabel={t('chainCard.chainCardView.start')}
+            scheduleLabel={t('chainCard.chainCardView.schedule')}
             onComplete={onCompleteBooking}
             onInterrupt={onCancelScheduledSession}
             onStart={onStartChain}
@@ -106,7 +104,7 @@ export const ChainCardView: React.FC<ChainCardViewProps> = React.memo(
           isOpen={showDeleteConfirm}
           chain={chain}
           language={language}
-          tr={tr}
+          t={t}
           onCancel={onCancelDelete}
           onConfirm={onConfirmDelete}
         />

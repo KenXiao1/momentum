@@ -1,11 +1,12 @@
+import { type Translator } from '../../../i18n';
 import { AlertTriangle, X } from 'lucide-react';
 
 export function ErrorBanner({
-  tr,
+  t,
   error,
   onDismiss,
 }: {
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   error: string;
   onDismiss: () => void;
 }) {
@@ -15,7 +16,7 @@ export function ErrorBanner({
       <span className="flex-1 text-red-700 dark:text-red-300">{error}</span>
       <button
         onClick={onDismiss}
-        aria-label={tr('关闭错误提示', 'Dismiss error')}
+        aria-label={t('ruleSelectionDialog.errorBanner.dismissError')}
         className="text-red-500 hover:text-red-700"
       >
         <X size={16} />

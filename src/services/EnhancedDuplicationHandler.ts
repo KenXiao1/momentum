@@ -10,7 +10,7 @@ import {
 } from '../types';
 import type { ExceptionRule } from '../types';
 import { exceptionRuleStorage } from './ExceptionRuleStorage';
-import { tr } from '../utils/runtimeI18n';
+import { t } from '../utils/runtimeI18n';
 import {
   findExactDuplicateRules,
   findSimilarRulesWithSimilarity,
@@ -80,10 +80,9 @@ export class EnhancedDuplicationHandler {
         suggestions: [
           {
             type: 'create_anyway',
-            title: tr('继续创建', 'Continue'),
-            description: tr(
-              '检查失败，但可以尝试创建',
-              'Check failed, but you can try creating it',
+            title: t('enhancedDuplicationHandler.continue'),
+            description: t(
+              'enhancedDuplicationHandler.checkFailedButYouCanTryCreatingIt',
             ),
             handler: async () => null,
           },
@@ -141,7 +140,7 @@ export class EnhancedDuplicationHandler {
     } catch (error) {
       throw new ExceptionRuleException(
         ExceptionRuleError.STORAGE_ERROR,
-        tr('重复检查失败', 'Duplicate check failed'),
+        t('enhancedDuplicationHandler.duplicateCheckFailed'),
         error,
       );
     }
@@ -192,9 +191,9 @@ export class EnhancedDuplicationHandler {
         if (checkResult.conflictType === 'exact') {
           throw new ExceptionRuleException(
             ExceptionRuleError.DUPLICATE_RULE_NAME,
-            tr(
-              `不能创建重复名称的规则: "${name}"`,
-              `Cannot create a rule with a duplicate name: "${name}"`,
+            t(
+              'enhancedDuplicationHandler.cannotCreateARuleWithADuplicateName',
+              { name: name },
             ),
           );
         }

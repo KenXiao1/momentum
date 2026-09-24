@@ -8,7 +8,7 @@ export function useRSIPTaskLinkEditor(params: {
   chains: Chain[];
   fixedChainId?: string;
   onUpsertLinks: (links: RSIPTaskLink[]) => void | Promise<unknown>;
-  tr: Tr;
+  t: Tr;
 }) {
   const [mode, setMode] = useState<TaskLinkMode>('task_to_rsip');
   const [selectedNodeId, setSelectedNodeId] = useState('');
@@ -112,7 +112,7 @@ export function useRSIPTaskLinkEditor(params: {
     chainLabelById: new Map(
       params.chains.map((chain) => [
         chain.id,
-        `${chain.type === 'group' ? params.tr('任务组', 'Group') : params.tr('任务', 'Task')}: ${chain.name}`,
+        `${chain.type === 'group' ? params.t('rsip.taskLink.rsipTaskLinkForm.group') : params.t('rsip.taskLink.rsipTaskLinkForm.task')}: ${chain.name}`,
       ]),
     ),
     handleModeChange,

@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw';
+import { canonicalJson } from '../../utils/operationIdentity';
 
 export const TEST_SUPABASE_URL = 'https://test.supabase.co';
 export const TEST_SUPABASE_USER_ID = 'test-user-123';
@@ -7,6 +8,10 @@ type TableName =
   | 'rsip_nodes'
   | 'rsip_meta'
   | 'rsip_groups'
+  | 'rsip_policy_library'
+  | 'rsip_run_history'
+  | 'rsip_task_links'
+  | 'rsip_execution_records'
   | 'chains'
   | 'scheduled_sessions'
   | 'active_sessions'
@@ -32,6 +37,10 @@ const tables: Record<TableName, Map<string, JsonRow>> = {
   rsip_nodes: new Map(),
   rsip_meta: new Map(),
   rsip_groups: new Map(),
+  rsip_policy_library: new Map(),
+  rsip_run_history: new Map(),
+  rsip_task_links: new Map(),
+  rsip_execution_records: new Map(),
   chains: new Map(),
   scheduled_sessions: new Map(),
   active_sessions: new Map(),
@@ -39,6 +48,11 @@ const tables: Record<TableName, Map<string, JsonRow>> = {
 };
 
 let authenticated = false;
+const storageOperations = new Map<string, string>();
+let loseStorageOperationResponse = false;
+export function failNextStorageOperationResponse(): void {
+  loseStorageOperationResponse = true;
+}
 const rsipCreationIntents = new Map<string, string[]>();
 let loseRSIPCreationResponse = false;
 
@@ -56,6 +70,8 @@ let pendingFailure:
 
 export function resetSupabaseMockState(): void {
   rsipCreationIntents.clear();
+  storageOperations.clear();
+  loseStorageOperationResponse = false;
   loseRSIPCreationResponse = false;
   for (const table of Object.values(tables)) table.clear();
   authenticated = false;
@@ -96,11 +112,16 @@ function asRows(body: unknown): JsonRow[] {
 
 function tableKey(table: TableName, row: JsonRow): string {
   if (table === 'rsip_meta') return String(row.user_id);
+  if (table === 'rsip_run_history')
+    return `${String(row.user_id)}:${String(row.run_number)}`;
   if (
     table === 'chains' ||
     table === 'active_sessions' ||
     table === 'rsip_groups' ||
-    table === 'rsip_nodes'
+    table === 'rsip_nodes' ||
+    table === 'rsip_policy_library' ||
+    table === 'rsip_task_links' ||
+    table === 'rsip_execution_records'
   ) {
     return String(row.id ?? `generated-${generatedId++}`);
   }
@@ -162,7 +183,10 @@ function filteredRows(table: TableName, requestUrl: string): JsonRow[] {
   }
 
   const limit = Number(url.searchParams.get('limit'));
-  return Number.isFinite(limit) && limit > 0 ? rows.slice(0, limit) : rows;
+  const offset = Number(url.searchParams.get('offset')) || 0;
+  return Number.isFinite(limit) && limit > 0
+    ? rows.slice(offset, offset + limit)
+    : rows.slice(offset);
 }
 
 function createTableHandlers(table: TableName) {
@@ -184,7 +208,11 @@ function createTableHandlers(table: TableName) {
       for (const row of rows) {
         const key = tableKey(table, row);
         if (ignoreDuplicates && tables[table].has(key)) continue;
-        const next = { ...tables[table].get(key), ...row };
+        const next = {
+          id: row.id ?? `generated-${generatedId++}`,
+          ...tables[table].get(key),
+          ...row,
+        };
         tables[table].set(key, next);
         stored.push(next);
       }
@@ -226,6 +254,91 @@ function authResponse() {
 }
 
 export const supabaseMockHandlers = [
+  // This handler checks HTTP protocol and retry identity only. SQL constraints,
+  // RLS, locking, and rollback are verified by scripts/database/run-tests.py.
+  http.post(
+    `${TEST_SUPABASE_URL}/rest/v1/rpc/commit_storage_operation`,
+    async ({ request }) => {
+      if (!authenticated)
+        return HttpResponse.json(
+          { code: '42501', message: 'Authentication required' },
+          { status: 403 },
+        );
+      const { p_operation_id, p_changes } = (await request.json()) as {
+        p_operation_id: string;
+        p_changes: { table: TableName; before: JsonRow[]; after: JsonRow[] }[];
+      };
+      if (
+        !p_operation_id ||
+        !Array.isArray(p_changes) ||
+        p_changes.some((change) => !(change.table in tables))
+      ) {
+        return HttpResponse.json(
+          { code: '22023', message: 'Invalid operation arguments' },
+          { status: 400 },
+        );
+      }
+      const payload = canonicalJson(p_changes);
+      const prior = storageOperations.get(p_operation_id);
+      if (prior) {
+        if (prior !== payload)
+          return HttpResponse.json(
+            { code: '22023', message: 'Operation ID reused' },
+            { status: 400 },
+          );
+        return HttpResponse.json({
+          success: true,
+          operation_id: p_operation_id,
+          replayed: true,
+        });
+      }
+      const ordered = (rows: JsonRow[]) =>
+        canonicalJson(
+          [...rows].sort((a, b) =>
+            canonicalJson(a).localeCompare(canonicalJson(b)),
+          ),
+        );
+      for (const change of p_changes) {
+        const failure = takeFailure('POST', change.table);
+        if (failure) return failure;
+        if (
+          [...change.before, ...change.after].some(
+            (row) => row.user_id !== TEST_SUPABASE_USER_ID,
+          )
+        ) {
+          return HttpResponse.json(
+            { code: '42501', message: 'Collection ownership mismatch' },
+            { status: 403 },
+          );
+        }
+        const current = [...tables[change.table].values()].filter(
+          (row) => row.user_id === TEST_SUPABASE_USER_ID,
+        );
+        if (ordered(current) !== ordered(change.before)) {
+          return HttpResponse.json(
+            { code: '40001', message: 'Collection changed' },
+            { status: 409 },
+          );
+        }
+      }
+      for (const { table, after } of p_changes) {
+        for (const [key, row] of tables[table])
+          if (row.user_id === TEST_SUPABASE_USER_ID) tables[table].delete(key);
+        for (const row of after)
+          tables[table].set(tableKey(table, row), { ...row });
+      }
+      storageOperations.set(p_operation_id, payload);
+      if (loseStorageOperationResponse) {
+        loseStorageOperationResponse = false;
+        return HttpResponse.error();
+      }
+      return HttpResponse.json({
+        success: true,
+        operation_id: p_operation_id,
+        replayed: false,
+      });
+    },
+  ),
   http.post(
     `${TEST_SUPABASE_URL}/rest/v1/rpc/create_rsip_nodes_with_meta`,
     async ({ request }) => {
@@ -294,6 +407,10 @@ export const supabaseMockHandlers = [
     authenticated = false;
     return new HttpResponse(null, { status: 204 });
   }),
+  ...createTableHandlers('rsip_policy_library'),
+  ...createTableHandlers('rsip_run_history'),
+  ...createTableHandlers('rsip_task_links'),
+  ...createTableHandlers('rsip_execution_records'),
   ...createTableHandlers('rsip_groups'),
   ...createTableHandlers('rsip_nodes'),
   ...createTableHandlers('rsip_meta'),

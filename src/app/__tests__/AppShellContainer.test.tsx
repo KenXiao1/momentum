@@ -166,7 +166,9 @@ vi.mock('../AppShellView', () => ({
           )
           .join(',')}
       </div>
-      <button onClick={props.dashboard.handleCreateChain}>create-chain</button>
+      <button onClick={() => props.dashboard.handleCreateChain()}>
+        create-chain
+      </button>
       <button onClick={() => props.dashboard.handleDeleteChain('chain-1')}>
         delete-chain
       </button>
@@ -335,6 +337,7 @@ describe('AppShellContainer', () => {
     });
     const aux = createUnitChain({ id: 'aux', name: 'Auxiliary Chain' });
     appShellStore.getState().updateAppState({
+      ...createInitialAppState(),
       chains: [focus, aux],
       activeSession: {
         chainId: focus.id,
@@ -371,7 +374,11 @@ describe('AppShellContainer', () => {
     fireEvent.click(screen.getByText('clear-auxiliary'));
     expect(navigationStore.getState().showAuxiliaryJudgment).toBeNull();
 
-    act(() => appShellStore.getState().updateAppState({ chains: [] }));
+    act(() =>
+      appShellStore
+        .getState()
+        .updateAppState((prev) => ({ ...prev, chains: [] })),
+    );
     expect(
       JSON.parse(screen.getByTestId('chain-context').textContent!),
     ).toEqual({

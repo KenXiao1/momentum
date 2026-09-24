@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import type { Dispatch, SetStateAction } from 'react';
 import type { AppState, ScheduledSession } from '../../../types';
 import type { MomentumStorage } from '../../../storage/MomentumStorage';
@@ -16,7 +17,7 @@ interface CreateSchedulingHandlersParams {
   storage: MomentumStorage;
   safelySaveChains: SafelySaveChains;
   setShowAuxiliaryJudgment: (chainId: string | null) => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 export function createSchedulingHandlers({
@@ -26,7 +27,7 @@ export function createSchedulingHandlers({
   storage,
   safelySaveChains,
   setShowAuxiliaryJudgment,
-  tr,
+  t,
 }: CreateSchedulingHandlersParams) {
   const readState = resolveAppStateReader({ state, getState });
   const pendingSchedules = new Set<string>();
@@ -68,9 +69,7 @@ export function createSchedulingHandlers({
           { chainId },
           normalizeUnknownError(error),
         );
-        toast.error(
-          tr('预约失败，请重试', 'Failed to schedule. Please try again.'),
-        );
+        toast.error(t('sessions.scheduling.failedToSchedulePleaseTryAgain'));
       } finally {
         pendingSchedules.delete(chainId);
       }
@@ -116,7 +115,7 @@ export function createSchedulingHandlers({
       notifyTaskCompleted(
         chain.name,
         chain.auxiliaryStreak + 1,
-        tr('预约已完成', 'Schedule completed'),
+        t('sessions.scheduling.scheduleCompleted'),
       );
     } catch (error) {
       logger.error(
@@ -126,10 +125,7 @@ export function createSchedulingHandlers({
         normalizeUnknownError(error),
       );
       toast.error(
-        tr(
-          '完成预约失败，请重试',
-          'Failed to complete booking. Please try again.',
-        ),
+        t('sessions.scheduling.failedToCompleteBookingPleaseTryAgain'),
       );
     } finally {
       pendingSchedules.delete(chainId);

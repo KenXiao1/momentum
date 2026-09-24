@@ -1,3 +1,5 @@
+import { translate } from '../../../i18n/translate';
+import { type Translator } from '../../../i18n';
 import { Flame, Users } from 'lucide-react';
 import type { ChainTreeNode } from '../../../types';
 import type {
@@ -11,9 +13,9 @@ export function GroupCardSummary(props: {
   progress: ReturnType<typeof getGroupProgress>;
   typeConfig: ReturnType<typeof getChainTypeConfig>;
   language: 'zh' | 'en';
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }) {
-  const { group, progress, typeConfig, language, tr } = props;
+  const { group, progress, typeConfig, language, t } = props;
   return (
     <>
       <div className="mb-6 flex items-start justify-between">
@@ -35,9 +37,11 @@ export function GroupCardSummary(props: {
                 </h3>
                 {group.totalCompletions > 0 && (
                   <div className="rounded-lg bg-amber-100 px-2 py-1 text-sm font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                    {language === 'zh'
-                      ? `#${group.totalCompletions}轮`
-                      : `#${group.totalCompletions} cycles`}
+                    {translate(
+                      language === 'zh' ? 'zh' : 'en',
+                      'groupCard.groupCardSummary.groupTotalCompletionsCycles',
+                      { groupTotalCompletions: group.totalCompletions },
+                    )}
                   </div>
                 )}
               </div>
@@ -45,9 +49,11 @@ export function GroupCardSummary(props: {
                 {typeConfig.name}
                 {group.totalCompletions > 0 && (
                   <span className="ml-2 text-amber-600 dark:text-amber-400">
-                    {language === 'zh'
-                      ? `• 第${group.totalCompletions + 1}轮进行中`
-                      : `• Cycle ${group.totalCompletions + 1} in progress`}
+                    {translate(
+                      language === 'zh' ? 'zh' : 'en',
+                      'groupCard.groupCardSummary.cycleGroupTotalCompletions1InProgress',
+                      { groupTotalCompletions1: group.totalCompletions + 1 },
+                    )}
                   </span>
                 )}
               </p>
@@ -61,7 +67,7 @@ export function GroupCardSummary(props: {
       <div className="mb-6">
         <div className="mb-3 flex items-center justify-between">
           <span className="font-chinese text-sm text-gray-600 dark:text-slate-400">
-            {tr('任务进度', 'Progress')}
+            {t('groupCard.groupCardSummary.progress')}
           </span>
           <span className="font-mono text-sm font-semibold text-blue-500">
             {progress.completed}/{progress.total}
@@ -85,7 +91,7 @@ export function GroupCardSummary(props: {
             </span>
           </div>
           <div className="font-chinese text-xs font-medium text-gray-600 dark:text-slate-400">
-            {tr('子任务数', 'Tasks')}
+            {t('groupCard.groupCardSummary.tasks')}
           </div>
         </div>
         <div className="rounded-2xl border border-primary-200/50 bg-gradient-to-br from-primary-500/10 to-primary-600/5 p-4 text-center dark:border-primary-400/30 dark:from-primary-500/20 dark:to-primary-600/10">
@@ -101,7 +107,7 @@ export function GroupCardSummary(props: {
             )}
           </div>
           <div className="font-chinese text-xs font-medium text-gray-600 dark:text-slate-400">
-            {tr('群组记录', 'Group streak')}
+            {t('groupCard.groupCardSummary.groupStreak')}
           </div>
         </div>
       </div>

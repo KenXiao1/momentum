@@ -121,7 +121,10 @@ describe('RuleScopeManager', () => {
         chainId: undefined,
         scope: 'global' as const,
       };
-      mockExceptionRuleManager.createRule.mockResolvedValue({ rule: newRule });
+      mockExceptionRuleManager.createRule.mockResolvedValue({
+        rule: newRule,
+        warnings: [],
+      });
       mockExceptionRuleStorage.updateRule.mockResolvedValue({
         ...newRule,
         chainId: 'chain-1',
@@ -169,7 +172,10 @@ describe('RuleScopeManager', () => {
   describe('createGlobalRule', () => {
     it('应该成功创建全局规则', async () => {
       const newRule = { ...mockRules[0], id: 'new-global-rule' };
-      mockExceptionRuleManager.createRule.mockResolvedValue({ rule: newRule });
+      mockExceptionRuleManager.createRule.mockResolvedValue({
+        rule: newRule,
+        warnings: [],
+      });
 
       const result = await ruleScopeManager.createGlobalRule(
         '新全局规则',

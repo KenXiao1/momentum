@@ -31,14 +31,11 @@ type ChainImportEntry = {
 
 export function getRawChainsFromPayload(
   payload: Record<string, unknown>,
-  tr: ImportTranslator,
+  t: ImportTranslator,
 ): unknown[] {
   if (!('chains' in payload) || !Array.isArray(payload.chains)) {
     throw new Error(
-      tr(
-        '导入数据格式错误：未找到有效的链条数据。',
-        'Invalid import format: no valid chains found',
-      ),
+      t('importExport.import.chains.invalidImportFormatNoValidChainsFound'),
     );
   }
 
@@ -47,7 +44,7 @@ export function getRawChainsFromPayload(
 
 export function buildChainEntriesAndIdMap(
   rawChains: unknown[],
-  tr: ImportTranslator,
+  t: ImportTranslator,
 ): { chainEntries: ChainImportEntry[]; idMap: Map<string, string> } {
   const chainEntries: ChainImportEntry[] = [];
   const seenIds = new Set<string>();
@@ -58,9 +55,9 @@ export function buildChainEntriesAndIdMap(
 
     if (seenIds.has(sourceId)) {
       throw new Error(
-        tr(
-          `导入数据包包含重复的链条ID: ${sourceId}`,
-          `Import data contains duplicate chain ID: ${sourceId}`,
+        t(
+          'importExport.import.chains.importDataContainsDuplicateChainIdSourceId',
+          { sourceId: sourceId },
         ),
       );
     }
@@ -135,9 +132,9 @@ export function buildImportChains(params: {
   idMap: Map<string, string>;
   preserveStatistics: boolean;
   preserveTimestamps: boolean;
-  tr: ImportTranslator;
+  t: ImportTranslator;
 }): Chain[] {
-  const { chainEntries, idMap, preserveStatistics, preserveTimestamps, tr } =
+  const { chainEntries, idMap, preserveStatistics, preserveTimestamps, t } =
     params;
 
   return chainEntries.map(({ raw, newId }) => {
@@ -156,7 +153,7 @@ export function buildImportChains(params: {
 
     const common = {
       id: newId,
-      name: String(raw.name ?? tr('未命名链条', 'Untitled chain')),
+      name: String(raw.name ?? t('importExport.import.chains.untitledChain')),
       parentId,
       sortOrder: toNumber(
         pickNonNullish(raw, 'sortOrder', 'sort_order'),

@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../../i18n/translate';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { RSIPNode } from '../../../../types';
@@ -54,7 +55,7 @@ function renderReparent(
       tree,
       nodesById,
       onSaveNodes,
-      tr: (_zh, en) => en,
+      t: createTranslator('en'),
     }),
   );
 

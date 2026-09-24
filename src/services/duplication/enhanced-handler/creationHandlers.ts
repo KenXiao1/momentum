@@ -1,7 +1,7 @@
 import type { ExceptionRule, ExceptionRuleType } from '../../../types';
 import { ExceptionRuleError, ExceptionRuleException } from '../../../types';
 import { exceptionRuleStorage } from '../../ExceptionRuleStorage';
-import { tr } from '../../../utils/runtimeI18n';
+import { t } from '../../../utils/runtimeI18n';
 import { isCommonRulePattern } from '../duplicationDetection';
 import type { DuplicationCheckResult } from './types';
 import { generateNameSuggestions } from './suggestionHelpers';
@@ -20,9 +20,8 @@ export async function createRuleIfNoConflict(
 
   if (isCommonRulePattern(trimmedName)) {
     warnings.push(
-      tr(
-        '这是一个常见的规则模式，建议检查是否已有类似规则',
-        'This is a common rule pattern; consider checking for existing similar rules',
+      t(
+        'duplication.enhancedHandler.creationHandlers.thisIsACommonRulePatternConsiderCheckingFor',
       ),
     );
   }
@@ -65,9 +64,9 @@ export async function handleUseExisting(
 
   const rule = existingRules[0];
   const warnings = [
-    tr(
-      `使用的规则类型 (${rule.type}) 与请求的类型 (${requestedType}) 不匹配`,
-      `Rule type (${rule.type}) does not match requested type (${requestedType})`,
+    t(
+      'duplication.enhancedHandler.creationHandlers.ruleTypeRuleTypeDoesNotMatchRequested',
+      { ruleType: rule.type, requestedType: requestedType },
     ),
   ];
 
@@ -94,9 +93,8 @@ export async function handleModifyName(
   if (suggestions.length === 0) {
     throw new ExceptionRuleException(
       ExceptionRuleError.DUPLICATE_RULE_NAME,
-      tr(
-        '无法生成可用的名称建议',
-        'Unable to generate a usable name suggestion',
+      t(
+        'duplication.enhancedHandler.creationHandlers.unableToGenerateAUsableNameSuggestion',
       ),
     );
   }
@@ -114,7 +112,11 @@ export async function handleModifyName(
   return {
     rule,
     action: 'created_with_modified_name',
-    warnings: [tr(`名称已修改为 "${newName}"`, `Name changed to "${newName}"`)],
+    warnings: [
+      t('duplication.enhancedHandler.creationHandlers.nameChangedToNewName', {
+        newName: newName,
+      }),
+    ],
   };
 }
 
@@ -143,9 +145,9 @@ export async function handleCreateAnyway(
       .map((r) => r.name)
       .join('", "');
     warnings.push(
-      tr(
-        `发现相似规则: "${similarNames}"`,
-        `Similar rules found: "${similarNames}"`,
+      t(
+        'duplication.enhancedHandler.creationHandlers.similarRulesFoundSimilarNames',
+        { similarNames: similarNames },
       ),
     );
   }

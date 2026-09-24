@@ -1,1 +1,2 @@
-export type ImportTranslator = (zh: string, en: string) => string;
+import { type Translator } from '../../../i18n';
+export type ImportTranslator = Translator;

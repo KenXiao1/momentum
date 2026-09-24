@@ -71,7 +71,7 @@ export function RSIPTreeTab({ model }: RSIPTreeTabProps) {
           })
         }
         language={model.language}
-        tr={model.tr}
+        t={model.t}
       />
 
       <RSIPSplitModeSection
@@ -90,7 +90,7 @@ export function RSIPTreeTab({ model }: RSIPTreeTabProps) {
           })
         }
         canAddToday={model.canAddToday}
-        tr={model.tr}
+        t={model.t}
       />
 
       <RSIPCanvas
@@ -104,13 +104,13 @@ export function RSIPTreeTab({ model }: RSIPTreeTabProps) {
           }
         }}
         language={model.language}
-        tr={model.tr}
+        t={model.t}
       />
 
       {model.isStrictMode && model.nodes.length > 0 && (
         <div className="mt-8">
           <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-            {model.tr('定式执行追踪', 'Policy Execution Tracking')}
+            {model.t('rsip.rsipTreeTab.policyExecutionTracking')}
           </h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {model.nodes.map((node) => {

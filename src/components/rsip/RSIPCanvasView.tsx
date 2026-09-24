@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import React from 'react';
 import type { RSIPTreeNode } from '../../types';
 import type { RSIPConnector } from './RSIPTree';
@@ -38,7 +39,7 @@ interface RSIPCanvasViewProps {
   reparentingTitle: string | null;
   relationError: string | null;
   language: string;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   viewportRef: React.RefObject<HTMLDivElement>;
   containerRef: React.RefObject<HTMLDivElement>;
   transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
@@ -83,7 +84,7 @@ export const RSIPCanvasView: React.FC<RSIPCanvasViewProps> = ({
   reparentingTitle,
   relationError,
   language,
-  tr,
+  t,
   viewportRef,
   containerRef,
   transformRef,
@@ -108,21 +109,27 @@ export const RSIPCanvasView: React.FC<RSIPCanvasViewProps> = ({
 }) => {
   const isRollbackFailure = confirmAction?.kind === 'rollbackFailure';
 
-  let confirmationTitle = tr('停止计时', 'Stop timer');
-  let confirmationMessage = tr('确定要停止计时吗？', 'Stop the timer?');
-  let confirmationConfirmText = tr('停止', 'Stop');
+  let confirmationTitle = t('rsip.rsipCanvasView.stopTimer');
+  let confirmationMessage = t('rsip.rsipCanvasView.stopTheTimer');
+  let confirmationConfirmText = t('rsip.rsipCanvasView.stop');
   let confirmationConfirmButtonClass = 'bg-amber-500 hover:bg-amber-600';
 
   if (isRollbackFailure && confirmAction) {
-    confirmationTitle = tr('确认回溯', 'Confirm rollback');
+    confirmationTitle = t('rsip.rsipCanvasView.confirmRollback');
 
     const childNodesLabel =
-      confirmAction.descendants === 1 ? 'child node' : 'child nodes';
-    confirmationMessage = tr(
-      `判定失败：将删除「${confirmAction.nodeTitle}」及其 ${confirmAction.descendants} 个子节点。确认回溯？`,
-      `Marked as failed: this will delete "${confirmAction.nodeTitle}" and its ${confirmAction.descendants} ${childNodesLabel}. Roll back?`,
+      confirmAction.descendants === 1
+        ? t('rsip.rsipCanvasView.childNode')
+        : t('rsip.rsipCanvasView.childNodes');
+    confirmationMessage = t(
+      'rsip.rsipCanvasView.markedAsFailedThisWillDeleteConfirmActionNodeTitle',
+      {
+        confirmActionNodeTitle: confirmAction.nodeTitle,
+        confirmActionDescendants: confirmAction.descendants,
+        childNodesLabel: childNodesLabel,
+      },
     );
-    confirmationConfirmText = tr('回溯', 'Roll back');
+    confirmationConfirmText = t('rsip.rsipCanvasView.rollBack');
     confirmationConfirmButtonClass = 'bg-red-500 hover:bg-red-600';
   }
 
@@ -133,7 +140,7 @@ export const RSIPCanvasView: React.FC<RSIPCanvasViewProps> = ({
         title={confirmationTitle}
         message={confirmationMessage}
         confirmText={confirmationConfirmText}
-        cancelText={tr('取消', 'Cancel')}
+        cancelText={t('bettingModal.bettingFormSections.cancel')}
         confirmButtonClass={confirmationConfirmButtonClass}
         onConfirm={onConfirmAction}
         onCancel={onCancelConfirm}
@@ -143,7 +150,7 @@ export const RSIPCanvasView: React.FC<RSIPCanvasViewProps> = ({
         filterType={filterType}
         onFilterTypeChange={onFilterTypeChange}
         language={language}
-        tr={tr}
+        t={t}
       />
 
       <RSIPTree
@@ -178,7 +185,7 @@ export const RSIPCanvasView: React.FC<RSIPCanvasViewProps> = ({
         setNodeRef={setNodeRef}
         formatRemaining={formatRemaining}
         formatMinutesLabel={formatMinutesLabel}
-        tr={tr}
+        t={t}
       />
     </>
   );

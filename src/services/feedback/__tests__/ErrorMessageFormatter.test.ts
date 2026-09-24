@@ -1,10 +1,11 @@
+import { createTranslator } from '../../../i18n/translate';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ExceptionRuleError, ExceptionRuleException } from '../../../types';
 import { ErrorMessageFormatter } from '../ErrorMessageFormatter';
 
 const runtimeI18n = vi.hoisted(() => ({
   getCurrentLanguage: vi.fn(() => 'en'),
-  tr: vi.fn((zh: string, en: string) => en),
+  t: vi.fn(),
 }));
 
 const safeErrorMessage = vi.hoisted(() => ({
@@ -20,7 +21,7 @@ describe('ErrorMessageFormatter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     runtimeI18n.getCurrentLanguage.mockReturnValue('en');
-    runtimeI18n.tr.mockImplementation((_zh: string, en: string) => en);
+    runtimeI18n.t.mockImplementation(createTranslator('en'));
     safeErrorMessage.getSafeErrorDetail.mockImplementation(
       (message: string) => message,
     );

@@ -23,7 +23,7 @@ export type CompletionHistorySelectRow = Pick<
   | 'notes'
 >;
 
-export type CompletionHistoryBasicRow = Pick<
+type CompletionHistoryBasicRow = Pick<
   CompletionHistoryRow,
   | 'chain_id'
   | 'completed_at'
@@ -60,16 +60,10 @@ export function mapCompletionHistoryRow(
   return decodeCompletionHistory(toSerializedCompletionHistory(row));
 }
 
-export function mapBasicCompletionHistoryRow(
-  row: CompletionHistoryBasicRow,
-): CompletionHistory {
-  return decodeCompletionHistory(toSerializedCompletionHistory(row));
-}
-
 export function buildCompletionHistoryRowsWithNewFields(
   userId: string,
   items: CompletionHistory[],
-): CompletionHistoryInsert[] {
+): (CompletionHistoryInsert & { completed_at: string })[] {
   return items.map((history) => ({
     chain_id: history.chainId,
     completed_at: history.completedAt.toISOString(),
@@ -87,7 +81,7 @@ export function buildCompletionHistoryRowsWithNewFields(
 export function buildCompletionHistoryRowsBasic(
   userId: string,
   items: CompletionHistory[],
-): CompletionHistoryInsert[] {
+): (CompletionHistoryInsert & { completed_at: string })[] {
   return items.map((history) => ({
     chain_id: history.chainId,
     completed_at: history.completedAt.toISOString(),

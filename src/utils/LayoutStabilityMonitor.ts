@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 /**
  * 布局稳定性监控器
  * 监控和修复布局偏移问题
@@ -139,14 +140,14 @@ export const layoutStabilityMonitor = new LayoutStabilityMonitor();
 export const useLayoutStability = (
   containerRef?: React.RefObject<HTMLElement>,
 ) => {
-  const startMonitoring = () => {
+  const startMonitoring = useCallback(() => {
     const container = containerRef?.current || undefined;
     layoutStabilityMonitor.startMonitoring(container);
-  };
+  }, [containerRef]);
 
-  const stopMonitoring = () => {
+  const stopMonitoring = useCallback(() => {
     layoutStabilityMonitor.stopMonitoring();
-  };
+  }, []);
 
   const checkNow = () => {
     const container = containerRef?.current || undefined;

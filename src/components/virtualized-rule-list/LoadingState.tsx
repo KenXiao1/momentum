@@ -1,10 +1,11 @@
-type Tr = (zh: string, en: string) => string;
+import { type Translator } from '../../i18n';
+type Tr = Translator;
 
 interface LoadingStateProps {
-  tr: Tr;
+  t: Tr;
 }
 
-export function LoadingState({ tr }: LoadingStateProps) {
+export function LoadingState({ t }: LoadingStateProps) {
   return (
     <div
       className="flex items-center justify-center py-12"
@@ -13,7 +14,7 @@ export function LoadingState({ tr }: LoadingStateProps) {
     >
       <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary-500"></div>
       <span className="ml-3 text-gray-600 dark:text-gray-400">
-        {tr('加载规则中...', 'Loading rules...')}
+        {t('ruleManager.ruleManagerViewView.loadingRules')}
       </span>
     </div>
   );

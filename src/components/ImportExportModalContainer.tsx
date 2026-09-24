@@ -37,7 +37,7 @@ interface ImportExportModalContainerProps {
 export const ImportExportModalContainer: React.FC<
   ImportExportModalContainerProps
 > = (props) => {
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const [activeTab, setActiveTab] = useState<'export' | 'import'>(
     props.chains.length === 0 ? 'import' : 'export',
   );
@@ -94,7 +94,7 @@ export const ImportExportModalContainer: React.FC<
       onExport={handleExport}
       onImport={importWorkflow.handleImport}
       onClose={props.onClose}
-      tr={tr}
+      t={t}
     />
   );
 };

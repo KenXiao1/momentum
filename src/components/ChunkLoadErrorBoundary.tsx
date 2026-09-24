@@ -5,7 +5,7 @@ import {
   isChunkLoadError,
 } from '../utils/chunkLoadRecovery';
 import { logger } from '../utils/logger';
-import { tr } from '../utils/runtimeI18n';
+import { t } from '../utils/runtimeI18n';
 
 interface ChunkLoadErrorBoundaryProps {
   children: React.ReactNode;
@@ -58,23 +58,15 @@ export class ChunkLoadErrorBoundary extends React.Component<
 
     const chunkError = isChunkLoadError(this.state.error);
     const title = chunkError
-      ? tr(
-          '应用资源已更新，请重新加载。',
-          'The app was updated. Please reload.',
-        )
-      : tr(
-          '页面出现异常，请重新加载。',
-          'The app hit an error. Please reload.',
-        );
+      ? t('chunkLoadErrorBoundary.theAppWasUpdatedPleaseReload')
+      : t('chunkLoadErrorBoundary.theAppHitAnErrorPleaseReload');
 
     const description = chunkError
-      ? tr(
-          '检测到资源版本不一致，这通常发生在新版本发布后。',
-          'A version mismatch was detected. This usually happens after a deployment.',
+      ? t(
+          'chunkLoadErrorBoundary.aVersionMismatchWasDetectedThisUsuallyHappensAfter',
         )
-      : tr(
-          '当前页面无法继续渲染，刷新后通常可以恢复。',
-          'The current view cannot continue rendering. Reload usually recovers.',
+      : t(
+          'chunkLoadErrorBoundary.theCurrentViewCannotContinueRenderingReloadUsuallyRecovers',
         );
 
     return (
@@ -91,7 +83,7 @@ export class ChunkLoadErrorBoundary extends React.Component<
             onClick={this.handleReload}
             className="btn-primary btn-disabled w-full px-4 py-3"
           >
-            {tr('重新加载应用', 'Reload app')}
+            {t('chunkLoadErrorBoundary.reloadApp')}
           </button>
         </div>
       </div>

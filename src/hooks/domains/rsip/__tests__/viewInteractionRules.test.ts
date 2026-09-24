@@ -317,4 +317,21 @@ describe('RSIP view interaction rules', () => {
 
     expect(markNodeViolatedFallback(nodes, 'missing')).toEqual(nodes);
   });
+  it('uses reinforcement to absorb a group violation before assessing collapse', () => {
+    const group: RSIPNodeGroup = {
+      id: 'protected-group',
+      title: 'Protected',
+      faultTolerance: 0,
+      createdAt,
+    };
+    const protectedNode = node({ groupId: group.id, reinforcementLevel: 1 });
+    expect(assessViolationGroup(protectedNode, [group])).toEqual({
+      status: 'none',
+    });
+    expect(
+      assessViolationGroup({ ...protectedNode, reinforcementLevel: 0 }, [
+        group,
+      ]),
+    ).toEqual({ status: 'collapse', groupTitle: 'Protected' });
+  });
 });

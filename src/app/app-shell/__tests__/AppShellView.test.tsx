@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RSIPViewProps } from '../../../components/RSIPView.types';
@@ -18,7 +19,7 @@ import {
 
 vi.mock('../../../i18n', () => ({
   useI18n: () => ({
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
   }),
 }));
 
@@ -208,6 +209,7 @@ function createProps(overrides: AppShellViewOverrides = {}): AppShellViewProps {
     mood: 'happy',
     isLoading: false,
     hasPet: true,
+    reloadPet: vi.fn(async () => undefined),
     createPet: vi.fn(async () => createPetState()),
     feedPet: vi.fn(async () => null),
     onTaskCompleted: vi.fn(async () => null),

@@ -16,7 +16,7 @@ import {
 import { MigrationStorage } from './MigrationStorage';
 import { exceptionRuleManager } from '../ExceptionRuleManager';
 import { logger } from '../../utils/logger';
-import { getCurrentLanguage, tr } from '../../utils/runtimeI18n';
+import { getCurrentLanguage, t } from '../../utils/runtimeI18n';
 import {
   getSafeErrorDetail,
   toError,
@@ -88,9 +88,8 @@ export class MigrationAnalyzer {
         uniqueRules: [],
         duplicateRules: [],
         recommendations: [
-          tr(
-            '获取迁移建议失败，请检查数据完整性',
-            'Failed to get migration suggestions. Check data integrity.',
+          t(
+            'migration.migrationAnalyzer.failedToGetMigrationSuggestionsCheckDataIntegrity',
           ),
         ],
       };
@@ -108,18 +107,17 @@ export class MigrationAnalyzer {
 
     if (duplicateRules.length > 0) {
       recommendations.push(
-        tr(
-          `发现 ${duplicateRules.length} 个重复使用的规则，迁移后将合并为单个规则`,
-          `Found ${duplicateRules.length} duplicated rule(s); duplicates will be merged after migration`,
+        t(
+          'migration.migrationAnalyzer.foundDuplicateRulesCountDuplicatedRuleSDuplicatesWillBeMergedAfter',
+          { duplicateRulesCount: duplicateRules.length },
         ),
       );
     }
 
     if (uniqueRules.length > 20) {
       recommendations.push(
-        tr(
-          '规则数量较多，建议迁移后进行整理和分类',
-          'Many rules detected; consider organizing and categorizing them after migration',
+        t(
+          'migration.migrationAnalyzer.manyRulesDetectedConsiderOrganizingAndCategorizingThemAfter',
         ),
       );
     }
@@ -132,19 +130,16 @@ export class MigrationAnalyzer {
 
     if (commonPatterns.length > 0) {
       recommendations.push(
-        tr(
-          `发现 ${commonPatterns.length} 个常见模式的规则，建议统一命名规范`,
-          `Found ${commonPatterns.length} common-pattern rule(s); consider standardizing naming`,
+        t(
+          'migration.migrationAnalyzer.foundCommonPatternsCountCommonPatternRuleSConsiderStandardizingNaming',
+          { commonPatternsCount: commonPatterns.length },
         ),
       );
     }
 
     if (recommendations.length === 0) {
       recommendations.push(
-        tr(
-          '数据结构良好，可以直接进行迁移',
-          'Data looks good; you can migrate directly',
-        ),
+        t('migration.migrationAnalyzer.dataLooksGoodYouCanMigrateDirectly'),
       );
     }
 
@@ -160,7 +155,7 @@ export class MigrationAnalyzer {
 
       const migrationInfo = this.migrationStorage.getMigrationInfo();
       if (!migrationInfo) {
-        issues.push(tr('缺少迁移记录', 'Missing migration record'));
+        issues.push(t('migration.migrationAnalyzer.missingMigrationRecord'));
       }
 
       const allRules = await exceptionRuleManager.getAllRules();
@@ -169,9 +164,12 @@ export class MigrationAnalyzer {
 
       if (migrationInfo && migratedRules.length !== migrationInfo.totalRules) {
         issues.push(
-          tr(
-            `迁移规则数量不匹配：期望 ${migrationInfo.totalRules}，实际 ${migratedRules.length}`,
-            `Migrated rule count mismatch: expected ${migrationInfo.totalRules}, got ${migratedRules.length}`,
+          t(
+            'migration.migrationAnalyzer.migratedRuleCountMismatchExpectedMigrationInfoTotalRulesGotMigratedRulesCount',
+            {
+              migrationInfoTotalRules: migrationInfo.totalRules,
+              migratedRulesCount: migratedRules.length,
+            },
           ),
         );
       }
@@ -179,10 +177,9 @@ export class MigrationAnalyzer {
       for (const rule of migratedRules) {
         if (!rule.name || !rule.type) {
           issues.push(
-            tr(
-              `规则 ${rule.id} 数据不完整`,
-              `Rule ${rule.id} data is incomplete`,
-            ),
+            t('migration.migrationAnalyzer.ruleRuleIdDataIsIncomplete', {
+              ruleId: rule.id,
+            }),
           );
         }
       }
@@ -206,13 +203,12 @@ export class MigrationAnalyzer {
               const safe = getSafeErrorDetail(error.message, currentLanguage);
               return (
                 safe ??
-                tr(
-                  '验证过程中发生错误，请查看控制台',
-                  'Validation error occurred. Check console for details.',
+                t(
+                  'migration.migrationAnalyzer.validationErrorOccurredCheckConsoleForDetails',
                 )
               );
             }
-            return tr('未知错误', 'Unknown error');
+            return t('focusMode.useExceptionRuleOperations.unknownError');
           })(),
         ],
         statistics: {
@@ -253,7 +249,7 @@ export class MigrationAnalyzer {
       const suggestions = await this.getMigrationSuggestions();
 
       const report = {
-        title: tr('例外规则迁移报告', 'Exception Rule Migration Report'),
+        title: t('migration.migrationAnalyzer.exceptionRuleMigrationReport'),
         generatedAt: new Date().toISOString(),
         migrationInfo,
         validation,
@@ -270,7 +266,7 @@ export class MigrationAnalyzer {
     } catch (error) {
       return JSON.stringify(
         {
-          title: tr('例外规则迁移报告', 'Exception Rule Migration Report'),
+          title: t('migration.migrationAnalyzer.exceptionRuleMigrationReport'),
           generatedAt: new Date().toISOString(),
           error: getErrorMessage(error),
         },

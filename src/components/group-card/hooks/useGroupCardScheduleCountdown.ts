@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import { useEffect, useRef, useState } from 'react';
 import type { ChainTreeNode, ScheduledSession } from '../../../types';
 import { getTimeRemaining } from '../../../utils/time';
@@ -14,9 +15,9 @@ export function useGroupCardScheduleCountdown(params: {
   scheduledSession?: ScheduledSession;
   group: ChainTreeNode;
   nextUnit: ChainTreeNode | null;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }) {
-  const { scheduledSession, group, nextUnit, tr } = params;
+  const { scheduledSession, group, nextUnit, t } = params;
 
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const warnedScheduleRef = useRef<string | null>(null);
@@ -46,7 +47,7 @@ export function useGroupCardScheduleCountdown(params: {
         fireAndForget(
           systemNotificationService.notifyScheduleWarning(
             group.name,
-            tr(`${minutes}分钟`, `${minutes} min`),
+            t('chainCard.useChainCard.minutesMin', { minutes: minutes }),
           ),
           { label: 'group-schedule-warning-notification' },
         );
@@ -64,7 +65,7 @@ export function useGroupCardScheduleCountdown(params: {
     updateTimer();
     const interval = window.setInterval(updateTimer, 1000);
     return () => window.clearInterval(interval);
-  }, [group.auxiliaryDuration, group.name, nextUnit, scheduledSession, tr]);
+  }, [group.auxiliaryDuration, group.name, nextUnit, scheduledSession, t]);
 
   return { timeRemaining };
 }

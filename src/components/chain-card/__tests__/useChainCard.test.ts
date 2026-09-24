@@ -1,6 +1,12 @@
+import { createTranslator } from '../../../i18n/translate';
+import { createChain as createFixtureChain } from '../../../test/factories/chainFactory';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ChainTreeNode, ScheduledSession } from '../../../types';
+import type {
+  ChainRecord,
+  ChainTreeNode,
+  ScheduledSession,
+} from '../../../types';
 import { useChainCard } from '../useChainCard';
 
 const getLastCompletionTimeMock = vi.hoisted(() => vi.fn());
@@ -11,7 +17,7 @@ const playTimerFinishedMock = vi.hoisted(() => vi.fn());
 const loggerWarnMock = vi.hoisted(() => vi.fn());
 const getChainTypeConfigMock = vi.hoisted(() =>
   vi.fn(() => ({
-    icon: 'bolt',
+    icon: 'zap' as const,
     bgColor: 'bg-slate-100',
     color: 'text-slate-700',
     name: 'Unit',
@@ -59,12 +65,15 @@ vi.mock('../../../utils/logger', () => ({
 vi.mock('../../../i18n', () => ({
   useI18n: () => ({
     language: 'en' as const,
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
   }),
 }));
 
 function createChain(overrides: Partial<ChainTreeNode> = {}): ChainTreeNode {
-  return {
+  const fields: Partial<ChainRecord> & {
+    children?: ChainTreeNode[];
+    depth?: number;
+  } = {
     id: 'chain-1',
     parentId: undefined,
     type: 'unit',
@@ -89,6 +98,11 @@ function createChain(overrides: Partial<ChainTreeNode> = {}): ChainTreeNode {
     children: [],
     depth: 0,
     ...overrides,
+  };
+  return {
+    ...createFixtureChain(fields.type === 'group' ? 'group' : 'unit', fields),
+    children: fields.children ?? [],
+    depth: fields.depth ?? 0,
   };
 }
 

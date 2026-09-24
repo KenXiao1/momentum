@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n';
 import React, { useRef } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { DialogShell } from './shared/DialogShell';
@@ -23,6 +24,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
+  const { t } = useI18n();
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
 
   if (!isOpen) return null;
@@ -56,7 +58,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           ref={cancelButtonRef}
           type="button"
           onClick={onCancel}
-          aria-label="关闭"
+          aria-label={t('accountModal.close')}
           className="focus-ring flex h-11 w-11 items-center justify-center rounded-xl bg-gray-100 transition-colors hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600"
         >
           <X size={22} className="text-gray-600 dark:text-slate-300" />

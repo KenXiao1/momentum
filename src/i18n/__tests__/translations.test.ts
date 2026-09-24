@@ -42,4 +42,18 @@ describe('translations', () => {
       expect(value.length, `zh:${key}`).toBeGreaterThan(0);
     }
   });
+
+  it('uses identical named placeholders in each language', () => {
+    const names = (value: string) =>
+      [
+        ...new Set([...value.matchAll(/\{(\w+)\}/g)].map((match) => match[1])),
+      ].sort();
+    for (const key of Object.keys(translations.en) as Array<
+      keyof typeof translations.en
+    >) {
+      expect(names(translations.zh[key]), key).toEqual(
+        names(translations.en[key]),
+      );
+    }
+  });
 });

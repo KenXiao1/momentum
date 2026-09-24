@@ -10,7 +10,7 @@ export function PetCreationDialog({
   onSubmit,
   onCancel,
 }: PetCreationDialogProps) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -44,12 +44,12 @@ export function PetCreationDialog({
     const trimmedName = name.trim();
 
     if (!trimmedName) {
-      setError(tr('请输入宠物名称', 'Please enter a pet name'));
+      setError(t('pet.petCreationDialog.pleaseEnterAPetName'));
       return;
     }
 
     if (trimmedName.length > 20) {
-      setError(tr('名称不能超过20个字符', 'Name cannot exceed 20 characters'));
+      setError(t('pet.petCreationDialog.nameCannotExceed20Characters'));
       return;
     }
 
@@ -72,10 +72,10 @@ export function PetCreationDialog({
             id="pet-creation-dialog-title"
             className="text-xl font-bold text-gray-800 dark:text-gray-100"
           >
-            {tr('领养你的宠物', 'Adopt Your Pet')}
+            {t('pet.petCreationDialog.adoptYourPet')}
           </h2>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            {tr('给你的新伙伴起个名字吧！', 'Give your new companion a name!')}
+            {t('pet.petCreationDialog.giveYourNewCompanionAName')}
           </p>
         </div>
 
@@ -92,8 +92,8 @@ export function PetCreationDialog({
                 setName(e.target.value);
                 setError('');
               }}
-              placeholder={tr('宠物名称...', 'Pet name...')}
-              aria-label={tr('宠物名称', 'Pet name')}
+              placeholder={t('pet.petCreationDialog.petName')}
+              aria-label={t('pet.petCreationDialog.petNameVariant2')}
               aria-invalid={!!error}
               aria-describedby={error ? 'pet-name-error' : undefined}
               className={`w-full rounded-xl border-2 px-4 py-3 ${error ? 'border-red-400' : 'border-gray-200 dark:border-gray-600'} bg-gray-50 text-gray-800 placeholder-gray-400 transition-colors focus:border-green-400 focus:outline-none dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:border-green-500`}
@@ -113,23 +113,20 @@ export function PetCreationDialog({
               onClick={onCancel}
               className="flex-1 rounded-xl bg-gray-100 py-3 text-gray-600 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
             >
-              {tr('稍后再说', 'Maybe Later')}
+              {t('pet.petCreationDialog.maybeLater')}
             </button>
             <button
               type="submit"
               className="flex-1 rounded-xl bg-gradient-to-r from-green-400 to-emerald-500 py-3 font-medium text-white transition-colors hover:from-green-500 hover:to-emerald-600"
             >
-              {tr('领养', 'Adopt')} 🎉
+              {t('pet.petCreationDialog.adopt')} 🎉
             </button>
           </div>
         </form>
 
         {/* Info */}
         <p className="mt-4 text-center text-xs text-gray-400 dark:text-gray-500">
-          {tr(
-            '完成任务可以喂养宠物，让它成长进化！',
-            'Complete tasks to feed your pet and help it grow!',
-          )}
+          {t('pet.petCreationDialog.completeTasksToFeedYourPetAndHelpIt')}
         </p>
       </div>
     </div>

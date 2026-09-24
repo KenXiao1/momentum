@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import { CheckCircle, Clock, Flame, Hourglass } from 'lucide-react';
 import type { ActiveSession, Chain } from '../../types';
 import {
@@ -19,7 +20,7 @@ interface FocusTimerPanelProps {
   hasReachedMinimum: boolean;
   minimumCountdown: number;
   language: 'zh' | 'en';
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 export function FocusTimerPanel({
@@ -33,7 +34,7 @@ export function FocusTimerPanel({
   hasReachedMinimum,
   minimumCountdown,
   language,
-  tr: translate,
+  t: t,
 }: FocusTimerPanelProps) {
   const elapsedMinutes = Math.ceil(elapsedSeconds / 60);
   const elapsedWholeMinutes = Math.floor(
@@ -74,10 +75,13 @@ export function FocusTimerPanel({
           <Clock className="text-primary-500" size={16} aria-hidden="true" />
           <span className="font-mono">
             {isDurationless
-              ? `${translate('已用时 ', 'Elapsed: ')}${formatTimeDescriptionByLanguage(elapsedMinutes, language)}`
-              : translate(
-                  `${elapsedWholeMinutes}分钟 / ${session.duration}分钟`,
-                  `${elapsedWholeMinutes} min / ${session.duration} min`,
+              ? `${t('focusMode.focusTimerPanel.elapsed')}${formatTimeDescriptionByLanguage(elapsedMinutes, language)}`
+              : t(
+                  'focusMode.focusTimerPanel.elapsedWholeMinutesMinSessionDurationMin',
+                  {
+                    elapsedWholeMinutes: elapsedWholeMinutes,
+                    sessionDuration: session.duration,
+                  },
                 )}
           </span>
         </div>
@@ -95,9 +99,12 @@ export function FocusTimerPanel({
         <div className="mt-4 flex items-center justify-center space-x-2 font-chinese text-lg text-indigo-600 dark:text-indigo-400">
           <Hourglass className="text-indigo-500" size={16} aria-hidden="true" />
           <span>
-            {translate(
-              `还需 ${Math.floor(minimumCountdown / 60)}分${minimumCountdown % 60}秒 达到最小时长`,
-              `Need ${Math.floor(minimumCountdown / 60)}m ${minimumCountdown % 60}s to reach the minimum duration`,
+            {t(
+              'focusMode.focusTimerPanel.needMinimumCountdownMinutesMMinimumCountdownSecondsSToReachTheMinimum',
+              {
+                minimumCountdownMinutes: Math.floor(minimumCountdown / 60),
+                minimumCountdownSeconds: minimumCountdown % 60,
+              },
             )}
           </span>
         </div>
@@ -110,9 +117,9 @@ export function FocusTimerPanel({
             aria-hidden="true"
           />
           <span>
-            {translate(
-              `已达到最小时长 ${chain.minimumDuration} 分钟，可以完成任务`,
-              `Minimum duration reached (${chain.minimumDuration} min). You can complete the task.`,
+            {t(
+              'focusMode.focusTimerPanel.minimumDurationReachedChainMinimumDurationMinYouCanComplete',
+              { chainMinimumDuration: chain.minimumDuration },
             )}
           </span>
         </div>

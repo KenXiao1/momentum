@@ -347,7 +347,7 @@ erDiagram
 | 字段           | 类型        | 约束                            | 说明     |
 | -------------- | ----------- | ------------------------------- | -------- |
 | `user_id`      | uuid        | PK, FK → auth.users             | 用户 ID  |
-| `total_points` | integer     | NOT NULL, DEFAULT 0, CHECK >= 0 | 总积分   |
+| `total_points` | bigint      | NOT NULL, DEFAULT 0, CHECK >= 0 | 总积分   |
 | `created_at`   | timestamptz | NOT NULL, DEFAULT now()         | 创建时间 |
 | `updated_at`   | timestamptz | NOT NULL, DEFAULT now()         | 更新时间 |
 
@@ -360,7 +360,7 @@ erDiagram
 | `id`               | uuid        | PK                              | 主键     |
 | `user_id`          | uuid        | FK → auth.users, NOT NULL       | 所属用户 |
 | `checkin_date`     | date        | NOT NULL, DEFAULT CURRENT_DATE  | 签到日期 |
-| `points_earned`    | integer     | NOT NULL, DEFAULT 10, CHECK > 0 | 获得积分 |
+| `points_earned`    | bigint      | NOT NULL, DEFAULT 10, CHECK > 0 | 获得积分 |
 | `consecutive_days` | integer     | NOT NULL, DEFAULT 1, CHECK > 0  | 连续天数 |
 | `created_at`       | timestamptz | NOT NULL, DEFAULT now()         | 创建时间 |
 
@@ -381,9 +381,9 @@ erDiagram
 | `id`               | uuid        | PK                        | 主键             |
 | `user_id`          | uuid        | FK → auth.users, NOT NULL | 所属用户         |
 | `transaction_type` | text        | NOT NULL                  | 交易类型（见下） |
-| `points_change`    | integer     | NOT NULL, CHECK != 0      | 变动数量         |
-| `points_before`    | integer     | NOT NULL, CHECK >= 0      | 变动前积分       |
-| `points_after`     | integer     | NOT NULL, CHECK >= 0      | 变动后积分       |
+| `points_change`    | bigint      | NOT NULL, CHECK != 0      | 变动数量         |
+| `points_before`    | bigint      | NOT NULL, CHECK >= 0      | 变动前积分       |
+| `points_after`     | bigint      | NOT NULL, CHECK >= 0      | 变动后积分       |
 | `description`      | text        |                           | 描述             |
 | `reference_id`     | uuid        |                           | 关联 ID          |
 | `created_at`       | timestamptz | NOT NULL, DEFAULT now()   | 创建时间         |
@@ -411,8 +411,8 @@ erDiagram
 | ----------------------- | ----------- | ----------------------- | ------------ |
 | `user_id`               | uuid        | PK, FK → auth.users     | 用户 ID      |
 | `gambling_mode_enabled` | boolean     | NOT NULL, DEFAULT false | 赌注模式开关 |
-| `daily_bet_limit`       | integer     | CHECK >= 0              | 每日押注上限 |
-| `max_single_bet`        | integer     | CHECK >= 0              | 单注上限     |
+| `daily_bet_limit`       | bigint      | CHECK >= 0              | 每日押注上限 |
+| `max_single_bet`        | bigint      | CHECK >= 0              | 单注上限     |
 | `settings_data`         | jsonb       | NOT NULL, DEFAULT '{}'  | 扩展设置     |
 | `created_at`            | timestamptz | NOT NULL, DEFAULT now() | 创建时间     |
 | `updated_at`            | timestamptz | NOT NULL, DEFAULT now() | 更新时间     |
@@ -421,22 +421,22 @@ erDiagram
 
 押注记录。
 
-| 字段                  | 类型        | 约束                               | 说明         |
-| --------------------- | ----------- | ---------------------------------- | ------------ |
-| `id`                  | uuid        | PK                                 | 主键         |
-| `user_id`             | uuid        | FK → auth.users, NOT NULL          | 所属用户     |
-| `session_id`          | uuid        | FK → active_sessions(id), NOT NULL | 关联会话     |
-| `chain_id`            | uuid        | FK → chains(id), NOT NULL          | 关联任务     |
-| `bet_amount`          | integer     | NOT NULL, CHECK > 0                | 押注金额     |
-| `bet_status`          | text        | NOT NULL, DEFAULT 'pending'        | 状态（见下） |
-| `points_before`       | integer     | NOT NULL, CHECK >= 0               | 押注前积分   |
-| `points_after`        | integer     | CHECK >= 0                         | 结算后积分   |
-| `potential_payout`    | integer     | NOT NULL, CHECK > 0                | 潜在收益     |
-| `actual_payout`       | integer     | CHECK >= 0                         | 实际收益     |
-| `settled_at`          | timestamptz |                                    | 结算时间     |
-| `cancellation_reason` | text        |                                    | 取消原因     |
-| `metadata`            | jsonb       | NOT NULL, DEFAULT '{}'             | 审计元数据   |
-| `created_at`          | timestamptz | NOT NULL, DEFAULT now()            | 创建时间     |
+| 字段                  | 类型        | 约束                                             | 说明         |
+| --------------------- | ----------- | ------------------------------------------------ | ------------ |
+| `id`                  | uuid        | PK                                               | 主键         |
+| `user_id`             | uuid        | FK → auth.users, NOT NULL                        | 所属用户     |
+| `session_id`          | uuid        | NOT NULL; immutable historical session reference | 关联会话     |
+| `chain_id`            | uuid        | FK → chains(id), NOT NULL                        | 关联任务     |
+| `bet_amount`          | bigint      | NOT NULL, CHECK > 0                              | 押注金额     |
+| `bet_status`          | text        | NOT NULL, DEFAULT 'pending'                      | 状态（见下） |
+| `points_before`       | bigint      | NOT NULL, CHECK >= 0                             | 押注前积分   |
+| `points_after`        | bigint      | CHECK >= 0                                       | 结算后积分   |
+| `potential_payout`    | bigint      | NOT NULL, CHECK > 0                              | 潜在收益     |
+| `actual_payout`       | bigint      | CHECK >= 0                                       | 实际收益     |
+| `settled_at`          | timestamptz |                                                  | 结算时间     |
+| `cancellation_reason` | text        |                                                  | 取消原因     |
+| `metadata`            | jsonb       | NOT NULL, DEFAULT '{}'                           | 审计元数据   |
+| `created_at`          | timestamptz | NOT NULL, DEFAULT now()                          | 创建时间     |
 
 **押注状态**：
 
@@ -492,11 +492,12 @@ CREATE POLICY "Users can manage their own [table]"
 
 ### 特殊策略
 
-| 表           | 策略             | 说明                      |
-| ------------ | ---------------- | ------------------------- |
-| `task_bets`  | 仅 SELECT/INSERT | 更新通过数据库函数处理    |
-| `audit_logs` | 仅 SELECT        | 用户只读，系统写入        |
-| `chains`     | 包含软删除       | 用户可查看/恢复已删除链条 |
+| 表                         | 策略       | 说明                                            |
+| -------------------------- | ---------- | ----------------------------------------------- |
+| `task_bets`                | 仅 SELECT  | 写入通过授权 RPC；session UUID 在会话删除后保留 |
+| `audit_logs`               | 仅 SELECT  | 用户只读，系统写入                              |
+| 积分、签到、流水、写入会话 | 仅 SELECT  | 写入通过授权 RPC；禁止客户端直接修改积分        |
+| `chains`                   | 包含软删除 | 用户可查看/恢复已删除链条                       |
 
 ---
 
@@ -505,11 +506,12 @@ CREATE POLICY "Users can manage their own [table]"
 应用当前使用的 RPC 入口如下；参数名称与类型以调用代码及最新迁移为准，
 避免在本文维护另一份容易过期的函数签名。
 
-| 模块     | 当前调用的函数                                    | 调用代码                                                  |
-| -------- | ------------------------------------------------- | --------------------------------------------------------- |
-| 签到     | `perform_daily_checkin`, `get_user_checkin_stats` | [checkin.ts](../../src/infra/storage/supabase/checkin.ts) |
-| 赌注     | `place_task_bet`, `complete_task_with_betting`    | [betting.ts](../../src/infra/storage/supabase/betting.ts) |
-| 写入会话 | `create_write_session`, `complete_write_session`  | [betting.ts](../../src/infra/storage/supabase/betting.ts) |
+| 模块     | 当前调用的函数                                    | 调用代码                                                        |
+| -------- | ------------------------------------------------- | --------------------------------------------------------------- |
+| 签到     | `perform_daily_checkin`, `get_user_checkin_stats` | [checkin.ts](../../src/infra/storage/supabase/checkin.ts)       |
+| 赌注     | `place_task_bet`, `complete_task_with_betting`    | [betting.ts](../../src/infra/storage/supabase/betting.ts)       |
+| 写入会话 | `create_write_session`, `complete_write_session`  | [betting.ts](../../src/infra/storage/supabase/betting.ts)       |
+| 事务操作 | `commit_storage_operation`                        | [operations.ts](../../src/infra/storage/supabase/operations.ts) |
 
 数据库还包含供触发器或其他操作使用的函数；完整定义见迁移文件。
 RLS 与 `SECURITY DEFINER` 的调用者校验要求见迁移指南。
@@ -518,7 +520,14 @@ RLS 与 `SECURITY DEFINER` 的调用者校验要求见迁移指南。
 
 ## 迁移历史
 
-以下为部分历史记录；完整顺序以 `supabase/migrations/` 为准。
+以下为部分历史记录；增量迁移以 `supabase/migrations/` 为准。空库使用
+[受控 baseline](../../supabase/baselines/README.md) 加后续迁移，不直接重放完整历史目录。
+
+2026-09-20 新增的 `completed_session_receipts` 保存已完成会话的稳定身份，
+阻止丢失响应后的旧客户端 upsert 复活会话；仅账号删除会级联移除。
+`storage_operation_commits` 和
+`betting_completion_operations` 保存用户作用域下的操作结果或 payload 的 SHA-256 摘要，用于
+幂等重试。它们启用 RLS 且撤销普通客户端所有表权限，仅由授权 RPC 访问。
 
 | 迁移文件                                                       | 日期       | 说明                                   |
 | -------------------------------------------------------------- | ---------- | -------------------------------------- |

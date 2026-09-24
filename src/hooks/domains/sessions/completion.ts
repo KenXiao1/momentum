@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import type { Dispatch, SetStateAction } from 'react';
 import type { AppState, CompletionHistory } from '../../../types';
 import type { MomentumStorage } from '../../../storage/MomentumStorage';
@@ -11,6 +12,8 @@ import { emitPointsChanged } from '../../../utils/pointsEvents';
 import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
 import type { TaskLifecycleEvent } from '../../../types';
 import { notifyTaskCompleted } from './sessionNotifications';
+import { toast } from '../../../utils/toast';
+import type { SessionCompletionInput } from '../../../storage/operations';
 import {
   computeActualDuration,
   maybeIncrementGroupCycleCompletion,
@@ -18,37 +21,7 @@ import {
   updateChainsForSuccess,
 } from './completionState';
 
-async function persistCompletionHistoryAndCleanupSupabase(
-  storage: MomentumStorage,
-  record: CompletionHistory,
-  setActiveSessionId: (sessionId: string | null) => void,
-  context: 'completion' | 'interrupt',
-): Promise<void> {
-  try {
-    await storage.appendCompletionHistory(record);
-  } catch (error) {
-    logger.error(
-      'SESSIONS',
-      `Failed to persist completion history after ${context}`,
-      undefined,
-      normalizeUnknownError(error),
-    );
-  } finally {
-    setActiveSessionId(null);
-    try {
-      await storage.saveActiveSession(null);
-    } catch (error) {
-      logger.error(
-        'SESSIONS',
-        `Failed to clear active session after ${context}`,
-        undefined,
-        normalizeUnknownError(error),
-      );
-    } finally {
-      emitPointsChanged();
-    }
-  }
-}
+const inFlight = new WeakMap<MomentumStorage, Map<string, Promise<boolean>>>();
 
 interface CreateCompletionHandlersParams {
   state?: AppState;
@@ -61,7 +34,7 @@ interface CreateCompletionHandlersParams {
   onNavigateToDashboard?: () => void;
   onPetTaskCompleted?: (duration: number, wasSuccessful: boolean) => void;
   onTaskLifecycleEvent?: (event: TaskLifecycleEvent) => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 export function createCompletionHandlers({
@@ -69,70 +42,93 @@ export function createCompletionHandlers({
   getState,
   setState,
   storage,
-  safelySaveChains,
   activeSessionId,
   setActiveSessionId,
   onNavigateToDashboard,
   onPetTaskCompleted,
   onTaskLifecycleEvent,
-  tr,
+  t,
 }: CreateCompletionHandlersParams) {
   const readState = resolveAppStateReader({ state, getState });
 
-  function persistChains(
-    updatedChains: AppState['chains'],
-    context: string,
-  ): void {
-    safelySaveChains(updatedChains).catch((error) => {
-      logger.error(
-        'SESSIONS',
-        context,
-        undefined,
-        normalizeUnknownError(error),
-      );
-    });
-  }
-
-  function persistCompletionHistoryAndCleanup(
-    record: CompletionHistory,
-    context: 'completion' | 'interrupt',
-  ): void {
-    if (activeSessionId && hasStorageCapability(storage, 'betting')) {
-      persistCompletionHistoryAndCleanupSupabase(
-        storage,
-        record,
-        setActiveSessionId,
-        context,
-      ).catch((error) => {
-        logger.error(
-          'SESSIONS',
-          `Unexpected ${context} cleanup error`,
-          undefined,
-          normalizeUnknownError(error),
-        );
-      });
-      return;
-    }
-
-    setActiveSessionId(null);
-
-    storage.saveActiveSession(null).catch((error) => {
-      logger.error(
-        'SESSIONS',
-        `Failed to clear active session after ${context}`,
-        undefined,
-        normalizeUnknownError(error),
-      );
-    });
-
-    storage.appendCompletionHistory(record).catch((error) => {
-      logger.error(
-        'SESSIONS',
-        `Failed to persist completion history after ${context}`,
-        undefined,
-        normalizeUnknownError(error),
-      );
-    });
+  function commit(
+    input: SessionCompletionInput,
+    publish: (
+      result: Awaited<ReturnType<MomentumStorage['commitSessionCompletion']>>,
+    ) => void,
+  ): Promise<boolean> {
+    const operations =
+      inFlight.get(storage) ?? new Map<string, Promise<boolean>>();
+    inFlight.set(storage, operations);
+    const pending = operations.get(input.operationId);
+    if (pending) return pending;
+    const promise = storage
+      .commitSessionCompletion(input)
+      .then(
+        (result) => {
+          const matchesCompletedSession = (
+            session: AppState['activeSession'],
+          ) =>
+            session?.chainId === input.session.chainId &&
+            session.startedAt.getTime() === input.session.startedAt.getTime();
+          const finishingCurrentSession = matchesCompletedSession(
+            readState().activeSession,
+          );
+          setState((previous) => ({
+            ...previous,
+            chains: result.chains,
+            activeSession: matchesCompletedSession(previous.activeSession)
+              ? null
+              : previous.activeSession,
+            completionHistory: [
+              ...previous.completionHistory.filter(
+                (item) =>
+                  item.chainId !== result.record.chainId ||
+                  item.completedAt.getTime() !==
+                    result.record.completedAt.getTime(),
+              ),
+              result.record,
+            ],
+          }));
+          for (const effect of [
+            () => {
+              if (finishingCurrentSession) setActiveSessionId(null);
+            },
+            () => publish(result),
+            () => {
+              if (finishingCurrentSession) onNavigateToDashboard?.();
+            },
+          ]) {
+            try {
+              effect();
+            } catch (error) {
+              logger.error(
+                'SESSIONS',
+                'Post-commit notification failed',
+                undefined,
+                normalizeUnknownError(error),
+              );
+            }
+          }
+          return true;
+        },
+        (error: unknown) => {
+          logger.error(
+            'SESSIONS',
+            'Session commit failed; the task remains available for retry',
+            { operationId: input.operationId },
+            normalizeUnknownError(error),
+          );
+          toast.error(
+            t('sessions.completion.saveIsNotConfirmedYourTaskIsRetainedRetry'),
+            { durationMs: 12000 },
+          );
+          return false;
+        },
+      )
+      .finally(() => operations.delete(input.operationId));
+    operations.set(input.operationId, promise);
+    return promise;
   }
 
   const handleCompleteSession = (description?: string, notes?: string) => {
@@ -149,9 +145,8 @@ export function createCompletionHandlers({
 
     const completedAt = new Date();
     const newStreak = chain.currentStreak + 1;
-    notifyTaskCompleted(chain.name, newStreak);
 
-    const completionRecord: CompletionHistory = {
+    let completionRecord: CompletionHistory = {
       chainId: chain.id,
       completedAt,
       duration: activeSession.duration,
@@ -162,11 +157,6 @@ export function createCompletionHandlers({
       notes,
     };
 
-    const updatedHistory = [
-      ...currentState.completionHistory,
-      completionRecord,
-    ];
-
     let updatedChains = updateChainsForSuccess(
       currentState.chains,
       chain.id,
@@ -175,53 +165,75 @@ export function createCompletionHandlers({
     const groupCycleResult = maybeIncrementGroupCycleCompletion(
       updatedChains,
       chain,
-      tr,
+      t,
+      false,
     );
     updatedChains = groupCycleResult.updatedChains;
 
-    persistChains(updatedChains, '完成任务时保存链条数据失败');
-    persistCompletionHistoryAndCleanup(completionRecord, 'completion');
-
-    if (completionRecord.actualDuration) {
-      storage
-        .updateTaskTimeStats(chain.id, completionRecord.actualDuration)
-        .catch((error) => {
-          logger.error(
-            'SESSIONS',
-            'Failed to update task time stats after completion',
-            { chainId: chain.id },
-            normalizeUnknownError(error),
+    return commit(
+      {
+        operationId: `session:${chain.id}:${activeSession.startedAt.toISOString()}`,
+        session: activeSession,
+        sessionId: activeSessionId,
+        expectedChains: currentState.chains,
+        chains: updatedChains,
+        record: completionRecord,
+      },
+      (persisted) => {
+        updatedChains = persisted.chains;
+        completionRecord = persisted.record;
+        if (chain.isDurationless)
+          forwardTimerManager.clearTimer(
+            `${chain.id}_${activeSession.startedAt.getTime()}`,
           );
+        if (hasStorageCapability(storage, 'betting')) emitPointsChanged();
+        notifyTaskCompleted(chain.name, newStreak);
+        if (groupCycleResult.completedGroupId) {
+          const group = updatedChains.find(
+            (item) => item.id === groupCycleResult.completedGroupId,
+          );
+          if (group)
+            notifyTaskCompleted(
+              group.name,
+              group.currentStreak,
+              t('sessions.completion.groupCompletedACycle'),
+            );
+        }
+
+        if (completionRecord.actualDuration) {
+          storage
+            .updateTaskTimeStats(chain.id, completionRecord.actualDuration)
+            .catch((error) => {
+              logger.error(
+                'SESSIONS',
+                'Failed to update task time stats after completion',
+                { chainId: chain.id },
+                normalizeUnknownError(error),
+              );
+            });
+        }
+
+        if (onPetTaskCompleted && completionRecord.actualDuration) {
+          onPetTaskCompleted(completionRecord.actualDuration, true);
+        }
+
+        onTaskLifecycleEvent?.({
+          type: 'task_completed',
+          chainId: chain.id,
+          chainKind: chain.type === 'group' ? 'group' : 'unit',
+          occurredAt: completionRecord.completedAt,
         });
-    }
 
-    if (onPetTaskCompleted && actualDuration) {
-      onPetTaskCompleted(actualDuration, true);
-    }
-
-    onTaskLifecycleEvent?.({
-      type: 'task_completed',
-      chainId: chain.id,
-      chainKind: chain.type === 'group' ? 'group' : 'unit',
-      occurredAt: completedAt,
-    });
-
-    if (groupCycleResult.completedGroupId) {
-      onTaskLifecycleEvent?.({
-        type: 'group_cycle_completed',
-        chainId: groupCycleResult.completedGroupId,
-        chainKind: 'group',
-        occurredAt: completedAt,
-      });
-    }
-
-    setState((prev) => ({
-      ...prev,
-      chains: updatedChains,
-      activeSession: null,
-      completionHistory: updatedHistory,
-    }));
-    onNavigateToDashboard?.();
+        if (groupCycleResult.completedGroupId) {
+          onTaskLifecycleEvent?.({
+            type: 'group_cycle_completed',
+            chainId: groupCycleResult.completedGroupId,
+            chainKind: 'group',
+            occurredAt: completionRecord.completedAt,
+          });
+        }
+      },
+    );
   };
 
   const handleInterruptSession = (reason?: string) => {
@@ -234,12 +246,7 @@ export function createCompletionHandlers({
     );
     if (!chain) return;
 
-    if (chain.isDurationless) {
-      const sessionId = `${activeSession.chainId}_${activeSession.startedAt.getTime()}`;
-      forwardTimerManager.clearTimer(sessionId);
-    }
-
-    const completionRecord: CompletionHistory = {
+    let completionRecord: CompletionHistory = {
       chainId: chain.id,
       completedAt: new Date(),
       duration: activeSession.duration,
@@ -248,11 +255,6 @@ export function createCompletionHandlers({
       actualDuration: activeSession.duration,
       isForwardTimed: Boolean(chain.isDurationless),
     };
-
-    const updatedHistory = [
-      ...currentState.completionHistory,
-      completionRecord,
-    ];
 
     let updatedChains = updateChainsForFailure(currentState.chains, chain.id);
     if (chain.parentId && chain.type !== 'group') {
@@ -263,23 +265,32 @@ export function createCompletionHandlers({
       updatedChains = resetGroupCompletionCount(updatedChains, chain.parentId);
     }
 
-    persistChains(updatedChains, '中断任务时保存链条数据失败');
-    persistCompletionHistoryAndCleanup(completionRecord, 'interrupt');
+    return commit(
+      {
+        operationId: `session:${chain.id}:${activeSession.startedAt.toISOString()}`,
+        session: activeSession,
+        sessionId: activeSessionId,
+        expectedChains: currentState.chains,
+        chains: updatedChains,
+        record: completionRecord,
+      },
+      (persisted) => {
+        updatedChains = persisted.chains;
+        completionRecord = persisted.record;
+        if (chain.isDurationless)
+          forwardTimerManager.clearTimer(
+            `${chain.id}_${activeSession.startedAt.getTime()}`,
+          );
+        if (hasStorageCapability(storage, 'betting')) emitPointsChanged();
 
-    onTaskLifecycleEvent?.({
-      type: 'task_interrupted',
-      chainId: chain.id,
-      chainKind: chain.type === 'group' ? 'group' : 'unit',
-      occurredAt: completionRecord.completedAt,
-    });
-
-    setState((prev) => ({
-      ...prev,
-      chains: updatedChains,
-      activeSession: null,
-      completionHistory: updatedHistory,
-    }));
-    onNavigateToDashboard?.();
+        onTaskLifecycleEvent?.({
+          type: 'task_interrupted',
+          chainId: chain.id,
+          chainKind: chain.type === 'group' ? 'group' : 'unit',
+          occurredAt: completionRecord.completedAt,
+        });
+      },
+    );
   };
 
   return { handleCompleteSession, handleInterruptSession };

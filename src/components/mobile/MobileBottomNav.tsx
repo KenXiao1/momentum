@@ -21,7 +21,7 @@ export function MobileBottomNav({
   onNavigate,
   onOpenSettings,
 }: MobileBottomNavProps) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
 
   const hiddenViews: ViewState[] = [
     'editor',
@@ -36,14 +36,14 @@ export function MobileBottomNav({
     {
       id: 'dashboard' as const,
       icon: Home,
-      label: tr('首页', 'Home'),
+      label: t('mobile.mobileBottomNav.home'),
       isActive: currentView === 'dashboard',
       onPress: () => onNavigate('dashboard'),
     },
     {
       id: 'focus' as const,
       icon: Target,
-      label: tr('专注', 'Focus'),
+      label: t('mobile.mobileBottomNav.focus'),
       isActive: false,
       disabled: !hasActiveSession,
       onPress: () => onNavigate('focus'),
@@ -51,14 +51,14 @@ export function MobileBottomNav({
     {
       id: 'rsip' as const,
       icon: Brain,
-      label: tr('RSIP', 'RSIP'),
+      label: t('mobile.mobileBottomNav.rsip'),
       isActive: currentView === 'rsip',
       onPress: () => onNavigate('rsip'),
     },
     {
       id: 'settings' as const,
       icon: Settings,
-      label: tr('设置', 'Settings'),
+      label: t('settings.button'),
       isActive: false,
       onPress: onOpenSettings,
     },
@@ -68,7 +68,7 @@ export function MobileBottomNav({
     <nav
       className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200/60 bg-white/95 backdrop-blur-md dark:border-gray-700/60 dark:bg-gray-900/95"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-      aria-label={tr('底部导航', 'Bottom navigation')}
+      aria-label={t('mobile.mobileBottomNav.bottomNavigation')}
     >
       <div className="flex items-center justify-around">
         {tabs.map((tab) => {

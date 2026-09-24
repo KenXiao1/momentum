@@ -2,7 +2,8 @@ import type {
   RecommendationContext,
   RSIPRecommendation,
 } from './rsipInsightsTypes';
-import { joinList, localize } from './rsipLocalization';
+import { translate } from '../../i18n/translate';
+import { joinList } from './rsipLocalization';
 import {
   buildRuralFirstRecommendation,
   buildSplitRecommendation,
@@ -22,31 +23,26 @@ function buildGroupingRecommendation(
     id: 'enable-groups',
     kind: 'grouping',
     priority: 'medium',
-    title: localize(
+    title: translate(
       context.locale,
-      '建立国策组并配置容错',
-      'Create policy groups with fault tolerance',
+      'rsipInsights.recommendations.grouping.title',
     ),
-    rationale: localize(
+    rationale: translate(
       context.locale,
-      '节点多且未分组时，级联风险难以控制。',
-      'Many independent nodes without grouping make cascade risk harder to control.',
+      'rsipInsights.recommendations.grouping.rationale',
     ),
     actions: [
-      localize(
+      translate(
         context.locale,
-        '先为相关分支建立 1-2 个国策组。',
-        'Create 1-2 policy groups for related branches.',
+        'rsipInsights.recommendations.grouping.createGroups',
       ),
-      localize(
+      translate(
         context.locale,
-        '每组先从容错 = 1 开始。',
-        'Start with fault tolerance = 1 for each group.',
+        'rsipInsights.recommendations.grouping.faultTolerance',
       ),
-      localize(
+      translate(
         context.locale,
-        '将高度相关的节点放入同一组。',
-        'Move high-correlation nodes into the same group.',
+        'rsipInsights.recommendations.grouping.relatedNodes',
       ),
     ],
   };
@@ -71,32 +67,28 @@ function buildReinforcementRecommendation(
     id: 'reinforce-e2',
     kind: 'reinforcement',
     priority: 'medium',
-    title: localize(
+    title: translate(
       context.locale,
-      '强化稳定 E2 节点',
-      'Reinforce stable E2 nodes',
+      'rsipInsights.recommendations.reinforcement.title',
     ),
-    rationale: localize(
+    rationale: translate(
       context.locale,
-      '稳定但未强化的节点，通过少量投入即可显著提高抗回滚能力。',
-      'Stable nodes without reinforcement can improve rollback resilience with small extra effort.',
+      'rsipInsights.recommendations.reinforcement.rationale',
     ),
     actions: [
-      localize(
+      translate(
         context.locale,
-        `优先强化这些节点：${joinList(
-          e2WithoutReinforcement.slice(0, 3).map((node) => node.title),
-          context.locale,
-        )}`,
-        `Reinforce these nodes first: ${joinList(
-          e2WithoutReinforcement.slice(0, 3).map((node) => node.title),
-          context.locale,
-        )}`,
+        'rsipInsights.recommendations.reinforcement.prioritizeNodes',
+        {
+          nodes: joinList(
+            e2WithoutReinforcement.slice(0, 3).map((node) => node.title),
+            context.locale,
+          ),
+        },
       ),
-      localize(
+      translate(
         context.locale,
-        '每成功执行一周增加 1 层强化。',
-        'Increase one reinforcement level per successful week.',
+        'rsipInsights.recommendations.reinforcement.weeklyLevel',
       ),
     ],
     relatedNodeIds: e2WithoutReinforcement.map((node) => node.id),
@@ -117,27 +109,26 @@ function buildPassiveRecommendation(
     id: 'add-passive-guards',
     kind: 'passive',
     priority: 'medium',
-    title: localize(context.locale, '增加被动护栏', 'Add passive guardrails'),
-    rationale: localize(
+    title: translate(
       context.locale,
-      '近期存在违约且被动国策覆盖率偏低，环境护栏可以降低摩擦。',
-      'Passive policy coverage is low while recent violations exist. Environment guardrails can reduce friction.',
+      'rsipInsights.recommendations.passive.title',
+    ),
+    rationale: translate(
+      context.locale,
+      'rsipInsights.recommendations.passive.rationale',
     ),
     actions: [
-      localize(
+      translate(
         context.locale,
-        '每条不稳定分支至少增加 1 条被动国策。',
-        'Add at least one passive policy for each unstable branch.',
+        'rsipInsights.recommendations.passive.unstableBranches',
       ),
-      localize(
+      translate(
         context.locale,
-        '优先使用自动化/环境改造，降低意志力负担。',
-        'Prefer automation/environment changes over willpower-heavy actions.',
+        'rsipInsights.recommendations.passive.preferAutomation',
       ),
-      localize(
+      translate(
         context.locale,
-        '显式标记被动节点，便于追踪。',
-        'Mark passive nodes explicitly for tracking.',
+        'rsipInsights.recommendations.passive.markNodes',
       ),
     ],
   };
@@ -154,31 +145,26 @@ function buildAutomationRecommendation(
     id: 'configure-links',
     kind: 'automation',
     priority: 'low',
-    title: localize(
+    title: translate(
       context.locale,
-      '启用 RSIP-任务流程联动',
-      'Enable RSIP-task process links',
+      'rsipInsights.recommendations.automation.title',
     ),
-    rationale: localize(
+    rationale: translate(
       context.locale,
-      '当前未检测到活动链接，事件驱动同步可提升一致性与执行效率。',
-      'No active links detected. Event-driven synchronization improves consistency and execution speed.',
+      'rsipInsights.recommendations.automation.rationale',
     ),
     actions: [
-      localize(
+      translate(
         context.locale,
-        '先配置 task_completed -> mark_rsip_executed。',
-        'Start with task_completed -> mark_rsip_executed.',
+        'rsipInsights.recommendations.automation.startWithTaskCompleted',
       ),
-      localize(
+      translate(
         context.locale,
-        '关键任务再加 rsip_mark_executed -> prompt_start_chain。',
-        'Add rsip_mark_executed -> prompt_start_chain for key tasks.',
+        'rsipInsights.recommendations.automation.addPromptStartChain',
       ),
-      localize(
+      translate(
         context.locale,
-        'RSIP->任务侧初期保持 confirm 模式。',
-        'Keep RSIP->task side in confirm mode initially.',
+        'rsipInsights.recommendations.automation.keepConfirmMode',
       ),
     ],
   };
@@ -198,26 +184,22 @@ function buildRebuildRecommendation(
     id: 'rebuild-from-library',
     kind: 'rebuild',
     priority: 'medium',
-    title: localize(
+    title: translate(
       context.locale,
-      '使用国策库辅助重建',
-      'Use library-assisted rebuild',
+      'rsipInsights.recommendations.rebuild.title',
     ),
-    rationale: localize(
+    rationale: translate(
       context.locale,
-      '轮次趋势下滑，优先恢复已验证国策，而不是只新增新国策。',
-      'Run trends are declining. Reintroduce proven policies from library instead of adding only new ones.',
+      'rsipInsights.recommendations.rebuild.rationale',
     ),
     actions: [
-      localize(
+      translate(
         context.locale,
-        '从国策库恢复 1-2 条高内化条目。',
-        'Restore 1-2 high-internalization entries from policy library.',
+        'rsipInsights.recommendations.rebuild.restoreLibraryEntries',
       ),
-      localize(
+      translate(
         context.locale,
-        '本周避免引入超过 1 条新的高风险国策。',
-        'Avoid introducing more than one new high-risk policy this week.',
+        'rsipInsights.recommendations.rebuild.limitNewHighRiskPolicies',
       ),
     ],
   };

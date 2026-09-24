@@ -1,0 +1,11 @@
+[extend]
+useDefault = true
+
+# This literal is the public localStorage namespace, not an access credential.
+[[allowlists]]
+description = "Reviewed diagnostics localStorage key and its fixture"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+regexes = ['''^momentum_diagnostics_v1$''']
+paths = ['''^src/utils/(diagnostics\.ts|__tests__/diagnostics\.test\.ts)$''']

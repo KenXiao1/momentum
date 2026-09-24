@@ -79,7 +79,7 @@ function mapImportedRsipNode(
   raw: Record<string, unknown>,
   idMap: Map<string, string>,
   groupIdMap: Map<string, string> | undefined,
-  tr: ImportTranslator,
+  t: ImportTranslator,
 ): RSIPNode {
   const sourceId = getTrimmedNonEmptyString(raw.id);
   const sourceParentId = getStringFromCandidates(raw, [
@@ -97,7 +97,9 @@ function mapImportedRsipNode(
     parentId: sourceParentId
       ? (idMap.get(sourceParentId) ?? sourceParentId)
       : undefined,
-    title: String(raw.title ?? tr('未命名国策', 'Untitled policy')),
+    title: String(
+      raw.title ?? t('importExport.import.rsipCore.untitledPolicy'),
+    ),
     rule: String(raw.rule ?? ''),
     sortOrder: toNumber(raw.sortOrder, Math.floor(Date.now() / 1000)),
     createdAt: parseTruthyDateOrNow(raw.createdAt),
@@ -125,7 +127,7 @@ function mapImportedRsipNode(
 export function parseImportRsipNodes(
   rsipNodes: unknown,
   existingRsipNodes: RSIPNode[] | undefined,
-  tr: ImportTranslator,
+  t: ImportTranslator,
   groupIdMap?: Map<string, string>,
 ): { nodes: RSIPNode[]; rsipIdMap: Map<string, string> } {
   if (!Array.isArray(rsipNodes)) return { nodes: [], rsipIdMap: new Map() };
@@ -133,7 +135,7 @@ export function parseImportRsipNodes(
   const rsipIdMap = buildIdMap(rsipNodes, existingIds, 'rsip');
   const nodes = rsipNodes
     .filter((raw): raw is Record<string, unknown> => isRecord(raw))
-    .map((raw) => mapImportedRsipNode(raw, rsipIdMap, groupIdMap, tr));
+    .map((raw) => mapImportedRsipNode(raw, rsipIdMap, groupIdMap, t));
   return { nodes, rsipIdMap };
 }
 

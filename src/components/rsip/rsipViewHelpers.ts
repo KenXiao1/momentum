@@ -1,3 +1,4 @@
+import { translate } from '../../i18n/translate';
 export interface SplitDraftItem {
   id: string;
   title: string;
@@ -8,68 +9,56 @@ export interface SplitDraftItem {
 export function getSplitTemplates(
   language: string,
 ): Record<string, { goal: string; items: SplitDraftItem[] }> {
-  const isZh = language.startsWith('zh');
+  const locale = language.startsWith('zh') ? 'zh' : 'en';
 
   return {
     sleep: {
-      goal: isZh ? '早睡早起' : 'Sleep early and wake early',
+      goal: translate(locale, 'rsip.splitTemplate.message1'),
       items: [
         {
           id: 'sleep-1',
-          title: isZh ? '23:00 前入睡' : 'Sleep before 23:00',
-          rule: isZh
-            ? '22:45 开始睡前流程，23:00 前上床。'
-            : 'Start wind-down at 22:45 and be in bed before 23:00.',
+          title: translate(locale, 'rsip.splitTemplate.message2'),
+          rule: translate(locale, 'rsip.splitTemplate.message3'),
           isPassive: false,
         },
         {
           id: 'sleep-2',
-          title: isZh ? '睡前断屏' : 'No-screen before sleep',
-          rule: isZh
-            ? '22:30 后手机仅保留闹钟功能。'
-            : 'After 22:30, keep phone only for alarm use.',
+          title: translate(locale, 'rsip.splitTemplate.message4'),
+          rule: translate(locale, 'rsip.splitTemplate.message5'),
           isPassive: true,
         },
       ],
     },
     exercise: {
-      goal: isZh ? '稳定运动' : 'Stable exercise habit',
+      goal: translate(locale, 'rsip.splitTemplate.message6'),
       items: [
         {
           id: 'exercise-1',
-          title: isZh ? '回家立刻换运动服' : 'Change into workout clothes',
-          rule: isZh
-            ? '下班到家 10 分钟内换好运动服。'
-            : 'Change into workout clothes within 10 minutes after getting home.',
+          title: translate(locale, 'rsip.splitTemplate.message7'),
+          rule: translate(locale, 'rsip.splitTemplate.message8'),
           isPassive: false,
         },
         {
           id: 'exercise-2',
-          title: isZh ? '最低运动量' : 'Minimum exercise dose',
-          rule: isZh
-            ? '每天至少完成 10 分钟步行或拉伸。'
-            : 'Complete at least 10 minutes of walking or stretching daily.',
+          title: translate(locale, 'rsip.splitTemplate.message9'),
+          rule: translate(locale, 'rsip.splitTemplate.message10'),
           isPassive: false,
         },
       ],
     },
     diet: {
-      goal: isZh ? '饮食控制' : 'Diet control',
+      goal: translate(locale, 'rsip.splitTemplate.message11'),
       items: [
         {
           id: 'diet-1',
-          title: isZh ? '提前备餐' : 'Prep meals in advance',
-          rule: isZh
-            ? '工作日晚间准备次日午餐。'
-            : 'Prepare next-day lunch during weekday evenings.',
+          title: translate(locale, 'rsip.splitTemplate.message12'),
+          rule: translate(locale, 'rsip.splitTemplate.message13'),
           isPassive: true,
         },
         {
           id: 'diet-2',
-          title: isZh ? '晚间零食拦截' : 'Night snack cutoff',
-          rule: isZh
-            ? '21:00 后不摄入高糖零食。'
-            : 'No high-sugar snacks after 21:00.',
+          title: translate(locale, 'rsip.splitTemplate.message14'),
+          rule: translate(locale, 'rsip.splitTemplate.message15'),
           isPassive: false,
         },
       ],

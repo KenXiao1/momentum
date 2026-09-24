@@ -1,3 +1,4 @@
+import { translate } from '../../i18n/translate';
 import type { RSIPInsightsLocale } from './rsipInsightsTypes';
 
 export function toLocale(locale?: string): RSIPInsightsLocale {
@@ -7,14 +8,6 @@ export function toLocale(locale?: string): RSIPInsightsLocale {
   return 'en';
 }
 
-export function localize(
-  locale: RSIPInsightsLocale,
-  zh: string,
-  en: string,
-): string {
-  return locale === 'zh' ? zh : en;
-}
-
 export function joinList(values: string[], locale: RSIPInsightsLocale): string {
-  return values.join(locale === 'zh' ? '、' : ', ');
+  return values.join(translate(locale, 'rsipInsights.listSeparator'));
 }

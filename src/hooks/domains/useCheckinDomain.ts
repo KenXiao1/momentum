@@ -26,7 +26,7 @@ import {
 import { POINTS_CHANGED_EVENT } from '../../utils/pointsEvents';
 
 export function useCheckinDomain() {
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const storage = useStorage();
   const canUseCheckin = hasStorageCapability(storage, 'checkin');
 
@@ -38,7 +38,7 @@ export function useCheckinDomain() {
   const statsRef = useRef(stats);
   const isCheckingInRef = useRef(isCheckingIn);
   const languageRef = useRef(language);
-  const trRef = useRef(tr);
+  const tRef = useRef(t);
 
   // Keep refs in sync with state
   useEffect(() => {
@@ -51,8 +51,8 @@ export function useCheckinDomain() {
 
   useEffect(() => {
     languageRef.current = language;
-    trRef.current = tr;
-  }, [language, tr]);
+    tRef.current = t;
+  }, [language, t]);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -67,7 +67,7 @@ export function useCheckinDomain() {
 
   const loadStats = useCallback(async () => {
     if (!canUseCheckin) {
-      setError(tr('签到功能需要登录后使用', 'Daily check-in requires login'));
+      setError(t('useCheckinDomain.dailyCheckInRequiresLogin'));
       setIsLoading(false);
       return;
     }
@@ -80,10 +80,7 @@ export function useCheckinDomain() {
         const safeDetail = getSafeErrorDetail(result.error.message, language);
         setError(
           safeDetail ??
-            tr(
-              '加载签到数据失败，请重试（详情见控制台）',
-              'Failed to load check-in data. Check the console for details, then try again.',
-            ),
+            t('useCheckinDomain.failedToLoadCheckInDataCheckTheConsoleFor'),
         );
         setStats(null);
         return;
@@ -94,15 +91,12 @@ export function useCheckinDomain() {
       const safeDetail = getSafeErrorDetailFromUnknown(err, language);
       setError(
         safeDetail ??
-          tr(
-            '加载签到数据失败，请重试（详情见控制台）',
-            'Failed to load check-in data. Check the console for details, then try again.',
-          ),
+          t('useCheckinDomain.failedToLoadCheckInDataCheckTheConsoleFor'),
       );
     } finally {
       setIsLoading(false);
     }
-  }, [canUseCheckin, language, storage, tr]);
+  }, [canUseCheckin, language, storage, t]);
 
   const handleCheckin = useCallback(async () => {
     // Use refs to get latest values without causing callback recreation
@@ -128,9 +122,8 @@ export function useCheckinDomain() {
         );
         setError(
           safeDetail ??
-            trRef.current(
-              '签到失败，请重试（详情见控制台）',
-              'Check-in failed. Check the console for details, then try again.',
+            tRef.current(
+              'useCheckinDomain.checkInFailedCheckTheConsoleForDetailsThenTry',
             ),
         );
         return;
@@ -155,9 +148,12 @@ export function useCheckinDomain() {
         );
 
         setSuccessMessage(
-          trRef.current(
-            `签到成功！获得${result.points_earned} 积分，连续签到${result.consecutive_days} 天`,
-            `Checked in! Earned ${result.points_earned} points. Streak: ${result.consecutive_days} days.`,
+          tRef.current(
+            'useCheckinDomain.checkedInEarnedResultPointsEarnedPointsStreakResultConsecutiveDaysDays',
+            {
+              resultPointsEarned: result.points_earned,
+              resultConsecutiveDays: result.consecutive_days,
+            },
           ),
         );
         setTimeout(() => setSuccessMessage(null), 3000);
@@ -165,7 +161,7 @@ export function useCheckinDomain() {
         const safeDetail = result.message
           ? getSafeErrorDetail(result.message, languageRef.current)
           : null;
-        setError(safeDetail ?? trRef.current('签到失败', 'Check-in failed'));
+        setError(safeDetail ?? tRef.current('useCheckinDomain.checkInFailed'));
       }
     } catch (err) {
       logger.error('CHECKIN', '签到失败', undefined, toError(err));
@@ -175,9 +171,8 @@ export function useCheckinDomain() {
       );
       setError(
         safeDetail ??
-          trRef.current(
-            '签到失败，请重试（详情见控制台）',
-            'Check-in failed. Check the console for details, then try again.',
+          tRef.current(
+            'useCheckinDomain.checkInFailedCheckTheConsoleForDetailsThenTry',
           ),
       );
     } finally {

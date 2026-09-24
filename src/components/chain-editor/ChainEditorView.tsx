@@ -34,7 +34,7 @@ export function ChainEditorView({
   rsipTaskLinks,
   onUpsertRSIPTaskLinks,
 }: ChainEditorViewProps) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const canEditRsipLinks = Boolean(
     chain?.id && rsipNodes && rsipTaskLinks && onUpsertRSIPTaskLinks,
   );
@@ -65,7 +65,7 @@ export function ChainEditorView({
           <TaskDescriptionSection form={form} />
           <section className="space-y-3" data-testid="chain-editor-rsip-links">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
-              {tr('RSIP 流程联动', 'RSIP Integration')}
+              {t('chainEditor.chainEditorView.rsipIntegration')}
             </h2>
             {canEditRsipLinks ? (
               <RSIPTaskLinkPanel
@@ -73,18 +73,16 @@ export function ChainEditorView({
                 nodes={rsipNodes ?? []}
                 chains={chain ? [chain] : []}
                 fixedChainId={chain?.id}
-                title={tr('任务侧 RSIP 联动', 'Task-side RSIP links')}
-                description={tr(
-                  '可在编辑器中直接为该任务配置联动。冲突采用最后写入生效（LWW）。',
-                  'Configure links for this task directly in the editor. Conflicts use last-write-wins.',
+                title={t('chainEditor.chainEditorView.taskSideRsipLinks')}
+                description={t(
+                  'chainEditor.chainEditorView.configureLinksForThisTaskDirectlyInTheEditor',
                 )}
                 onUpsertLinks={onUpsertRSIPTaskLinks!}
               />
             ) : (
               <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-3 text-sm text-gray-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
-                {tr(
-                  '请先保存任务，再在这里配置 RSIP 联动。',
-                  'Save this task first, then configure RSIP links here.',
+                {t(
+                  'chainEditor.chainEditorView.saveThisTaskFirstThenConfigureRsipLinksHere',
                 )}
               </div>
             )}

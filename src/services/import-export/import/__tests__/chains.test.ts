@@ -1,7 +1,8 @@
+import { createTranslator } from '../../../../i18n/translate';
 import { describe, expect, test, vi } from 'vitest';
 import { buildChainEntriesAndIdMap, buildImportChains } from '../chains';
 
-const tr = (zh: string, en: string) => en || zh;
+const t = createTranslator('en');
 
 describe('import/chains parser', () => {
   test('builds imported chains with remapped parent ids and reset stats when requested', () => {
@@ -38,7 +39,7 @@ describe('import/chains parser', () => {
           createdAt: '2026-02-03T00:00:00.000Z',
         },
       ],
-      tr,
+      t,
     );
 
     const chains = buildImportChains({
@@ -46,7 +47,7 @@ describe('import/chains parser', () => {
       idMap,
       preserveStatistics: false,
       preserveTimestamps: false,
-      tr,
+      t,
     });
 
     expect(chains).toHaveLength(2);

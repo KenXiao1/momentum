@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../../i18n/translate';
 import { renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RSIPMeta, RSIPNode } from '../../../../types';
@@ -7,7 +8,7 @@ import { createNode } from './testHelpers';
 vi.mock('../../../../i18n', () => ({
   useI18n: () => ({
     language: 'en',
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
   }),
 }));
 

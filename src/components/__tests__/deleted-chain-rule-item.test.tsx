@@ -6,6 +6,7 @@ import RuleItem from '../RuleItem';
 import {
   ExceptionRuleType,
   type DeletedChain,
+  type UnitChain,
   type ExceptionRule,
 } from '../../types';
 import { createUnitChain } from '../../test/factories/chainFactory';
@@ -15,9 +16,7 @@ function renderWithI18n(ui: JSX.Element) {
   return render(<I18nProvider>{ui}</I18nProvider>);
 }
 
-function createDeletedChain(
-  overrides: Partial<DeletedChain> = {},
-): DeletedChain {
+function createDeletedChain(overrides: Partial<UnitChain> = {}): DeletedChain {
   const base = createUnitChain({
     id: 'chain-1',
     name: 'Morning Deep Work',
@@ -26,7 +25,7 @@ function createDeletedChain(
     totalCompletions: 12,
     deletedAt: new Date('2026-02-01T00:00:00.000Z'),
     type: 'unit',
-  }) as DeletedChain;
+  });
 
   return {
     ...base,

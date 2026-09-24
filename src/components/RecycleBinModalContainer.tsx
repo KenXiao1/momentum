@@ -23,7 +23,7 @@ export const RecycleBinModalContainer: React.FC<RecycleBinModalProps> =
       isLoading,
       showConfirmDialog,
       language,
-      tr,
+      t,
       formatDeletedTime,
       handleSelectChain,
       handleSelectAll,
@@ -39,7 +39,7 @@ export const RecycleBinModalContainer: React.FC<RecycleBinModalProps> =
       <RecycleBinModalView
         isOpen={isOpen}
         language={language}
-        tr={tr}
+        t={t}
         deletedChains={deletedChains}
         selectedChains={selectedChains}
         isLoading={isLoading}

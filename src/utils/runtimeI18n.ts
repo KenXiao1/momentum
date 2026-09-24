@@ -1,4 +1,5 @@
-import type { Language } from '../i18n';
+import type { Language, TranslationKey } from '../i18n/translations';
+import { translate, type TranslationArgs } from '../i18n/translate';
 import { localPreferences } from './localPreferences';
 
 const detectBrowserLanguage = (): Language => {
@@ -24,10 +25,20 @@ export const getCurrentLanguage = (): Language => {
   return detectBrowserLanguage();
 };
 
-export const tr = (
-  zh: string,
-  en: string,
-  language: Language = getCurrentLanguage(),
-): string => {
-  return language === 'zh' ? zh : en;
-};
+export function t<Key extends TranslationKey>(
+  key: Key,
+  ...args: [...TranslationArgs<NoInfer<Key>>, language?: Language]
+): string {
+  const requestedLanguage = args[1];
+  const language =
+    requestedLanguage === 'zh'
+      ? 'zh'
+      : requestedLanguage === 'en'
+        ? 'en'
+        : getCurrentLanguage();
+  return translate(
+    language,
+    key,
+    ...([args[0]] as TranslationArgs<NoInfer<Key>>),
+  );
+}

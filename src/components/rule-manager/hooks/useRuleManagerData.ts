@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import { useCallback, useEffect, useState } from 'react';
 import type { ExceptionRule } from '../../../types';
 import { exceptionRuleManager } from '../../../services/ExceptionRuleManager';
@@ -6,9 +7,9 @@ import type { Language } from '../../../i18n/translations';
 
 export function useRuleManagerData(args: {
   language: Language;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }) {
-  const { language, tr } = args;
+  const { language, t } = args;
 
   const [rules, setRules] = useState<ExceptionRule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,11 +23,11 @@ export function useRuleManagerData(args: {
       setError(null);
     } catch (err) {
       const safe = getSafeErrorDetailFromUnknown(err, language);
-      setError(safe ?? tr('加载规则失败', 'Failed to load rules'));
+      setError(safe ?? t('ruleManager.useRuleManagerData.failedToLoadRules'));
     } finally {
       setLoading(false);
     }
-  }, [language, tr]);
+  }, [language, t]);
 
   useEffect(() => {
     void loadRules();

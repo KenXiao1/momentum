@@ -9,45 +9,43 @@ const STREAK_MILESTONES = [7, 30, 100, 365];
 
 type ChainCardMetricsProps = Pick<
   ChainCardViewProps,
-  'chain' | 'language' | 'tr' | 'lastCompletionTime'
+  'chain' | 'language' | 't' | 'lastCompletionTime'
 >;
 
 function getDurationText({
   chain,
   language,
   lastCompletionTime,
-  translate,
+  t,
 }: {
   chain: ChainCardViewProps['chain'];
   language: ChainCardViewProps['language'];
   lastCompletionTime: ChainCardViewProps['lastCompletionTime'];
-  translate: ChainCardViewProps['tr'];
+  t: ChainCardViewProps['t'];
 }) {
   if (!chain.isDurationless && chain.duration !== 0) {
     return formatTime(chain.duration, language);
   }
-  if (!lastCompletionTime) return translate('首次执行', 'First time');
-  return `${translate('上次：', 'Last: ')}${formatTimeDescriptionByLanguage(lastCompletionTime, language)}`;
+  if (!lastCompletionTime) return t('chainCard.chainCardMetrics.firstTime');
+  return `${t('chainCard.chainCardMetrics.last')}${formatTimeDescriptionByLanguage(lastCompletionTime, language)}`;
 }
 
 export function ChainCardMetrics({
   chain,
   language,
-  tr: translate,
+  t: t,
   lastCompletionTime,
 }: ChainCardMetricsProps) {
   const durationText = getDurationText({
     chain,
     language,
     lastCompletionTime,
-    translate,
+    t,
   });
-  const completionNoun =
-    chain.totalCompletions === 1 ? 'completion' : 'completions';
   const completionsText =
-    language === 'zh'
-      ? `${chain.totalCompletions} 次完成`
-      : `${chain.totalCompletions} ${completionNoun}`;
+    chain.totalCompletions === 1
+      ? t('counts.completion', { count: chain.totalCompletions })
+      : t('counts.completions', { count: chain.totalCompletions });
   const isMilestone =
     chain.currentStreak > 0 && STREAK_MILESTONES.includes(chain.currentStreak);
 
@@ -63,7 +61,7 @@ export function ChainCardMetrics({
                 aria-hidden="true"
               />
               <span className="font-chinese text-xs font-semibold text-primary-600 dark:text-primary-400">
-                {translate('开始第一链', 'Start first chain')}
+                {t('chainCard.chainCardMetrics.startFirstChain')}
               </span>
             </div>
           ) : (
@@ -77,7 +75,7 @@ export function ChainCardMetrics({
             </div>
           )}
           <div className="font-chinese text-xs font-medium text-gray-600 dark:text-slate-400">
-            {translate('主链记录', 'Main streak')}
+            {t('chainCard.chainCardMetrics.mainStreak')}
           </div>
         </div>
         <div className="rounded-2xl border border-blue-200/50 bg-gradient-to-br from-blue-500/10 to-blue-600/5 p-4 text-center dark:border-blue-400/30 dark:from-blue-500/20 dark:to-blue-600/10">
@@ -89,7 +87,7 @@ export function ChainCardMetrics({
                 aria-hidden="true"
               />
               <span className="font-chinese text-xs font-semibold text-blue-500 dark:text-blue-400">
-                {translate('尚无预约', 'No bookings yet')}
+                {t('chainCard.chainCardMetrics.noBookingsYet')}
               </span>
             </div>
           ) : (
@@ -101,7 +99,7 @@ export function ChainCardMetrics({
             </div>
           )}
           <div className="font-chinese text-xs font-medium text-gray-600 dark:text-slate-400">
-            {translate('预约链记录', 'Booking streak')}
+            {t('chainCard.chainCardMetrics.bookingStreak')}
           </div>
         </div>
       </div>

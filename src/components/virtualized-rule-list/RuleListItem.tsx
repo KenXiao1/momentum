@@ -1,3 +1,4 @@
+import { translate } from '../../i18n/translate';
 import type { ReactNode } from 'react';
 import { CheckCircle, TrendingUp, History } from 'lucide-react';
 import type { ExceptionRule } from '../../types';
@@ -35,11 +36,15 @@ export function RuleListItem({
 }: RuleListItemProps) {
   const rule = result.rule;
   const usageCount = rule.usageCount || 0;
-  const usageUnit = usageCount === 1 ? 'time' : 'times';
+  const locale = language === 'zh' ? 'zh' : 'en';
   const usageText =
-    language === 'zh'
-      ? `使用过 ${usageCount} 次`
-      : `Used ${usageCount} ${usageUnit}`;
+    usageCount === 1
+      ? translate(locale, 'counts.rulePreviouslyUsedOnce', {
+          count: usageCount,
+        })
+      : translate(locale, 'counts.rulePreviouslyUsedMany', {
+          count: usageCount,
+        });
   const actualIndex = showCreateNew && searchQuery ? index - 1 : index;
 
   if (actualIndex < 0 || actualIndex >= rulesLength) return null;

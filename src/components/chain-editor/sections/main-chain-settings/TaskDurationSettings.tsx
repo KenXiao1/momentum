@@ -1,3 +1,4 @@
+import { type Translator } from '../../../../i18n';
 import { Clock, Infinity as InfinityIcon } from 'lucide-react';
 import { NumericSliderField } from '../../../shared/NumericSliderField';
 import type { ChainEditorFormModel } from '../../hooks/useChainEditorForm';
@@ -6,10 +7,10 @@ import { MinimumDurationSettings } from './MinimumDurationSettings';
 
 export function TaskDurationSettings({
   form,
-  tr: translate,
+  t: t,
 }: {
   form: ChainEditorFormModel;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }) {
   return (
     <div className="animate-scale-in p-5 md:p-6">
@@ -18,12 +19,13 @@ export function TaskDurationSettings({
           <Clock className="text-primary-500" size={20} aria-hidden="true" />
           <div className="min-w-0">
             <h4 className="font-chinese text-base font-semibold text-gray-900 dark:text-slate-100">
-              {translate('任务时长', 'Task duration')}
+              {t(
+                'chainEditor.mainChainSettings.taskDurationSettings.taskDuration',
+              )}
             </h4>
             <p className="font-chinese text-sm text-gray-500 dark:text-slate-400">
-              {translate(
-                '设置一个可执行的时间边界',
-                'Set a practical time boundary',
+              {t(
+                'chainEditor.mainChainSettings.taskDurationSettings.setAPracticalTimeBoundary',
               )}
             </p>
           </div>
@@ -36,12 +38,14 @@ export function TaskDurationSettings({
               aria-hidden="true"
             />
             <span className="whitespace-nowrap">
-              {translate('无时长任务', 'No timer')}
+              {t('chainEditor.mainChainSettings.taskDurationSettings.noTimer')}
             </span>
           </div>
           <label
             className="relative inline-flex cursor-pointer items-center"
-            aria-label={translate('无时长任务', 'No timer')}
+            aria-label={t(
+              'chainEditor.mainChainSettings.taskDurationSettings.noTimer',
+            )}
           >
             <input
               type="checkbox"
@@ -54,7 +58,7 @@ export function TaskDurationSettings({
         </div>
       </div>
       {form.isDurationless ? (
-        <MinimumDurationSettings form={form} tr={translate} />
+        <MinimumDurationSettings form={form} t={t} />
       ) : (
         <div className="space-y-4">
           <select
@@ -79,30 +83,38 @@ export function TaskDurationSettings({
                 value={preset}
                 className="bg-white text-gray-900 dark:bg-slate-700 dark:text-slate-100"
               >
-                {translate(`${preset}分钟`, `${preset} min`)}
+                {t('chainEditor.auxiliaryChainSettingsSection.presetMin', {
+                  preset: preset,
+                })}
               </option>
             ))}
             <option
               value="custom"
               className="bg-white text-gray-900 dark:bg-slate-700 dark:text-slate-100"
             >
-              {translate('自定义时长', 'Custom duration')}
+              {t('chainEditor.auxiliaryChainSettingsSection.customDuration')}
             </option>
           </select>
           {form.isCustomDuration && (
             <NumericSliderField
               id="duration-slider"
-              label={translate('自定义时长', 'Custom duration')}
-              description={translate(
-                '拖动滑块或使用键盘输入设置任务时长',
-                'Drag the slider or use keyboard input to set the duration',
+              label={t(
+                'chainEditor.auxiliaryChainSettingsSection.customDuration',
+              )}
+              description={t(
+                'chainEditor.mainChainSettings.taskDurationSettings.dragTheSliderOrUseKeyboardInputToSet',
               )}
               value={form.duration}
               onChange={form.setDuration}
               min={1}
               max={300}
-              unit={translate('分钟', 'min')}
-              formatValue={(value) => translate(`${value}分钟`, `${value} min`)}
+              unit={t('chainEditor.auxiliaryChainSettingsSection.min')}
+              formatValue={(value) =>
+                t(
+                  'chainEditor.mainChainSettings.taskDurationSettings.valueMin',
+                  { value: value },
+                )
+              }
               debounceMs={50}
             />
           )}

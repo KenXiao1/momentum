@@ -1,3 +1,4 @@
+import { translate } from '../i18n/translate';
 import type { Language } from '../i18n';
 
 const CHINESE_CHAR_REGEX = /[\u4e00-\u9fff]/;
@@ -77,35 +78,35 @@ function isProjectPausedError(lower: string): boolean {
 
 function translateKnownErrorsZh(lower: string): string | null {
   if (isReadOnlyModeError(lower)) {
-    return '数据库处于只读模式，写入被拒绝（可能是 Supabase 免费额度/磁盘空间/项目状态导致）。请到 Supabase Dashboard 检查用量与项目状态。';
+    return translate('zh', 'errors.detail.databaseReadOnly');
   }
 
   if (isNetworkError(lower)) {
-    return '网络错误：无法连接到 Supabase，请检查网络或稍后重试。';
+    return translate('zh', 'errors.detail.network');
   }
 
   if (isAuthError(lower)) {
-    return '登录状态异常或已过期，请重新登录后再试。';
+    return translate('zh', 'errors.detail.auth');
   }
 
   if (isRlsError(lower)) {
-    return '权限不足（RLS 拒绝）。请确认已登录，并检查 Supabase 的 RLS Policy 是否允许当前操作。';
+    return translate('zh', 'errors.detail.rls');
   }
 
   if (lower.includes('chains_time_limit_check')) {
-    return '任务群保存失败：需要设置时间限制（timeLimitHours）。可先用默认值 24 小时。';
+    return translate('zh', 'errors.detail.timeLimitRequired');
   }
 
   if (lower.includes('chains_time_limit_hours_check')) {
-    return '任务群保存失败：时间限制必须是正数（建议 1-168 小时）。';
+    return translate('zh', 'errors.detail.timeLimitPositive');
   }
 
   if (isRateLimitedError(lower)) {
-    return '请求过于频繁（429），请稍后重试。';
+    return translate('zh', 'errors.detail.rateLimited');
   }
 
   if (isProjectPausedError(lower)) {
-    return 'Supabase 项目可能处于暂停/唤醒中，请等待片刻再试。';
+    return translate('zh', 'errors.detail.projectPaused');
   }
 
   return null;
@@ -140,13 +141,13 @@ export function getSafeErrorDetail(
     if (translated) return translated;
 
     const code = extractErrorCode(message);
-    return code ? `错误码: ${code}` : null;
+    return code ? translate(language, 'errors.detail.code', { code }) : null;
   }
 
   if (!hasChinese) return message;
 
   const code = extractErrorCode(message);
-  return code ? `Error code: ${code}` : null;
+  return code ? translate(language, 'errors.detail.code', { code }) : null;
 }
 
 export function getSafeErrorDetailFromUnknown(

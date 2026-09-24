@@ -205,6 +205,7 @@ describe('ExceptionRuleStorageService', () => {
         ruleId: rule.id,
         chainId: 'chain_1',
         sessionId: 'session_1',
+        ruleScope: 'global' as const,
         actionType: 'pause' as const,
         taskElapsedTime: 300,
         taskRemainingTime: 600,
@@ -229,6 +230,7 @@ describe('ExceptionRuleStorageService', () => {
         ruleId: rule.id,
         chainId: 'chain_1',
         sessionId: 'session_1',
+        ruleScope: 'global' as const,
         actionType: 'pause',
         taskElapsedTime: 300,
       });
@@ -237,6 +239,7 @@ describe('ExceptionRuleStorageService', () => {
         ruleId: rule.id,
         chainId: 'chain_2',
         sessionId: 'session_2',
+        ruleScope: 'global' as const,
         actionType: 'pause',
         taskElapsedTime: 450,
       });
@@ -257,6 +260,7 @@ describe('ExceptionRuleStorageService', () => {
         ruleId: rule.id,
         chainId: 'chain_1',
         sessionId: 'session_1',
+        ruleScope: 'global' as const,
         actionType: 'pause',
         taskElapsedTime: 300,
       });
@@ -278,6 +282,7 @@ describe('ExceptionRuleStorageService', () => {
         ruleId: rule.id,
         chainId: 'chain_1',
         sessionId: 'session_1',
+        ruleScope: 'global' as const,
         actionType: 'pause',
         taskElapsedTime: 300,
       });
@@ -299,6 +304,7 @@ describe('ExceptionRuleStorageService', () => {
       const importData = {
         rules: [
           {
+            scope: 'global' as const,
             id: 'imported_rule_1',
             name: '导入规则',
             type: ExceptionRuleType.EARLY_COMPLETION_ONLY,
@@ -328,6 +334,7 @@ describe('ExceptionRuleStorageService', () => {
       const importData = {
         rules: [
           {
+            scope: 'global' as const,
             id: 'imported_rule_1',
             name: '导入规则',
             type: ExceptionRuleType.EARLY_COMPLETION_ONLY,

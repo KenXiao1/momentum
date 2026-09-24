@@ -1,3 +1,4 @@
+import { createTranslator } from '../../i18n/translate';
 /**
  * 增强的重复规则处理服务测试
  */
@@ -20,7 +21,7 @@ vi.mock('../ExceptionRuleStorage', () => ({
 
 vi.mock('../../utils/runtimeI18n', () => ({
   getCurrentLanguage: vi.fn(() => 'zh'),
-  tr: vi.fn((zh: string) => zh),
+  t: createTranslator('zh'),
 }));
 
 describe('EnhancedDuplicationHandler', () => {
@@ -259,7 +260,7 @@ describe('EnhancedDuplicationHandler', () => {
 
       const result = await handler.handleDuplicateCreation(
         '上厕所',
-        ExceptionRuleType.BREAK_CHAIN,
+        ExceptionRuleType.EARLY_COMPLETION_ONLY,
         undefined,
         'use_existing',
       );

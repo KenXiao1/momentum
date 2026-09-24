@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ExceptionRuleError,
@@ -61,7 +62,7 @@ vi.mock('../../../utils/env', () => ({
 }));
 
 vi.mock('../../../utils/runtimeI18n', () => ({
-  tr: (_zh: string, en: string) => en,
+  t: createTranslator('en'),
 }));
 
 import { ruleCreator } from '../RuleCreator';

@@ -1,9 +1,10 @@
+import { translate } from '../../i18n/translate';
 import { AlertTriangle, Clock, Hash, Target, Users } from 'lucide-react';
 import type { GroupViewViewProps } from './types';
 
 type Props = Pick<
   GroupViewViewProps,
-  'group' | 'language' | 'tr' | 'progress' | 'unitProgress' | 'timeStatus'
+  'group' | 'language' | 't' | 'progress' | 'unitProgress' | 'timeStatus'
 >;
 
 function getProgressBarColor(progress: number) {
@@ -15,7 +16,7 @@ function getProgressBarColor(progress: number) {
 export function GroupOverview({
   group,
   language,
-  tr,
+  t,
   progress,
   unitProgress,
   timeStatus,
@@ -24,41 +25,47 @@ export function GroupOverview({
     <div className="bento-card mb-8 animate-scale-in">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="font-chinese text-2xl font-bold text-gray-900 dark:text-slate-100">
-          {tr('任务群概览', 'Group overview')}
+          {t('groupView.groupOverview.groupOverview')}
         </h2>
         <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-slate-400">
           <div className="flex items-center space-x-2">
             <Users size={16} />
             <span>
-              {tr(
-                `${group.children.length} 个单元`,
-                `${group.children.length} units`,
-              )}
+              {t('groupView.groupOverview.groupChildrenCountUnits', {
+                groupChildrenCount: group.children.length,
+              })}
             </span>
           </div>
           <div className="flex items-center space-x-2">
             <Target size={16} />
             <span>
               {unitProgress.completed}/{unitProgress.total}{' '}
-              {tr('已完成', 'completed')}
+              {t('groupView.groupOverview.completed')}
             </span>
           </div>
           {group.totalCompletions > 0 && (
             <div className="flex items-center space-x-2 font-medium text-amber-600 dark:text-amber-400">
               <Hash size={16} />
               <span>
-                {language === 'zh'
-                  ? `已完成 ${group.totalCompletions} 轮`
-                  : `Completed ${group.totalCompletions} cycles`}
+                {translate(
+                  language === 'zh' ? 'zh' : 'en',
+                  'groupView.groupOverview.completedGroupTotalCompletionsCycles',
+                  { groupTotalCompletions: group.totalCompletions },
+                )}
               </span>
             </div>
           )}
           {progress.total !== unitProgress.total && (
             <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-slate-500">
               <span>
-                {language === 'zh'
-                  ? `(${progress.completed}/${progress.total} 重复次数)`
-                  : `(${progress.completed}/${progress.total} repeats)`}
+                {translate(
+                  language === 'zh' ? 'zh' : 'en',
+                  'groupView.groupOverview.progressCompletedProgressTotalRepeats',
+                  {
+                    progressCompleted: progress.completed,
+                    progressTotal: progress.total,
+                  },
+                )}
               </span>
             </div>
           )}
@@ -98,8 +105,8 @@ export function GroupOverview({
                   className={`font-chinese font-bold ${timeStatus.isExpired ? 'text-red-700 dark:text-red-300' : 'text-orange-700 dark:text-orange-300'}`}
                 >
                   {timeStatus.isExpired
-                    ? tr('任务群已超时', 'Time expired')
-                    : tr('时间限制', 'Time limit')}
+                    ? t('groupView.groupOverview.timeExpired')
+                    : t('groupView.groupOverview.timeLimit')}
                 </h4>
                 <p
                   className={`text-sm ${timeStatus.isExpired ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}`}
@@ -125,9 +132,8 @@ export function GroupOverview({
           {timeStatus.isExpired && (
             <div className="mt-3 flex items-center font-chinese text-sm text-red-600 dark:text-red-400">
               <AlertTriangle size={14} className="mr-2" />
-              {tr(
-                '任务群已超时，进度将被清空。请重新开始任务群。',
-                'This group has expired. Progress will be cleared. Please restart the group.',
+              {t(
+                'groupView.groupOverview.thisGroupHasExpiredProgressWillBeClearedPlease',
               )}
             </div>
           )}

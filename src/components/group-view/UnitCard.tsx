@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import React, { useEffect, useRef, useState } from 'react';
 import type { ChainTreeNode, ScheduledSession } from '../../types';
 import {
@@ -23,7 +24,7 @@ interface UnitCardProps {
   scheduledSession?: ScheduledSession;
   nextUnit?: ChainTreeNode;
   language: 'en' | 'zh';
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   onStartChain: (id: string) => void;
   onScheduleChain: (id: string) => void;
   onEditChain: (id: string) => void;
@@ -44,7 +45,7 @@ export const UnitCard: React.FC<UnitCardProps> = ({
   scheduledSession,
   nextUnit,
   language,
-  tr,
+  t,
   onStartChain,
   onScheduleChain,
   onEditChain,
@@ -106,7 +107,9 @@ export const UnitCard: React.FC<UnitCardProps> = ({
       onClick={() => onViewDetail(unit.id)}
       role="button"
       tabIndex={0}
-      aria-label={tr(`查看任务：${unit.name}`, `View task: ${unit.name}`)}
+      aria-label={t('groupView.unitCard.viewTaskUnitName', {
+        unitName: unit.name,
+      })}
       onKeyDown={(e) => {
         if (e.target !== e.currentTarget) return;
         if (e.key === 'Enter' || e.key === ' ') {
@@ -139,7 +142,7 @@ export const UnitCard: React.FC<UnitCardProps> = ({
               </h4>
               {isNext && (
                 <span className="rounded-full bg-primary-500/10 px-2 py-0.5 font-chinese text-xs text-primary-600 dark:text-primary-400">
-                  {tr('下一个', 'Next')}
+                  {t('groupView.unitCard.next')}
                 </span>
               )}
             </div>
@@ -153,14 +156,14 @@ export const UnitCard: React.FC<UnitCardProps> = ({
               </span>
               <span
                 className="flex items-center space-x-1"
-                title={tr('完成次数', 'Completions')}
+                title={t('groupView.unitCard.completions')}
               >
                 <Flame size={12} />
                 <span>#{unit.currentStreak}</span>
               </span>
               <span
                 className="flex items-center space-x-1"
-                title={tr('预约次数', 'Bookings')}
+                title={t('groupView.unitCard.bookings')}
               >
                 <CalendarCheck size={12} />
                 <span>{unit.auxiliaryStreak || 0}</span>
@@ -184,7 +187,7 @@ export const UnitCard: React.FC<UnitCardProps> = ({
                   onReorderUnit?.(group.id, unit.id, 'up');
                 }}
                 className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
-                title={tr('上移', 'Move up')}
+                title={t('groupView.unitCard.moveUp')}
                 disabled={index === 0}
               >
                 <ArrowUp size={14} />
@@ -196,7 +199,7 @@ export const UnitCard: React.FC<UnitCardProps> = ({
                   onReorderUnit?.(group.id, unit.id, 'down');
                 }}
                 className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
-                title={tr('下移', 'Move down')}
+                title={t('groupView.unitCard.moveDown')}
                 disabled={index === group.children.length - 1}
               >
                 <ArrowDown size={14} />
@@ -210,7 +213,7 @@ export const UnitCard: React.FC<UnitCardProps> = ({
                 onEditChain(unit.id);
               }}
               className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
-              title={tr('编辑单元', 'Edit unit')}
+              title={t('groupView.unitCard.editUnit')}
             >
               <Edit size={14} />
             </button>
@@ -221,7 +224,7 @@ export const UnitCard: React.FC<UnitCardProps> = ({
                 onDeleteChain(unit.id);
               }}
               className="rounded-lg p-2 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
-              title={tr('删除单元', 'Delete unit')}
+              title={t('groupView.unitCard.deleteUnit')}
             >
               <Trash2 size={14} />
             </button>
@@ -237,7 +240,7 @@ export const UnitCard: React.FC<UnitCardProps> = ({
                   className="rounded-lg bg-blue-500/10 px-3 py-1 font-chinese text-sm text-blue-600 transition-colors hover:bg-blue-500/20 dark:text-blue-400"
                   disabled={!!scheduledSession}
                 >
-                  {tr('预约', 'Schedule')}
+                  {t('chainCard.chainCardView.schedule')}
                 </button>
                 <button
                   type="button"
@@ -247,7 +250,7 @@ export const UnitCard: React.FC<UnitCardProps> = ({
                   }}
                   className="rounded-lg bg-primary-500 px-3 py-1 font-chinese text-sm text-white transition-colors hover:bg-primary-600"
                 >
-                  {tr('开始', 'Start')}
+                  {t('groupView.unitCard.start')}
                 </button>
               </>
             )}
@@ -261,10 +264,9 @@ export const UnitCard: React.FC<UnitCardProps> = ({
           onOpenRepeatModal(unit);
         }}
         className="absolute bottom-3 right-3 flex items-center space-x-1 rounded-md border border-slate-600 bg-slate-800 px-2 py-1 text-xs font-bold text-white shadow-md transition duration-200 hover:scale-105 hover:bg-slate-700 hover:shadow-lg dark:border-slate-400 dark:bg-slate-200 dark:text-slate-800 dark:hover:bg-slate-300"
-        title={tr(
-          `设置重复次数 (当前: ${currentRepeatCount})`,
-          `Set repeat count (current: ${currentRepeatCount})`,
-        )}
+        title={t('groupView.unitCard.setRepeatCountCurrentCurrentRepeatCount', {
+          currentRepeatCount: currentRepeatCount,
+        })}
       >
         <X size={12} className="opacity-90" />
         <span>{currentRepeatCount}</span>

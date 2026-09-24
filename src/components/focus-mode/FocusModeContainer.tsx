@@ -17,9 +17,12 @@ import { useI18n } from '../../i18n';
 interface FocusModeProps {
   session: ActiveSession;
   chain: Chain;
-  onComplete: (description?: string, notes?: string) => void;
-  onInterrupt: (reason?: string) => void;
-  onPause: (duration?: number) => void;
+  onComplete: (
+    description?: string,
+    notes?: string,
+  ) => void | Promise<boolean | void>;
+  onInterrupt: (reason?: string) => void | Promise<boolean | void>;
+  onPause: (duration?: number) => void | Promise<boolean | void>;
   onResume: () => void;
   onRuleUsed?: (
     rule: ExceptionRule,
@@ -37,7 +40,7 @@ export function FocusMode({
   onResume,
   onRuleUsed,
 }: FocusModeProps) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const storage = useStorage();
   const isDurationless = !!chain.isDurationless || session.duration === 0;
 
@@ -115,14 +118,17 @@ export function FocusMode({
     exceptionRuleFlow.openEarlyCompletionSelection();
   };
 
-  const handleDirectComplete = (description?: string, notes?: string) => {
-    setShowCompletionDialog(false);
-    onComplete(description, notes);
+  const handleDirectComplete = async (description?: string, notes?: string) => {
+    const result = await onComplete(description, notes);
+    if (result !== false) setShowCompletionDialog(false);
+    return result;
   };
 
-  const handleConfirmInterrupt = () => {
-    setShowInterruptDialog(false);
-    onInterrupt(tr('用户主动中断', 'User interrupted'));
+  const handleConfirmInterrupt = async () => {
+    const result = await onInterrupt(
+      t('focusMode.focusModeContainer.userInterrupted'),
+    );
+    if (result !== false) setShowInterruptDialog(false);
   };
 
   const handleResumeNow = () => {

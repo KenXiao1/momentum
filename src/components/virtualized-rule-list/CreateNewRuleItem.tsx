@@ -1,19 +1,20 @@
+import { type Translator } from '../../i18n';
 import { Plus } from 'lucide-react';
 
-type Tr = (zh: string, en: string) => string;
+type Tr = Translator;
 
 interface CreateNewRuleItemProps {
   itemHeight: number;
   onCreateNew: (name: string) => void;
   searchQuery: string;
-  tr: Tr;
+  t: Tr;
 }
 
 export function CreateNewRuleItem({
   itemHeight,
   onCreateNew,
   searchQuery,
-  tr,
+  t,
 }: CreateNewRuleItemProps) {
   return (
     <div
@@ -27,9 +28,9 @@ export function CreateNewRuleItem({
       <button
         type="button"
         onClick={() => onCreateNew(searchQuery)}
-        aria-label={tr(
-          `创建新规则: "${searchQuery}"`,
-          `Create new rule: "${searchQuery}"`,
+        aria-label={t(
+          'virtualizedRuleList.createNewRuleItem.createNewRuleSearchQuery',
+          { searchQuery: searchQuery },
         )}
         className="flex w-full items-center space-x-3 rounded-xl border border-primary-200 bg-primary-50 p-4 text-left transition-colors hover:bg-primary-100 dark:border-primary-500/30 dark:bg-primary-500/10 dark:hover:bg-primary-500/20"
         style={{ height: itemHeight }}
@@ -41,13 +42,15 @@ export function CreateNewRuleItem({
         />
         <div className="min-w-0 flex-1">
           <div className="truncate font-medium text-primary-700 dark:text-primary-300">
-            {tr(
-              `创建新规则: "${searchQuery}"`,
-              `Create new rule: "${searchQuery}"`,
+            {t(
+              'virtualizedRuleList.createNewRuleItem.createNewRuleSearchQuery',
+              { searchQuery: searchQuery },
             )}
           </div>
           <div className="text-sm text-primary-600 dark:text-primary-400">
-            {tr('为当前任务链创建专属规则', 'Create a chain-specific rule')}
+            {t(
+              'virtualizedRuleList.createNewRuleItem.createAChainSpecificRule',
+            )}
           </div>
         </div>
       </button>

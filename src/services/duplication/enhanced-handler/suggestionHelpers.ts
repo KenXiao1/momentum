@@ -1,5 +1,5 @@
 import type { ExceptionRule } from '../../../types';
-import { getCurrentLanguage, tr } from '../../../utils/runtimeI18n';
+import { getCurrentLanguage, t } from '../../../utils/runtimeI18n';
 import type { DuplicationConflictType, DuplicationSuggestion } from './types';
 
 export function generateNameSuggestions(
@@ -20,10 +20,12 @@ export function generateNameSuggestions(
   }
 
   const language = getCurrentLanguage();
-  const descriptiveSuffixes =
-    language === 'zh'
-      ? ['新', '备用', '临时', '特殊']
-      : ['New', 'Spare', 'Temp', 'Special'];
+  const descriptiveSuffixes = [
+    t('duplication.nameSuffix.new'),
+    t('duplication.nameSuffix.spare'),
+    t('duplication.nameSuffix.temp'),
+    t('duplication.nameSuffix.special'),
+  ];
   for (const suffix of descriptiveSuffixes) {
     const suggestion = `${baseName}(${suffix})`;
     if (
@@ -65,10 +67,10 @@ export function generateSuggestions(
 
     suggestions.push({
       type: 'use_existing',
-      title: tr('使用现有规则', 'Use existing rule'),
-      description: tr(
-        `使用已存在的规则 "${existingRule.name}"`,
-        `Use the existing rule "${existingRule.name}"`,
+      title: t('duplication.enhancedHandler.suggestionHelpers.useExistingRule'),
+      description: t(
+        'duplication.enhancedHandler.suggestionHelpers.useTheExistingRuleExistingRuleName',
+        { existingRuleName: existingRule.name },
       ),
       rule: existingRule,
       handler: async () => existingRule,
@@ -82,10 +84,10 @@ export function generateSuggestions(
     nameSuggestions.forEach((suggestedName) => {
       suggestions.push({
         type: 'modify_name',
-        title: tr('修改名称', 'Change name'),
-        description: tr(
-          `使用建议的名称 "${suggestedName}"`,
-          `Use the suggested name "${suggestedName}"`,
+        title: t('duplication.enhancedHandler.suggestionHelpers.changeName'),
+        description: t(
+          'duplication.enhancedHandler.suggestionHelpers.useTheSuggestedNameSuggestedName',
+          { suggestedName: suggestedName },
         ),
         suggestedName,
         handler: async () => null,
@@ -94,10 +96,9 @@ export function generateSuggestions(
   } else if (conflictType === 'similar') {
     suggestions.push({
       type: 'create_anyway',
-      title: tr('继续创建', 'Continue'),
-      description: tr(
-        '名称相似但不完全相同，可以继续创建',
-        'Name is similar but not identical; you can continue creating it',
+      title: t('enhancedDuplicationHandler.continue'),
+      description: t(
+        'duplication.enhancedHandler.suggestionHelpers.nameIsSimilarButNotIdenticalYouCanContinue',
       ),
       handler: async () => null,
     });
@@ -106,10 +107,12 @@ export function generateSuggestions(
       const mostSimilar = existingRules[0];
       suggestions.push({
         type: 'use_existing',
-        title: tr('使用相似规则', 'Use similar rule'),
-        description: tr(
-          `考虑使用相似的规则 "${mostSimilar.name}"`,
-          `Consider using the similar rule "${mostSimilar.name}"`,
+        title: t(
+          'duplication.enhancedHandler.suggestionHelpers.useSimilarRule',
+        ),
+        description: t(
+          'duplication.enhancedHandler.suggestionHelpers.considerUsingTheSimilarRuleMostSimilarName',
+          { mostSimilarName: mostSimilar.name },
         ),
         rule: mostSimilar,
         handler: async () => mostSimilar,
@@ -125,19 +128,19 @@ export function getConflictMessage(
   existingRules: ExceptionRule[],
 ): string {
   if (conflictType === 'exact') {
-    return tr(
-      `规则名称 "${existingRules[0].name}" 已存在`,
-      `Rule name "${existingRules[0].name}" already exists`,
+    return t(
+      'duplication.enhancedHandler.suggestionHelpers.ruleNameExistingRules0nameAlreadyExists',
+      { existingRules0Name: existingRules[0].name },
     );
   }
 
   if (conflictType === 'similar') {
     const similarNames = existingRules.map((r) => r.name).join('", "');
-    return tr(
-      `发现相似的规则名称: "${similarNames}"`,
-      `Found similar rule name(s): "${similarNames}"`,
+    return t(
+      'duplication.enhancedHandler.suggestionHelpers.foundSimilarRuleNameSSimilarNames',
+      { similarNames: similarNames },
     );
   }
 
-  return tr('没有发现冲突', 'No conflict detected');
+  return t('duplication.enhancedHandler.suggestionHelpers.noConflictDetected');
 }

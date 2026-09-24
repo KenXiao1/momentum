@@ -1,17 +1,18 @@
+import { type Translator } from '../../../i18n';
 import React from 'react';
 import { ConfirmationDialog } from '../../ConfirmationDialog';
 import type { ConfirmDialogState } from '../types';
 
 interface ConfirmDialogProps {
   showConfirmDialog: ConfirmDialogState;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   showConfirmDialog,
-  tr,
+  t,
   onConfirm,
   onCancel,
 }) => (
@@ -19,26 +20,34 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     isOpen={true}
     title={
       showConfirmDialog.type === 'restore'
-        ? tr('确认恢复', 'Confirm restore')
-        : tr('确认永久删除', 'Confirm permanent deletion')
+        ? t('recycleBinModal.confirmDialog.confirmRestore')
+        : t('recycleBinModal.confirmDialog.confirmPermanentDeletion')
     }
     message={
       showConfirmDialog.type === 'restore'
-        ? tr(
-            `确定要恢复以下 ${showConfirmDialog.chainIds.length} 个链条吗？\n\n${showConfirmDialog.chainNames.join(', ')}`,
-            `Restore the following ${showConfirmDialog.chainIds.length} chain(s)?\n\n${showConfirmDialog.chainNames.join(', ')}`,
+        ? t(
+            'recycleBinModal.confirmDialog.restoreTheFollowingShowConfirmDialogChainIdsCountChainSShowConfirmDialogChainNames',
+            {
+              showConfirmDialogChainIdsCount: showConfirmDialog.chainIds.length,
+              showConfirmDialogChainNames:
+                showConfirmDialog.chainNames.join(', '),
+            },
           )
-        : tr(
-            `确定要永久删除以下 ${showConfirmDialog.chainIds.length} 个链条吗？\n\n${showConfirmDialog.chainNames.join(', ')}\n\n⚠️ 此操作无法撤销，所有数据将被永久删除！`,
-            `Permanently delete the following ${showConfirmDialog.chainIds.length} chain(s)?\n\n${showConfirmDialog.chainNames.join(', ')}\n\n⚠️ This cannot be undone. All data will be permanently deleted!`,
+        : t(
+            'recycleBinModal.confirmDialog.permanentlyDeleteTheFollowingShowConfirmDialogChainIdsCountChainSShowConfirmDialogChainNamesThis',
+            {
+              showConfirmDialogChainIdsCount: showConfirmDialog.chainIds.length,
+              showConfirmDialogChainNames:
+                showConfirmDialog.chainNames.join(', '),
+            },
           )
     }
     confirmText={
       showConfirmDialog.type === 'restore'
-        ? tr('恢复', 'Restore')
-        : tr('永久删除', 'Delete permanently')
+        ? t('deletedChainCard.restore')
+        : t('recycleBinModal.bulkActionsBar.deletePermanently')
     }
-    cancelText={tr('取消', 'Cancel')}
+    cancelText={t('bettingModal.bettingFormSections.cancel')}
     confirmButtonClass={
       showConfirmDialog.type === 'restore'
         ? 'bg-green-500 hover:bg-green-600'

@@ -1,3 +1,4 @@
+import { translate } from '../i18n/translate';
 import type { Chain } from '../types';
 import { formatTime } from './time';
 
@@ -7,10 +8,8 @@ export function formatChainDuration(
 ): string {
   if (!chain.isDurationless && chain.duration !== 0)
     return formatTime(chain.duration, language);
-  const label = language === 'zh' ? '无固定时长' : 'No fixed duration';
+  const label = translate(language, 'time.noFixedDuration');
   if (!chain.minimumDuration) return label;
   const minimum = formatTime(chain.minimumDuration, language);
-  return language === 'zh'
-    ? `${label}（至少 ${minimum}）`
-    : `${label} (minimum ${minimum})`;
+  return translate(language, 'time.minimumDuration', { label, minimum });
 }

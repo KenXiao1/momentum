@@ -33,7 +33,7 @@ export const BettingModalContainer: React.FC<BettingModalProps> = React.memo(
       successMessage,
       quickBetOptions,
       language,
-      tr,
+      t,
       handleBetAmountChange,
       setQuickBetAmount,
       handlePlaceBet,
@@ -46,7 +46,7 @@ export const BettingModalContainer: React.FC<BettingModalProps> = React.memo(
         chainName={chainName}
         taskDuration={taskDuration}
         language={language}
-        tr={tr}
+        t={t}
         betAmount={betAmount}
         availablePoints={availablePoints}
         todayBetAmount={todayBetAmount}

@@ -20,7 +20,7 @@ describe('buildRSIPNodeRows', () => {
       cumulativeExecutionDays: 12,
       isPassive: true,
       splitFromGoal: '早睡早起',
-      stabilityPhase: 'E1',
+      stabilityPhase: 'E1' as const,
       phaseStartedAt: new Date('2026-02-07T00:10:00.000Z'),
       lastExecutedAt: new Date('2026-02-07T00:20:00.000Z'),
       lastViolatedAt: new Date('2026-02-07T00:30:00.000Z'),

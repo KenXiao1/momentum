@@ -25,7 +25,7 @@ export const ChainDetailContainer: React.FC<ChainDetailProps> = React.memo(
       chainHistoryCount,
       language,
       locale,
-      tr,
+      t,
       formatFailureReason,
       handleDeleteClick,
       handleDeleteConfirm,
@@ -41,7 +41,7 @@ export const ChainDetailContainer: React.FC<ChainDetailProps> = React.memo(
         showDeleteConfirm={showDeleteConfirm}
         language={language}
         locale={locale}
-        tr={tr}
+        t={t}
         formatFailureReason={formatFailureReason}
         onBack={onBack}
         onEdit={onEdit}

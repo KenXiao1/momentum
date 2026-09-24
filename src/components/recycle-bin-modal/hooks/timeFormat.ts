@@ -1,15 +1,13 @@
+import { translate } from '../../../i18n/translate';
+import { type Translator } from '../../../i18n';
 import type { Language } from '../../../i18n';
-
-function pluralizeEn(count: number, singular: string, plural = `${singular}s`) {
-  return count === 1 ? singular : plural;
-}
 
 export function formatDeletedTime(params: {
   deletedAt: Date;
   language: Language;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }): string {
-  const { deletedAt, language, tr } = params;
+  const { deletedAt, language, t } = params;
 
   const now = new Date();
   const diffMs = now.getTime() - deletedAt.getTime();
@@ -18,20 +16,22 @@ export function formatDeletedTime(params: {
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
 
   if (diffDays > 0) {
-    return language === 'zh'
-      ? `${diffDays}天前`
-      : `${diffDays} ${pluralizeEn(diffDays, 'day')} ago`;
+    return diffDays === 1
+      ? translate(language, 'time.dayAgo', { count: diffDays })
+      : translate(language, 'time.daysAgo', { count: diffDays });
   }
   if (diffHours > 0) {
-    return language === 'zh'
-      ? `${diffHours}小时前`
-      : `${diffHours} ${pluralizeEn(diffHours, 'hour')} ago`;
+    return diffHours === 1
+      ? translate(language, 'time.hourAgo', { count: diffHours })
+      : translate(language, 'time.hoursAgo', { count: diffHours });
   }
   if (diffMinutes > 0) {
-    return language === 'zh'
-      ? `${diffMinutes}分钟前`
-      : `${diffMinutes} min ago`;
+    return translate(
+      language === 'zh' ? 'zh' : 'en',
+      'recycleBinModal.timeFormat.diffMinutesMinAgo',
+      { diffMinutes: diffMinutes },
+    );
   }
 
-  return tr('刚刚', 'just now');
+  return t('recycleBinModal.timeFormat.justNow');
 }

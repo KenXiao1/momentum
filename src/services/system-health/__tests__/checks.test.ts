@@ -1,3 +1,4 @@
+import type { ComponentHealth } from '../types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const dataIntegrityCheckerMock = vi.hoisted(() => ({
@@ -216,7 +217,7 @@ describe('system health recommendations and summary', () => {
       recentErrors: [{ id: 1 }],
     });
 
-    const components = [
+    const components: ComponentHealth[] = [
       await checkDataIntegrity(),
       await checkErrorHandling(),
       {
@@ -241,7 +242,7 @@ describe('system health recommendations and summary', () => {
   });
 
   it('generates summary text for healthy/warning/critical states', () => {
-    const components = [
+    const components: ComponentHealth[] = [
       { name: 'a', status: 'healthy', score: 90, issues: [] },
       { name: 'b', status: 'warning', score: 70, issues: ['w'] },
       { name: 'c', status: 'critical', score: 20, issues: ['c'] },

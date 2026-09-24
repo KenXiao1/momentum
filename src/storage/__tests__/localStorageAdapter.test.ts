@@ -11,7 +11,7 @@ describe('localStorageAdapter capabilities', () => {
       localStorageAdapter.toggleGamblingMode(),
       localStorageAdapter.createBettingSession('chain-1', 1200),
       localStorageAdapter.deleteBettingSession('session-1'),
-      localStorageAdapter.completeTaskWithBetting('session-1'),
+      localStorageAdapter.completeTaskWithBetting('session-1', true),
       localStorageAdapter.placeBet({
         session_id: 'session-1',
         bet_amount: 1,

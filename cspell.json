@@ -12,7 +12,7 @@
     "package-lock.json",
     "src/lib/database.types.ts",
     "docs/guides/How to Improve Self-Control by edmond EN.md",
-    "docs/guides/如何提高自制力？-edmond的回答.md"
+    "docs/guides/\u5982\u4f55\u63d0\u9ad8\u81ea\u5236\u529b\uff1f-edmond\u7684\u56de\u7b54.md"
   ],
   "words": [
     "adblock",
@@ -82,6 +82,9 @@
     "tseslint",
     "tsprune",
     "vitest",
-    "Nori"
+    "Nori",
+    "unjournaled",
+    "unwritable",
+    "reindexing"
   ]
 }

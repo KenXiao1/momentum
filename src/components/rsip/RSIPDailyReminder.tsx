@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import { Bell } from 'lucide-react';
 
 interface RSIPDailyReminderProps {
@@ -11,6 +12,7 @@ export function RSIPDailyReminder({
   treeOpenStreak,
   onRecordOpened,
 }: RSIPDailyReminderProps) {
+  const { t } = useI18n();
   if (hasOpenedToday) {
     return null;
   }
@@ -24,10 +26,10 @@ export function RSIPDailyReminder({
           </div>
           <div>
             <p className="font-medium text-amber-800 dark:text-amber-200">
-              今日尚未查看国策树
+              {t('rsip.rsipDailyReminder.notOpenedToday')}
             </p>
             <p className="text-sm text-amber-700 dark:text-amber-300/70">
-              连续 {treeOpenStreak} 天打卡
+              {t('rsip.rsipDailyReminder.streak', { days: treeOpenStreak })}
             </p>
           </div>
         </div>
@@ -36,7 +38,7 @@ export function RSIPDailyReminder({
           onClick={onRecordOpened}
           className="cursor-pointer rounded-xl bg-amber-500 px-4 py-2 font-medium text-black transition hover:bg-amber-400"
         >
-          立即打卡
+          {t('rsip.rsipDailyReminder.checkInNow')}
         </button>
       </div>
     </div>

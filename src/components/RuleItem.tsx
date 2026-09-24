@@ -1,3 +1,4 @@
+import { translate } from '../i18n/translate';
 /**
  * 优化的规则项组件
  * 使用 React.memo 避免不必要的重渲染
@@ -18,12 +19,12 @@ interface RuleItemProps {
 
 const RuleItem: React.FC<RuleItemProps> = memo(
   ({ rule, isOptimistic, onEdit, onDelete, onSelect }) => {
-    const { language, tr } = useI18n();
+    const { language, t } = useI18n();
 
     const getRuleTypeDisplayName = (type: ExceptionRuleType): string => {
       return type === ExceptionRuleType.PAUSE_ONLY
-        ? tr('仅暂停', 'Pause only')
-        : tr('仅提前完成', 'Early completion only');
+        ? t('ruleItem.pauseOnly')
+        : t('ruleItem.earlyCompletionOnly');
     };
 
     const getRuleTypeColor = (type: ExceptionRuleType): string => {
@@ -33,22 +34,34 @@ const RuleItem: React.FC<RuleItemProps> = memo(
     };
 
     const formatLastUsed = (date?: Date): string => {
-      if (!date) return tr('从未使用', 'Never used');
+      if (!date) return t('ruleItem.neverUsed');
 
       const now = new Date();
       const diffMs = now.getTime() - date.getTime();
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-      if (diffDays === 0) return tr('今天', 'Today');
-      if (diffDays === 1) return tr('昨天', 'Yesterday');
+      if (diffDays === 0) return t('ruleItem.today');
+      if (diffDays === 1) return t('ruleItem.yesterday');
       if (diffDays < 7)
-        return language === 'zh' ? `${diffDays}天前` : `${diffDays}d ago`;
+        return translate(
+          language === 'zh' ? 'zh' : 'en',
+          'ruleItem.diffDaysDAgo',
+          { diffDays: diffDays },
+        );
       if (diffDays < 30) {
         const weeks = Math.floor(diffDays / 7);
-        return language === 'zh' ? `${weeks}周前` : `${weeks}w ago`;
+        return translate(
+          language === 'zh' ? 'zh' : 'en',
+          'ruleItem.weeksWAgo',
+          { weeks: weeks },
+        );
       }
       const months = Math.floor(diffDays / 30);
-      return language === 'zh' ? `${months}个月前` : `${months}mo ago`;
+      return translate(
+        language === 'zh' ? 'zh' : 'en',
+        'ruleItem.monthsMoAgo',
+        { months: months },
+      );
     };
 
     const isSelectable = Boolean(onSelect);
@@ -59,11 +72,10 @@ const RuleItem: React.FC<RuleItemProps> = memo(
       }
     };
 
-    const usageUnit = rule.usageCount === 1 ? 'time' : 'times';
     const usageText =
-      language === 'zh'
-        ? `使用 ${rule.usageCount} 次`
-        : `Used ${rule.usageCount} ${usageUnit}`;
+      rule.usageCount === 1
+        ? t('counts.ruleUsedOnce', { count: rule.usageCount })
+        : t('counts.ruleUsedMany', { count: rule.usageCount });
 
     return (
       <div

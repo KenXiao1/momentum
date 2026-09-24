@@ -45,6 +45,10 @@ function getGitSha(repoRoot) {
   return (result.stdout ?? '').trim() || 'unknown';
 }
 
+/**
+ * @typedef {{ exitCode: number | null, stdout: string, stderr: string, error?: Error }} CheckExecution
+ * @returns {CheckExecution | Promise<CheckExecution>}
+ */
 function defaultExecuteCheck(check, { repoRoot }) {
   const command =
     process.platform === 'win32'
@@ -148,6 +152,21 @@ function renderSummaryMarkdown(summary) {
   return `${lines.join('\n')}\n`;
 }
 
+/**
+ * @typedef {{ id: string, label: string, script: string, reports?: string[], textReportPath?: string }} QualityCheck
+ * @typedef {Object} LaneOptions
+ * @property {string} [laneId]
+ * @property {string} [repoRoot]
+ * @property {QualityCheck[]} [checks]
+ * @property {(check: QualityCheck, context: { repoRoot: string }) => CheckExecution | Promise<CheckExecution>} [executeCheck]
+ * @property {string} [exitPolicy]
+ * @property {string} [summaryJsonPath]
+ * @property {string} [summaryMarkdownPath]
+ * @property {string} [logsDir]
+ * @property {boolean} [captureTextReports]
+ * @property {string} [laneLabel]
+ * @param {LaneOptions} options
+ */
 export async function runLane({
   laneId,
   repoRoot = process.cwd(),

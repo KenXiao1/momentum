@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { exceptionRuleStorage } from '../../../services/ExceptionRuleStorage';
@@ -7,12 +8,12 @@ import {
   type RuleActionType,
 } from '../useRuleSelectionRules';
 
-const tr = (_zh: string, en: string) => en;
+const t = createTranslator('en');
 
 function renderRules(actionType: RuleActionType = 'pause') {
   return renderHook(
     ({ actionType, chainId }) =>
-      useRuleSelectionRules({ actionType, chainId, language: 'en', tr }),
+      useRuleSelectionRules({ actionType, chainId, language: 'en', t }),
     { initialProps: { actionType, chainId: 'chain-1' } },
   );
 }

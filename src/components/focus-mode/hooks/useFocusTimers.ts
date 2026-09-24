@@ -22,7 +22,7 @@ export function useFocusTimers({
   storage,
   onTimeUp,
 }: UseFocusTimersParams) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [forwardElapsedSeconds, setForwardElapsedSeconds] = useState(0);
   const [lastCompletionTime, setLastCompletionTime] = useState<number | null>(
@@ -133,7 +133,7 @@ export function useFocusTimers({
         fireAndForget(
           systemNotificationService.notifyTaskWarning(
             chain.name,
-            tr(`${minutes}分钟`, `${minutes} min`),
+            t('chainCard.useChainCard.minutesMin', { minutes: minutes }),
           ),
           { label: 'task-warning-notification' },
         );
@@ -154,7 +154,7 @@ export function useFocusTimers({
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [chain.name, isDurationless, onTimeUp, session, tr]);
+  }, [chain.name, isDurationless, onTimeUp, session, t]);
 
   return {
     timeRemaining,

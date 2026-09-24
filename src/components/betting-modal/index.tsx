@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 /**
  * BettingModalView - 纯展示组件
  */
@@ -13,7 +14,7 @@ interface BettingModalViewProps {
   chainName: string;
   taskDuration: number;
   language: 'zh' | 'en';
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 
   // 状态
   betAmount: string;
@@ -42,7 +43,7 @@ const BettingModalViewComponent: React.FC<BettingModalViewProps> = ({
   chainName,
   taskDuration,
   language,
-  tr,
+  t,
   betAmount,
   availablePoints,
   todayBetAmount,
@@ -63,18 +64,18 @@ const BettingModalViewComponent: React.FC<BettingModalViewProps> = ({
 
   let content: React.ReactNode;
   if (isLoading) {
-    content = <LoadingState tr={tr} />;
+    content = <LoadingState t={t} />;
   } else if (error) {
-    content = <ErrorState error={error} tr={tr} onReload={onReload} />;
+    content = <ErrorState error={error} t={t} onReload={onReload} />;
   } else if (successMessage) {
-    content = <SuccessState successMessage={successMessage} tr={tr} />;
+    content = <SuccessState successMessage={successMessage} t={t} />;
   } else {
     content = (
       <BettingForm
         chainName={chainName}
         taskDuration={taskDuration}
         language={language}
-        tr={tr}
+        t={t}
         betAmount={betAmount}
         availablePoints={availablePoints}
         todayBetAmount={todayBetAmount}
@@ -98,7 +99,7 @@ const BettingModalViewComponent: React.FC<BettingModalViewProps> = ({
         aria-labelledby="betting-modal-title"
         className="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800"
       >
-        <BettingHeader tr={tr} onClose={onClose} />
+        <BettingHeader t={t} onClose={onClose} />
 
         <div className="p-6">{content}</div>
       </div>

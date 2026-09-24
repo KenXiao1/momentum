@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../../i18n/translate';
 import { describe, expect, test } from 'vitest';
 import type { RSIPNodeGroup } from '../../../../types';
 import {
@@ -10,7 +11,7 @@ import {
   parseImportRsipTaskLinks,
 } from '../rsip';
 
-const tr = (zh: string) => zh;
+const t = createTranslator('zh');
 
 describe('import/rsip parser', () => {
   test('parses rsip meta with strict date fields', () => {
@@ -78,7 +79,7 @@ describe('import/rsip parser', () => {
         },
       ],
       [],
-      tr,
+      t,
       groupIdMap,
     );
 
@@ -132,7 +133,7 @@ describe('import/rsip parser', () => {
         },
       ],
       [],
-      tr,
+      t,
     );
     const chainIdMap = new Map<string, string>([['source-chain', 'new-chain']]);
 

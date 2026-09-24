@@ -6,10 +6,24 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  actions: read
 
 jobs:
+  verify-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - name: Require successful CI for the release commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node tools/quality/release-gate.mjs
+
   build-desktop:
+    needs: verify-ci
     strategy:
       fail-fast: false
       matrix:
@@ -133,6 +147,7 @@ jobs:
             src-tauri/target/release/bundle/appimage/*.AppImage.sig
 
   build-android:
+    needs: verify-ci
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -171,7 +186,7 @@ jobs:
             "platforms;android-34" \
             "build-tools;34.0.0" \
             "ndk;25.2.9519653"
-          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
+          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> "$GITHUB_ENV"
 
       - name: Setup Rust with Android targets
         uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
@@ -207,47 +222,43 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: npx tauri android build
 
-      - name: Rename APK
-        shell: bash
-        run: |
-          set -euo pipefail
-          VERSION=$(node -p "require('./src-tauri/tauri.conf.json').version")
-          APK_DIR="src-tauri/gen/android/app/build/outputs/apk/universal/release"
-          TARGET_APK="$APK_DIR/Momentum_${VERSION}_universal.apk"
-          SOURCE_APK=""
-
-          if [ -f "$APK_DIR/app-universal-release.apk" ]; then
-            SOURCE_APK="$APK_DIR/app-universal-release.apk"
-          elif [ -f "$APK_DIR/app-universal-release-unsigned.apk" ]; then
-            SOURCE_APK="$APK_DIR/app-universal-release-unsigned.apk"
-          fi
-
-          if [ -n "$SOURCE_APK" ]; then
-            cp "$SOURCE_APK" "$TARGET_APK"
-          fi
-
-          echo "=== Android APK ==="
-          ls -la "$APK_DIR/" 2>/dev/null || echo "APK dir not found"
-
-      - name: Upload Android artifact
+      # Keep mobile build evidence without presenting an unsigned APK as an installer.
+      - name: Upload Android development artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: android-artifacts
+          name: android-development-artifacts
           path: |
-            src-tauri/gen/android/app/build/outputs/apk/universal/release/Momentum_*.apk
+            src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
             src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk
 
   create-release:
-    needs: [build-desktop, build-android]
+    needs: [verify-ci, build-desktop, build-android]
+    permissions:
+      contents: write
+      actions: read
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
 
     steps:
-      - name: Download all artifacts
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - name: Download Windows release artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
+          name: windows-artifacts
           path: artifacts
-          merge-multiple: true
+      - name: Download macOS release artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: macos-artifacts
+          path: artifacts
+      - name: Download Linux release artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: linux-artifacts
+          path: artifacts
 
       - name: List downloaded artifacts
         run: find artifacts -type f 2>/dev/null || echo "No artifacts"
@@ -301,7 +312,7 @@ jobs:
           LINUX_URL="$REPO/$(basename "$LINUX_FILE")"
           MAC_URL="$REPO/$(basename "$MAC_FILE")"
           MAC_PLATFORM_KEY="darwin-aarch64"
-          if echo "$(basename "$MAC_FILE")" | grep -Eq '(x64|x86_64|amd64)'; then
+          if basename "$MAC_FILE" | grep -Eq '(x64|x86_64|amd64)'; then
             MAC_PLATFORM_KEY="darwin-x86_64"
           fi
 
@@ -321,6 +332,11 @@ jobs:
           echo "=== latest.json ==="
           cat artifacts/latest.json
 
+      - name: Recheck CI immediately before publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node tools/quality/release-gate.mjs
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
@@ -336,7 +352,17 @@ jobs:
             | **macOS** | `Momentum_*_aarch64.dmg` | Apple Silicon (M1/M2/M3/M4) |
             | **Linux** | `Momentum_*_amd64.AppImage` | Universal, no install needed |
             | **Linux** | `Momentum_*_amd64.deb` | Debian/Ubuntu |
-            | **Android** | `Momentum_*_universal.apk` | Sideload install (enable "Unknown sources") |
-          files: artifacts/**/*
+          files: |
+            artifacts/**/*.exe
+            artifacts/**/*.exe.sig
+            artifacts/**/*.msi
+            artifacts/**/*.msi.sig
+            artifacts/**/*.dmg
+            artifacts/**/*.app.tar.gz
+            artifacts/**/*.app.tar.gz.sig
+            artifacts/**/*.deb
+            artifacts/**/*.AppImage
+            artifacts/**/*.AppImage.sig
+            artifacts/latest.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

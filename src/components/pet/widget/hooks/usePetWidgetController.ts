@@ -1,3 +1,4 @@
+import { type Translator } from '../../../../i18n';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FeedResult, PetMood, PetState } from '../../../../types/pet';
 import { toast } from '../../../../utils/toast';
@@ -15,7 +16,7 @@ export function usePetWidgetController(params: {
   onUpdateMinimizedPosition: (x: number, y: number) => Promise<void>;
   onMinimize: () => Promise<void>;
   onExpand: () => Promise<void>;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }) {
   const {
     pet,
@@ -28,7 +29,7 @@ export function usePetWidgetController(params: {
     onUpdateMinimizedPosition,
     onMinimize,
     onExpand,
-    tr,
+    t,
   } = params;
 
   const [isDragging, setIsDragging] = useState(false);
@@ -64,18 +65,18 @@ export function usePetWidgetController(params: {
       if (result && result.hungerReduced > 0) {
         fireAndForget(capabilityCenter.haptics.notification('success'));
         toast.success(
-          tr(
-            `喂食成功！饱食度+${Math.round(result.hungerReduced)}`,
-            `Fed! Fullness +${Math.round(result.hungerReduced)}`,
+          t(
+            'pet.widget.usePetWidgetController.fedFullnessResultHungerReduced',
+            { resultHungerReduced: Math.round(result.hungerReduced) },
           ),
         );
       } else if (result && result.hungerReduced === 0) {
-        toast.info(tr('宠物已经吃饱啦~', 'Pet is already full~'));
+        toast.info(t('pet.widget.usePetWidgetController.petIsAlreadyFull'));
       }
     } finally {
       setIsFeeding(false);
     }
-  }, [capabilityCenter.haptics, isFeeding, onFeedPet, pet, tr]);
+  }, [capabilityCenter.haptics, isFeeding, onFeedPet, pet, t]);
 
   const handleMouseDown = useCallback(
     (event: React.MouseEvent) => {
@@ -263,9 +264,12 @@ export function usePetWidgetController(params: {
     async (name: string) => {
       await onCreatePet(name);
       setShowCreationDialog(false);
-      toast.success(tr(`欢迎 ${name} 加入！`, `Welcome ${name}!`) + ' 🎀');
+      toast.success(
+        t('pet.widget.usePetWidgetController.welcomeName', { name: name }) +
+          ' 🎀',
+      );
     },
-    [onCreatePet, tr],
+    [onCreatePet, t],
   );
 
   const handleMinimize = useCallback(async () => {

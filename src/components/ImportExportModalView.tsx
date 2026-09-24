@@ -1,3 +1,4 @@
+import { type Translator } from '../i18n';
 import React from 'react';
 import { Download, Upload, X, FileText } from 'lucide-react';
 import type { ImportExportImportOptions } from '../services/ImportExportService';
@@ -29,7 +30,7 @@ interface ImportExportModalViewProps {
   onExport: () => void;
   onImport: () => void;
   onClose: () => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 export const ImportExportModalView: React.FC<ImportExportModalViewProps> = ({
@@ -48,7 +49,7 @@ export const ImportExportModalView: React.FC<ImportExportModalViewProps> = ({
   onExport,
   onImport,
   onClose,
-  tr,
+  t,
 }) => {
   const isImportDisabled =
     !importData.trim() ||
@@ -68,15 +69,15 @@ export const ImportExportModalView: React.FC<ImportExportModalViewProps> = ({
       onClose={onClose}
       className="w-full max-w-2xl animate-scale-in overflow-y-auto rounded-3xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-slate-600 dark:bg-slate-800 sm:p-6"
     >
-      <ModalHeader onClose={onClose} tr={tr} />
-      <TabNavigation activeTab={activeTab} onTabChange={onTabChange} tr={tr} />
+      <ModalHeader onClose={onClose} t={t} />
+      <TabNavigation activeTab={activeTab} onTabChange={onTabChange} t={t} />
 
       {activeTab === 'export' && (
         <ExportTab
           chainsCount={chainsCount}
           onExport={onExport}
           language={language}
-          tr={tr}
+          t={t}
         />
       )}
 
@@ -93,7 +94,7 @@ export const ImportExportModalView: React.FC<ImportExportModalViewProps> = ({
           onFileUpload={onFileUpload}
           onOpenFile={onOpenFile}
           onImport={onImport}
-          tr={tr}
+          t={t}
         />
       )}
     </DialogShell>
@@ -102,8 +103,8 @@ export const ImportExportModalView: React.FC<ImportExportModalViewProps> = ({
 
 const ModalHeader: React.FC<{
   onClose: () => void;
-  tr: (zh: string, en: string) => string;
-}> = ({ onClose, tr }) => (
+  t: Translator;
+}> = ({ onClose, t }) => (
   <div className="mb-8 flex items-center justify-between">
     <div className="flex items-center space-x-3">
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-500/10">
@@ -114,17 +115,17 @@ const ModalHeader: React.FC<{
           id="import-export-modal-title"
           className="font-chinese text-2xl font-bold text-gray-900 dark:text-slate-100"
         >
-          {tr('数据管理', 'Data management')}
+          {t('importExportModalView.dataManagement')}
         </h2>
         <p className="font-mono text-sm tracking-wide text-gray-500">
-          {tr('数据管理', 'DATA MANAGEMENT')}
+          {t('importExportModalView.dataManagementVariant2')}
         </p>
       </div>
     </div>
     <button
       type="button"
       onClick={onClose}
-      aria-label={tr('关闭', 'Close')}
+      aria-label={t('accountModal.close')}
       className="rounded-xl p-2 text-gray-400 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
     >
       <X size={20} />
@@ -135,13 +136,13 @@ const ModalHeader: React.FC<{
 interface TabNavigationProps {
   activeTab: 'export' | 'import';
   onTabChange: (tab: 'export' | 'import') => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 const TabNavigation: React.FC<TabNavigationProps> = ({
   activeTab,
   onTabChange,
-  tr,
+  t,
 }) => (
   <div className="mb-8 flex rounded-2xl bg-gray-100 p-1 dark:bg-slate-700">
     <button
@@ -154,7 +155,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
       }`}
     >
       <Download size={16} />
-      <span>{tr('导出数据', 'Export')}</span>
+      <span>{t('importExportModalView.export')}</span>
     </button>
     <button
       type="button"
@@ -166,7 +167,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
       }`}
     >
       <Upload size={16} />
-      <span>{tr('导入数据', 'Import')}</span>
+      <span>{t('importExportModalView.import')}</span>
     </button>
   </div>
 );
@@ -183,7 +184,7 @@ interface ImportTabProps {
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onOpenFile?: () => void;
   onImport: () => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 const ImportTab: React.FC<ImportTabProps> = ({
@@ -198,46 +199,46 @@ const ImportTab: React.FC<ImportTabProps> = ({
   onFileUpload,
   onOpenFile,
   onImport,
-  tr,
+  t,
 }) => (
   <div className="space-y-6">
-    <ImportInfoBox tr={tr} />
-    <FileUploadSection onFileUpload={onFileUpload} tr={tr} />
-    {onOpenFile && <SystemFilePickerButton onOpenFile={onOpenFile} tr={tr} />}
+    <ImportInfoBox t={t} />
+    <FileUploadSection onFileUpload={onFileUpload} t={t} />
+    {onOpenFile && <SystemFilePickerButton onOpenFile={onOpenFile} t={t} />}
     <ManualInputSection
       importData={importData}
       onImportDataChange={onImportDataChange}
-      tr={tr}
+      t={t}
     />
     <ImportOptionsSection
       importOptions={importOptions}
       onImportOptionsChange={onImportOptionsChange}
-      tr={tr}
+      t={t}
     />
     <ImportStatusDisplay
       importStatus={importStatus}
       importError={importError}
-      tr={tr}
+      t={t}
     />
     <ImportButton
       importStatus={importStatus}
       isImportDisabled={isImportDisabled}
       isImporting={isImporting}
       onImport={onImport}
-      tr={tr}
+      t={t}
     />
   </div>
 );
 
 const SystemFilePickerButton: React.FC<{
   onOpenFile: () => void;
-  tr: (zh: string, en: string) => string;
-}> = ({ onOpenFile, tr }) => (
+  t: Translator;
+}> = ({ onOpenFile, t }) => (
   <button
     type="button"
     onClick={onOpenFile}
     className="rounded-xl border border-gray-200 px-4 py-2 font-chinese text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
   >
-    {tr('使用系统文件选择器', 'Use system file picker')}
+    {t('importExportModalView.useSystemFilePicker')}
   </button>
 );

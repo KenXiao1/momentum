@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import React, { useCallback, useState } from 'react';
 import type { RSIPNode, RSIPTreeNode } from '../../types';
 import {
@@ -19,7 +20,7 @@ interface RSIPCanvasContainerProps {
   onSaveNodes: (nodes: RSIPNode[]) => void;
   onMarkFailedNode?: (nodeId: string) => void;
   language: string;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 export const RSIPCanvasContainer: React.FC<RSIPCanvasContainerProps> = ({
@@ -28,7 +29,7 @@ export const RSIPCanvasContainer: React.FC<RSIPCanvasContainerProps> = ({
   onSaveNodes,
   onMarkFailedNode,
   language,
-  tr,
+  t,
 }) => {
   const { savedState, isLoaded, saveCanvasState } = useCanvasState();
   const [filterType, setFilterType] = useState<string | null>(null);
@@ -53,7 +54,7 @@ export const RSIPCanvasContainer: React.FC<RSIPCanvasContainerProps> = ({
     formatMinutesLabel,
     handleStartTimer,
     confirmStopTimer,
-  } = useRSIPTimers(tr);
+  } = useRSIPTimers(t);
 
   const {
     reparentingId,
@@ -69,7 +70,7 @@ export const RSIPCanvasContainer: React.FC<RSIPCanvasContainerProps> = ({
     commitReparent,
     cancelReparent,
     setRelationError,
-  } = useRSIPReparent({ nodes, tree, nodesById, onSaveNodes, tr });
+  } = useRSIPReparent({ nodes, tree, nodesById, onSaveNodes, t });
 
   const {
     viewportRef,
@@ -163,7 +164,7 @@ export const RSIPCanvasContainer: React.FC<RSIPCanvasContainerProps> = ({
       reparentingTitle={reparentingTitle}
       relationError={relationError}
       language={language}
-      tr={tr}
+      t={t}
       viewportRef={viewportRef}
       containerRef={containerRef}
       transformRef={transformRef}

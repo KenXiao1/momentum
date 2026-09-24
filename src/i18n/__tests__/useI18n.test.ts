@@ -1,3 +1,4 @@
+import { createTranslator } from '../translate';
 import React from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
@@ -11,8 +12,7 @@ describe('useI18n', () => {
       language: 'en',
       locale: 'en-US',
       setLanguage: vi.fn(),
-      t: (key) => key,
-      tr: (_zh, en) => en,
+      t: createTranslator('en'),
     };
 
     const wrapper = ({ children }: { children: React.ReactNode }) =>
@@ -34,7 +34,7 @@ describe('useI18n', () => {
     expect(result.current.language).toBe('en');
     expect(result.current.locale).toBe('en-US');
     expect(result.current.t('settings.title')).toBe('Personal Settings');
-    expect(result.current.tr('你好', 'Hello')).toBe('Hello');
+    expect(result.current.t('common.back')).toBe('Back');
 
     act(() => {
       result.current.setLanguage('zh');
@@ -42,6 +42,6 @@ describe('useI18n', () => {
 
     expect(result.current.language).toBe('zh');
     expect(result.current.locale).toBe('zh-CN');
-    expect(result.current.tr('你好', 'Hello')).toBe('你好');
+    expect(result.current.t('common.back')).toBe('返回');
   });
 });

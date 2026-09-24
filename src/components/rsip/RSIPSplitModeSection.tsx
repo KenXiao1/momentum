@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import type { Dispatch, SetStateAction } from 'react';
 import type { SplitDraftItem } from './rsipViewHelpers';
 
@@ -13,21 +14,18 @@ interface RSIPSplitModeSectionProps {
   onAddSplitRow: () => void;
   onSubmitSplit: () => void;
   canAddToday: boolean;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
-function getTemplateLabel(
-  templateKey: string,
-  tr: (zh: string, en: string) => string,
-): string {
+function getTemplateLabel(templateKey: string, t: Translator): string {
   if (templateKey === 'sleep') {
-    return tr('作息模板', 'Sleep template');
+    return t('rsip.rsipSplitModeSection.sleepTemplate');
   }
   if (templateKey === 'exercise') {
-    return tr('运动模板', 'Exercise template');
+    return t('rsip.rsipSplitModeSection.exerciseTemplate');
   }
   if (templateKey === 'diet') {
-    return tr('饮食模板', 'Diet template');
+    return t('rsip.rsipSplitModeSection.dietTemplate');
   }
   return templateKey;
 }
@@ -44,7 +42,7 @@ export function RSIPSplitModeSection({
   onAddSplitRow,
   onSubmitSplit,
   canAddToday,
-  tr,
+  t,
 }: RSIPSplitModeSectionProps) {
   const updateSplitItem = (itemId: string, patch: Partial<SplitDraftItem>) => {
     setSplitItems((currentItems) =>
@@ -58,10 +56,7 @@ export function RSIPSplitModeSection({
     <div className="bento-card mb-8">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
-          {tr(
-            '拆分模式（零散牛皮糖）',
-            'Split mode (shatter oversized policies)',
-          )}
+          {t('rsip.rsipSplitModeSection.splitModeShatterOversizedPolicies')}
         </h3>
         <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-slate-300">
           <input
@@ -69,7 +64,7 @@ export function RSIPSplitModeSection({
             checked={splitMode}
             onChange={(event) => setSplitMode(event.target.checked)}
           />
-          {tr('启用', 'Enable')}
+          {t('rsip.rsipSplitModeSection.enable')}
         </label>
       </div>
 
@@ -78,9 +73,8 @@ export function RSIPSplitModeSection({
           <input
             value={splitGoal}
             onChange={(event) => setSplitGoal(event.target.value)}
-            placeholder={tr(
-              '目标，例如：早睡早起',
-              'Goal, e.g. Sleep early and wake early',
+            placeholder={t(
+              'rsip.rsipSplitModeSection.goalEGSleepEarlyAndWakeEarly',
             )}
             className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
           />
@@ -93,7 +87,7 @@ export function RSIPSplitModeSection({
                 onClick={() => onApplySplitTemplate(templateKey)}
                 className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs text-gray-700 dark:bg-slate-700 dark:text-slate-200"
               >
-                {getTemplateLabel(templateKey, tr)}
+                {getTemplateLabel(templateKey, t)}
               </button>
             ))}
             <button
@@ -101,7 +95,7 @@ export function RSIPSplitModeSection({
               onClick={onAddSplitRow}
               className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs text-white"
             >
-              {tr('新增子国策', 'Add sub-policy')}
+              {t('rsip.rsipSplitModeSection.addSubPolicy')}
             </button>
           </div>
 
@@ -115,7 +109,7 @@ export function RSIPSplitModeSection({
                 onChange={(event) =>
                   updateSplitItem(item.id, { title: event.target.value })
                 }
-                placeholder={tr('子国策标题', 'Sub-policy title')}
+                placeholder={t('rsip.rsipSplitModeSection.subPolicyTitle')}
                 className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 md:col-span-4"
               />
               <input
@@ -123,7 +117,7 @@ export function RSIPSplitModeSection({
                 onChange={(event) =>
                   updateSplitItem(item.id, { rule: event.target.value })
                 }
-                placeholder={tr('子国策规则', 'Sub-policy rule')}
+                placeholder={t('rsip.rsipSplitModeSection.subPolicyRule')}
                 className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 md:col-span-6"
               />
               <label className="inline-flex items-center justify-center gap-2 text-xs text-gray-600 dark:text-slate-300 md:col-span-2">
@@ -136,7 +130,7 @@ export function RSIPSplitModeSection({
                     })
                   }
                 />
-                {tr('被动', 'Passive')}
+                {t('rsip.rsipSplitModeSection.passive')}
               </label>
             </div>
           ))}
@@ -151,7 +145,7 @@ export function RSIPSplitModeSection({
                 : 'bg-emerald-600 text-white hover:bg-emerald-700'
             }`}
           >
-            {tr('批量创建拆分国策', 'Create split policies')}
+            {t('rsip.rsipSplitModeSection.createSplitPolicies')}
           </button>
         </div>
       )}

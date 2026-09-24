@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../../i18n/translate';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -79,7 +80,7 @@ function createParams(
     clearAutoResumeSchedule: vi.fn(),
     onRuleUsed: vi.fn(),
     finishFlow: vi.fn(),
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
   };
 }
 
@@ -181,6 +182,29 @@ describe('useExceptionRuleOperations', () => {
     expect(params.onRequestCompletionDialog).toHaveBeenCalledTimes(1);
     expect(params.onPause).not.toHaveBeenCalled();
     expect(params.scheduleAutoResume).not.toHaveBeenCalled();
+  });
+
+  it('retains the rule dialog without a success message or auto-resume when pause persistence fails', async () => {
+    const params = createParams('pause');
+    params.onPause.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    const rule = createRule();
+    const pauseOptions = { duration: 120, autoResume: true };
+    const { result } = renderHook(() => useExceptionRuleOperations(params));
+    await act(async () => {
+      await result.current.handleRuleSelected(rule, pauseOptions);
+    });
+    expect(params.finishFlow).not.toHaveBeenCalled();
+    expect(params.onRuleUsed).not.toHaveBeenCalled();
+    expect(params.scheduleAutoResume).not.toHaveBeenCalled();
+    expect(userFeedbackHandlerMock.showSuccess).not.toHaveBeenCalled();
+    expect(userFeedbackHandlerMock.hideProgress).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      await result.current.handleRuleSelected(rule, pauseOptions);
+    });
+    expect(params.finishFlow).toHaveBeenCalledTimes(1);
+    expect(params.onRuleUsed).toHaveBeenCalledTimes(1);
+    expect(params.scheduleAutoResume).toHaveBeenCalledWith(2);
+    expect(userFeedbackHandlerMock.showSuccess).toHaveBeenCalledTimes(1);
   });
 
   it('keeps the flow open and surfaces a storage error when rule use rejects', async () => {

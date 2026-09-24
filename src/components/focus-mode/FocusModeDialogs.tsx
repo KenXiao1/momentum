@@ -20,7 +20,10 @@ interface FocusModeDialogsProps {
   onCreateNewRule: (name: string, type: ExceptionRuleType) => void;
   onRuleSelectionCancel: () => void;
   showCompletionDialog: boolean;
-  onDirectComplete: (description?: string, notes?: string) => void;
+  onDirectComplete: (
+    description?: string,
+    notes?: string,
+  ) => void | Promise<boolean | void>;
   onCompletionCancel: () => void;
   showInterruptDialog: boolean;
   onCancelInterrupt: () => void;

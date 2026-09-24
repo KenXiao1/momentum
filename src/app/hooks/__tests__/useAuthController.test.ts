@@ -96,7 +96,7 @@ describe('useAuthController', () => {
   it('should log warning when auth subscription setup fails', () => {
     const storage = createSupabaseStorageMock({
       onAuthStateChange: vi.fn(() =>
-        err({ code: 'AUTH', message: 'subscription failed' }),
+        err({ code: 'STORAGE' as const, message: 'subscription failed' }),
       ),
     });
 

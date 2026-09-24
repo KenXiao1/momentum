@@ -5,15 +5,17 @@
 Choose a suite for the behavior being changed. Append a test path or `-t` filter
 for focused runs; the config files own exact discovery patterns.
 
-| Command                          | Scope                                                       | Configuration                  |
-| -------------------------------- | ----------------------------------------------------------- | ------------------------------ |
-| `npm test` / `npm run test:all`  | Same unit suite; excludes integration and performance tests | `vitest.config.ts`             |
-| `npm run test:integration`       | Storage/API integration                                     | `vitest.integration.config.ts` |
-| `npm run test:performance`       | Timing and performance scenarios                            | `vitest.performance.config.ts` |
-| `npm run test:coverage`          | Unit + integration, all production TS/TSX                   | `vitest.coverage.config.ts`    |
-| `npm run test:mutation:critical` | Focused mutation checks                                     | `stryker.critical.config.mjs`  |
-| `npm run test:mutation`          | Broader mutation scope                                      | `stryker.config.mjs`           |
-| `npm run test:rust`              | Rust tests with the desktop feature                         | `src-tauri/Cargo.toml`         |
+| Command                          | Scope                                                                | Configuration                  |
+| -------------------------------- | -------------------------------------------------------------------- | ------------------------------ |
+| `npm test` / `npm run test:all`  | Same unit suite; excludes integration and performance tests          | `vitest.config.ts`             |
+| `npm run test:integration`       | Storage/API integration                                              | `vitest.integration.config.ts` |
+| `npm run test:performance`       | Timing and performance scenarios                                     | `vitest.performance.config.ts` |
+| `npm run test:coverage`          | Unit + integration, all production TS/TSX                            | `vitest.coverage.config.ts`    |
+| `npm run test:mutation:critical` | Focused mutation checks                                              | `stryker.critical.config.mjs`  |
+| `npm run test:mutation`          | Broader mutation scope                                               | `stryker.config.mjs`           |
+| `npm run typecheck:tests`        | Strict types for tests, fixtures, mocks, E2E, and browser benchmarks | `tsconfig.tests.json`          |
+| `npm run test:e2e`               | Core browser journeys against a production build                     | `playwright.config.ts`         |
+| `npm run test:rust`              | Rust tests with the desktop feature                                  | `src-tauri/Cargo.toml`         |
 
 Unit tests use `src/test/setup.ts` with independent native JSDOM local/session
 storage and suppressed console output. Tests live next to source or in
@@ -32,11 +34,44 @@ the subject under test and tautological assertions are checked by
 `quality:test:assertions`; test-runner and Testing Library rules live in
 `eslint.tests.config.js`.
 
+## Browser journeys and test types
+
+Install the Chromium test runtime once with `npx playwright install chromium`
+(or `npx playwright install --with-deps chromium` on Linux), then run
+`npm run test:e2e`. Playwright builds and serves the application on port 4173,
+with Supabase configuration empty so tests always use isolated local browser
+storage. Every test gets a new browser context. The four core journeys cover:
+
+- Create a chain, start, pause using an exception rule, refresh while paused,
+  resume, complete, and refresh again to verify a single saved completion.
+- Interrupt a browser storage write after the operation journal is persisted;
+  preserve the completion draft, retry, and verify exactly one completion.
+- Download a real JSON export and import it into empty browser storage,
+  preserving chain statistics and completion history across refresh.
+- Create two RSIP policies, cancel deletion, then delete one policy and verify
+  the other remains after refreshing and reopening the tree.
+
+These journeys operate real UI and persistence. The failure scenario injects a
+single browser storage exception; it does not replace the application storage
+adapter. Cloud authorization and concurrent database behavior belong to the
+real database suite, not these local browser journeys. Failed browser runs save
+screenshots and traces in `test-results/`; inspect the report with
+`npx playwright show-report`.
+
+`typecheck:tests` inherits application strictness, includes all source/test
+files and browser harnesses, and adds Node/Vitest types and ES2023 APIs used in
+tests. Unused test variables remain a lint concern. JavaScript governance tools
+are imported with inferred types but are not checked as JavaScript. Fixture
+factories must supply current required domain fields; mocks must preserve the
+real method argument/return contracts. Use a documented expected diagnostic
+only when a test deliberately passes an invalid runtime value.
+
 ## CI and diagnostics
 
-[CI](../../.github/workflows/ci.yml) runs `quality:ci:required`: formatting,
-lint/type/import checks, Knip, test validation, unit + integration coverage,
-Rust checks, and the web build. The exact roster is in `package.json`;
+[CI](../../.github/workflows/ci.yml) runs separate required jobs for formatting,
+lint/type/import checks, test types, unit + integration coverage, core browser
+journeys, database contracts, Rust checks, and the web build. An aggregate
+required status verifies that every required job succeeded. The exact roster is in `package.json`;
 coverage thresholds live in `vitest.coverage.config.ts`.
 `quality:test:coverage-hotspots` verifies report freshness and reports source inclusion,
 then ranks uncovered behavior. It consumes the preceding coverage run.

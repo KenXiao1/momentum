@@ -1,3 +1,5 @@
+import { translate } from '../../i18n/translate';
+import { type Translator } from '../../i18n';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   BetPlacementRequest,
@@ -21,7 +23,7 @@ export function useBetPlacementForm(params: {
   storage: Pick<MomentumStorage, 'placeBet'>;
   canUseBetting: boolean;
   language: Language;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   availablePoints: number;
   setAvailablePoints: React.Dispatch<React.SetStateAction<number>>;
   todayBetAmount: number;
@@ -42,7 +44,7 @@ export function useBetPlacementForm(params: {
     setTodayBetAmount,
     storage,
     todayBetAmount,
-    tr,
+    t,
   } = params;
   const [betAmount, setBetAmount] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -64,15 +66,14 @@ export function useBetPlacementForm(params: {
       availablePoints,
       todayBetAmount,
       settings: gamblingSettings,
-      tr,
+      t,
     });
     setValidationError(validationMessage);
     if (validationMessage) return;
     if (!canUseBetting) {
       setError(
-        tr(
-          '当前存储不支持押注功能',
-          'Betting is not supported for the current storage',
+        t(
+          'bettingModal.useBetPlacementForm.bettingIsNotSupportedForTheCurrentStorage',
         ),
       );
       return;
@@ -91,14 +92,19 @@ export function useBetPlacementForm(params: {
         const message = result.ok ? result.value.message : result.error.message;
         setError(
           getSafeErrorDetail(message || '', language) ??
-            tr('押注失败', 'Bet failed'),
+            t('bettingModal.useBetPlacementForm.betFailed'),
         );
         return;
       }
       setSuccessMessage(
-        language === 'zh'
-          ? `押注成功！押注 ${numAmount} 积分，潜在收益 ${result.value.potential_payout} 积分`
-          : `Bet placed! Bet ${numAmount} points, potential payout ${result.value.potential_payout} points`,
+        translate(
+          language === 'zh' ? 'zh' : 'en',
+          'bettingModal.useBetPlacementForm.betPlacedBetNumAmountPointsPotentialPayoutResultValuePotentialPayoutPoints',
+          {
+            numAmount: numAmount,
+            resultValuePotentialPayout: result.value.potential_payout,
+          },
+        ),
       );
       setAvailablePoints(
         result.value.points_after ?? availablePoints - numAmount,
@@ -114,9 +120,8 @@ export function useBetPlacementForm(params: {
       );
       setError(
         getSafeErrorDetailFromUnknown(error, language) ??
-          tr(
-            '押注失败，请重试（详情见控制台）',
-            'Bet failed. Check the console for details, then try again.',
+          t(
+            'bettingModal.useBetPlacementForm.betFailedCheckTheConsoleForDetailsThenTry',
           ),
       );
     } finally {
@@ -135,7 +140,7 @@ export function useBetPlacementForm(params: {
     setTodayBetAmount,
     storage,
     todayBetAmount,
-    tr,
+    t,
   ]);
 
   useEffect(() => {

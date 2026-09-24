@@ -1,3 +1,4 @@
+import { createTranslator } from '../../i18n/translate';
 import { act, renderHook } from '@testing-library/react';
 import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -19,7 +20,7 @@ interface HarnessProps {
   onBetPlaced?: (result: BetPlacementResult) => void;
 }
 
-const tr = (_zh: string, en: string) => en;
+const t = createTranslator('en');
 
 function useBetPlacementHarness({
   isOpen = true,
@@ -42,7 +43,7 @@ function useBetPlacementHarness({
     storage: { placeBet },
     canUseBetting,
     language: 'en',
-    tr,
+    t,
     availablePoints,
     setAvailablePoints,
     todayBetAmount,

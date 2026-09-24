@@ -27,7 +27,7 @@ export const ChainCard: React.FC<ChainCardProps> = React.memo(
       isScheduled,
       typeConfig,
       language,
-      tr,
+      t,
       handleToggleMenu,
       handleShowDeleteConfirm,
       handleConfirmDelete,
@@ -39,7 +39,7 @@ export const ChainCard: React.FC<ChainCardProps> = React.memo(
         chain={chain}
         typeConfig={typeConfig}
         language={language}
-        tr={tr}
+        t={t}
         timeRemaining={timeRemaining}
         isScheduled={!!isScheduled}
         showMenu={showMenu}

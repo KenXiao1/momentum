@@ -27,7 +27,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
   onBack,
   onUseLocalMode,
 }) => {
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const [isSignUp, setIsSignUp] = useState(initialIsSignUp);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -52,20 +52,14 @@ export const AuthForm: React.FC<AuthFormProps> = ({
         const result = await storage.signUp(email, password);
         if (result.ok) {
           setSuccessMessage(
-            tr(
-              '账号已创建！请检查邮箱完成确认。',
-              'Account created! Please check your email to confirm.',
-            ),
+            t('authForm.accountCreatedPleaseCheckYourEmailToConfirm'),
           );
           logger.info('AUTH', 'Sign up successful', { email });
         } else {
           const safeDetail = getSafeErrorDetail(result.error.message, language);
           setError(
             safeDetail ??
-              tr(
-                '注册失败，请重试（详情见控制台）',
-                'Sign up failed. Check the console for details, then try again.',
-              ),
+              t('authForm.signUpFailedCheckTheConsoleForDetailsThen'),
           );
           logger.error(
             'AUTH',
@@ -82,10 +76,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
           const safeDetail = getSafeErrorDetail(result.error.message, language);
           setError(
             safeDetail ??
-              tr(
-                '登录失败，请重试（详情见控制台）',
-                'Sign in failed. Check the console for details, then try again.',
-              ),
+              t('authForm.signInFailedCheckTheConsoleForDetailsThen'),
           );
           logger.error(
             'AUTH',
@@ -99,10 +90,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
       const safeDetail = getSafeErrorDetailFromUnknown(err, language);
       setError(
         safeDetail ??
-          tr(
-            '发生了意外错误（详情见控制台）',
-            'An unexpected error occurred. Check the console for details.',
-          ),
+          t('authForm.anUnexpectedErrorOccurredCheckTheConsoleForDetails'),
       );
       const errToLog = err instanceof Error ? err : new Error(String(err));
       logger.error('AUTH', 'Unexpected error during auth', undefined, errToLog);
@@ -118,12 +106,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({
           <button
             type="button"
             onClick={onBack}
-            aria-label={tr('返回', 'Go back')}
+            aria-label={t('authForm.goBack')}
             className="mb-8 flex items-center space-x-2 pl-2 text-slate-500 transition-colors hover:text-violet-600 dark:text-slate-400 dark:hover:text-violet-400"
           >
             <ArrowLeft size={20} />
             <span className="text-xs font-bold uppercase tracking-wide">
-              {tr('返回', 'Back')}
+              {t('common.back')}
             </span>
           </button>
         )}
@@ -132,23 +120,20 @@ export const AuthForm: React.FC<AuthFormProps> = ({
           <div className="mb-10 text-center">
             <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-slate-800 dark:text-white">
               {isSignUp
-                ? tr('创建账号', 'Create Account')
-                : tr('欢迎回来', 'Welcome Back')}
+                ? t('authForm.createAccount')
+                : t('authForm.welcomeBack')}
             </h2>
             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
               {isSignUp
-                ? tr('开启你的掌控之旅', 'Start your journey to mastery')
-                : tr(
-                    '输入账号信息以继续',
-                    'Enter your credentials to continue',
-                  )}
+                ? t('authForm.startYourJourneyToMastery')
+                : t('authForm.enterYourCredentialsToContinue')}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-1">
               <label className="ml-4 text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400">
-                {tr('邮箱', 'Email')}
+                {t('authForm.email')}
               </label>
               <div className="relative">
                 <input
@@ -160,14 +145,14 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="h-14 w-full rounded-2xl border border-violet-200/50 bg-violet-50/50 pl-4 pr-4 font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-violet-500/20 dark:bg-violet-900/10 dark:text-white dark:placeholder:text-slate-500"
-                  placeholder={tr('输入邮箱地址', 'Enter your email')}
+                  placeholder={t('authForm.enterYourEmail')}
                 />
               </div>
             </div>
 
             <div className="space-y-1">
               <label className="ml-4 text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400">
-                {tr('密码', 'Password')}
+                {t('authForm.password')}
               </label>
               <div className="relative">
                 <input
@@ -179,15 +164,15 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="h-14 w-full rounded-2xl border border-violet-200/50 bg-violet-50/50 pl-4 pr-12 font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-violet-500/20 dark:bg-violet-900/10 dark:text-white dark:placeholder:text-slate-500"
-                  placeholder={tr('输入密码', 'Enter your password')}
+                  placeholder={t('authForm.enterYourPassword')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={
                     showPassword
-                      ? tr('隐藏密码', 'Hide password')
-                      : tr('显示密码', 'Show password')
+                      ? t('authForm.hidePassword')
+                      : t('authForm.showPassword')
                   }
                   aria-pressed={showPassword}
                   className="absolute right-4 top-1/2 -translate-y-1/2 rounded text-slate-400 transition-colors hover:text-violet-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 dark:hover:text-violet-400"
@@ -229,8 +214,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({
               ) : (
                 <span className="text-sm font-bold tracking-wide">
                   {isSignUp
-                    ? tr('创建账号', 'Create Account')
-                    : tr('登录', 'Sign In')}
+                    ? t('authForm.createAccount')
+                    : t('authForm.signIn')}
                 </span>
               )}
             </button>
@@ -239,19 +224,19 @@ export const AuthForm: React.FC<AuthFormProps> = ({
           <div className="mt-8 text-center">
             <p className="text-sm text-slate-500 dark:text-slate-400">
               {isSignUp
-                ? tr('已有账号？', 'Already have an account?')
-                : tr('没有账号？', "Don't have an account?")}{' '}
+                ? t('authForm.alreadyHaveAnAccount')
+                : t('authForm.donTHaveAnAccount')}{' '}
               <button
                 type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
                 aria-label={
                   isSignUp
-                    ? tr('切换到登录', 'Switch to sign in')
-                    : tr('切换到注册', 'Switch to sign up')
+                    ? t('authForm.switchToSignIn')
+                    : t('authForm.switchToSignUp')
                 }
                 className="rounded font-bold text-violet-600 transition hover:underline focus:outline-none focus:ring-2 focus:ring-violet-500/50 dark:text-violet-400"
               >
-                {isSignUp ? tr('登录', 'Sign In') : tr('注册', 'Sign Up')}
+                {isSignUp ? t('authForm.signIn') : t('authForm.signUp')}
               </button>
             </p>
 
@@ -261,7 +246,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                 onClick={onUseLocalMode}
                 className="mt-3 rounded text-xs font-medium text-slate-500 transition hover:text-slate-700 hover:underline dark:text-slate-400 dark:hover:text-slate-200"
               >
-                {tr('切换到本地模式', 'Switch to local mode')}
+                {t('authForm.switchToLocalMode')}
               </button>
             )}
           </div>

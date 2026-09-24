@@ -12,6 +12,7 @@ import { UserFeedbackDisplay } from '../UserFeedbackDisplay';
 import { toast } from '../../utils/toast';
 import { userFeedbackHandler } from '../../services/UserFeedbackHandler';
 import { logger } from '../../utils/logger';
+import { I18nProvider } from '../../i18n';
 
 describe('Feedback components', () => {
   beforeEach(() => {
@@ -36,6 +37,7 @@ describe('Feedback components', () => {
           onConfirm={vi.fn()}
           onCancel={vi.fn()}
         />,
+        { wrapper: I18nProvider },
       );
 
       expect(container).toBeEmptyDOMElement();
@@ -56,6 +58,7 @@ describe('Feedback components', () => {
           onConfirm={onConfirm}
           onCancel={onCancel}
         />,
+        { wrapper: I18nProvider },
       );
 
       expect(screen.getByRole('dialog')).toBeInTheDocument();

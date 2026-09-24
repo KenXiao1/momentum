@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import type { ChainTreeNode, ScheduledSession } from '../../../types';
 import { ChainExecutionActions } from '../../shared/ChainExecutionActions';
 
@@ -10,7 +11,7 @@ export function GroupCardActions(props: {
   onScheduleChain: (id: string) => void;
   onCancelScheduledSession?: (id: string) => void;
   onCompleteBooking?: (id: string) => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }) {
   const targetId = props.nextUnit?.id ?? props.group.id;
   const scheduledSession = props.scheduledSession;
@@ -24,11 +25,11 @@ export function GroupCardActions(props: {
             }
           : undefined
       }
-      signalPrefix={props.tr('预约信号: ', 'Signal: ')}
-      completeLabel={props.tr('完成预约', 'Complete booking')}
-      interruptLabel={props.tr('中断/规则判定', 'Interrupt / Adjudicate')}
-      startLabel={props.tr('开始下一个', 'Start next')}
-      scheduleLabel={props.tr('预约', 'Schedule')}
+      signalPrefix={props.t('chainCard.chainCardView.signal')}
+      completeLabel={props.t('chainCard.chainCardView.completeBooking')}
+      interruptLabel={props.t('chainCard.chainCardView.interruptAdjudicate')}
+      startLabel={props.t('groupCard.groupCardActions.startNext')}
+      scheduleLabel={props.t('chainCard.chainCardView.schedule')}
       onComplete={() =>
         scheduledSession && props.onCompleteBooking?.(scheduledSession.chainId)
       }

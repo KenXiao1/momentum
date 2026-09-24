@@ -1,3 +1,4 @@
+import { translate } from '../../i18n/translate';
 import type {
   NotificationPermissionState,
   NotificationTogglePlacement,
@@ -5,7 +6,7 @@ import type {
 import { getPlatformCapabilityCenter } from '../../utils/platform-capabilities/center';
 import { localPreferences } from '../../utils/localPreferences';
 import { randomId } from '../../utils/random';
-import { getCurrentLanguage, tr } from '../../utils/runtimeI18n';
+import { getCurrentLanguage } from '../../utils/runtimeI18n';
 import { logger } from '../../utils/logger';
 import { normalizeUnknownError } from '../../utils/errors/normalizeError';
 
@@ -30,9 +31,11 @@ function formatChainWithReason(
 ) {
   const quotedChainName = `"${chainName}"`;
   if (!reason) return quotedChainName;
-  return language === 'zh'
-    ? `${quotedChainName}：${reason}`
-    : `${quotedChainName}: ${reason}`;
+  return translate(
+    language === 'zh' ? 'zh' : 'en',
+    'platform.systemNotificationService.quotedChainNameReason',
+    { quotedChainName: quotedChainName, reason: reason },
+  );
 }
 
 class SystemNotificationService {
@@ -147,7 +150,10 @@ class SystemNotificationService {
   async notifyTaskFailed(chainName: string, reason: string): Promise<void> {
     const language = getCurrentLanguage();
     await this.show({
-      title: tr('任务失败', 'Task failed', language),
+      title: translate(
+        language,
+        'platform.systemNotificationService.taskFailed',
+      ),
       body: formatChainWithReason(language, chainName, reason),
       icon: DEFAULT_NOTIFICATION_ICON,
       tag: randomId('task-failed'),
@@ -163,11 +169,12 @@ class SystemNotificationService {
     const language = getCurrentLanguage();
     const suffix = message ? ` ${message}` : '';
     await this.show({
-      title: tr('任务完成', 'Task completed', language),
-      body:
-        language === 'zh'
-          ? `"${chainName}"已完成！${suffix}当前记录: #${streak}`
-          : `"${chainName}" completed!${suffix} Current streak: #${streak}`,
+      title: translate(language, 'rsip.taskLink.taskLinkUi.taskCompleted'),
+      body: translate(
+        language === 'zh' ? 'zh' : 'en',
+        'platform.systemNotificationService.chainNameCompletedSuffixCurrentStreakStreak',
+        { chainName: chainName, suffix: suffix, streak: streak },
+      ),
       icon: DEFAULT_NOTIFICATION_ICON,
       tag: randomId('task-completed'),
       requireInteraction: false,
@@ -180,11 +187,15 @@ class SystemNotificationService {
   ): Promise<void> {
     const language = getCurrentLanguage();
     await this.show({
-      title: tr('任务即将结束', 'Task ending soon', language),
-      body:
-        language === 'zh'
-          ? `"${chainName}"还剩${timeRemaining}，请继续保持专注！`
-          : `"${chainName}" has ${timeRemaining} left. Stay focused!`,
+      title: translate(
+        language,
+        'platform.systemNotificationService.taskEndingSoon',
+      ),
+      body: translate(
+        language === 'zh' ? 'zh' : 'en',
+        'platform.systemNotificationService.chainNameHasTimeRemainingLeftStayFocused',
+        { chainName: chainName, timeRemaining: timeRemaining },
+      ),
       icon: DEFAULT_NOTIFICATION_ICON,
       tag: randomId('task-warning'),
       requireInteraction: false,
@@ -197,11 +208,15 @@ class SystemNotificationService {
   ): Promise<void> {
     const language = getCurrentLanguage();
     await this.show({
-      title: tr('预约即将到期', 'Schedule expiring', language),
-      body:
-        language === 'zh'
-          ? `"${chainName}"预约还剩${timeRemaining}，请准备开始任务！`
-          : `"${chainName}" schedule has ${timeRemaining} left. Get ready to start!`,
+      title: translate(
+        language,
+        'platform.systemNotificationService.scheduleExpiring',
+      ),
+      body: translate(
+        language === 'zh' ? 'zh' : 'en',
+        'platform.systemNotificationService.chainNameScheduleHasTimeRemainingLeftGetReady',
+        { chainName: chainName, timeRemaining: timeRemaining },
+      ),
       icon: DEFAULT_NOTIFICATION_ICON,
       tag: randomId('schedule-warning'),
       requireInteraction: true,
@@ -211,11 +226,15 @@ class SystemNotificationService {
   async notifyScheduleFailed(chainName: string): Promise<void> {
     const language = getCurrentLanguage();
     await this.show({
-      title: tr('预约失败', 'Schedule failed', language),
-      body:
-        language === 'zh'
-          ? `"${chainName}"预约时间已到期，需要进行规则判定。`
-          : `"${chainName}" schedule expired. Adjudication required.`,
+      title: translate(
+        language,
+        'platform.systemNotificationService.scheduleFailed',
+      ),
+      body: translate(
+        language === 'zh' ? 'zh' : 'en',
+        'platform.systemNotificationService.chainNameScheduleExpiredAdjudicationRequired',
+        { chainName: chainName },
+      ),
       icon: DEFAULT_NOTIFICATION_ICON,
       tag: randomId('schedule-failed'),
       requireInteraction: true,

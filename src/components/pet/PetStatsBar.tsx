@@ -61,7 +61,7 @@ export function PetStatsBar({
   experience,
   stage,
 }: PetStatsBarProps) {
-  const { language } = useI18n();
+  const { language, t } = useI18n();
   const levelProgress = getLevelProgress({ level, experience });
   const xpRequired = getXpForLevel(level);
   const stageName = getStageName(stage, language);
@@ -89,20 +89,20 @@ export function PetStatsBar({
       {/* Stats */}
       <div className="space-y-1.5 pt-1">
         <StatBar
-          label="Fullness"
+          label={t('pet.stats.fullness')}
           value={hunger}
           colorClass="bg-gradient-to-r from-amber-400 to-orange-500"
           icon="🍖"
           inverted={true}
         />
         <StatBar
-          label="Happiness"
+          label={t('pet.stats.happiness')}
           value={happiness}
           colorClass="bg-gradient-to-r from-pink-400 to-rose-500"
           icon="💖"
         />
         <StatBar
-          label="Health"
+          label={t('pet.stats.health')}
           value={health}
           colorClass="bg-gradient-to-r from-green-400 to-emerald-500"
           icon="💚"

@@ -1,3 +1,4 @@
+import { type Translator } from '../../i18n';
 import { Flame, Maximize, X } from 'lucide-react';
 import type { Chain } from '../../types';
 import { getTriggerLabel } from '../chain-editor/constants';
@@ -8,7 +9,7 @@ interface FocusSessionHeaderProps {
   isFullscreen: boolean;
   onEnterFullscreen: () => void;
   onExitFullscreen: () => void;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 }
 
 export function FocusSessionHeader({
@@ -17,11 +18,11 @@ export function FocusSessionHeader({
   isFullscreen,
   onEnterFullscreen,
   onExitFullscreen,
-  tr: translate,
+  t: t,
 }: FocusSessionHeaderProps) {
   const fullscreenLabel = isFullscreen
-    ? translate('退出全屏', 'Exit fullscreen')
-    : translate('进入全屏', 'Enter fullscreen');
+    ? t('focusMode.focusSessionHeader.exitFullscreen')
+    : t('focusMode.focusSessionHeader.enterFullscreen');
 
   return (
     <>
@@ -33,8 +34,8 @@ export function FocusSessionHeader({
           className="focus-ring flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-950 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 dark:hover:text-white"
           title={
             isFullscreen
-              ? translate('退出全屏 (ESC)', 'Exit fullscreen (ESC)')
-              : translate('进入全屏 (F11)', 'Enter fullscreen (F11)')
+              ? t('focusMode.focusSessionHeader.exitFullscreenEsc')
+              : t('focusMode.focusSessionHeader.enterFullscreenF11')
           }
         >
           {isFullscreen ? (

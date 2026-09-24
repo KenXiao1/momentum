@@ -15,14 +15,12 @@ type RecycleBinStorage = Pick<
 
 const mockStorage: Mocked<RecycleBinStorage> = {
   kind: 'local',
-  getDeletedChains: vi.fn<[], Promise<DeletedChain[]>>(),
-  softDeleteChain: vi.fn<[string], Promise<void>>(),
-  restoreChain: vi.fn<[string], Promise<void>>(),
-  permanentlyDeleteChain: vi.fn<[string], Promise<void>>(),
-  cleanupExpiredDeletedChains: vi.fn<
-    [olderThanDays?: number],
-    Promise<number>
-  >(),
+  getDeletedChains: vi.fn<() => Promise<DeletedChain[]>>(),
+  softDeleteChain: vi.fn<(chainId: string) => Promise<void>>(),
+  restoreChain: vi.fn<(chainId: string) => Promise<void>>(),
+  permanentlyDeleteChain: vi.fn<(chainId: string) => Promise<void>>(),
+  cleanupExpiredDeletedChains:
+    vi.fn<(olderThanDays?: number) => Promise<number>>(),
 };
 
 describe('RecycleBinService', () => {

@@ -1,9 +1,7 @@
+import { translate } from '../../i18n/translate';
 import React from 'react';
 import { Armchair, Scale, Clock } from 'lucide-react';
-import {
-  introTranslations as translations,
-  type IntroLang,
-} from './introTranslations';
+import { getIntroTranslations, type IntroLang } from './introTranslations';
 
 interface IntroPrinciplesSectionProps {
   lang: IntroLang;
@@ -47,15 +45,16 @@ const principleIllustrations: Record<string, PrincipleIllustrationSpec> = {
 export const IntroPrinciplesSection: React.FC<IntroPrinciplesSectionProps> = ({
   lang,
 }) => {
+  const translations = getIntroTranslations(lang);
   return (
     <section className="relative border-y border-violet-200/30 bg-white/40 px-6 py-32 dark:border-violet-500/10 dark:bg-slate-900/40">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto mb-24 max-w-xl space-y-4 text-center">
           <h2 className="text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400">
-            {translations.principles.titleEn}
+            {translate('en', 'intro.principles.title')}
           </h2>
           <h3 className="text-4xl font-extrabold text-slate-800 dark:text-white">
-            {lang === 'zh' ? '三大法则' : 'The Trinity'}
+            {translate(lang, 'intro.principles.heading')}
           </h3>
         </div>
 
@@ -92,13 +91,13 @@ export const IntroPrinciplesSection: React.FC<IntroPrinciplesSectionProps> = ({
                   </div>
 
                   <h4 className="mb-2 text-xl font-bold text-slate-800 dark:text-white">
-                    {lang === 'en' ? item.titleEn : item.titleZh}
+                    {item.title}
                   </h4>
                   <p className="mb-6 text-xs font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400">
-                    {lang === 'en' ? item.descEn : item.descZh}
+                    {item.desc}
                   </p>
                   <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                    {lang === 'en' ? item.detailEn : item.detailZh}
+                    {item.detail}
                   </p>
                 </div>
               </div>

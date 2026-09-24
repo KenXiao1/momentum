@@ -28,7 +28,7 @@ export function useRSIPViewState({
   | 'executionRecords'
   | 'policyLibrary'
 >): RSIPViewStateSlice {
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const tree = useMemo<RSIPTreeNode[]>(() => buildRSIPTree(nodes), [nodes]);
 
   const [selectedParentId, setSelectedParentId] = useState<string | undefined>(
@@ -98,7 +98,7 @@ export function useRSIPViewState({
 
   return {
     language,
-    tr,
+    t,
     nodes,
     meta,
     groups,

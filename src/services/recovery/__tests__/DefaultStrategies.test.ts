@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ExceptionRuleError, ExceptionRuleException } from '../../../types';
 import { RecoveryStrategyRegistry } from '../RecoveryStrategy';
@@ -30,7 +31,7 @@ vi.mock('../RecoveryHandlers', () => ({
 }));
 
 vi.mock('../../../utils/runtimeI18n', () => ({
-  tr: (_zh: string, en: string) => en,
+  t: createTranslator('en'),
 }));
 
 import {

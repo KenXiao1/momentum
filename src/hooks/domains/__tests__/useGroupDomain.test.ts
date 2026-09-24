@@ -1,3 +1,6 @@
+import { createTranslationMock } from '../../../test/i18n';
+import { createTranslator } from '../../../i18n/translate';
+import type { SafelySaveChains } from '../useChainsDomain';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppState } from '../../../types';
@@ -12,12 +15,12 @@ import { logger } from '../../../utils/logger';
 import { toast } from '../../../utils/toast';
 import { useGroupDomain } from '../useGroupDomain';
 
-const trMock = vi.fn((zh: string, en: string) => en);
+const trMock = createTranslationMock('en');
 
 vi.mock('../../../i18n', () => ({
   useI18n: vi.fn(() => ({
     language: 'en',
-    tr: trMock,
+    t: trMock,
   })),
 }));
 
@@ -86,13 +89,15 @@ describe('useGroupDomain', () => {
   });
 
   it('should import units in copy mode and append copied chains', async () => {
-    vi.spyOn(crypto, 'randomUUID').mockReturnValue('copied-id');
+    vi.spyOn(crypto, 'randomUUID').mockReturnValue(
+      '00000000-0000-4000-8000-000000000001',
+    );
     const group = createGroupChain({ id: 'group-1', name: 'Group 1' });
     const unit = createUnitChain({ id: 'unit-1', name: 'Unit 1' });
     const stateRef = createStateContainer(
       createAppState({ chains: [group, unit] }),
     );
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useGroupDomain({
@@ -111,7 +116,7 @@ describe('useGroupDomain', () => {
     const updated = safelySaveChains.mock.calls[0]?.[0];
     expect(updated).toHaveLength(3);
     expect(updated?.[2]).toMatchObject({
-      id: 'copied-id',
+      id: '00000000-0000-4000-8000-000000000001',
       parentId: group.id,
       name: 'Unit 1 (Copy)',
       currentStreak: 0,
@@ -143,7 +148,7 @@ describe('useGroupDomain', () => {
     const stateRef = createStateContainer(
       createAppState({ chains: [group, unit, sibling] }),
     );
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useGroupDomain({
@@ -175,7 +180,7 @@ describe('useGroupDomain', () => {
   it('should update task repeat count and persist changes', async () => {
     const chain = createUnitChain({ id: 'unit-3', taskRepeatCount: 1 });
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useGroupDomain({
@@ -208,7 +213,7 @@ describe('useGroupDomain', () => {
     const stateRef = createStateContainer(
       createAppState({ chains: [group, a, b] }),
     );
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useGroupDomain({
@@ -255,7 +260,7 @@ describe('useGroupDomain', () => {
     const stateRef = createStateContainer(
       createAppState({ chains: [group, a, b, c] }),
     );
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result } = renderHook(() =>
       useGroupDomain({
@@ -291,7 +296,7 @@ describe('useGroupDomain', () => {
     const stateRef = createStateContainer(
       createAppState({ chains: [group, a, b] }),
     );
-    const safelySaveChains = vi.fn(async () => undefined);
+    const safelySaveChains = vi.fn<SafelySaveChains>(async () => undefined);
 
     const { result, rerender } = renderHook(() =>
       useGroupDomain({
@@ -353,8 +358,7 @@ describe('useGroupDomain', () => {
       expect.any(Error),
     );
     expect(trMock).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.stringContaining('Failed to update repeat count'),
+      'useGroupDomain.failedToUpdateRepeatCount',
     );
   });
 
@@ -404,16 +408,8 @@ describe('useGroupDomain', () => {
       undefined,
       expect.any(Error),
     );
-    const importFailureTranslation = vi
-      .mocked(trMock)
-      .mock.calls.find(
-        (call) =>
-          typeof call[1] === 'string' &&
-          call[1].includes('Import failed: safe import detail'),
-      );
-    expect(importFailureTranslation?.[0]).toEqual(expect.any(String));
-    expect(importFailureTranslation?.[1]).toEqual(
-      expect.stringContaining('Import failed: safe import detail'),
+    expect(trMock).toHaveBeenCalledWith(
+      'importExportModal.importStatusControls.importFailed',
     );
   });
 
@@ -448,8 +444,7 @@ describe('useGroupDomain', () => {
       'Failed to update repeat count. Check the console for details, then try again.',
     );
     expect(trMock).toHaveBeenCalledWith(
-      expect.any(String),
-      'Failed to update repeat count. Check the console for details, then try again.',
+      'useGroupDomain.failedToUpdateRepeatCountCheckTheConsoleFor',
     );
   });
 });

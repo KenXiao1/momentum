@@ -5,7 +5,7 @@
 
 import { ExceptionRuleError } from '../../types';
 import { dataIntegrityChecker } from '../DataIntegrityChecker';
-import { tr } from '../../utils/runtimeI18n';
+import { t } from '../../utils/runtimeI18n';
 import { RecoveryStrategyRegistry, RecoveryResult } from './RecoveryStrategy';
 import { recoveryOptionsProvider } from './RecoveryOptionsProvider';
 import { recoveryHandlers } from './RecoveryHandlers';
@@ -25,9 +25,8 @@ export function initializeDefaultStrategies(
     handler: async (error) => {
       return {
         success: false,
-        message: tr(
-          '无法自动恢复缺失的规则',
-          'Unable to auto-recover the missing rule',
+        message: t(
+          'recovery.defaultStrategies.unableToAutoRecoverTheMissingRule',
         ),
         requiresUserAction: true,
         actions: recoveryOptionsProvider.getRecoveryOptions(error),
@@ -43,7 +42,7 @@ export function initializeDefaultStrategies(
     handler: async (error) => {
       return {
         success: false,
-        message: tr('发现重复的规则名称', 'Duplicate rule name detected'),
+        message: t('recovery.defaultStrategies.duplicateRuleNameDetected'),
         requiresUserAction: true,
         actions: recoveryOptionsProvider.getRecoveryOptions(error),
       };
@@ -58,10 +57,7 @@ export function initializeDefaultStrategies(
     handler: async (error) => {
       return {
         success: false,
-        message: tr(
-          '规则类型与操作不匹配',
-          'Rule type does not match the action',
-        ),
+        message: t('recovery.defaultStrategies.ruleTypeDoesNotMatchTheAction'),
         requiresUserAction: true,
         actions: recoveryOptionsProvider.getRecoveryOptions(error),
       };
@@ -88,9 +84,9 @@ export function initializeDefaultStrategies(
           if (successCount > 0) {
             return {
               success: true,
-              message: tr(
-                `已自动修复 ${successCount} 个数据问题`,
-                `Auto-fixed ${successCount} data issue(s)`,
+              message: t(
+                'recovery.defaultStrategies.autoFixedSuccessCountDataIssueS',
+                { successCount: successCount },
               ),
             };
           }
@@ -101,9 +97,8 @@ export function initializeDefaultStrategies(
 
       return {
         success: false,
-        message: tr(
-          '存储错误需要手动处理',
-          'Storage error requires manual handling',
+        message: t(
+          'recovery.defaultStrategies.storageErrorRequiresManualHandling',
         ),
         requiresUserAction: true,
         actions: recoveryOptionsProvider.getRecoveryOptions(error),
@@ -119,18 +114,16 @@ export function initializeDefaultStrategies(
     handler: async (error) => {
       return {
         success: false,
-        message: tr(
-          '验证错误需要用户确认',
-          'Validation requires your confirmation',
+        message: t(
+          'recovery.defaultStrategies.validationRequiresYourConfirmation',
         ),
         requiresUserAction: true,
         actions: [
           {
             id: 'fix_validation',
-            label: tr('修复验证问题', 'Fix validation issues'),
-            description: tr(
-              '尝试修复数据验证问题',
-              'Try to fix validation issues',
+            label: t('recovery.defaultStrategies.fixValidationIssues'),
+            description: t(
+              'recovery.defaultStrategies.tryToFixValidationIssues',
             ),
             type: 'primary',
             handler: async () => recoveryHandlers.handleValidationFix(error),
@@ -147,15 +140,14 @@ export function initializeDefaultStrategies(
 export function createUnknownErrorResult(errorType: string): RecoveryResult {
   return {
     success: false,
-    message: tr(
-      `未知错误类型: ${errorType}`,
-      `Unknown error type: ${errorType}`,
-    ),
+    message: t('recovery.defaultStrategies.unknownErrorTypeErrorType', {
+      errorType: errorType,
+    }),
     actions: [
       {
         id: 'check_data_integrity',
-        label: tr('检查数据完整性', 'Check data integrity'),
-        description: tr('检查并修复规则数据', 'Check and repair rule data'),
+        label: t('recovery.defaultStrategies.checkDataIntegrity'),
+        description: t('recovery.defaultStrategies.checkAndRepairRuleData'),
         type: 'secondary',
         handler: async () =>
           recoveryHandlers.handleDataIntegrityCheck({} as never),
@@ -170,30 +162,23 @@ export function createUnknownErrorResult(errorType: string): RecoveryResult {
 export function createRecoveryFailureResult(): RecoveryResult {
   return {
     success: false,
-    message: tr(
-      '所有自动恢复策略都失败了',
-      'All auto-recovery strategies failed',
-    ),
+    message: t('recovery.defaultStrategies.allAutoRecoveryStrategiesFailed'),
     actions: [
       {
         id: 'manual_intervention',
-        label: tr('手动处理', 'Manual fix'),
-        description: tr(
-          '需要手动解决此问题',
-          'This requires manual intervention',
-        ),
+        label: t('errorRecoveryManager.manualFix'),
+        description: t('errorRecoveryManager.thisRequiresManualIntervention'),
         type: 'danger',
         handler: async () => ({
           success: false,
-          message: tr('需要手动处理', 'Manual intervention required'),
+          message: t('errorRecoveryManager.manualInterventionRequired'),
         }),
       },
       {
         id: 'reset_system',
-        label: tr('重置系统', 'Reset system'),
-        description: tr(
-          '重置规则系统到初始状态',
-          'Reset the rule system to the initial state',
+        label: t('recovery.defaultStrategies.resetSystem'),
+        description: t(
+          'recovery.defaultStrategies.resetTheRuleSystemToTheInitialState',
         ),
         type: 'danger',
         handler: async () => recoveryHandlers.handleSystemReset({} as never),

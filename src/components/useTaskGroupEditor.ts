@@ -52,7 +52,7 @@ export function useTaskGroupEditor({
   initialParentId,
   onSave,
 }: UseTaskGroupEditorProps) {
-  const { language, tr } = useI18n();
+  const { language, t } = useI18n();
   const initialAuxiliarySignal = getInitialAuxiliarySignal(chain);
 
   // Form state
@@ -168,35 +168,31 @@ export function useTaskGroupEditor({
       const newErrors: TaskGroupEditorFormErrors = {};
 
       if (!name.trim()) {
-        newErrors.name = tr('请输入任务群名称', 'Please enter a group name');
+        newErrors.name = t('useTaskGroupEditor.pleaseEnterAGroupName');
       }
 
       if (!description.trim()) {
-        newErrors.description = tr(
-          '请输入任务群描述',
-          'Please enter a group description',
+        newErrors.description = t(
+          'useTaskGroupEditor.pleaseEnterAGroupDescription',
         );
       }
 
       if (!auxiliarySignal) {
-        newErrors.auxiliarySignal = tr(
-          '请选择预约信号',
-          'Please choose a booking signal',
+        newErrors.auxiliarySignal = t(
+          'useTaskGroupEditor.pleaseChooseABookingSignal',
         );
       } else if (
         auxiliarySignal === CUSTOM_AUXILIARY_SIGNAL_VALUE &&
         !customAuxiliarySignal.trim()
       ) {
-        newErrors.auxiliarySignal = tr(
-          '请输入自定义预约信号',
-          'Please enter a custom booking signal',
+        newErrors.auxiliarySignal = t(
+          'useTaskGroupEditor.pleaseEnterACustomBookingSignal',
         );
       }
 
       if (!auxiliaryCompletionTrigger.trim()) {
-        newErrors.auxiliaryCompletionTrigger = tr(
-          '请输入预约完成条件',
-          'Please enter a booking completion condition',
+        newErrors.auxiliaryCompletionTrigger = t(
+          'useTaskGroupEditor.pleaseEnterABookingCompletionCondition',
         );
       }
 
@@ -254,14 +250,14 @@ export function useTaskGroupEditor({
       chain,
       initialParentId,
       onSave,
-      tr,
+      t,
     ],
   );
 
   return {
     // i18n
     language,
-    tr,
+    t,
     // Form state
     name,
     description,

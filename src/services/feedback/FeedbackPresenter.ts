@@ -6,7 +6,7 @@
 import { ExceptionRuleError, ExceptionRuleException } from '../../types';
 import { errorRecoveryManager, RecoveryAction } from '../ErrorRecoveryManager';
 import { getSafeErrorDetail } from '../../utils/errorMessage';
-import { getCurrentLanguage, tr } from '../../utils/runtimeI18n';
+import { getCurrentLanguage, t } from '../../utils/runtimeI18n';
 import { ignoreUnused } from '../../utils/ignoreUnused';
 import { MessageStore } from './MessageStore';
 import { ErrorMessageFormatter } from './ErrorMessageFormatter';
@@ -133,9 +133,15 @@ export class FeedbackPresenter {
           this.hideProgress();
 
           if (result.success) {
-            this.showSuccess(tr('操作成功', 'Success'), result.message);
+            this.showSuccess(
+              t('focusMode.useExceptionRuleOperations.success'),
+              result.message,
+            );
           } else {
-            this.showWarning(tr('操作未完成', 'Not completed'), result.message);
+            this.showWarning(
+              t('feedback.feedbackPresenter.notCompleted'),
+              result.message,
+            );
           }
         } catch (error) {
           this.hideProgress();
@@ -146,7 +152,11 @@ export class FeedbackPresenter {
             return;
           }
 
-          let message = tr('操作失败', 'Operation failed', language);
+          let message = t(
+            'feedback.errorMessageFormatter.operationFailed',
+            undefined,
+            language,
+          );
           if (error instanceof Error) {
             message = getSafeErrorDetail(error.message, language) ?? message;
           }

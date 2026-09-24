@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -24,7 +25,7 @@ vi.mock('../hooks/useGroupCardScheduleCountdown', () => countdownMock);
 vi.mock('../../../i18n', () => ({
   useI18n: () => ({
     language: 'en',
-    tr: (_zh: string, en: string) => en,
+    t: createTranslator('en'),
   }),
 }));
 vi.mock('../components/GroupDeleteConfirmDialog', () => ({

@@ -23,7 +23,7 @@ interface DailyCheckinProps {
 export const DailyCheckin: React.FC<DailyCheckinProps> = ({
   className = '',
 }) => {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const {
     stats,
     isLoading,
@@ -46,7 +46,7 @@ export const DailyCheckin: React.FC<DailyCheckinProps> = ({
         <div className="flex items-center justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
           <span className="ml-3 text-gray-600 dark:text-gray-300">
-            {tr('加载签到数据...', 'Loading check-in data...')}
+            {t('dailyCheckin.loadingCheckInData')}
           </span>
         </div>
       </div>
@@ -63,7 +63,7 @@ export const DailyCheckin: React.FC<DailyCheckinProps> = ({
           <AlertCircle className="h-8 w-8 text-red-500" />
           <div className="ml-3">
             <p className="font-medium text-red-600 dark:text-red-400">
-              {tr('签到功能暂不可用', 'Daily check-in unavailable')}
+              {t('dailyCheckin.dailyCheckInUnavailable')}
             </p>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {error}
@@ -71,10 +71,10 @@ export const DailyCheckin: React.FC<DailyCheckinProps> = ({
             <button
               type="button"
               onClick={loadStats}
-              aria-label={tr('重试', 'Retry')}
+              aria-label={t('accountModal.retry')}
               className="mt-2 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
             >
-              {tr('重试', 'Retry')}
+              {t('accountModal.retry')}
             </button>
           </div>
         </div>
@@ -91,7 +91,7 @@ export const DailyCheckin: React.FC<DailyCheckinProps> = ({
         <button
           type="button"
           onClick={toggleCollapsed}
-          aria-label={tr('展开/折叠签到', 'Toggle check-in')}
+          aria-label={t('dailyCheckin.toggleCheckIn')}
           aria-expanded={!isCollapsed}
           className="flex items-center text-xl font-semibold text-gray-900 transition-colors hover:text-primary-600 dark:text-gray-100 dark:hover:text-primary-400"
         >
@@ -99,7 +99,7 @@ export const DailyCheckin: React.FC<DailyCheckinProps> = ({
             className="mr-2 h-5 w-5 text-primary-500"
             aria-hidden="true"
           />
-          {tr('每日签到', 'Daily Check-in')}
+          {t('dailyCheckin.dailyCheckIn')}
           {isCollapsed ? (
             <ChevronDown
               className="ml-2 h-5 w-5 text-gray-500"
@@ -130,9 +130,9 @@ export const DailyCheckin: React.FC<DailyCheckinProps> = ({
           <button
             type="button"
             onClick={loadStats}
-            aria-label={tr('刷新数据', 'Refresh')}
+            aria-label={t('dailyCheckin.refresh')}
             className="p-1 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
-            title={tr('刷新数据', 'Refresh')}
+            title={t('dailyCheckin.refresh')}
           >
             <svg
               className="h-4 w-4"
@@ -157,18 +157,18 @@ export const DailyCheckin: React.FC<DailyCheckinProps> = ({
         className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[1000px] opacity-100'} `}
       >
         {/* 统计信息 */}
-        {stats && <DailyCheckinStatsGrid stats={stats} tr={tr} />}
+        {stats && <DailyCheckinStatsGrid stats={stats} t={t} />}
 
         {/* 签到按钮 */}
         <div className="space-y-4">
           {stats?.has_checked_in_today ? (
-            <DailyCheckinCheckedInState tr={tr} />
+            <DailyCheckinCheckedInState t={t} />
           ) : (
             <button
               type="button"
               onClick={handleCheckin}
               disabled={isCheckingIn}
-              aria-label={tr('立即签到', 'Check in now')}
+              aria-label={t('dailyCheckin.checkInNow')}
               className={`w-full rounded-xl px-6 py-4 text-lg font-semibold transition duration-200 ${
                 isCheckingIn
                   ? 'cursor-not-allowed bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
@@ -181,12 +181,12 @@ export const DailyCheckin: React.FC<DailyCheckinProps> = ({
                     className="mr-3 h-6 w-6 animate-spin"
                     aria-hidden="true"
                   />
-                  {tr('签到中...', 'Checking in...')}
+                  {t('dailyCheckin.checkingIn')}
                 </div>
               ) : (
                 <div className="flex items-center justify-center">
                   <Gift className="mr-3 h-6 w-6" aria-hidden="true" />
-                  {tr('立即签到', 'Check in now')}
+                  {t('dailyCheckin.checkInNow')}
                 </div>
               )}
             </button>
@@ -215,7 +215,7 @@ export const DailyCheckin: React.FC<DailyCheckinProps> = ({
                 <button
                   type="button"
                   onClick={clearError}
-                  aria-label={tr('关闭', 'Close')}
+                  aria-label={t('accountModal.close')}
                   className="text-red-400 hover:text-red-600 dark:hover:text-red-300"
                 >
                   <svg
@@ -241,11 +241,11 @@ export const DailyCheckin: React.FC<DailyCheckinProps> = ({
           {stats && stats.longest_streak > stats.current_streak && (
             <div className="border-t border-gray-200 py-2 text-center dark:border-gray-700">
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {tr('最佳记录：连续', 'Best streak:')}{' '}
+                {t('dailyCheckin.bestStreak')}{' '}
                 <span className="font-semibold text-gray-700 dark:text-gray-300">
                   {stats.longest_streak}
                 </span>{' '}
-                {tr('天', 'days')}
+                {t('dailyCheckin.days')}
               </p>
             </div>
           )}

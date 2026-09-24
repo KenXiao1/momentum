@@ -1,0 +1,174 @@
+{
+  "through": "20260211000000",
+  "origin": "repository historical migrations; not a production schema dump",
+  "extra_adjustments": [
+    "Default privileges target the executing migration owner rather than the local dump role",
+    "Added completion_history.metadata jsonb default {} required by historical complete_task_with_betting RPC"
+  ],
+  "sources": [
+    {
+      "file": "20250122000000_performance_optimization_v2.sql",
+      "sha256": "42dccc33f76aae188b30c15d16a879ca9fb924326a86d8747f836211572efb2b",
+      "adjustments": [
+        "excluded out-of-order optional performance script (references missing schema)"
+      ]
+    },
+    {
+      "file": "20250730021823_winter_flame.sql",
+      "sha256": "bd7bc87cc1fc29bc0fbd4267337eff2e28fca5dd98f9111e509459e208bb19b5",
+      "adjustments": ["decoded literal newline escapes"]
+    },
+    {
+      "file": "20250801160754_peaceful_palace.sql",
+      "sha256": "3da3fdb12528b0b867c2abdc2924f7941eb493612d48503775156c106c150377",
+      "adjustments": ["decoded literal newline escapes"]
+    },
+    {
+      "file": "20250801161456_fading_sunset.sql",
+      "sha256": "3da3fdb12528b0b867c2abdc2924f7941eb493612d48503775156c106c150377",
+      "adjustments": ["decoded literal newline escapes"]
+    },
+    {
+      "file": "20250808000000_add_group_time_limit.sql",
+      "sha256": "3c71fb267182f6c92b5a20cf28e977e59934276f9e47b7832cc852080dad8478",
+      "adjustments": []
+    },
+    {
+      "file": "20250808001000_add_durationless_flag.sql",
+      "sha256": "dead5e4888dfbfa54ce64cc8cf9163e646d553bb04b4c25be6db1dc720a09ee1",
+      "adjustments": []
+    },
+    {
+      "file": "20250810000000_add_rsip_tables.sql",
+      "sha256": "4e274a7fa5f8fe56c58dbec75e563121619d11d426867e79555d5a6d05833cec",
+      "adjustments": []
+    },
+    {
+      "file": "20250814000000_add_soft_delete.sql",
+      "sha256": "277cb097ad48eb581a30eeba036d6fc1671fb7e865d9ff7029d3ba6d3af29c76",
+      "adjustments": ["repaired invalid dollar quoting"]
+    },
+    {
+      "file": "20250817000000_add_completion_description_notes.sql",
+      "sha256": "91aa96e848389fa4665679d70e846b4b06484da2bdc6c02f272322728159a929",
+      "adjustments": []
+    },
+    {
+      "file": "20250817100000_add_timing_fields.sql",
+      "sha256": "47a2294d52c59199e53ddc05cd93342d909afb3f2f787b6d06fc7e819fd2c048",
+      "adjustments": []
+    },
+    {
+      "file": "20250817103715_add_completion_description_notes.sql",
+      "sha256": "261eede83b18742e61f96d606402f30d713b1c505852afae0738873bdbecea3f",
+      "adjustments": ["made duplicate columns conditional"]
+    },
+    {
+      "file": "20250817110614_add_timing_fields.sql",
+      "sha256": "cd6e56c2f5b19dd82644c1b3cf4d4bcf176f13d490fd1bf7308f6c4b35ffff0a",
+      "adjustments": []
+    },
+    {
+      "file": "20250820000000_performance_optimization.sql",
+      "sha256": "f22d6d77a3d2fb417eb7efb03b2c0362f55fa592f6bb72ba32f2525f6e7fe8ed",
+      "adjustments": []
+    },
+    {
+      "file": "20250904000000_add_daily_checkin_system.sql",
+      "sha256": "d246c229f0bfd5fad27846a385466cd80986bef75af68d2f72752e5317ea5301",
+      "adjustments": []
+    },
+    {
+      "file": "20250905000000_add_gambling_mode_system.sql",
+      "sha256": "3a856ada4c7057f3ac04218ca068c597faf034394c2cfb69d6ad393c6562ad2d",
+      "adjustments": []
+    },
+    {
+      "file": "20250905100000_fix_bet_transaction_atomicity.sql",
+      "sha256": "1cfc886bea514a56d2b1c5a02cdaad7889fb32afcb7746c1e7aa091ee980e178",
+      "adjustments": []
+    },
+    {
+      "file": "20250906000000_implement_universal_write_sessions.sql",
+      "sha256": "0b27004e45bf5a366db5862ba54b8b1e51339b38797c1128af0b182913fe696c",
+      "adjustments": [
+        "excluded historical import_sessions conversion; next repair creates write_sessions explicitly"
+      ]
+    },
+    {
+      "file": "20250906000001_fix_function_conflicts.sql",
+      "sha256": "b41ae9bf00db21cb9829b3e1eb131ca377bfaa8abf3d8004e9e69bd837a3d445",
+      "adjustments": []
+    },
+    {
+      "file": "20250906000002_fix_bet_settlement_on_session_completion.sql",
+      "sha256": "a4dc21e7176fde28078bcde1a9f2a6f34d59b033ae5d2066f9fa034f61540fa0",
+      "adjustments": []
+    },
+    {
+      "file": "20250906000003_fix_betting_reward_calculation.sql",
+      "sha256": "4cafc649bac8648abd53dacdb6fbbeda6fb79239e745b06346ca29362317ca9e",
+      "adjustments": [
+        "removed superseded RPC signatures before named-argument changes"
+      ]
+    },
+    {
+      "file": "20250906000004_fix_function_overloading_conflict.sql",
+      "sha256": "e1863b0b43278766d7a038c629859aa77a4e360769e8bc772a13b4d35efb2cef",
+      "adjustments": [
+        "removed superseded RPC signatures before named-argument changes"
+      ]
+    },
+    {
+      "file": "20250906000005_complete_function_conflict_fix.sql",
+      "sha256": "e34db46dc046687f4b88de0bec5481893bd23d5a0442e2efae31baaca446f353",
+      "adjustments": [
+        "removed superseded RPC signatures before named-argument changes"
+      ]
+    },
+    {
+      "file": "20250906000006_fix_create_write_session_type_mismatch.sql",
+      "sha256": "e8907e2680a44e91f7d5cae51aacc342ffd57accbb90c855d2b055de1ff89af9",
+      "adjustments": []
+    },
+    {
+      "file": "20260114000000_add_chain_repeat_and_minimum_duration.sql",
+      "sha256": "08667860859c5335d4b90038b3cd3804987aa4070d1efc07b9659d2536863f1c",
+      "adjustments": []
+    },
+    {
+      "file": "20260123000000_optimize_rls_policy_auth_uid.sql",
+      "sha256": "3c9bf7350ef10346b37e9ece3d2162a9f99f134bac11dc60273f3fae95c658a0",
+      "adjustments": []
+    },
+    {
+      "file": "20260124000000_rsip_execution_tracking.sql",
+      "sha256": "1c026de5625022906ab5f1c0fd3359b7d17f66192d17409f4f23cd3fe0c698f4",
+      "adjustments": []
+    },
+    {
+      "file": "20260127000000_dedupe_and_add_unique_indexes.sql",
+      "sha256": "b88bbd41e058fc0fdad9548f13f638edb2d484d6cf15f922aee98d07309c4693",
+      "adjustments": []
+    },
+    {
+      "file": "20260208000000_rsip_process_integration.sql",
+      "sha256": "fd3b19a4f2ddd0742d1ac6f81372d3b347bd8f6ba491ac4e098e49b66804b67d",
+      "adjustments": []
+    },
+    {
+      "file": "20260211000000_schema_alignment_hotfix.sql",
+      "sha256": "895c2d1d478f2937bbe08b2863e38d0d17c71231fbe3d9ef63cf3c52399fe1b7",
+      "adjustments": [
+        "used text ordering for uuid MAX (PostgreSQL has no max(uuid))"
+      ]
+    }
+  ],
+  "baseline_sha256": "00a1b669b1ab5cdb720e65dfd5761ed925effc04ee792feb33f9a34a8bc3f289",
+  "snapshot_adjustments": [
+    "Removed pg_dump restriction token",
+    "Made public schema creation conditional",
+    "Added explicit uuid-ossp and pgcrypto extension creation",
+    "Explicit UTF-8 client encoding"
+  ]
+}

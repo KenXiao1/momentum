@@ -1,3 +1,4 @@
+import { createTranslator } from '../../../i18n/translate';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { AuthUser } from '../../../domain/auth';
@@ -51,7 +52,7 @@ function createProps(overrides?: {
           ? overrides.userFullName
           : 'Demo User',
       locale: 'en-US',
-      tr: (_zh: string, en: string) => en,
+      t: createTranslator('en'),
       gamblingSettings: overrides?.gamblingSettings ?? createSettings(),
       gamblingLoading: overrides?.gamblingLoading ?? false,
       gamblingError: overrides?.gamblingError ?? null,

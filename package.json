@@ -39,10 +39,10 @@
     "quality:test:audit": "npm run quality:test:lint && npm run quality:test:assertions && npm run quality:test:mutation-scope && npm run test:coverage && npm run quality:test:coverage-hotspots && npm run quality:test:mutation-hotspots",
     "quality:arch-gate": "depcruise src --config .dependency-cruiser.cjs --output-type err",
     "quality:rust": "npm run format:rust:check && npm run lint:rust && npm run test:rust",
-    "quality:ci:required": "npm run format:check && npm run lint && npm run lint:css && npm run quality:css-structure && npm run lint:md && npm run lint:spell && npm run lint:spell:docs && npm run typecheck && npm run quality:i18n && npm run quality:type-coverage && npm run quality:knip && npm run quality:arch-gate && npm run quality:test:lint && npm run quality:test:assertions && npm run test:coverage && npm run quality:test:coverage-hotspots && npm run quality:rust && npm run build",
+    "quality:ci:required": "npm run quality:ci:static && npm run quality:ci:tests && npm run quality:rust && npm run build && npm run security:npm-audit && npm run test:e2e",
     "quality:ci:info": "node tools/quality/lane-runner.mjs info",
     "quality:ci:nightly": "node tools/quality/lane-runner.mjs nightly",
-    "security:semgrep": "node tools/quality/run-ps.mjs tools/quality/semgrep.ps1",
+    "security:semgrep": "node tools/quality/run-semgrep.mjs",
     "security:npm-audit": "npm audit --audit-level=high",
     "quality:licenses": "license-checker --summary",
     "lint:sql": "node tools/quality/run-ps.mjs tools/quality/sqlfluff.ps1",
@@ -56,7 +56,16 @@
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --features desktop",
     "test:mutation": "npm run quality:test:mutation-scope && node tools/quality/run-mutation.mjs --mode nightly",
     "test:mutation:critical": "npm run quality:test:mutation-scope && node tools/quality/run-mutation.mjs --mode critical && node tools/quality/mutation-hotspots.mjs --mode critical --required",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "typecheck:tests": "tsc -p tsconfig.tests.json --noEmit",
+    "test:e2e": "playwright test",
+    "security:npm-audit:production": "npm audit --omit=dev --audit-level=high",
+    "quality:delivery": "node --test tools/quality/__tests__/*.test.mjs",
+    "quality:ci:static": "npm run format:check && npm run lint && npm run lint:css && npm run quality:css-structure && npm run lint:md && npm run lint:spell && npm run lint:spell:docs && npm run typecheck && npm run typecheck:tests && npm run quality:i18n && npm run quality:type-coverage && npm run quality:knip && npm run quality:arch-gate && npm run quality:delivery",
+    "quality:ci:tests": "npm run quality:test:lint && npm run quality:test:assertions && npm run quality:test:mutation-scope && npm run test:coverage && npm run quality:test:coverage-hotspots",
+    "test:database": "python3 scripts/database/run-tests.py",
+    "benchmark:browser": "playwright test --config playwright.benchmark.config.ts",
+    "security:gitleaks": "node tools/quality/run-gitleaks.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.91.0",
@@ -77,6 +86,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@playwright/test": "1.63.0",
     "@stryker-mutator/core": "^9.5.1",
     "@stryker-mutator/vitest-runner": "^9.5.1",
     "@tauri-apps/cli": "^2.0.0",
@@ -121,5 +131,16 @@
     "vite": "^7.3.1",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.0.17"
+  },
+  "overrides": {
+    "brace-expansion@^1.1.7": "^1.1.21",
+    "qs": "^6.16.0",
+    "eslint-plugin-sonarjs": {
+      "minimatch": "^10.2.6"
+    },
+    "markdownlint-cli2": {
+      "js-yaml": "^4.3.2",
+      "markdown-it": "^14.3.2"
+    }
   }
 }

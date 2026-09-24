@@ -316,10 +316,7 @@ describe('usePetDomain', () => {
       await result.current.createPet('Decimal');
     });
 
-    let feedResult;
-    await act(async () => {
-      feedResult = await result.current.feedPet();
-    });
+    const feedResult = await act(async () => result.current.feedPet());
 
     expect(feedResult).not.toBeNull();
     expect(feedResult?.hungerReduced).toBeCloseTo(30, 6);
@@ -354,10 +351,7 @@ describe('usePetDomain', () => {
       await result.current.createPet('LowFeed');
     });
 
-    let feedResult;
-    await act(async () => {
-      feedResult = await result.current.feedPet();
-    });
+    const feedResult = await act(async () => result.current.feedPet());
 
     expect(feedResult).not.toBeNull();
     expect(feedResult?.hungerReduced).toBeCloseTo(12.3, 6);

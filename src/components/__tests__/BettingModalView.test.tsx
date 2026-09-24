@@ -1,9 +1,10 @@
+import { createTranslator } from '../../i18n/translate';
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { BettingModalView } from '../BettingModalView';
 
-const tr = (_zh: string, en: string) => en;
+const t = createTranslator('en');
 
 function createProps(
   overrides: Partial<React.ComponentProps<typeof BettingModalView>> = {},
@@ -13,7 +14,7 @@ function createProps(
     chainName: 'Deep Work',
     taskDuration: 45,
     language: 'en' as const,
-    tr,
+    t,
     betAmount: '10',
     availablePoints: 100,
     todayBetAmount: 5,

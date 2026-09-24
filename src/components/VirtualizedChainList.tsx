@@ -72,7 +72,7 @@ export const VirtualizedChainList: React.FC<VirtualizedChainListProps> =
       const [containerHeight, setContainerHeight] = useState(600);
       const [scrollTop, setScrollTop] = useState(0);
       const [isPending, startTransition] = useTransition();
-      const { tr } = useI18n();
+      const { t } = useI18n();
       const itemsPerRow = useItemsPerRow();
 
       // Use regular grid for small lists, virtual scrolling for large lists
@@ -192,7 +192,7 @@ export const VirtualizedChainList: React.FC<VirtualizedChainListProps> =
         return (
           <div
             role="list"
-            aria-label={tr('任务链列表', 'Task chains list')}
+            aria-label={t('virtualizedChainList.taskChainsList')}
             className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"
           >
             {topLevelChains.map((chainNode, index) => (
@@ -213,7 +213,7 @@ export const VirtualizedChainList: React.FC<VirtualizedChainListProps> =
         <div
           id="chain-list-container"
           role="list"
-          aria-label={tr('任务链列表', 'Task chains list')}
+          aria-label={t('virtualizedChainList.taskChainsList')}
           className={`relative max-h-[calc(100vh-16rem)] overflow-auto rounded-lg border border-gray-200 transition-opacity dark:border-slate-600 md:max-h-[calc(100vh-12rem)] ${isPending ? 'opacity-70' : ''}`}
           onScroll={handleScroll}
           style={{

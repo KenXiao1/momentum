@@ -1,24 +1,23 @@
+import { type Translator } from '../../../i18n';
 import React from 'react';
 import { Trash2, X } from 'lucide-react';
 
 interface HeaderProps {
   deletedChainsCount: number;
   language: 'zh' | 'en';
-  tr: (zh: string, en: string) => string;
+  t: Translator;
   onClose: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   deletedChainsCount,
-  language,
-  tr,
+  t,
   onClose,
 }) => {
-  const itemLabel = deletedChainsCount === 1 ? 'ITEM' : 'ITEMS';
   const subtitle =
-    language === 'zh'
-      ? `回收箱 • ${deletedChainsCount} 项`
-      : `RECYCLE BIN • ${deletedChainsCount} ${itemLabel}`;
+    deletedChainsCount === 1
+      ? t('counts.recycleItem', { count: deletedChainsCount })
+      : t('counts.recycleItems', { count: deletedChainsCount });
 
   return (
     <div className="flex items-center justify-between border-b border-gray-200 p-8 dark:border-slate-600">
@@ -31,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
             id="recycle-bin-modal-title"
             className="font-chinese text-2xl font-bold text-gray-900 dark:text-slate-100"
           >
-            {tr('回收箱', 'Recycle bin')}
+            {t('dashboard.dashboardChainsSection.recycleBin')}
           </h2>
           <p className="font-mono text-sm text-gray-500 dark:text-slate-400">
             {subtitle}
@@ -41,7 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
       <button
         type="button"
         onClick={onClose}
-        aria-label={tr('关闭', 'Close')}
+        aria-label={t('accountModal.close')}
         className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 transition-colors hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600"
       >
         <X size={24} className="text-gray-600 dark:text-slate-300" />

@@ -225,7 +225,7 @@ describe('useFocusTimers', () => {
   });
 
   it('uses the real forward timer across minimum, pause, and resume transitions', async () => {
-    const lastCompletion = new Date('2026-07-13T08:00:00.000Z');
+    const lastCompletion = new Date('2026-07-13T08:00:00.000Z').getTime();
     const storage = createLocalStorageMock({
       getLastCompletionTime: vi.fn(async () => lastCompletion),
     });
@@ -280,7 +280,7 @@ describe('useFocusTimers', () => {
   });
 
   it('clears stale completion data when the storage boundary rejects', async () => {
-    const lastCompletion = new Date('2026-07-13T08:00:00.000Z');
+    const lastCompletion = new Date('2026-07-13T08:00:00.000Z').getTime();
     const getLastCompletionTime = vi.fn(async (chainId: string) => {
       if (chainId === 'unavailable-chain') {
         throw new Error('storage unavailable');

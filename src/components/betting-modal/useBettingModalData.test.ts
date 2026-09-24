@@ -1,3 +1,4 @@
+import { createTranslator } from '../../i18n/translate';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { AppError } from '../../domain/errors';
@@ -14,7 +15,7 @@ type GetUserAvailablePoints = BettingDataStorage['getUserAvailablePoints'];
 type GetGamblingSettings = BettingDataStorage['getGamblingSettings'];
 type GetTodayBetAmount = BettingDataStorage['getTodayBetAmount'];
 
-const tr = (_zh: string, en: string) => en;
+const t = createTranslator('en');
 const settings: GamblingSettings = {
   gambling_mode_enabled: true,
   daily_bet_limit: 80,
@@ -50,7 +51,7 @@ function renderDataHook(
       canUseBetting: overrides.canUseBetting ?? true,
       storage,
       language: 'en',
-      tr,
+      t,
     }),
   );
 }

@@ -11,7 +11,7 @@ import {
 import { exceptionRuleStorage } from '../ExceptionRuleStorage';
 import { getDuplicationReport } from '../duplication/duplicationDetection';
 import { ruleUsageTracker } from '../RuleUsageTracker';
-import { tr } from '../../utils/runtimeI18n';
+import { t } from '../../utils/runtimeI18n';
 
 interface RuleUpdateResult {
   rule: ExceptionRule;
@@ -81,9 +81,9 @@ class RuleMaintenanceService {
             .map((r) => r.rule.name)
             .join(', ');
           warnings.push(
-            tr(
-              `发现相似规则: ${similarRuleNames}`,
-              `Similar rules found: ${similarRuleNames}`,
+            t(
+              'ruleManager.ruleMaintenanceService.similarRulesFoundSimilarRuleNames',
+              { similarRuleNames: similarRuleNames },
             ),
           );
         }
@@ -163,13 +163,15 @@ class RuleMaintenanceService {
       let status: 'healthy' | 'warning' | 'error' = 'healthy';
 
       if (activeRules.length === 0) {
-        issues.push(tr('没有活跃的例外规则', 'No active exception rules'));
+        issues.push(
+          t('ruleManager.ruleMaintenanceService.noActiveExceptionRules'),
+        );
         status = 'warning';
       }
 
       if (usageRecords.length === 0 && activeRules.length > 0) {
         issues.push(
-          tr('有规则但没有使用记录', 'Rules exist but no usage records'),
+          t('ruleManager.ruleMaintenanceService.rulesExistButNoUsageRecords'),
         );
         status = 'warning';
       }
@@ -184,7 +186,7 @@ class RuleMaintenanceService {
           (Date.now() - lastUsedAt.getTime()) / (1000 * 60 * 60 * 24);
         if (daysSinceLastUse > 30) {
           issues.push(
-            tr('超过30天未使用任何规则', 'No rules used in the last 30 days'),
+            t('ruleManager.ruleMaintenanceService.noRulesUsedInTheLast30Days'),
           );
           status = 'warning';
         }
@@ -196,9 +198,9 @@ class RuleMaintenanceService {
       );
       if (duplicateNames.length > 0) {
         issues.push(
-          tr(
-            `发现重复规则名称: ${duplicateNames.join(', ')}`,
-            `Duplicate rule names found: ${duplicateNames.join(', ')}`,
+          t(
+            'ruleManager.ruleMaintenanceService.duplicateRuleNamesFoundDuplicateNames',
+            { duplicateNames: duplicateNames.join(', ') },
           ),
         );
         status = 'error';
@@ -219,10 +221,10 @@ class RuleMaintenanceService {
         activeRules: 0,
         totalUsageRecords: 0,
         issues: [
-          tr('系统检查失败: ', 'System check failed: ') +
+          t('ruleManager.ruleMaintenanceService.systemCheckFailed') +
             (error instanceof Error
               ? error.message
-              : tr('未知错误', 'Unknown error')),
+              : t('focusMode.useExceptionRuleOperations.unknownError')),
         ],
       };
     }

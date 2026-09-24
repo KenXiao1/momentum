@@ -1,12 +1,13 @@
+import { type Translator } from '../../i18n';
 import type { ActionType } from './types';
 
 export function getActionDisplayName(
   actionType: ActionType,
-  tr: (zh: string, en: string) => string,
+  t: Translator,
 ): string {
   return actionType === 'pause'
-    ? tr('暂停计时', 'Pause timer')
-    : tr('提前完成', 'Early completion');
+    ? t('ruleSelectionDialog.pauseTimer')
+    : t('ruleSelectionDialog.earlyCompletion');
 }
 
 export function getActionColorClass(actionType: ActionType): string {

@@ -1,3 +1,4 @@
+import { type Translator } from '../../../i18n';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import type React from 'react';
 import type { ExceptionRule } from '../../../types';
@@ -7,7 +8,7 @@ import type { RuleManagerFormData } from '../types';
 interface RuleManagerFormModalProps {
   isOpen: boolean;
   editingRule: ExceptionRule | null;
-  tr: (zh: string, en: string) => string;
+  t: Translator;
 
   formErrors: string[];
   formWarnings: string[];
@@ -28,7 +29,7 @@ interface RuleManagerFormModalProps {
 export function RuleManagerFormModal({
   isOpen,
   editingRule,
-  tr,
+  t,
   formErrors,
   formWarnings,
   duplicateSuggestions,
@@ -48,8 +49,8 @@ export function RuleManagerFormModal({
       <div className="w-full max-w-md rounded-3xl bg-white p-6 dark:bg-gray-800">
         <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">
           {editingRule
-            ? tr('编辑规则', 'Edit rule')
-            : tr('创建新规则', 'Create rule')}
+            ? t('ruleManager.ruleManagerFormModal.editRule')
+            : t('ruleManager.ruleManagerFormModal.createRule')}
         </h3>
 
         {formErrors.length > 0 && (
@@ -83,7 +84,7 @@ export function RuleManagerFormModal({
         {duplicateSuggestions.length > 0 && (
           <div className="mb-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-500/30 dark:bg-blue-500/10">
             <p className="mb-2 text-blue-700 dark:text-blue-300">
-              {tr('建议的规则名称：', 'Suggested rule names:')}
+              {t('ruleManager.ruleManagerFormModal.suggestedRuleNames')}
             </p>
             <div className="flex flex-wrap gap-2">
               {duplicateSuggestions.map((suggestion, index) => (
@@ -102,7 +103,7 @@ export function RuleManagerFormModal({
         <div className="space-y-4">
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {tr('规则名称 *', 'Rule name *')}
+              {t('ruleManager.ruleManagerFormModal.ruleName')}
             </label>
             <input
               type="text"
@@ -110,9 +111,8 @@ export function RuleManagerFormModal({
               onChange={(event) =>
                 setFormData({ ...formData, name: event.target.value })
               }
-              placeholder={tr(
-                '例如：上厕所、喝水、接电话',
-                'e.g. bathroom break, water, phone call',
+              placeholder={t(
+                'ruleManager.ruleManagerFormModal.eGBathroomBreakWaterPhoneCall',
               )}
               className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
@@ -120,7 +120,7 @@ export function RuleManagerFormModal({
 
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {tr('规则类型 *', 'Rule type *')}
+              {t('ruleManager.ruleManagerFormModal.ruleType')}
             </label>
             <select
               value={formData.type}
@@ -133,15 +133,13 @@ export function RuleManagerFormModal({
               className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value={ExceptionRuleType.PAUSE_ONLY}>
-                {tr(
-                  '仅暂停 - 只能用于暂停计时',
-                  'Pause only — can only pause the timer',
+                {t(
+                  'ruleManager.ruleManagerFormModal.pauseOnlyCanOnlyPauseTheTimer',
                 )}
               </option>
               <option value={ExceptionRuleType.EARLY_COMPLETION_ONLY}>
-                {tr(
-                  '仅提前完成 - 只能用于提前完成任务',
-                  'Early completion only — can only complete tasks early',
+                {t(
+                  'ruleManager.ruleManagerFormModal.earlyCompletionOnlyCanOnlyCompleteTasksEarly',
                 )}
               </option>
             </select>
@@ -149,16 +147,15 @@ export function RuleManagerFormModal({
 
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {tr('描述（可选）', 'Description (optional)')}
+              {t('ruleManager.ruleManagerFormModal.descriptionOptional')}
             </label>
             <textarea
               value={formData.description}
               onChange={(event) =>
                 setFormData({ ...formData, description: event.target.value })
               }
-              placeholder={tr(
-                '详细描述这个例外情况...',
-                'Describe this exception...',
+              placeholder={t(
+                'ruleManager.ruleManagerFormModal.describeThisException',
               )}
               rows={3}
               className="w-full resize-none rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
@@ -175,7 +172,7 @@ export function RuleManagerFormModal({
             }}
             className="rounded-xl bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
           >
-            {tr('取消', 'Cancel')}
+            {t('bettingModal.bettingFormSections.cancel')}
           </button>
           <button
             onClick={
@@ -190,7 +187,9 @@ export function RuleManagerFormModal({
               <Loader2 size={16} className="animate-spin" />
             )}
             <span>
-              {editingRule ? tr('更新', 'Update') : tr('创建', 'Create')}
+              {editingRule
+                ? t('ruleManager.ruleManagerFormModal.update')
+                : t('ruleManager.ruleManagerFormModal.create')}
             </span>
           </button>
         </div>

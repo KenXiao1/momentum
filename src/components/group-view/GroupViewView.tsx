@@ -23,7 +23,7 @@ export const GroupViewView: React.FC<GroupViewViewProps> = (props) => (
     )}
     <RepeatCountModal
       isOpen={props.showRepeatModal}
-      tr={props.tr}
+      t={props.t}
       repeatCount={props.repeatCount}
       setRepeatCount={props.setRepeatCount}
       onClose={() => props.setShowRepeatModal(false)}
