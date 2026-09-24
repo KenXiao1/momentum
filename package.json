@@ -96,9 +96,9 @@
     "@types/react": "^18.3.27",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^5.1.2",
-    "@vitest/coverage-v8": "^4.0.17",
-    "@vitest/eslint-plugin": "^1.6.6",
-    "@vitest/ui": "^4.0.17",
+    "@vitest/coverage-v8": "^5.0.1",
+    "@vitest/eslint-plugin": "^1.6.27",
+    "@vitest/ui": "^5.0.1",
     "autoprefixer": "^10.4.23",
     "cspell": "^9.6.3",
     "dependency-cruiser": "^16.10.4",
@@ -130,7 +130,7 @@
     "typescript-eslint": "^8.53.1",
     "vite": "^7.3.1",
     "vite-plugin-pwa": "^1.2.0",
-    "vitest": "^4.0.17"
+    "vitest": "^5.0.1"
   },
   "overrides": {
     "brace-expansion@^1.1.7": "^1.1.21",
