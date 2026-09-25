@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ['**']
+    branches: [new-feature-branch]
   pull_request:
   workflow_dispatch:
 
@@ -14,7 +14,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      full: ${{ steps.scope.outputs.full }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - id: scope
+        run: node tools/quality/ci-scope.mjs
+
+  docs:
+    needs: changes
+    if: needs.changes.outputs.full == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --check '*.md' 'docs/**/*.md'
+      - run: npm run lint:md
+      - run: npm run lint:spell:docs
+
   static:
+    needs: changes
+    if: needs.changes.outputs.full == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -26,6 +57,8 @@ jobs:
       - run: npm run quality:ci:static
 
   tests:
+    needs: changes
+    if: needs.changes.outputs.full == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -44,6 +77,8 @@ jobs:
             reports/quality/test-coverage-hotspots.*
 
   build:
+    needs: changes
+    if: needs.changes.outputs.full == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -55,6 +90,8 @@ jobs:
       - run: npm run build
 
   dependencies:
+    needs: changes
+    if: needs.changes.outputs.full == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -66,6 +103,8 @@ jobs:
       - run: npm run security:npm-audit
 
   rust:
+    needs: changes
+    if: needs.changes.outputs.full == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -85,6 +124,8 @@ jobs:
       - run: npm run quality:rust
 
   e2e:
+    needs: changes
+    if: needs.changes.outputs.full == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -105,6 +146,8 @@ jobs:
           if-no-files-found: ignore
 
   database:
+    needs: changes
+    if: needs.changes.outputs.full == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -127,6 +170,8 @@ jobs:
       - run: python3 scripts/database/run-tests.py
 
   semgrep:
+    needs: changes
+    if: needs.changes.outputs.full == 'true'
     uses: ./.github/workflows/semgrep.yml
 
   secrets:
@@ -136,6 +181,8 @@ jobs:
     if: always()
     needs:
       [
+        changes,
+        docs,
         static,
         tests,
         rust,
@@ -148,13 +195,18 @@ jobs:
       ]
     runs-on: ubuntu-latest
     steps:
-      - name: Require every blocking job to succeed
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - name: Require all checks applicable to this change
         env:
           RESULTS: ${{ toJSON(needs) }}
-        run: |
-          node -e 'const jobs = JSON.parse(process.env.RESULTS); const failed = Object.entries(jobs).filter(([, job]) => job.result !== "success"); if (failed.length) { console.error(failed); process.exit(1); }'
+        run: node tools/quality/ci-scope.mjs --check
 
   info:
+    needs: changes
+    if: needs.changes.outputs.full == 'true'
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:

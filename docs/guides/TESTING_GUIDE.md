@@ -71,7 +71,21 @@ only when a test deliberately passes an invalid runtime value.
 [CI](../../.github/workflows/ci.yml) runs separate required jobs for formatting,
 lint/type/import checks, test types, unit + integration coverage, core browser
 journeys, database contracts, Rust checks, and the web build. An aggregate
-required status verifies that every required job succeeded. The exact roster is in `package.json`;
+required status verifies that every applicable job succeeded. Feature-branch
+pushes do not also launch CI: the PR run is the merge signal. Pushes to
+`new-feature-branch` and manual dispatches always run the full lane, preserving
+the default-branch release check.
+
+For PRs containing only root or `docs/` Markdown, `changes` selects a documentation
+lane: Prettier, Markdown lint, documentation spelling and the secret scan.
+Application jobs are intentionally skipped. The classifier reads the complete
+Git diff from the merge base, including both sides of renames; executable,
+configuration, unknown and mixed changes use full CI. `required` still runs with
+`always()` and rejects failed scope detection, missing results, failures,
+cancellations and unexpected skips. There is no workflow-level path filter that
+could leave the required check pending.
+
+The exact command roster is in `package.json`;
 coverage thresholds live in `vitest.coverage.config.ts`.
 `quality:test:coverage-hotspots` verifies report freshness and reports source inclusion,
 then ranks uncovered behavior. It consumes the preceding coverage run.

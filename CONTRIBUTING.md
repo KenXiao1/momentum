@@ -42,8 +42,12 @@ npm run test:all -- path/to/file.test.ts
 is available through `npm run quality:ci:required` when the change warrants it
 (after `npx playwright install chromium`). CI runs static checks, behavior tests,
 Rust, builds, dependencies, browser journeys, database tests, Semgrep, and secret
-scanning independently. The stable `required` job fails if any blocking job
-fails, is cancelled, or is skipped. The default branch requires that check,
+scanning independently. Feature branches run CI on pull requests; push CI runs
+only on `new-feature-branch`, avoiding duplicate checks on the same PR commit.
+PRs changing only root or `docs/` Markdown run formatting, Markdown/spelling
+checks and the secret scan. Other PRs, default-branch pushes and manual runs use
+the full lane. The stable `required` job always runs and rejects failures,
+cancellations, missing results and skips outside the selected lane. The default branch requires that check,
 including for administrators, and requires pull requests with resolved conversations.
 
 `npm run typecheck:tests` checks test fixtures and mocks. `npm run test:database`
