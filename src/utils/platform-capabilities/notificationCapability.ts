@@ -1,33 +1,35 @@
 import { logger } from '../logger';
 import { getNotificationAdapter } from '../platform-adapters';
-import type { PlatformCapabilities, PlatformCapabilityCenter } from './types';
+import type { PlatformCapabilityCenter } from './types';
 
-export function createNotificationCapability(
-  getCapabilities: () => Promise<PlatformCapabilities>,
-): PlatformCapabilityCenter['notification'] {
-  return {
-    isSupported: async () => (await getCapabilities()).notification.supported,
+export const notificationCapability: PlatformCapabilityCenter['notification'] =
+  {
+    isSupported: async () => (await getNotificationAdapter()).isSupported(),
     getPermissionState: async () =>
       (await getNotificationAdapter()).getPermissionState(),
     requestPermission: async () => {
-      if (!(await getCapabilities()).notification.canRequestPermission) {
+      const adapter = await getNotificationAdapter();
+      if (
+        !adapter.isSupported() ||
+        !adapter.getCapabilities().canRequestPermission
+      ) {
         logger.warn(
           'PLATFORM_CAPABILITIES',
           'Notification permission request is not supported on this platform',
         );
         return 'default';
       }
-      return (await getNotificationAdapter()).requestPermission();
+      return adapter.requestPermission();
     },
     show: async (payload) => {
-      if (!(await getCapabilities()).notification.canShow) {
+      const adapter = await getNotificationAdapter();
+      if (!adapter.isSupported() || !adapter.getCapabilities().canShow) {
         logger.warn(
           'PLATFORM_CAPABILITIES',
           'Notification show is not supported on this platform',
         );
         return;
       }
-      await (await getNotificationAdapter()).show(payload);
+      await adapter.show(payload);
     },
   };
-}

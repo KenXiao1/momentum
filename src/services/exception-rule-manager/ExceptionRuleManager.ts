@@ -37,7 +37,6 @@ import {
   ruleExportImportService,
   ruleMaintenanceService,
   type RuleCreationResult,
-  type RealTimeCheckResult,
   type RuleExecutionResult,
   type ImportResult,
   type ExportResult,
@@ -45,6 +44,7 @@ import {
   type SystemHealthStatus,
 } from '../rule-manager';
 import { withRuleErrorHandling } from './errorHandling';
+import type { DuplicateResolution } from '../duplication/enhanced-handler/types';
 
 type DuplicationSuggestions = DuplicationReport & { nameSuggestions: string[] };
 
@@ -114,7 +114,7 @@ export class ExceptionRuleManager {
     name: string,
     type: ExceptionRuleType,
     description?: string,
-    userChoice?: 'use_existing' | 'modify_name' | 'create_anyway',
+    userChoice?: DuplicateResolution,
   ): Promise<RuleCreationResult> {
     await this.initialize();
     return ruleCreator.createRule(name, type, description, userChoice);
@@ -128,13 +128,6 @@ export class ExceptionRuleManager {
   ): Promise<RuleCreationResult> {
     await this.initialize();
     return ruleCreator.createChainRule(chainId, name, type, description);
-  }
-
-  async checkRuleNameRealTime(
-    name: string,
-    excludeId?: string,
-  ): Promise<RealTimeCheckResult> {
-    return ruleCreator.checkRuleNameRealTime(name, excludeId);
   }
 
   // ==================== Query Methods ====================

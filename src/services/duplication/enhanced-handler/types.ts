@@ -4,8 +4,9 @@ export type DuplicationConflictType = 'exact' | 'similar' | 'none';
 type DuplicationSuggestionType =
   | 'use_existing'
   | 'modify_name'
-  | 'create_anyway'
-  | 'merge_rules';
+  | 'create_anyway';
+
+export type DuplicateResolution = DuplicationSuggestionType | 'reuse_exact';
 
 export interface DuplicationCheckResult {
   hasConflict: boolean;
@@ -21,5 +22,4 @@ export interface DuplicationSuggestion {
   description: string;
   rule?: ExceptionRule;
   suggestedName?: string;
-  handler: () => Promise<ExceptionRule | null>;
 }

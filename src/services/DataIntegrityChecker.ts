@@ -21,8 +21,6 @@ import type {
 } from './integrity/IntegrityTypes';
 
 class DataIntegrityChecker {
-  private fixHistory: FixResult[] = [];
-
   async checkRuleDataIntegrity(): Promise<IntegrityReport> {
     try {
       const issues: IntegrityIssue[] = [];
@@ -70,7 +68,6 @@ class DataIntegrityChecker {
             details: issue.details,
           };
           results.push(result);
-          this.fixHistory.push(result);
         }
       } catch (error) {
         const result: FixResult = {
@@ -80,7 +77,6 @@ class DataIntegrityChecker {
           details: { issue, error },
         };
         results.push(result);
-        this.fixHistory.push(result);
       }
     }
 
@@ -91,14 +87,6 @@ class DataIntegrityChecker {
     ruleIntegrityChecker.validateRuleIds.bind(ruleIntegrityChecker);
   checkDuplicateNames =
     ruleIntegrityChecker.checkDuplicateNames.bind(ruleIntegrityChecker);
-
-  getFixHistory(): FixResult[] {
-    return [...this.fixHistory];
-  }
-
-  clearFixHistory(): void {
-    this.fixHistory = [];
-  }
 }
 
 export const dataIntegrityChecker = new DataIntegrityChecker();

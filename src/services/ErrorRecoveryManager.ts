@@ -4,7 +4,6 @@
  *
  * 职责：
  * - 协调恢复策略的执行
- * - 管理恢复历史记录
  * - 提供统一的恢复入口
  *
  * 相关模块：
@@ -23,7 +22,6 @@ import {
   RecoveryAction,
   RecoveryContext,
   RecoveryStrategy,
-  RecoveryHistoryEntry,
   RecoveryStrategyRegistry,
   recoveryOptionsProvider,
   initializeDefaultStrategies,
@@ -40,7 +38,6 @@ export type { RecoveryAction };
  */
 class ErrorRecoveryManager {
   private registry: RecoveryStrategyRegistry;
-  private recoveryHistory: RecoveryHistoryEntry[] = [];
 
   constructor() {
     this.registry = new RecoveryStrategyRegistry();
@@ -92,9 +89,6 @@ class ErrorRecoveryManager {
       for (const strategy of strategies) {
         try {
           const result = await strategy.handler(error, recoveryContext);
-
-          // 记录恢复历史
-          this.recordHistory(error, recoveryContext, result);
 
           if (result.success) {
             logger.info('ERROR_RECOVERY', '错误恢复成功', {
@@ -154,37 +148,6 @@ class ErrorRecoveryManager {
    */
   getRecoveryOptions(error: ExceptionRuleException): RecoveryAction[] {
     return recoveryOptionsProvider.getRecoveryOptions(error);
-  }
-
-  /**
-   * 获取恢复历史
-   * @returns 恢复历史记录的副本
-   */
-  getRecoveryHistory(): RecoveryHistoryEntry[] {
-    return [...this.recoveryHistory];
-  }
-
-  /**
-   * 清除恢复历史
-   */
-  clearRecoveryHistory(): void {
-    this.recoveryHistory = [];
-  }
-
-  /**
-   * 记录恢复历史
-   */
-  private recordHistory(
-    error: ExceptionRuleException,
-    context: RecoveryContext,
-    result: RecoveryResult,
-  ): void {
-    this.recoveryHistory.push({
-      error,
-      context,
-      result,
-      timestamp: new Date(),
-    });
   }
 }
 

@@ -9,7 +9,6 @@ export type {
   RecoveryAction,
   RecoveryContext,
   RecoveryStrategy,
-  RecoveryHistoryEntry,
 } from './RecoveryStrategy';
 
 export { RecoveryStrategyRegistry } from './RecoveryStrategy';

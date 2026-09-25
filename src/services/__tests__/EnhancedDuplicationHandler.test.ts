@@ -56,62 +56,6 @@ describe('EnhancedDuplicationHandler', () => {
     vi.clearAllMocks();
   });
 
-  describe('checkDuplicationRealTime', () => {
-    it('should return no conflict for empty name', async () => {
-      const result = await handler.checkDuplicationRealTime('');
-
-      expect(result.isChecking).toBe(false);
-      expect(result.hasConflict).toBe(false);
-      expect(result.suggestions).toHaveLength(0);
-    });
-
-    it('should return no conflict for whitespace-only name', async () => {
-      const result = await handler.checkDuplicationRealTime('   ');
-
-      expect(result.isChecking).toBe(false);
-      expect(result.hasConflict).toBe(false);
-    });
-
-    it('should detect exact match conflict', async () => {
-      vi.mocked(exceptionRuleStorage.getRules).mockResolvedValue(mockRules);
-
-      const result = await handler.checkDuplicationRealTime('上厕所');
-
-      expect(result.hasConflict).toBe(true);
-      expect(result.conflictMessage).toContain('上厕所');
-    });
-
-    it('should detect similar match conflict', async () => {
-      vi.mocked(exceptionRuleStorage.getRules).mockResolvedValue(mockRules);
-
-      const result = await handler.checkDuplicationRealTime('去厕所');
-
-      expect(result.hasConflict).toBe(true);
-      expect(result.suggestions.length).toBeGreaterThan(0);
-    });
-
-    it('should return no conflict for unique name', async () => {
-      vi.mocked(exceptionRuleStorage.getRules).mockResolvedValue(mockRules);
-
-      const result = await handler.checkDuplicationRealTime('完全不同的规则');
-
-      expect(result.hasConflict).toBe(false);
-    });
-
-    it('should handle errors gracefully', async () => {
-      vi.mocked(exceptionRuleStorage.getRules).mockRejectedValue(
-        new Error('Storage error'),
-      );
-
-      const result = await handler.checkDuplicationRealTime('测试');
-
-      expect(result.isChecking).toBe(false);
-      expect(result.hasConflict).toBe(false);
-      expect(result.suggestions).toHaveLength(1);
-      expect(result.suggestions[0].type).toBe('create_anyway');
-    });
-  });
-
   describe('checkDuplication', () => {
     it('observes renames immediately without requiring cache invalidation', async () => {
       vi.mocked(exceptionRuleStorage.getRules).mockResolvedValue(mockRules);

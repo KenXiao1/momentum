@@ -92,16 +92,18 @@ async function loadCenter(options: LoadCenterOptions = {}) {
       debug: vi.fn(),
     },
   }));
-  vi.doMock('../../platform-adapters', () => ({
+  const adapterLoaders = {
     getNotificationAdapter: vi.fn(async () => notificationAdapter),
     getWindowAdapter: vi.fn(async () => windowAdapter),
     getFileAdapter: vi.fn(async () => fileAdapter),
     getHapticsAdapter: vi.fn(async () => hapticsAdapter),
-  }));
+  };
+  vi.doMock('../../platform-adapters', () => adapterLoaders);
 
   const module = await import('../center');
   return {
     center: module.getPlatformCapabilityCenter(),
+    adapterLoaders,
     notificationAdapter,
     windowAdapter,
     fileAdapter,
@@ -109,6 +111,18 @@ async function loadCenter(options: LoadCenterOptions = {}) {
     loggerWarn,
     loggerError,
   };
+}
+
+async function loadOnlyCapability(
+  available: keyof Awaited<ReturnType<typeof loadCenter>>['adapterLoaders'],
+) {
+  const loaded = await loadCenter();
+  for (const [name, loader] of Object.entries(loaded.adapterLoaders)) {
+    if (name !== available) {
+      loader.mockRejectedValue(new Error(`${name} unavailable`));
+    }
+  }
+  return loaded;
 }
 
 describe('platform capability center', () => {
@@ -178,6 +192,81 @@ describe('platform capability center', () => {
       body: 'Done',
     });
   });
+
+  it('keeps notifications usable when unrelated adapters cannot load', async () => {
+    const loaded = await loadOnlyCapability('getNotificationAdapter');
+
+    await expect(loaded.center.notification.isSupported()).resolves.toBe(true);
+    await expect(loaded.center.notification.getPermissionState()).resolves.toBe(
+      'default',
+    );
+    await expect(loaded.center.notification.requestPermission()).resolves.toBe(
+      'granted',
+    );
+    await loaded.center.notification.show({ title: 'Ready', body: 'Done' });
+    expect(loaded.notificationAdapter.show).toHaveBeenCalledWith({
+      title: 'Ready',
+      body: 'Done',
+    });
+  });
+
+  it('keeps window controls usable when unrelated adapters cannot load', async () => {
+    const loaded = await loadOnlyCapability('getWindowAdapter');
+
+    await expect(loaded.center.window.setFullscreen(true)).resolves.toBe(true);
+    await expect(loaded.center.window.minimizeToTray()).resolves.toBe(true);
+    await expect(loaded.center.window.focus()).resolves.toBe(true);
+    expect(loaded.windowAdapter.setFullscreen).toHaveBeenCalledWith(true);
+    expect(loaded.windowAdapter.minimizeToTray).toHaveBeenCalledOnce();
+    expect(loaded.windowAdapter.focus).toHaveBeenCalledOnce();
+  });
+
+  it('keeps file operations usable when unrelated adapters cannot load', async () => {
+    const loaded = await loadOnlyCapability('getFileAdapter');
+
+    await expect(loaded.center.file.saveFile('{}', 'data.json')).resolves.toBe(
+      true,
+    );
+    await expect(loaded.center.file.openFile(['json'])).resolves.toBe(
+      '{"ok":true}',
+    );
+    expect(loaded.fileAdapter.saveFile).toHaveBeenCalledWith('{}', 'data.json');
+    expect(loaded.fileAdapter.openFile).toHaveBeenCalledWith(['json']);
+  });
+
+  it('keeps haptics usable when unrelated adapters cannot load', async () => {
+    const loaded = await loadOnlyCapability('getHapticsAdapter');
+
+    await expect(loaded.center.haptics.impact('light')).resolves.toBe(true);
+    await expect(loaded.center.haptics.notification('success')).resolves.toBe(
+      true,
+    );
+    await expect(loaded.center.haptics.selectionChanged()).resolves.toBe(true);
+    expect(loaded.hapticsAdapter.impact).toHaveBeenCalledWith('light');
+    expect(loaded.hapticsAdapter.notification).toHaveBeenCalledWith('success');
+    expect(loaded.hapticsAdapter.selectionChanged).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    { supported: false, canRequestPermission: true, canShow: true },
+    { supported: true, canRequestPermission: false, canShow: false },
+  ])(
+    'requires notification support and each operation flag: %j',
+    async (caps) => {
+      const loaded = await loadCenter();
+      loaded.notificationAdapter.isSupported.mockReturnValue(caps.supported);
+      loaded.notificationAdapter.getCapabilities.mockReturnValue(caps);
+
+      await expect(
+        loaded.center.notification.requestPermission(),
+      ).resolves.toBe('default');
+      await loaded.center.notification.show({ title: 'Ready', body: 'Done' });
+      expect(
+        loaded.notificationAdapter.requestPermission,
+      ).not.toHaveBeenCalled();
+      expect(loaded.notificationAdapter.show).not.toHaveBeenCalled();
+    },
+  );
 
   it('returns false and logs warning for unsupported operations', async () => {
     const loaded = await loadCenter({

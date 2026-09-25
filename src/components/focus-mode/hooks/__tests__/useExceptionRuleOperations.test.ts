@@ -12,7 +12,6 @@ import { useExceptionRuleOperations } from '../useExceptionRuleOperations';
 
 const exceptionRuleManagerMock = vi.hoisted(() => ({
   useRule: vi.fn(),
-  checkRuleNameRealTime: vi.fn(),
   createRule: vi.fn(),
 }));
 
@@ -88,10 +87,6 @@ describe('useExceptionRuleOperations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     exceptionRuleManagerMock.useRule.mockResolvedValue({ success: true });
-    exceptionRuleManagerMock.checkRuleNameRealTime.mockResolvedValue({
-      hasConflict: false,
-      suggestions: [],
-    });
     errorRecoveryManagerMock.attemptRecovery.mockResolvedValue({
       success: false,
       message: 'Not recovered',
@@ -275,29 +270,16 @@ describe('useExceptionRuleOperations', () => {
       .calls[0]?.[0] as EnhancedExceptionRuleException;
     expect(displayedError.type).toBe(ExceptionRuleError.VALIDATION_ERROR);
     expect(displayedError.message).toBe('Rule name cannot be empty');
-    expect(
-      exceptionRuleManagerMock.checkRuleNameRealTime,
-    ).not.toHaveBeenCalled();
     expect(exceptionRuleManagerMock.createRule).not.toHaveBeenCalled();
     expect(exceptionRuleManagerMock.useRule).not.toHaveBeenCalled();
   });
 
-  it('normalizes an invalid type, honors duplicate guidance, and applies the created rule', async () => {
+  it('normalizes an invalid type, requests exact reuse, and applies the created rule', async () => {
     const params = createParams('early_completion');
     const createdRule = createRule({
       id: 'created-rule',
       name: 'Finish now',
       type: ExceptionRuleType.EARLY_COMPLETION_ONLY,
-    });
-    exceptionRuleManagerMock.checkRuleNameRealTime.mockResolvedValue({
-      hasConflict: true,
-      suggestions: [
-        {
-          type: 'create_anyway',
-          title: 'Create anyway',
-          description: 'Keep both rules',
-        },
-      ],
     });
     exceptionRuleManagerMock.createRule.mockResolvedValue({
       rule: createdRule,
@@ -316,7 +298,7 @@ describe('useExceptionRuleOperations', () => {
       'Finish now',
       ExceptionRuleType.EARLY_COMPLETION_ONLY,
       undefined,
-      'create_anyway',
+      'reuse_exact',
     );
     expect(userFeedbackHandlerMock.showWarning).toHaveBeenCalledWith(
       'Notes',
@@ -339,7 +321,7 @@ describe('useExceptionRuleOperations', () => {
       'duplicate',
     );
     const recoveredRule = createRule({ id: 'recovered-rule' });
-    exceptionRuleManagerMock.checkRuleNameRealTime.mockRejectedValue(error);
+    exceptionRuleManagerMock.createRule.mockRejectedValue(error);
     errorRecoveryManagerMock.attemptRecovery.mockResolvedValue({
       success: true,
       message: 'Recovered existing rule',
@@ -367,7 +349,7 @@ describe('useExceptionRuleOperations', () => {
       'Issue resolved',
       'Recovered existing rule',
     );
-    expect(exceptionRuleManagerMock.createRule).not.toHaveBeenCalled();
+    expect(exceptionRuleManagerMock.createRule).toHaveBeenCalledOnce();
     expect(exceptionRuleManagerMock.useRule).toHaveBeenCalledWith(
       recoveredRule.id,
       sessionContext,

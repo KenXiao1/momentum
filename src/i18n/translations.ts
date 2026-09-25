@@ -1370,8 +1370,6 @@ const enTranslations = {
   'useRecycleBinDomain.couldNotRestoreStateAfterTheErrorRefreshThePage':
     "Couldn't restore state after the error. Refresh the page to recover.",
   'enhancedDuplicationHandler.continue': 'Continue',
-  'enhancedDuplicationHandler.checkFailedButYouCanTryCreatingIt':
-    'Check failed, but you can try creating it',
   'enhancedDuplicationHandler.duplicateCheckFailed': 'Duplicate check failed',
   'enhancedDuplicationHandler.cannotCreateARuleWithADuplicateName':
     'Cannot create a rule with a duplicate name: "{name}"',
@@ -2947,8 +2945,6 @@ const zhTranslations = {
   'useRecycleBinDomain.couldNotRestoreStateAfterTheErrorRefreshThePage':
     '发生错误后无法恢复状态，建议刷新页面。',
   'enhancedDuplicationHandler.continue': '继续创建',
-  'enhancedDuplicationHandler.checkFailedButYouCanTryCreatingIt':
-    '检查失败，但可以尝试创建',
   'enhancedDuplicationHandler.duplicateCheckFailed': '重复检查失败',
   'enhancedDuplicationHandler.cannotCreateARuleWithADuplicateName':
     '不能创建重复名称的规则: "{name}"',

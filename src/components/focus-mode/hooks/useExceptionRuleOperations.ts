@@ -250,22 +250,6 @@ export function useExceptionRuleOperations(params: {
         30,
         t('focusMode.useExceptionRuleOperations.validating'),
       );
-      const duplicateCheck =
-        await exceptionRuleManager.checkRuleNameRealTime(name);
-      const suggestion = duplicateCheck.suggestions?.[0]?.type;
-      const userChoice =
-        suggestion === 'use_existing' ||
-        suggestion === 'modify_name' ||
-        suggestion === 'create_anyway'
-          ? suggestion
-          : undefined;
-      if (duplicateCheck.hasConflict) {
-        userFeedbackHandler.hideProgress();
-        userFeedbackHandler.showProgress(
-          t('focusMode.useExceptionRuleOperations.creatingRule'),
-          50,
-        );
-      }
       userFeedbackHandler.updateProgress(
         70,
         t('focusMode.useExceptionRuleOperations.saving'),
@@ -274,7 +258,7 @@ export function useExceptionRuleOperations(params: {
         name,
         validType,
         undefined,
-        userChoice,
+        'reuse_exact',
       );
       userFeedbackHandler.hideProgress();
       userFeedbackHandler.showSuccess(

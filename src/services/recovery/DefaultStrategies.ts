@@ -83,11 +83,14 @@ export function initializeDefaultStrategies(
 
           if (successCount > 0) {
             return {
-              success: true,
-              message: t(
+              // Repairing data does not replay or confirm the failed operation.
+              success: false,
+              requiresUserAction: true,
+              message: `${t(
                 'recovery.defaultStrategies.autoFixedSuccessCountDataIssueS',
                 { successCount: successCount },
-              ),
+              )}. ${t('recovery.recoveryHandlers.pleaseRetryTheOperation')}`,
+              actions: recoveryOptionsProvider.getRecoveryOptions(error),
             };
           }
         }

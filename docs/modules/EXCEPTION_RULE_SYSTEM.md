@@ -71,23 +71,31 @@ sequenceDiagram
     participant Manager as ExceptionRuleManager
     participant Creator as RuleCreator
     participant Duplication as DuplicationHandler
-    participant Validation as ValidationService
     participant Storage as ExceptionRuleStorage
 
-    Client->>Manager: createRule(name, type, desc)
+    Client->>Manager: createRule(name, type, desc, resolution)
     Manager->>Manager: initialize() if needed
-    Manager->>Creator: createRule(name, type, desc)
-    Creator->>Duplication: checkDuplicationRealTime(name)
-    Duplication-->>Creator: { hasConflict, suggestions }
-    alt has conflict
-        Creator-->>Manager: throw DUPLICATE_RULE_NAME
+    Manager->>Creator: createRule(name, type, desc, resolution)
+    Creator->>Storage: validateRule(input)
+    Creator->>Duplication: handleDuplicateCreation(input, resolution)
+    Duplication->>Storage: getRules()
+    alt reuse an existing rule
+        Duplication-->>Creator: { rule, warnings }
+    else create a new rule
+        Duplication->>Storage: createRule(ruleData)
+        Note over Storage: Validate again, including duplicate names
+        Storage-->>Duplication: persisted rule
+        Duplication-->>Creator: { rule, warnings }
+    else exact conflict without a permitted resolution
+        Duplication-->>Creator: throw DUPLICATE_RULE_NAME
     end
-    Creator->>Validation: validateRulesIntegrity([rule])
-    Creator->>Storage: createRule(ruleData)
-    Storage-->>Creator: rule
     Creator-->>Manager: { rule, warnings }
     Manager-->>Client: { rule, warnings }
 ```
+
+专注模式传入 `reuse_exact`：同名复用、相似名称继续创建并提示警告；不再先读取
+建议列表再发起第二次查重。规则管理页的默认冲突处理及显式复用、改名、继续创建
+选项保持原有语义。链专属创建仍通过 `createChainRule` 走存储的作用域校验。
 
 ### 规则使用流程
 
@@ -126,6 +134,10 @@ sequenceDiagram
 | **网络错误** | NETWORK_ERROR                         | 重试 + 离线模式    | "网络连接异常"      |
 
 ### 错误恢复流程
+
+存储错误触发的数据完整性修复只确认修复结果，不会重放原创建/使用操作。
+即使修复成功，仍返回 `requiresUserAction` 并提示重试，保留原操作错误。
+每次修复/恢复结果直接返回调用方，不再复制到无消费者的内存历史列表。
 
 ```typescript
 // 错误恢复管理器使用示例

@@ -1,6 +1,6 @@
 /**
  * 增强的重复规则处理服务
- * 提供实时重复检测、用户友好的处理选项和智能建议
+ * 提供重复检测、用户友好的处理选项和智能建议
  */
 
 import {
@@ -29,15 +29,8 @@ import {
 import type {
   DuplicationCheckResult,
   DuplicationConflictType,
-  DuplicationSuggestion,
+  DuplicateResolution,
 } from './duplication/enhanced-handler/types';
-
-interface RealTimeDuplicationCheck {
-  isChecking: boolean;
-  hasConflict: boolean;
-  conflictMessage?: string;
-  suggestions: DuplicationSuggestion[];
-}
 
 export class EnhancedDuplicationHandler {
   /**
@@ -45,50 +38,6 @@ export class EnhancedDuplicationHandler {
    */
   generateNameSuggestions(baseName: string, existingNames: string[]): string[] {
     return buildNameSuggestions(baseName, existingNames);
-  }
-
-  /**
-   * 实时重复检测（用于用户输入时）
-   */
-  async checkDuplicationRealTime(
-    name: string,
-    excludeId?: string,
-  ): Promise<RealTimeDuplicationCheck> {
-    if (!name || name.trim().length === 0) {
-      return {
-        isChecking: false,
-        hasConflict: false,
-        suggestions: [],
-      };
-    }
-
-    try {
-      const result = await this.checkDuplication(name.trim(), excludeId);
-
-      return {
-        isChecking: false,
-        hasConflict: result.hasConflict,
-        conflictMessage: result.hasConflict
-          ? getConflictMessage(result.conflictType, result.existingRules)
-          : undefined,
-        suggestions: result.suggestions,
-      };
-    } catch {
-      return {
-        isChecking: false,
-        hasConflict: false,
-        suggestions: [
-          {
-            type: 'create_anyway',
-            title: t('enhancedDuplicationHandler.continue'),
-            description: t(
-              'enhancedDuplicationHandler.checkFailedButYouCanTryCreatingIt',
-            ),
-            handler: async () => null,
-          },
-        ],
-      };
-    }
   }
 
   /**
@@ -153,7 +102,7 @@ export class EnhancedDuplicationHandler {
     name: string,
     type: ExceptionRuleType,
     description?: string,
-    userChoice?: 'use_existing' | 'modify_name' | 'create_anyway',
+    userChoice?: DuplicateResolution,
   ): Promise<{
     rule: ExceptionRule;
     action: string;
@@ -164,6 +113,12 @@ export class EnhancedDuplicationHandler {
     if (!checkResult.hasConflict) {
       const result = await createRuleIfNoConflict(name, type, description);
       return result;
+    }
+
+    // Resolve focus-mode intent against this read instead of a separate UI precheck.
+    if (userChoice === 'reuse_exact') {
+      userChoice =
+        checkResult.conflictType === 'exact' ? 'use_existing' : 'create_anyway';
     }
 
     // 相似冲突默认允许创建，但提供警告

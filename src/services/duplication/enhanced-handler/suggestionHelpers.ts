@@ -73,7 +73,6 @@ export function generateSuggestions(
         { existingRuleName: existingRule.name },
       ),
       rule: existingRule,
-      handler: async () => existingRule,
     });
 
     const nameSuggestions = generateNameSuggestions(
@@ -90,7 +89,6 @@ export function generateSuggestions(
           { suggestedName: suggestedName },
         ),
         suggestedName,
-        handler: async () => null,
       });
     });
   } else if (conflictType === 'similar') {
@@ -100,7 +98,6 @@ export function generateSuggestions(
       description: t(
         'duplication.enhancedHandler.suggestionHelpers.nameIsSimilarButNotIdenticalYouCanContinue',
       ),
-      handler: async () => null,
     });
 
     if (existingRules.length > 0) {
@@ -115,7 +112,6 @@ export function generateSuggestions(
           { mostSimilarName: mostSimilar.name },
         ),
         rule: mostSimilar,
-        handler: async () => mostSimilar,
       });
     }
   }

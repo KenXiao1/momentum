@@ -52,16 +52,6 @@ export interface RecoveryStrategy {
 }
 
 /**
- * 恢复历史记录
- */
-export interface RecoveryHistoryEntry {
-  error: ExceptionRuleException;
-  context: RecoveryContext;
-  result: RecoveryResult;
-  timestamp: Date;
-}
-
-/**
  * 恢复策略注册表
  * 管理错误类型到恢复策略的映射
  */

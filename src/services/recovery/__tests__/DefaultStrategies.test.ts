@@ -132,7 +132,7 @@ describe('recovery/DefaultStrategies', () => {
     ).toHaveBeenCalledTimes(2);
   });
 
-  it('auto-fixes storage errors when integrity issues are fixable and falls back otherwise', async () => {
+  it('repairs fixable data but still requests a retry of the failed operation', async () => {
     const registry = new RecoveryStrategyRegistry();
     initializeDefaultStrategies(registry);
     const strategy = registry.getStrategies(
@@ -156,10 +156,12 @@ describe('recovery/DefaultStrategies', () => {
     );
     expect(autoFixed).toEqual(
       expect.objectContaining({
-        success: true,
-        message: 'Auto-fixed 1 data issue(s)',
+        success: false,
+        requiresUserAction: true,
+        message: 'Auto-fixed 1 data issue(s). Please retry the operation',
       }),
     );
+    expect(autoFixed.actions).toHaveLength(1);
 
     dataIntegrityCheckerMock.checkRuleDataIntegrity.mockRejectedValueOnce(
       new Error('integrity check failed'),

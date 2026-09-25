@@ -5,11 +5,11 @@ import {
   getNotificationAdapter,
   getWindowAdapter,
 } from '../platform-adapters';
-import { createFileCapability } from './fileCapability';
-import { createHapticsCapability } from './hapticsCapability';
-import { createNotificationCapability } from './notificationCapability';
+import { fileCapability } from './fileCapability';
+import { hapticsCapability } from './hapticsCapability';
+import { notificationCapability } from './notificationCapability';
 import type { PlatformCapabilityCenter, PlatformCapabilities } from './types';
-import { createWindowCapability } from './windowCapability';
+import { windowCapability } from './windowCapability';
 
 function toPlacement(supported: boolean): 'topbar' | 'settings' | 'hidden' {
   if (!supported) return 'hidden';
@@ -17,10 +17,10 @@ function toPlacement(supported: boolean): 'topbar' | 'settings' | 'hidden' {
 }
 
 const center: PlatformCapabilityCenter = {
-  notification: createNotificationCapability(() => center.getCapabilities()),
-  window: createWindowCapability(() => center.getCapabilities()),
-  file: createFileCapability(() => center.getCapabilities()),
-  haptics: createHapticsCapability(() => center.getCapabilities()),
+  notification: notificationCapability,
+  window: windowCapability,
+  file: fileCapability,
+  haptics: hapticsCapability,
 
   async getCapabilities(): Promise<PlatformCapabilities> {
     const [notification, window, file, haptics] = await Promise.all([

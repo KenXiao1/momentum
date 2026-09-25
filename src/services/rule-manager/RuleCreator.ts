@@ -11,6 +11,7 @@ import {
 } from '../../types';
 import { exceptionRuleStorage } from '../ExceptionRuleStorage';
 import { enhancedDuplicationHandler } from '../EnhancedDuplicationHandler';
+import type { DuplicateResolution } from '../duplication/enhanced-handler/types';
 import { validateRulesIntegrity } from '../validateRulesIntegrity';
 import { errorClassificationService } from '../ErrorClassificationService';
 import { errorRecoveryManager } from '../ErrorRecoveryManager';
@@ -23,17 +24,6 @@ export interface RuleCreationResult {
   warnings: string[];
 }
 
-export interface RealTimeCheckResult {
-  hasConflict: boolean;
-  conflictMessage?: string;
-  suggestions: Array<{
-    type: 'use_existing' | 'modify_name' | 'create_anyway' | 'merge_rules';
-    title: string;
-    description: string;
-    suggestedName?: string;
-  }>;
-}
-
 /**
  * 规则创建服务类 - 处理所有规则创建相关的逻辑
  */
@@ -43,7 +33,7 @@ class RuleCreator {
     name: string,
     type: ExceptionRuleType,
     description?: string,
-    userChoice?: 'use_existing' | 'modify_name' | 'create_anyway',
+    userChoice?: DuplicateResolution,
   ): Promise<RuleCreationResult> {
     try {
       if (isDev) {
@@ -104,31 +94,6 @@ class RuleCreator {
         'Failed to create chain rule',
         error,
       );
-    }
-  }
-
-  /** 实时检查规则名称重复 */
-  async checkRuleNameRealTime(
-    name: string,
-    excludeId?: string,
-  ): Promise<RealTimeCheckResult> {
-    try {
-      const result = await enhancedDuplicationHandler.checkDuplicationRealTime(
-        name,
-        excludeId,
-      );
-      return {
-        hasConflict: result.hasConflict,
-        conflictMessage: result.conflictMessage,
-        suggestions: result.suggestions.map((s) => ({
-          type: s.type,
-          title: s.title,
-          description: s.description,
-          suggestedName: s.suggestedName,
-        })),
-      };
-    } catch {
-      return { hasConflict: false, suggestions: [] };
     }
   }
 

@@ -67,6 +67,33 @@ describe('ExceptionRuleManager', () => {
       expect(result.warnings[0]).toContain('相似规则');
     });
 
+    test('显式改名仍创建新规则，显式复用相似规则仍保留原 ID', async () => {
+      const original = await manager.createRule(
+        'Hydration pause',
+        ExceptionRuleType.PAUSE_ONLY,
+      );
+      const renamed = await manager.createRule(
+        'Hydration pause',
+        ExceptionRuleType.PAUSE_ONLY,
+        undefined,
+        'modify_name',
+      );
+      const reused = await manager.createRule(
+        'Hydration paus',
+        ExceptionRuleType.PAUSE_ONLY,
+        undefined,
+        'use_existing',
+      );
+
+      expect(renamed.rule.name).toBe('Hydration pause 2');
+      expect(renamed.rule.id).not.toBe(original.rule.id);
+      expect(renamed.warnings).toEqual(['名称已修改为 "Hydration pause 2"']);
+      expect(reused.rule.id).toBe(original.rule.id);
+      expect(
+        (await exceptionRuleStorage.getRules()).map((rule) => rule.name),
+      ).toEqual(['Hydration pause', 'Hydration pause 2']);
+    });
+
     test('应该能够更新规则', async () => {
       const createResult = await manager.createRule(
         '原始规则',

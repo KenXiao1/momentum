@@ -15,7 +15,6 @@ const exceptionRuleStorageMock = vi.hoisted(() => ({
 
 const enhancedDuplicationHandlerMock = vi.hoisted(() => ({
   handleDuplicateCreation: vi.fn(),
-  checkDuplicationRealTime: vi.fn(),
 }));
 
 const validateRulesIntegrityMock = vi.hoisted(() => vi.fn());
@@ -107,18 +106,6 @@ describe('rule-manager/RuleCreator', () => {
     exceptionRuleStorageMock.getRuleById.mockResolvedValue(
       createRule({ id: 'rule-recovered' }),
     );
-    enhancedDuplicationHandlerMock.checkDuplicationRealTime.mockResolvedValue({
-      hasConflict: true,
-      conflictMessage: 'duplicate found',
-      suggestions: [
-        {
-          type: 'modify_name',
-          title: 'Rename',
-          description: 'Use a different name',
-          suggestedName: 'Focus Rule (1)',
-        },
-      ],
-    });
   });
 
   it('creates rules through duplication handler and returns warnings', async () => {
@@ -257,35 +244,6 @@ describe('rule-manager/RuleCreator', () => {
     ).rejects.toMatchObject({
       type: ExceptionRuleError.STORAGE_ERROR,
       message: 'Failed to create chain rule',
-    });
-  });
-
-  it('supports real-time name checks with fallback', async () => {
-    const checkResult = await ruleCreator.checkRuleNameRealTime(
-      'Rule Name',
-      'exclude-id',
-    );
-    expect(checkResult).toEqual({
-      hasConflict: true,
-      conflictMessage: 'duplicate found',
-      suggestions: [
-        {
-          type: 'modify_name',
-          title: 'Rename',
-          description: 'Use a different name',
-          suggestedName: 'Focus Rule (1)',
-        },
-      ],
-    });
-
-    enhancedDuplicationHandlerMock.checkDuplicationRealTime.mockRejectedValueOnce(
-      new Error('real-time check failed'),
-    );
-    await expect(
-      ruleCreator.checkRuleNameRealTime('Rule Name'),
-    ).resolves.toEqual({
-      hasConflict: false,
-      suggestions: [],
     });
   });
 });

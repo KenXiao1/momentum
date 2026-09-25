@@ -81,6 +81,14 @@ for these services. Rule creation returns the persisted ID; execution reads stor
 and validates the current rule. There is no service-level temporary ID registry or
 rule-state mirror. The rule manager UI keeps its own optimistic update/rollback.
 
+Focus-mode creation passes `reuse_exact` to the manager: duplicate resolution
+reuses an exact name or creates a similar name with a warning. The creation
+service owns that decision from one read; the UI no longer prechecks and copies
+the first suggestion into a second request. Storage still validates before writing.
+Recovery keeps per-attempt results rather than unused in-memory history lists.
+Repairing data without replaying the failed operation requires a user retry and
+does not clear the original error as a successful operation.
+
 Chain trees are derived from chain arrays. Dashboard and group rendering use
 local React memoization; domain actions build the tree when needed. There is no
 shared query cache, chain revision counter, or manual invalidation protocol.
@@ -103,8 +111,9 @@ window operations, haptics, and updates. Native commands use the lazy
 `src/utils/tauri-bridge.ts`; plugin APIs are also loaded inside native paths.
 This allows shared modules to load in browsers without invoking native APIs.
 Adapter getters return the module-owned instances without a second instance cache.
-The capability center reads adapter support on demand. Its operation wrappers
-preserve unsupported, cancellation, and failure results used by UI workflows.
+The capability center reads adapter support on demand. Each operation reads only
+its own adapter, without a callback through the aggregate capability query. Its
+wrappers preserve unsupported, cancellation, and failure results used by UI workflows.
 
 `src-tauri/src/lib.rs` registers Rust commands and plugins; `main.rs` is the
 desktop entry. `src-tauri/capabilities/` controls permissions and
