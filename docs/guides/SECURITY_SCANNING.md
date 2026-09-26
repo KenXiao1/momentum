@@ -16,6 +16,15 @@ complete history. Reports redact credentials. The runner treats every nonzero ex
 code as a failure and rejects missing or invalid reports. It never posts pull request comments.
 A passing change-range scan does not certify the full repository history.
 
+CI runs on every PR (including documentation-only PRs) and on pushes to the
+default branch `new-feature-branch`. It does not launch a second CI run on a
+feature-branch push. A newly created feature ref previously triggered a full
+history scan alongside its PR range scan, publishing conflicting `required`
+results for the same commit. Full-history scanning remains in the scheduled
+Gitleaks workflow and local/manual scans; this trigger change neither exempts
+nor resolves historical findings. Update the CI and CodeQL push branch filters
+if the default branch is renamed.
+
 The sole scanner false-positive allowance matches the exact public localStorage
 namespace `momentum_diagnostics_v1` in the diagnostics module and its test fixture.
 It applies only to the generic API-key rule and those two paths; default rules
