@@ -98,6 +98,8 @@ export async function saveChainsWithSync(
   logger.debug('REALTIME_SYNC', 'Starting save operation', {
     chainCount: chains.length,
   });
-  await storage.saveChains(chains);
+  // Upsert, never replace: a stale or partial in-memory list must not be able
+  // to delete chains. Deletion goes through softDelete/permanentlyDelete.
+  await storage.upsertChains(chains);
   return loadAndSyncChains(storage, 'update', sync);
 }

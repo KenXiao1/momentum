@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import type { AppState } from '../../types';
+import type { AppState, Chain } from '../../types';
 import type { MomentumStorage } from '../../storage/MomentumStorage';
 import { hasStorageCapability } from '../../storage/ports';
 import { fireAndForget } from '../../utils/fireAndForget';
@@ -8,10 +8,7 @@ import { migrateCompletionHistoryForTiming } from '../../utils/completionHistory
 import { toError } from '../../utils/errorMessage';
 import { logger } from '../../utils/logger';
 import { runWhenIdle } from '../../utils/runWhenIdle';
-import {
-  cleanupExpiredDeletedChains,
-  persistCompletionHistoryTimingMigration,
-} from './appDataLoadHelpers';
+import { cleanupExpiredDeletedChains } from './appDataLoadHelpers';
 import { navigationStore } from '../../stores/navigationStore';
 import { loadAppDataSnapshot } from './appDataSnapshot';
 
@@ -21,34 +18,63 @@ interface UseAppDataLoadParams {
   setState: Dispatch<SetStateAction<AppState>>;
 }
 
+/** Clears self-parenting chains, persisting only the chains it changed. */
+async function repairSelfParentedChains(
+  storage: MomentumStorage,
+  chains: Chain[],
+): Promise<Chain[]> {
+  const repaired = chains
+    .filter((chain) => chain.parentId === chain.id)
+    .map((chain) => ({ ...chain, parentId: undefined }));
+  if (repaired.length === 0) return chains;
+
+  await storage.upsertChains(repaired);
+  logger.info('APP_SHELL', 'Repaired self-parented chains', {
+    chainIds: repaired.map((chain) => chain.id),
+  });
+  const repairedById = new Map(repaired.map((chain) => [chain.id, chain]));
+  return chains.map((chain) => repairedById.get(chain.id) ?? chain);
+}
+
+/**
+ * Loads persisted data into app state.
+ *
+ * App state is only populated from a complete, successful load. On failure
+ * `loadError` is set and state is left untouched, so no view can render, edit
+ * and persist a partial or empty data set. `retryDataLoad` starts a new load.
+ */
 export function useAppDataLoad({
   storage,
   isInitialized,
   setState,
 }: UseAppDataLoadParams) {
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [loadError, setLoadError] = useState<Error | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const canUseAuth = hasStorageCapability(storage, 'auth');
+  const retryDataLoad = useCallback(
+    () => setLoadAttempt((attempt) => attempt + 1),
+    [],
+  );
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadData = async () => {
       logger.debug('APP_SHELL', 'Starting data load', {
         storage: storage.kind,
+        attempt: loadAttempt,
       });
       setIsLoadingData(true);
+      setLoadError(null);
 
       try {
         if (canUseAuth) {
           const authResult = await storage.waitForAuthentication(10000);
           if (!authResult.ok) {
-            logger.warn(
-              'APP_SHELL',
-              'Authentication check failed; delaying data load',
-              {
-                code: authResult.error.code,
-                message: authResult.error.message,
-              },
+            throw new Error(
+              `Authentication check failed: ${authResult.error.message}`,
             );
-            return;
           }
 
           if (!authResult.value.isAuthenticated) {
@@ -57,132 +83,51 @@ export function useAppDataLoad({
           }
         }
 
-        // Run maintenance tasks without blocking initial render.
+        const snapshot = await loadAppDataSnapshot(storage);
+        const chains = await repairSelfParentedChains(storage, snapshot.chains);
+        if (cancelled) return;
+
+        // Derived on every load and kept in memory only: persisting it would
+        // mean replacing the whole history, racing completions recorded since.
+        const { updatedHistory: completionHistory } =
+          migrateCompletionHistoryForTiming(snapshot.completionHistory, chains);
+
+        setState((prev) => ({
+          ...prev,
+          ...snapshot,
+          chains,
+          completionHistory,
+        }));
+        navigationStore
+          .getState()
+          .navigateToView(snapshot.activeSession ? 'focus' : 'dashboard');
+
+        // Maintenance runs only after a successful load.
         runWhenIdle(() => {
           fireAndForget(cleanupExpiredDeletedChains(storage), {
             label: 'APP_SHELL auto cleanup',
           });
         });
-
-        const {
-          chains,
-          scheduledSessions,
-          activeSession,
-          completionHistory,
-          rsipNodes,
-          rsipMeta,
-          rsipGroups,
-          rsipPolicyLibrary,
-          rsipRunHistory,
-          rsipTaskLinks,
-          rsipExecutionRecords,
-          taskTimeStats,
-        } = await loadAppDataSnapshot(storage);
-
-        // Check and fix circular reference data.
-        const hasCircularReferences = chains.some(
-          (chain) => chain.parentId === chain.id,
-        );
-        if (hasCircularReferences) {
-          logger.debug('APP_SHELL', 'Detected circular reference data; fixing');
-          const fixedChains = chains.map((chain) => {
-            if (chain.parentId === chain.id) {
-              logger.debug(
-                'APP_SHELL',
-                `Fixed circular reference for chain ${chain.name}`,
-              );
-              return { ...chain, parentId: undefined };
-            }
-            return chain;
-          });
-
-          // Persist the fixed data before continuing.
-          await storage.saveChains(fixedChains);
-          logger.info(
-            'APP_SHELL',
-            'Circular reference data fix completed and saved',
-          );
-
-          setState((prev) => ({
-            ...prev,
-            chains: fixedChains,
-            scheduledSessions: [],
-            activeSession: null,
-            completionHistory: [],
-          }));
-          navigationStore.getState().navigateToDashboard();
-          return;
-        }
-
-        logger.debug('APP_SHELL', 'Loaded chain data', {
-          count: chains.length,
-        });
-        logger.debug('APP_SHELL', 'Chain data details', {
-          chains: chains.map((c) => ({ id: c.id, name: c.name })),
-        });
-
-        // Migrate completion history to include timing info.
-        const {
-          updatedHistory: migratedCompletionHistory,
-          hasChanges: didMigrateCompletionHistory,
-        } = migrateCompletionHistoryForTiming(completionHistory, chains);
-        if (didMigrateCompletionHistory) {
-          runWhenIdle(() => {
-            fireAndForget(
-              persistCompletionHistoryTimingMigration(
-                storage,
-                migratedCompletionHistory,
-              ),
-              {
-                label: 'APP_SHELL completion history timing migration',
-              },
-            );
-          });
-        }
-
-        logger.debug('APP_SHELL', 'Setting app state', {
-          chainCount: chains.length,
-        });
-        setState((prev) => ({
-          ...prev,
-          chains,
-          scheduledSessions,
-          activeSession,
-          completionHistory: migratedCompletionHistory,
-          rsipNodes,
-          rsipMeta,
-          rsipGroups,
-          rsipPolicyLibrary,
-          rsipRunHistory,
-          rsipTaskLinks,
-          rsipExecutionRecords,
-          taskTimeStats,
-        }));
-        navigationStore
-          .getState()
-          .navigateToView(activeSession ? 'focus' : 'dashboard');
       } catch (error) {
-        logger.error(
-          'APP_SHELL',
-          'Failed to load data',
-          undefined,
-          toError(error),
-        );
+        if (cancelled) return;
+        const normalized = toError(error);
+        logger.error('APP_SHELL', 'Failed to load data', undefined, normalized);
+        setLoadError(normalized);
       } finally {
-        setIsLoadingData(false);
+        if (!cancelled) setIsLoadingData(false);
       }
     };
 
     if (isInitialized) {
-      logger.debug(
-        'APP_SHELL',
-        'Application initialization complete; starting data load',
-      );
       fireAndForget(loadData(), { label: 'APP_SHELL loadData' });
     } else {
       setIsLoadingData(false);
     }
-  }, [canUseAuth, storage, isInitialized, setState]);
 
-  return { isLoadingData };
+    return () => {
+      cancelled = true;
+    };
+  }, [canUseAuth, storage, isInitialized, setState, loadAttempt]);
+
+  return { isLoadingData, loadError, retryDataLoad };
 }

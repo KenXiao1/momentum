@@ -3,4 +3,4 @@ export {
   restoreChain,
   softDeleteChain,
 } from './recycleBinMutations';
-export { saveChains, upsertChain } from './writes';
+export { saveChains, upsertChain, upsertChains } from './writes';

@@ -108,6 +108,8 @@ function createProps(overrides: AppShellViewOverrides = {}): AppShellViewProps {
   const app: AppShellAppViewModel = {
     isInitialized: true,
     isLoadingData: false,
+    loadError: null,
+    onRetryDataLoad: vi.fn(),
     currentView: 'dashboard',
     hasActiveSession: true,
     onNavigateToView: vi.fn(),
@@ -241,6 +243,25 @@ describe('AppShellView', () => {
       <AppShellView {...createProps({ app: { isInitialized: false } })} />,
     );
     expect(screen.getByText('INITIALIZING APPLICATION')).toBeInTheDocument();
+  });
+
+  it('blocks every data view behind a retry screen when loading failed', () => {
+    const onRetryDataLoad = vi.fn();
+    render(
+      <AppShellView
+        {...createProps({
+          app: { loadError: new Error('network down'), onRetryDataLoad },
+        })}
+      />,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Could not load your data',
+    );
+    expect(screen.queryByTestId('dashboard')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('pet-widget')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(onRetryDataLoad).toHaveBeenCalledTimes(1);
   });
 
   it('renders dashboard and supports skip-to-content focus', async () => {

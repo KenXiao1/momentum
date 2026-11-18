@@ -20,7 +20,7 @@ export function useAppShellBootstrap(
     resetUIState: state.resetUIState,
   });
 
-  const { isLoadingData } = useAppDataLoad({
+  const { isLoadingData, loadError, retryDataLoad } = useAppDataLoad({
     storage,
     isInitialized,
     setState: state.setState,
@@ -43,7 +43,7 @@ export function useAppShellBootstrap(
     isInitialized,
   });
 
-  return { isInitialized, isLoadingData };
+  return { isInitialized, isLoadingData, loadError, retryDataLoad };
 }
 
 export type AppShellBootstrap = ReturnType<typeof useAppShellBootstrap>;

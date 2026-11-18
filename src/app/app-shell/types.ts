@@ -51,6 +51,9 @@ export interface RSIPViolationActionOptions {
 export interface AppShellAppViewModel {
   isInitialized: boolean;
   isLoadingData: boolean;
+  /** Set when the initial data load failed; the app must not render data views. */
+  loadError: Error | null;
+  onRetryDataLoad: () => void;
   currentView: ViewState;
   hasActiveSession: boolean;
   onNavigateToView: (view: ViewState) => void;

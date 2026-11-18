@@ -119,6 +119,33 @@ export async function saveChains(
   }
 }
 
+export async function upsertChains(
+  ctx: SupabaseStorageContext,
+  chains: Chain[],
+): Promise<void> {
+  if (chains.length === 0) return;
+  const { user, isAuthenticated } = await ctx.waitForAuthentication(10000);
+  if (!isAuthenticated || !user) {
+    throw new Error('User authentication failed or timed out');
+  }
+  assertUniqueIds(chains);
+  const savedIds = new Set(
+    await upsertWithFallback(
+      ctx,
+      chains.map((chain) => buildChainRow(chain, user.id, true)),
+      chains.map((chain) => buildChainRow(chain, user.id, false)),
+    ),
+  );
+  const missingSavedIds = chains
+    .map((chain) => chain.id)
+    .filter((id) => !savedIds.has(id));
+  if (missingSavedIds.length) {
+    throw new Error(
+      `Chain upsert did not confirm ${missingSavedIds.length} row(s)`,
+    );
+  }
+}
+
 export async function upsertChain(
   ctx: SupabaseStorageContext,
   chain: Chain,

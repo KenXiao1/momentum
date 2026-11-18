@@ -28,7 +28,7 @@ export function AppShellView({
 }: AppShellViewProps) {
   const { t } = useI18n();
   const shouldShowPetWidget =
-    app.isInitialized && app.currentView === 'dashboard';
+    app.isInitialized && !app.loadError && app.currentView === 'dashboard';
 
   const renderAuxiliaryJudgment = () => {
     const auxiliaryJudgmentChain = session.auxiliaryJudgmentChain;
@@ -67,6 +67,29 @@ export function AppShellView({
             <p className="font-mono text-sm text-gray-600 dark:text-slate-400">
               {t('app.appShell.appShellView.initializingApplication')}
             </p>
+          </div>
+        </div>
+      );
+    }
+
+    if (app.loadError) {
+      return (
+        <div className="bg-background flex min-h-screen items-center justify-center px-4">
+          <div role="alert" className="max-w-md text-center">
+            <h2 className="mb-2 font-chinese text-2xl font-bold text-gray-900 dark:text-slate-100">
+              {t('app.appShell.appShellView.loadFailedTitle')}
+            </h2>
+            <p className="mb-6 text-sm text-gray-600 dark:text-slate-400">
+              {t('app.appShell.appShellView.loadFailedDescription')}
+            </p>
+            <button
+              type="button"
+              onClick={app.onRetryDataLoad}
+              disabled={app.isLoadingData}
+              className="focus-ring gradient-primary rounded-xl px-5 py-2 font-medium text-white shadow-lg disabled:opacity-60"
+            >
+              {t('app.appShell.appShellView.retryLoad')}
+            </button>
           </div>
         </div>
       );

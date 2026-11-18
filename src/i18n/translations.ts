@@ -316,6 +316,10 @@ const enTranslations = {
   'app.appShell.appShellView.initializingApplication':
     'INITIALIZING APPLICATION',
   'app.appShell.appShellView.skipToMainContent': 'Skip to main content',
+  'app.appShell.appShellView.loadFailedTitle': 'Could not load your data',
+  'app.appShell.appShellView.loadFailedDescription':
+    'Nothing was changed. Editing stays disabled until your data loads, so a partial copy cannot overwrite it.',
+  'app.appShell.appShellView.retryLoad': 'Try again',
   'app.appShell.appShellView.unknownTask': 'Unknown Task',
   'accountModal.usingLocalStorageNoAccountRequired':
     'Using local storage - no account required.',
@@ -1757,6 +1761,10 @@ const zhTranslations = {
   'app.appShell.appShellView.initializing': '正在初始化…',
   'app.appShell.appShellView.initializingApplication': '正在初始化应用',
   'app.appShell.appShellView.skipToMainContent': '跳转到主要内容',
+  'app.appShell.appShellView.loadFailedTitle': '数据加载失败',
+  'app.appShell.appShellView.loadFailedDescription':
+    '没有任何数据被修改。数据加载成功前暂停编辑，避免不完整的数据覆盖已有记录。',
+  'app.appShell.appShellView.retryLoad': '重试',
   'app.appShell.appShellView.unknownTask': '未知任务',
   'accountModal.usingLocalStorageNoAccountRequired':
     '当前使用本地存储模式，无需账号登录',

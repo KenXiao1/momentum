@@ -35,6 +35,8 @@ export function useAppShellViewModels(
   const app: AppShellViewProps['app'] = {
     isInitialized: bootstrap.isInitialized,
     isLoadingData: bootstrap.isLoadingData,
+    loadError: bootstrap.loadError,
+    onRetryDataLoad: bootstrap.retryDataLoad,
     currentView: state.currentView,
     hasActiveSession: !!state.activeSession,
     onNavigateToView,

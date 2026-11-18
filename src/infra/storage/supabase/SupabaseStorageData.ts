@@ -30,6 +30,8 @@ export abstract class SupabaseStorageData
     chainsApi.saveChains(this.ctx, chains);
   upsertChain: ChainStore['upsertChain'] = (chain) =>
     chainsApi.upsertChain(this.ctx, chain);
+  upsertChains: ChainStore['upsertChains'] = (chains) =>
+    chainsApi.upsertChains(this.ctx, chains);
   getActiveChains() {
     return this.deduplicatedRequest('getActiveChains', () =>
       chainsApi.getActiveChains(this.ctx),

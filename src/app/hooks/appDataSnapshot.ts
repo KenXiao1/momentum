@@ -2,25 +2,14 @@ import type { MomentumStorage } from '../../storage/MomentumStorage';
 import { toError } from '../../utils/errorMessage';
 import { logger } from '../../utils/logger';
 
-async function loadWithFallback<T>(params: {
-  load: () => Promise<T>;
-  fallback: T;
-  message: string;
-  level: 'error' | 'warn';
-}): Promise<T> {
-  try {
-    return await params.load();
-  } catch (error) {
-    logger[params.level](
-      'APP_SHELL',
-      params.message,
-      undefined,
-      toError(error),
-    );
-    return params.fallback;
-  }
-}
-
+/**
+ * Loads every persisted collection the app edits.
+ *
+ * Any failed read rejects the whole snapshot. Substituting `[]` for a failed
+ * read would show an empty account and let the next save write that empty
+ * state back over real data. Only task time stats, a local duration-hint
+ * cache that is never written back from app state, may fall back.
+ */
 export async function loadAppDataSnapshot(storage: MomentumStorage) {
   const [
     chains,
@@ -36,77 +25,25 @@ export async function loadAppDataSnapshot(storage: MomentumStorage) {
     rsipExecutionRecords,
     taskTimeStats,
   ] = await Promise.all([
-    loadWithFallback({
-      load: () => storage.getActiveChains(),
-      fallback: [],
-      message: 'Failed to load chain data',
-      level: 'error',
-    }),
-    loadWithFallback({
-      load: () => storage.getScheduledSessions(),
-      fallback: [],
-      message: 'Failed to load scheduled sessions',
-      level: 'warn',
-    }),
-    loadWithFallback({
-      load: () => storage.getActiveSession(),
-      fallback: null,
-      message: 'Failed to load active session',
-      level: 'warn',
-    }),
-    loadWithFallback({
-      load: () => storage.getCompletionHistory(),
-      fallback: [],
-      message: 'Failed to load completion history',
-      level: 'warn',
-    }),
-    loadWithFallback({
-      load: () => storage.getRSIPNodes(),
-      fallback: [],
-      message: 'Failed to load RSIP nodes',
-      level: 'warn',
-    }),
-    loadWithFallback({
-      load: () => storage.getRSIPMeta(),
-      fallback: {},
-      message: 'Failed to load RSIP meta',
-      level: 'warn',
-    }),
-    loadWithFallback({
-      load: () => storage.getRSIPGroups(),
-      fallback: [],
-      message: 'Failed to load RSIP groups',
-      level: 'warn',
-    }),
-    loadWithFallback({
-      load: () => storage.getRSIPPolicyLibrary(),
-      fallback: [],
-      message: 'Failed to load RSIP policy library',
-      level: 'warn',
-    }),
-    loadWithFallback({
-      load: () => storage.getRSIPRunHistory(),
-      fallback: [],
-      message: 'Failed to load RSIP run history',
-      level: 'warn',
-    }),
-    loadWithFallback({
-      load: () => storage.getRSIPTaskLinks(),
-      fallback: [],
-      message: 'Failed to load RSIP task links',
-      level: 'warn',
-    }),
-    loadWithFallback({
-      load: () => storage.getRSIPExecutionRecords(),
-      fallback: [],
-      message: 'Failed to load RSIP execution records',
-      level: 'warn',
-    }),
-    loadWithFallback({
-      load: () => storage.getTaskTimeStats(),
-      fallback: [],
-      message: 'Failed to load task time stats',
-      level: 'warn',
+    storage.getActiveChains(),
+    storage.getScheduledSessions(),
+    storage.getActiveSession(),
+    storage.getCompletionHistory(),
+    storage.getRSIPNodes(),
+    storage.getRSIPMeta(),
+    storage.getRSIPGroups(),
+    storage.getRSIPPolicyLibrary(),
+    storage.getRSIPRunHistory(),
+    storage.getRSIPTaskLinks(),
+    storage.getRSIPExecutionRecords(),
+    storage.getTaskTimeStats().catch((error: unknown) => {
+      logger.warn(
+        'APP_SHELL',
+        'Failed to load task time stats',
+        undefined,
+        toError(error),
+      );
+      return [];
     }),
   ]);
 

@@ -187,6 +187,27 @@ export function describeStorageContract(
         );
       });
 
+      it('batch-upserts chains without deleting chains it was not given', async () => {
+        await storage.saveChains([
+          createUnitChain({ id: 'kept', name: 'Kept' }),
+          createUnitChain({ id: 'edited', name: 'Before' }),
+        ]);
+
+        await storage.upsertChains([
+          createUnitChain({ id: 'edited', name: 'After' }),
+          createUnitChain({ id: 'created', name: 'Created' }),
+        ]);
+
+        const loaded = new Map(
+          (await storage.getChains()).map((chain) => [chain.id, chain.name]),
+        );
+        expect(Object.fromEntries(loaded)).toEqual({
+          kept: 'Kept',
+          edited: 'After',
+          created: 'Created',
+        });
+      });
+
       it('soft-deletes, restores, and permanently deletes the target only', async () => {
         await storage.saveChains([
           createUnitChain({ id: 'target' }),

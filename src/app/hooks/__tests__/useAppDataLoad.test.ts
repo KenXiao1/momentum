@@ -1,6 +1,7 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ok } from '../../../domain/result';
+import type { AppError } from '../../../domain/errors';
+import { err, ok } from '../../../domain/result';
 import {
   createAppState,
   createLocalStorageMock,
@@ -161,7 +162,9 @@ describe('useAppDataLoad', () => {
     expect(fireAndForget).toHaveBeenCalled();
     expect(storage.cleanupExpiredDeletedChains).toHaveBeenCalledWith(30);
     expect(storage.removeScheduledSession).not.toHaveBeenCalled();
-    expect(storage.saveCompletionHistory).toHaveBeenCalledWith(migratedHistory);
+    // The timing migration is derived in memory; persisting it would replace
+    // the whole history and race completions recorded since the load.
+    expect(storage.saveCompletionHistory).not.toHaveBeenCalled();
 
     const stateUpdater = setState.mock.calls.at(-1)?.[0] as (
       prev: ReturnType<typeof createAppState>,
@@ -202,22 +205,24 @@ describe('useAppDataLoad', () => {
     expect(setState).not.toHaveBeenCalled();
   });
 
-  it('should fix circular parent references and persist repaired chains', async () => {
+  it('repairs self-parented chains by upserting only those chains and keeps the loaded data', async () => {
     const circular = createUnitChain({
       id: 'circular-1',
       parentId: 'circular-1',
     });
+    const healthy = createUnitChain({ id: 'healthy-1' });
+    const history = [
+      {
+        chainId: healthy.id,
+        completedAt: new Date('2026-01-31T10:00:00.000Z'),
+        duration: 25,
+        wasSuccessful: true,
+      },
+    ];
     navigationStore.getState().navigateToView('focus');
     const storage = createLocalStorageMock({
-      getActiveChains: vi.fn(async () => [circular]),
-      getScheduledSessions: vi.fn(async () => []),
-      getActiveSession: vi.fn(async () => null),
-      getCompletionHistory: vi.fn(async () => []),
-      getRSIPNodes: vi.fn(async () => []),
-      getRSIPMeta: vi.fn(async () => ({})),
-      getTaskTimeStats: vi.fn(async () => []),
-      saveChains: vi.fn(async () => undefined),
-      cleanupExpiredDeletedChains: vi.fn(async () => 0),
+      getActiveChains: vi.fn(async () => [circular, healthy]),
+      getCompletionHistory: vi.fn(async () => history),
     });
     const setState = vi.fn();
 
@@ -233,45 +238,29 @@ describe('useAppDataLoad', () => {
       expect(result.current.isLoadingData).toBe(false);
     });
 
-    expect(storage.saveChains).toHaveBeenCalledWith([
-      expect.objectContaining({
-        id: circular.id,
-        parentId: undefined,
-      }),
+    expect(storage.saveChains).not.toHaveBeenCalled();
+    expect(storage.upsertChains).toHaveBeenCalledWith([
+      expect.objectContaining({ id: circular.id, parentId: undefined }),
     ]);
 
     const stateUpdater = setState.mock.calls.at(-1)?.[0] as (
       prev: ReturnType<typeof createAppState>,
     ) => ReturnType<typeof createAppState>;
     const next = stateUpdater(createAppState());
+    expect(next.chains.map((chain) => [chain.id, chain.parentId])).toEqual([
+      [circular.id, undefined],
+      [healthy.id, healthy.parentId],
+    ]);
+    expect(next.completionHistory).toEqual(history);
     expect(navigationStore.getState().currentView).toBe('dashboard');
-    expect(next.scheduledSessions).toEqual([]);
-    expect(next.activeSession).toBeNull();
-    expect(next.completionHistory).toEqual([]);
+    expect(result.current.loadError).toBeNull();
   });
 
-  it('should keep loading flow resilient when individual reads fail', async () => {
+  it('reports a load error and never populates state when a read fails', async () => {
     const storage = createLocalStorageMock({
-      getActiveChains: vi.fn(async () => {
-        throw new Error('chains failed');
-      }),
-      getScheduledSessions: vi.fn(async () => {
-        throw new Error('sessions failed');
-      }),
-      getActiveSession: vi.fn(async () => {
-        throw new Error('active session failed');
-      }),
-      getCompletionHistory: vi.fn(async () => {
-        throw new Error('history failed');
-      }),
-      getRSIPNodes: vi.fn(async () => {
-        throw new Error('rsip nodes failed');
-      }),
-      getRSIPMeta: vi.fn(async () => {
-        throw new Error('rsip meta failed');
-      }),
-      getTaskTimeStats: vi.fn(async () => {
-        throw new Error('stats failed');
+      getActiveChains: vi.fn(async () => [createUnitChain({ id: 'chain-1' })]),
+      getRSIPGroups: vi.fn(async () => {
+        throw new Error('rsip groups failed');
       }),
     });
     const setState = vi.fn();
@@ -285,16 +274,67 @@ describe('useAppDataLoad', () => {
     );
 
     await waitFor(() => {
-      expect(result.current.isLoadingData).toBe(false);
+      expect(result.current.loadError?.message).toBe('rsip groups failed');
     });
+    expect(result.current.isLoadingData).toBe(false);
+    expect(setState).not.toHaveBeenCalled();
+    expect(storage.cleanupExpiredDeletedChains).not.toHaveBeenCalled();
+  });
 
-    const stateUpdater = setState.mock.calls.at(-1)?.[0] as (
+  it('reports a load error when the authentication check fails', async () => {
+    const storage = createSupabaseStorageMock({
+      waitForAuthentication: vi.fn(async () =>
+        err({ code: 'NETWORK', message: 'offline' } as AppError),
+      ),
+    });
+    const setState = vi.fn();
+
+    const { result } = renderHook(() =>
+      useAppDataLoad({
+        storage,
+        isInitialized: true,
+        setState,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(result.current.loadError?.message).toContain('offline');
+    });
+    expect(storage.getActiveChains).not.toHaveBeenCalled();
+    expect(setState).not.toHaveBeenCalled();
+  });
+
+  it('loads normally on retry after a failed load', async () => {
+    const chain = createUnitChain({ id: 'chain-1' });
+    const getActiveChains = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValue([chain]);
+    const storage = createLocalStorageMock({ getActiveChains });
+    const setState = vi.fn();
+
+    const { result } = renderHook(() =>
+      useAppDataLoad({
+        storage,
+        isInitialized: true,
+        setState,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(result.current.loadError).not.toBeNull();
+    });
+    expect(setState).not.toHaveBeenCalled();
+
+    act(() => result.current.retryDataLoad());
+
+    await waitFor(() => {
+      expect(setState).toHaveBeenCalledTimes(1);
+    });
+    expect(result.current.loadError).toBeNull();
+    const stateUpdater = setState.mock.calls[0][0] as (
       prev: ReturnType<typeof createAppState>,
     ) => ReturnType<typeof createAppState>;
-    const next = stateUpdater(createAppState());
-    expect(next.chains).toEqual([]);
-    expect(next.scheduledSessions).toEqual([]);
-    expect(next.activeSession).toBeNull();
-    expect(next.completionHistory).toEqual([]);
+    expect(stateUpdater(createAppState()).chains).toEqual([chain]);
   });
 });

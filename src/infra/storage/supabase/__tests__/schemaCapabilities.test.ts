@@ -15,6 +15,17 @@ const RSIP_NODE_CAPABILITIES = [
 ] as const;
 
 describe('schemaCapabilities', () => {
+  it('does not treat PGRST116 (single() matched 0 or many rows) as a missing schema', () => {
+    expect(
+      isMissingSchemaCapabilityError(
+        createSupabaseError(
+          'PGRST116',
+          'JSON object requested, multiple (or no) rows returned',
+        ),
+      ),
+    ).toBe(false);
+  });
+
   it('returns false when no capability is marked missing', () => {
     const ctx = createMockContext();
 

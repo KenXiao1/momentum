@@ -9,6 +9,7 @@ function createStorageMock(
     getChains: vi.fn().mockResolvedValue([]),
     saveChains: vi.fn().mockResolvedValue(undefined),
     upsertChain: vi.fn().mockResolvedValue(undefined),
+    upsertChains: vi.fn().mockResolvedValue(undefined),
     getActiveChains: vi.fn().mockResolvedValue([]),
     getDeletedChains: vi.fn().mockResolvedValue([]),
     softDeleteChain: vi.fn().mockResolvedValue(undefined),
@@ -201,7 +202,8 @@ describe('RealTimeSyncService', () => {
     await expect(
       service.saveWithSync(storage, [{ id: 'chain-10' }] as never),
     ).resolves.toEqual([{ id: 'chain-10' }]);
-    expect(storage.saveChains).toHaveBeenCalledWith([{ id: 'chain-10' }]);
+    expect(storage.upsertChains).toHaveBeenCalledWith([{ id: 'chain-10' }]);
+    expect(storage.saveChains).not.toHaveBeenCalled();
     expect(callback).toHaveBeenCalledTimes(2);
   });
 

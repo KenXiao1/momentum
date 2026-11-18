@@ -7,13 +7,13 @@ const DELETED_AT = new Date('2026-02-01T10:00:00.000Z');
 
 function failingSaves(errors: Error[]) {
   const storage = createTestStorage();
-  const save = storage.saveChains;
-  const saveChains = vi.fn(async (chains) => {
+  const upsert = storage.upsertChains;
+  const upsertChains = vi.fn(async (chains) => {
     const error = errors.shift();
     if (error) throw error;
-    await save(chains);
+    await upsert(chains);
   });
-  return { storage: { ...storage, saveChains }, saveChains };
+  return { storage: { ...storage, upsertChains }, upsertChains };
 }
 
 async function savedIds(
@@ -27,23 +27,38 @@ describe('useSafeSaveChains', () => {
     vi.useRealTimers();
   });
 
-  it('saves the active chains and keeps chains already in the recycle bin', async () => {
+  it('upserts the given chains and never deletes chains it was not given', async () => {
     const storage = createTestStorage();
     await storage.saveChains([
-      createUnitChain({ id: 'stale-active' }),
+      createUnitChain({ id: 'not-in-memory', name: 'Stored elsewhere' }),
+      createUnitChain({ id: 'edited', name: 'Before' }),
       createUnitChain({ id: 'binned', deletedAt: DELETED_AT }),
     ]);
     const { result } = renderHook(() => useSafeSaveChains(storage));
 
-    await result.current([createUnitChain({ id: 'active' })]);
+    // An incomplete in-memory list (e.g. stale state) must not delete rows.
+    await result.current([
+      createUnitChain({ id: 'edited', name: 'After' }),
+      createUnitChain({ id: 'created' }),
+    ]);
 
-    expect(await savedIds(storage)).toEqual(['active', 'binned']);
+    expect(await savedIds(storage)).toEqual([
+      'binned',
+      'created',
+      'edited',
+      'not-in-memory',
+    ]);
+    const byId = new Map(
+      (await storage.getChains()).map((chain) => [chain.id, chain]),
+    );
+    expect(byId.get('edited')?.name).toBe('After');
+    expect(byId.get('not-in-memory')?.name).toBe('Stored elsewhere');
     const binned = (await storage.getDeletedChains())[0];
     expect(binned.deletedAt).toEqual(DELETED_AT);
   });
 
   it('fails at once on an error that retrying cannot fix', async () => {
-    const { storage, saveChains } = failingSaves([
+    const { storage, upsertChains } = failingSaves([
       new Error('Converting circular structure to JSON'),
     ]);
     const { result } = renderHook(() => useSafeSaveChains(storage));
@@ -51,7 +66,7 @@ describe('useSafeSaveChains', () => {
     await expect(
       result.current([createUnitChain({ id: 'chain' })]),
     ).rejects.toThrow('Converting circular structure to JSON');
-    expect(saveChains).toHaveBeenCalledTimes(1);
+    expect(upsertChains).toHaveBeenCalledTimes(1);
     expect(await savedIds(storage)).toEqual([]);
   });
 
@@ -72,17 +87,17 @@ describe('useSafeSaveChains', () => {
   it('gives up after three retries spaced 1s, 2s and 4s apart', async () => {
     vi.useFakeTimers();
     const failure = new Error('persistent failure');
-    const { storage, saveChains } = failingSaves(Array(4).fill(failure));
+    const { storage, upsertChains } = failingSaves(Array(4).fill(failure));
     const { result } = renderHook(() => useSafeSaveChains(storage));
 
     const saving = result.current([createUnitChain({ id: 'chain' })]);
     const rejection = expect(saving).rejects.toThrow('persistent failure');
     await vi.advanceTimersByTimeAsync(6999);
-    expect(saveChains).toHaveBeenCalledTimes(3);
+    expect(upsertChains).toHaveBeenCalledTimes(3);
     await vi.advanceTimersByTimeAsync(1);
     await rejection;
 
-    expect(saveChains).toHaveBeenCalledTimes(4);
+    expect(upsertChains).toHaveBeenCalledTimes(4);
     expect(await savedIds(storage)).toEqual([]);
   });
 });

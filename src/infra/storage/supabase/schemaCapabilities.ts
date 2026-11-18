@@ -12,7 +12,10 @@ const MISSING_SCHEMA_PATTERNS = [
   /undefined column/,
 ];
 
-const MISSING_SCHEMA_CODES = ['PGRST204', 'PGRST116', '42703', '42P01'];
+// PGRST116 is deliberately absent: it means a `.single()` query matched 0 or
+// several rows, not that the schema is behind. Treating it as "missing column"
+// made writes silently fall back to rows without the newer columns.
+const MISSING_SCHEMA_CODES = ['PGRST204', '42703', '42P01'];
 
 interface CacheMissingCapabilitiesOptions {
   markAllOnSchemaError?: boolean;

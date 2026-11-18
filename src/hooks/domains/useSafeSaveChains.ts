@@ -3,8 +3,7 @@
  * @description 安全保存链条数据的领域 Hook
  *
  * 职责：
- * - 提供带重试机制的链条保存函数
- * - 保留已删除链条数据（回收箱功能）
+ * - 提供带重试机制的链条保存函数（只 upsert，不会删除未列出的链条）
  * - 通过 RealTimeSyncService 确保多端同步
  *
  * 重试策略：
@@ -35,14 +34,7 @@ export function useSafeSaveChains(storage: MomentumStorage) {
           });
         }
 
-        const allExistingChains = await storage.getChains();
-        const deletedChains = allExistingChains.filter(
-          (chain) => chain.deletedAt != null,
-        );
-
-        const allUpdatedChains = [...updatedActiveChains, ...deletedChains];
-
-        await realTimeSyncService.saveWithSync(storage, allUpdatedChains);
+        await realTimeSyncService.saveWithSync(storage, updatedActiveChains);
 
         if (isDev) {
           logger.debug(

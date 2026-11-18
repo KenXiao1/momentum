@@ -32,6 +32,13 @@ export function upsertChain(chain: Chain): void {
   saveChains([...chains, chain]);
 }
 
+export function upsertChains(incoming: Chain[]): void {
+  recoverOperationJournal();
+  const byId = new Map(getChains().map((chain) => [chain.id, chain]));
+  for (const chain of incoming) byId.set(chain.id, chain);
+  saveChains([...byId.values()]);
+}
+
 export function getActiveChains(): Chain[] {
   recoverOperationJournal();
   return getChains().filter((chain) => chain.deletedAt == null);

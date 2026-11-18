@@ -1,5 +1,4 @@
 import type { Chain, DeletedChain } from '../../../../types';
-import { toError } from '../../../../utils/errorMessage';
 import { logger } from '../../../../utils/logger';
 import { mapChainRowToChain } from '../chainMapper';
 import type { SupabaseStorageContext } from '../types';
@@ -32,14 +31,6 @@ export async function getChains(ctx: SupabaseStorageContext): Promise<Chain[]> {
         userId: user.id,
       });
 
-      if (
-        error.code === 'PGRST116' ||
-        error.message?.includes('relation') ||
-        error.message?.includes('does not exist')
-      ) {
-        return [];
-      }
-
       throw new Error(`Failed to fetch chains: ${error.message}`);
     }
 
@@ -49,15 +40,9 @@ export async function getChains(ctx: SupabaseStorageContext): Promise<Chain[]> {
     return (data || []).map(mapChainRowToChain);
   };
 
-  try {
-    return await ctx.retryOperation(fetchChains, 2, 100);
-  } catch (error) {
-    const errorObj = toError(error);
-    logger.warn('SUPABASE_STORAGE', 'getChains failed; returning empty array', {
-      message: errorObj.message,
-    });
-    return [];
-  }
+  // A failed read must never look like an empty account: callers would
+  // render (and later persist) an empty list.
+  return ctx.retryOperation(fetchChains, 2, 100);
 }
 
 export async function getActiveChains(
@@ -82,84 +67,52 @@ export async function getActiveChains(
         return allChains.filter((chain) => chain.deletedAt == null);
       }
 
-      if (
-        error.code === 'PGRST116' ||
-        error.message?.includes('relation') ||
-        error.message?.includes('does not exist')
-      ) {
-        return [];
-      }
-
       throw new Error(`Failed to fetch active chains: ${error.message}`);
     }
 
     return (data || []).map(mapChainRowToChain);
   };
 
-  try {
-    return await ctx.retryOperation(fetchActiveChains, 2, 100);
-  } catch (error) {
-    logger.warn(
-      'SUPABASE_STORAGE',
-      'getActiveChains failed; returning empty array',
-      {
-        message: toError(error).message,
-      },
-    );
-    return [];
-  }
+  return ctx.retryOperation(fetchActiveChains, 2, 100);
 }
 
 export async function getDeletedChains(
   ctx: SupabaseStorageContext,
 ): Promise<DeletedChain[]> {
-  try {
-    const user = await ctx.getCurrentUser();
-    if (!user) return [];
+  const user = await ctx.getCurrentUser();
+  if (!user) return [];
 
-    const client = ctx.getClient();
-    const fetchDeletedChains = async () => {
-      const { data, error } = await client
-        .from('chains')
-        .select('*')
-        .eq('user_id', user.id)
-        .not('deleted_at', 'is', null)
-        .order('deleted_at', { ascending: false });
+  const client = ctx.getClient();
+  const fetchDeletedChains = async () => {
+    const { data, error } = await client
+      .from('chains')
+      .select('*')
+      .eq('user_id', user.id)
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false });
 
-      if (error) {
-        if (isMissingDeletedAtColumnError(error)) {
-          const allChains = await getChains(ctx);
-          const deletedChains = allChains.filter(
-            (chain) => chain.deletedAt != null,
-          );
-          return deletedChains
-            .map((chain) => ({ ...chain, deletedAt: chain.deletedAt! }))
-            .sort((a, b) => b.deletedAt.getTime() - a.deletedAt.getTime());
-        }
-
-        if (
-          error.code === 'PGRST116' ||
-          error.message?.includes('relation') ||
-          error.message?.includes('does not exist')
-        ) {
-          return [];
-        }
-
-        throw new Error(`Failed to fetch deleted chains: ${error.message}`);
+    if (error) {
+      if (isMissingDeletedAtColumnError(error)) {
+        const allChains = await getChains(ctx);
+        const deletedChains = allChains.filter(
+          (chain) => chain.deletedAt != null,
+        );
+        return deletedChains
+          .map((chain) => ({ ...chain, deletedAt: chain.deletedAt! }))
+          .sort((a, b) => b.deletedAt.getTime() - a.deletedAt.getTime());
       }
 
-      const chains = (data || []).map(mapChainRowToChain);
-      return chains
-        .filter((chain) => chain.deletedAt != null)
-        .map((chain) => ({
-          ...chain,
-          deletedAt: chain.deletedAt!,
-        })) as DeletedChain[];
-    };
+      throw new Error(`Failed to fetch deleted chains: ${error.message}`);
+    }
 
-    return await ctx.retryOperation(fetchDeletedChains, 2, 100);
-  } catch (error) {
-    logger.warn('SUPABASE_STORAGE', 'Failed to get deleted chains', { error });
-    return [];
-  }
+    const chains = (data || []).map(mapChainRowToChain);
+    return chains
+      .filter((chain) => chain.deletedAt != null)
+      .map((chain) => ({
+        ...chain,
+        deletedAt: chain.deletedAt!,
+      })) as DeletedChain[];
+  };
+
+  return ctx.retryOperation(fetchDeletedChains, 2, 100);
 }

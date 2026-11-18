@@ -157,22 +157,6 @@ export function useChainsDomain({
     });
 
     try {
-      const allExistingChains = await storage.getChains();
-      logger.debug('CHAINS', 'Loaded existing chains (including deleted)', {
-        count: allExistingChains.length,
-      });
-
-      const activeChains = allExistingChains.filter(
-        (chain) => chain.deletedAt == null,
-      );
-      const deletedChains = allExistingChains.filter(
-        (chain) => chain.deletedAt != null,
-      );
-      logger.debug('CHAINS', 'Chain counts', {
-        active: activeChains.length,
-        deleted: deletedChains.length,
-      });
-
       let updatedActiveChains: Chain[];
       const normalizedParentId = normalizeOptionalParentId(chainData.parentId);
 

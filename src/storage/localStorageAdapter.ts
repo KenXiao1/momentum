@@ -43,6 +43,10 @@ export const localStorageAdapter: MomentumStorage = {
     withOperationLock('local-data', async () =>
       localStorageUtils.upsertChain(chain),
     ),
+  upsertChains: async (chains) =>
+    withOperationLock('local-data', async () =>
+      localStorageUtils.upsertChains(chains),
+    ),
   getActiveChains: async () =>
     readLocal(() => localStorageUtils.getActiveChains()),
   getDeletedChains: async () =>

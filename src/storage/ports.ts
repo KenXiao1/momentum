@@ -37,8 +37,15 @@ import type {
 export interface ChainStore {
   /** Order is unspecified; the chain tree sorts by sortOrder. */
   getChains(): Promise<Chain[]>;
+  /**
+   * Replaces the whole collection: chains absent from `chains` are deleted.
+   * Only for complete snapshots (import, tests). Everyday edits use
+   * `upsertChains`, which can never delete rows.
+   */
   saveChains(chains: Chain[]): Promise<void>;
   upsertChain(chain: Chain): Promise<void>;
+  /** Inserts or updates the given chains; rows not listed are left untouched. */
+  upsertChains(chains: Chain[]): Promise<void>;
   getActiveChains(): Promise<Chain[]>;
   getDeletedChains(): Promise<DeletedChain[]>;
   softDeleteChain(chainId: string): Promise<void>;

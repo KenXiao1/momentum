@@ -363,17 +363,8 @@ describe('useChainsDomain', () => {
         chainCount: 2,
       }),
     );
-    expect(logger.debug).toHaveBeenCalledWith(
-      'CHAINS',
-      'Loaded existing chains (including deleted)',
-      {
-        count: 3,
-      },
-    );
-    expect(logger.debug).toHaveBeenCalledWith('CHAINS', 'Chain counts', {
-      active: 2,
-      deleted: 1,
-    });
+    // Saving builds on in-memory state; it no longer re-reads storage.
+    expect(storage.getChains).not.toHaveBeenCalled();
     expect(logger.debug).toHaveBeenCalledWith(
       'CHAINS',
       'Create chain',
@@ -820,15 +811,12 @@ describe('useChainsDomain', () => {
     );
   });
 
-  it('should recover when loading all chains fails before save starts', async () => {
+  it('should reload active chains when the save fails', async () => {
     const fallback = [
       createUnitChain({ id: 'fallback-2', name: 'Fallback 2' }),
     ];
     const stateRef = createStateContainer(createAppState({ chains: [] }));
     const storage = createLocalStorageMock({
-      getChains: vi.fn(async () => {
-        throw new Error('load failed');
-      }),
       getActiveChains: vi.fn(async () => fallback),
     });
 
@@ -838,7 +826,9 @@ describe('useChainsDomain', () => {
         setState: stateRef.setState,
         editingChainId: null,
         storage,
-        safelySaveChains: vi.fn(async () => undefined),
+        safelySaveChains: vi.fn(async () => {
+          throw new Error('save failed');
+        }),
       }),
     );
 

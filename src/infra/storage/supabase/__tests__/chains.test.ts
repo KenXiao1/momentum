@@ -105,27 +105,23 @@ describe('chains.ts', () => {
       expect(result).toEqual([]);
     });
 
-    it('should return empty array on PGRST116 error (table not found)', async () => {
+    it('rejects on a query error instead of reporting an empty account', async () => {
       const queryBuilder = createMockQueryBuilder({
         data: null,
-        error: createSupabaseError('PGRST116', 'relation does not exist'),
+        error: createSupabaseError('42P01', 'relation "chains" does not exist'),
       });
       const ctx = createMockContext({ queryBuilder });
 
-      const result = await getChains(ctx);
-
-      expect(result).toEqual([]);
+      await expect(getChains(ctx)).rejects.toThrow('Failed to fetch chains');
     });
 
-    it('should return empty array when data fetch throws error', async () => {
+    it('rejects when the fetch itself fails', async () => {
       const ctx = createMockContext();
       ctx.retryOperation = vi
         .fn()
         .mockRejectedValue(new Error('Network error'));
 
-      const result = await getChains(ctx);
-
-      expect(result).toEqual([]);
+      await expect(getChains(ctx)).rejects.toThrow('Network error');
     });
 
     it('should map group chains correctly', async () => {
@@ -184,16 +180,16 @@ describe('chains.ts', () => {
       expect(result.map((chain) => chain.id)).toEqual(['active-1']);
     });
 
-    it('should return empty array on relation-missing errors', async () => {
+    it('rejects on a query error instead of reporting no active chains', async () => {
       const queryBuilder = createMockQueryBuilder({
         data: null,
-        error: createSupabaseError('PGRST116', 'relation does not exist'),
+        error: createSupabaseError('42P01', 'relation "chains" does not exist'),
       });
       const ctx = createMockContext({ queryBuilder });
 
-      const result = await getActiveChains(ctx);
-
-      expect(result).toEqual([]);
+      await expect(getActiveChains(ctx)).rejects.toThrow(
+        'Failed to fetch active chains',
+      );
     });
   });
 
