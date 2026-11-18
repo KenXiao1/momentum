@@ -1,248 +1,99 @@
 # Exception Rule System 系统设计文档
 
-本文档描述例外规则系统的内部设计、服务分解和最佳实践。
+本文档描述例外规则系统的内部结构、数据流和修改方法。领域行为见
+[领域文档](../features/DOMAIN_RULES.md)。
 
 ---
 
-## 系统概述
+## 结构
 
-例外规则系统是 Momentum 的核心子系统之一，用于管理专注模式下的有纪律中断。系统遵循单一职责原则，将功能分解为多个专注的服务类。
+```text
+UI（专注模式、规则选择对话框、规则管理页、导入导出）
+        │  exceptionRuleManager
+        ▼
+src/services/exception-rule-manager/ExceptionRuleManager.ts
+        │  纯函数                         │  RuleStore 端口
+        ▼                                 ▼
+src/domain/rules.ts               src/storage/localRuleStore.ts
+（校验、重名、可用性、             （localStorage；测试用
+  使用记录、数据修复）               src/test/fakes/memoryRuleStore.ts）
+```
 
-### 设计原则
+| 位置                                                          | 职责                                                 |
+| ------------------------------------------------------------- | ---------------------------------------------------- |
+| `src/domain/rules.ts`                                         | 输入校验、重名与相似名称、动作可用性、使用记录、修复 |
+| `src/storage/ports.ts` 中的 `RuleStore`                       | 规则与使用记录的读取和整体保存                       |
+| `src/storage/localRuleStore.ts`                               | localStorage 实现；读写失败直接抛出                  |
+| `src/services/exception-rule-manager/ExceptionRuleManager.ts` | 组合上述两者的唯一入口                               |
 
-1. **单一职责（SRP）**: 每个服务只处理一类职责
-2. **依赖倒置（DIP）**: 高层模块不依赖低层模块，都依赖抽象
-3. **开闭原则（OCP）**: 对扩展开放，对修改关闭
-4. **类型安全**: 使用 TypeScript 严格模式，避免 `any`
+规则只保存在本地，云端模式下也不同步。
 
 ---
 
-## 服务架构
+## 设计要点
 
-### 分层结构
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      协调层 (Coordinator)                     │
-│  ExceptionRuleManager - 统一入口，协调各服务                   │
-└─────────────────────────────────────────────────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        ▼                     ▼                     ▼
-┌───────────────┐   ┌───────────────┐   ┌───────────────┐
-│   创建服务     │   │   查询服务     │   │   执行服务     │
-│ RuleCreator   │   │RuleQueryService│   │ RuleExecutor  │
-└───────────────┘   └───────────────┘   └───────────────┘
-        │                     │                     │
-        ▼                     ▼                     ▼
-┌───────────────┐   ┌───────────────┐   ┌───────────────┐
-│   统计服务     │   │  导入导出服务   │   │   维护服务     │
-│RuleStatsService│   │RuleExportImport│   │RuleMaintenance│
-└───────────────┘   └───────────────┘   └───────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      基础设施层                               │
-│  ExceptionRuleStorage / DataIntegrityChecker                 │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 服务职责
-
-| 服务                        | 文件                         | 行数目标 | 职责                       |
-| --------------------------- | ---------------------------- | -------- | -------------------------- |
-| **RuleCreator**             | `RuleCreator.ts`             | <200     | 规则创建、名称检查         |
-| **RuleQueryService**        | `RuleQueryService.ts`        | <200     | 规则查询、搜索、建议       |
-| **RuleExecutor**            | `RuleExecutor.ts`            | <150     | 规则执行、验证、使用记录   |
-| **RuleStatsService**        | `RuleStatsService.ts`        | <150     | 统计计算、类型分布         |
-| **RuleExportImportService** | `RuleExportImportService.ts` | <150     | 数据导入导出               |
-| **RuleMaintenanceService**  | `RuleMaintenanceService.ts`  | <200     | 更新、删除、清理、健康检查 |
-| **ExceptionRuleManager**    | `ExceptionRuleManager.ts`    | <150     | 协调器，初始化，外部接口   |
+- **单一入口**：UI 只调用 `exceptionRuleManager`，不直接读写存储。
+- **逻辑与存储分离**：判断全部在 `src/domain/rules.ts` 的纯函数里，可以不依赖存储测试；
+  管理器只负责读、判断、写。
+- **串行执行**：管理器的每个操作排队执行，并发调用不会互相覆盖读改写结果。
+- **错误不吞**：规则错误（校验、重名、不存在、类型不匹配）原样抛出；其余失败统一包装为
+  `STORAGE_ERROR`。`localRuleStore` 遇到无法解析的数据或浏览器拒绝写入时直接抛出，
+  调用方不会把未保存的结果报告为成功。
+- **启动修复**：首次操作前调用一次 `repairRuleData`，修复旧版本或外部损坏的数据；失败后
+  下次操作会重试。
 
 ---
 
 ## 数据流
 
-### 规则创建流程
+### 创建规则
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant Manager as ExceptionRuleManager
-    participant Creator as RuleCreator
-    participant Duplication as DuplicationHandler
-    participant Storage as ExceptionRuleStorage
+1. `validateRuleInput` 校验名称（非空，≤100 字符）、类型和描述（≤500 字符）。
+2. `findExactDuplicates` 在所有激活规则中查找同名（忽略大小写、空格和标点）。
+   - 默认抛出 `DUPLICATE_RULE_NAME`。
+   - 传 `{ reuseExisting: true }` 时返回已有规则，优先类型相同的一条，类型不同时附带警告。
+     专注模式用这个选项。
+3. 没有同名时创建全局规则；`findSimilarRules` 找到相似名称时附带警告。规则管理页收到警告会
+   保持表单打开并显示。
 
-    Client->>Manager: createRule(name, type, desc, resolution)
-    Manager->>Manager: initialize() if needed
-    Manager->>Creator: createRule(name, type, desc, resolution)
-    Creator->>Storage: validateRule(input)
-    Creator->>Duplication: handleDuplicateCreation(input, resolution)
-    Duplication->>Storage: getRules()
-    alt reuse an existing rule
-        Duplication-->>Creator: { rule, warnings }
-    else create a new rule
-        Duplication->>Storage: createRule(ruleData)
-        Note over Storage: Validate again, including duplicate names
-        Storage-->>Duplication: persisted rule
-        Duplication-->>Creator: { rule, warnings }
-    else exact conflict without a permitted resolution
-        Duplication-->>Creator: throw DUPLICATE_RULE_NAME
-    end
-    Creator-->>Manager: { rule, warnings }
-    Manager-->>Client: { rule, warnings }
-```
+链专属规则用 `createChainRule`，名称只需在同一条链内唯一，可以与全局规则同名。
 
-专注模式传入 `reuse_exact`：同名复用、相似名称继续创建并提示警告；不再先读取
-建议列表再发起第二次查重。规则管理页的默认冲突处理及显式复用、改名、继续创建
-选项保持原有语义。链专属创建仍通过 `createChainRule` 走存储的作用域校验。
+### 使用规则
 
-### 规则使用流程
+1. `assertRuleUsableForAction` 要求规则存在、已激活，且类型与动作匹配。
+2. 追加一条使用记录，再把规则的 `usageCount` 加一并更新 `lastUsedAt`。
 
-```mermaid
-sequenceDiagram
-    participant FocusMode
-    participant Manager as ExceptionRuleManager
-    participant Executor as RuleExecutor
-    participant Storage as ExceptionRuleStorage
-    participant Classification as ClassificationService
-    participant Tracker as UsageTracker
+### 导入
 
-    FocusMode->>Manager: useRule(ruleId, context, actionType)
-    Manager->>Executor: useRule(ruleId, context, actionType)
-    Executor->>Storage: getRuleById(ruleId)
-    Storage-->>Executor: persisted rule (or null)
-    Executor->>Classification: validateRuleForAction(ruleId, actionType)
-    Classification-->>Executor: void (or throw)
-    Executor->>Tracker: recordUsage(ruleId, context, actionType)
-    Tracker-->>Executor: usageRecord
-    Executor-->>Manager: { record, rule }
-    Manager-->>FocusMode: { record, rule }
-```
+`importRules` 一次读取、一次保存。同名规则按选项跳过、原地更新类型和描述，或记为错误；
+同一批导入中重复的名称同样按重名处理。
 
 ---
 
-## 错误处理策略
+## 错误传播
 
-### 错误分类
-
-| 类别         | 错误类型                              | 处理策略           | 用户提示            |
-| ------------ | ------------------------------------- | ------------------ | ------------------- |
-| **用户错误** | VALIDATION_ERROR, DUPLICATE_RULE_NAME | 显示提示，引导修正 | 具体原因 + 建议操作 |
-| **系统错误** | STORAGE_ERROR, OPERATION_TIMEOUT      | 自动重试，降级处理 | "请稍后重试"        |
-| **数据错误** | DATA_INTEGRITY_ERROR                  | 自动修复           | 不打扰用户          |
-| **网络错误** | NETWORK_ERROR                         | 重试 + 离线模式    | "网络连接异常"      |
-
-### 错误恢复流程
-
-存储错误触发的数据完整性修复只确认修复结果，不会重放原创建/使用操作。
-即使修复成功，仍返回 `requiresUserAction` 并提示重试，保留原操作错误。
-每次修复/恢复结果直接返回调用方，不再复制到无消费者的内存历史列表。
-
-```typescript
-// 错误恢复管理器使用示例
-try {
-  await ruleCreator.createRule(name, type, desc);
-} catch (error) {
-  if (error instanceof ExceptionRuleException) {
-    const recovery = await errorRecoveryManager.attemptRecovery(error, context);
-    if (recovery.success) {
-      return recovery.recoveredData;
-    }
-    if (recovery.requiresUserAction) {
-      // 显示恢复选项给用户
-      showRecoveryOptions(recovery.actions);
-    }
-  }
-  throw error;
-}
-```
+专注模式在动作入口统一调用 `userFeedbackHandler.showErrorMessage` 展示错误并保持流程打开，
+由用户重试。规则管理页把错误显示在表单里，失败时撤销乐观更新。
 
 ---
 
-## 缓存策略
+## 测试
 
-当前缓存的所有权、TTL 与失效边界见 [缓存指南](../guides/CACHING_STRATEGY.md)。
-第二轮消融删除了没有生产调用的预验证结果缓存；实际规则使用仍执行类型与有效性验证。
-第三轮删除了重复检测 TTL、规则选择快照和无 UI 调用的服务层乐观创建链。
-创建结果使用持久化 ID；管理页自己的乐观展示与失败回滚仍保留。
-健康检查只报告现存的数据完整性、验证、错误处理和存储组件；未知错误的恢复选项
-执行数据完整性检查，不再通过复制规则状态宣称恢复成功。
-
----
-
-## 测试策略
-
-### 单元测试覆盖
-
-| 模块                 | 覆盖率目标 | 重点测试             |
-| -------------------- | ---------- | -------------------- |
-| RuleCreator          | 80%        | 创建流程、重复检测   |
-| RuleQueryService     | 70%        | 查询准确性、搜索算法 |
-| RuleExecutor         | 90%        | 规则验证、使用记录   |
-| RuleStatsService     | 70%        | 统计计算、边界条件   |
-| ErrorRecoveryManager | 80%        | 恢复策略、错误分类   |
-
-### 集成测试场景
-
-1. 完整的规则创建→使用→统计流程
-2. 并发创建同名规则
-3. 数据完整性检查和自动修复
-4. 错误恢复流程
+| 测试                                                           | 覆盖                                      |
+| -------------------------------------------------------------- | ----------------------------------------- |
+| `src/domain/__tests__/rules.test.ts`、`ruleDataRepair.test.ts` | 纯函数的表驱动测试                        |
+| `src/services/exception-rule-manager/__tests__/`               | 管理器对内存 `RuleStore` 的完整行为       |
+| `src/storage/__tests__/localRuleStore.test.ts`                 | localStorage 往返、旧数据作用域、写入失败 |
+| 规则管理页、规则选择、专注模式的 hook 测试                     | 真实管理器加 jsdom localStorage           |
+| `e2e/core-flows.spec.ts`                                       | 对话框建规则、管理页增改删、用规则暂停    |
 
 ---
 
-## 性能优化
+## 添加新的规则类型
 
-### 已实施优化
-
-1. **批量验证**: 多个规则一次验证，减少 I/O
-2. **延迟初始化**: 首次使用时才初始化管理器
-3. **乐观更新**: UI 立即响应，后台同步
-
-### 性能指标
-
-| 操作     | 目标延迟 | 当前延迟 |
-| -------- | -------- | -------- |
-| 规则创建 | <300ms   | 200ms    |
-| 规则验证 | <100ms   | 80ms     |
-| 规则搜索 | <150ms   | 100ms    |
-| 统计计算 | <200ms   | 150ms    |
-
----
-
-## 扩展指南
-
-### 添加新的规则类型
-
-1. 在 `src/types/index.ts` 中添加枚举值：
-
-   ```typescript
-   enum ExceptionRuleType {
-     PAUSE_ONLY = 'pause_only',
-     EARLY_COMPLETION_ONLY = 'early_completion_only',
-     NEW_TYPE = 'new_type', // 新增
-   }
-   ```
-
-2. 在 `RuleClassificationService` 中添加验证逻辑
-
-3. 在 `RuleSelectionDialog` 中添加 UI 支持
-
-### 添加新的恢复策略
-
-1. 在 `RecoveryStrategy.ts` 中定义策略：
-
-   ```typescript
-   const newStrategy: RecoveryStrategy = {
-     errorType: ExceptionRuleError.NEW_ERROR,
-     strategy: 'auto_fix',
-     priority: 100,
-     handler: async (error, context) => { ... }
-   };
-   ```
-
-2. 在 `ErrorRecoveryManager` 构造函数中注册
+1. 在 `src/types/exception-rule.ts` 的 `ExceptionRuleType` 中添加枚举值。
+2. 在 `src/domain/rules.ts` 的 `ruleTypeForAction` 和 `assertRuleUsableForAction` 中处理新类型。
+3. 在规则选择对话框和规则管理页表单中添加选项。
 
 ---
 

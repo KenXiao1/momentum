@@ -12,14 +12,6 @@ const realTimeSyncServiceMock = vi.hoisted(() => ({
   setStorage: vi.fn(),
 }));
 
-const recycleBinServiceMock = vi.hoisted(() => ({
-  setStorage: vi.fn(),
-}));
-
-const migrationServiceMock = vi.hoisted(() => ({
-  setStorage: vi.fn(),
-}));
-
 const localAdapterMock = vi.hoisted(() => ({
   kind: 'local',
 }));
@@ -47,14 +39,6 @@ vi.mock('../../utils/supabaseConfig', () => ({
 
 vi.mock('../../services/RealTimeSyncService', () => ({
   realTimeSyncService: realTimeSyncServiceMock,
-}));
-
-vi.mock('../../services/RecycleBinService', () => ({
-  RecycleBinService: recycleBinServiceMock,
-}));
-
-vi.mock('../../services/migration', () => ({
-  migrationCoordinator: migrationServiceMock,
 }));
 
 vi.mock('../localStorageAdapter', () => ({
@@ -133,14 +117,10 @@ describe('StorageProvider', () => {
 
     expect(screen.getByTestId('storage-kind').textContent).toBe('supabase');
     expect(realTimeSyncServiceMock.setStorage).toHaveBeenCalledWith(storage);
-    expect(recycleBinServiceMock.setStorage).toHaveBeenCalledWith(storage);
-    expect(migrationServiceMock.setStorage).toHaveBeenCalledWith(storage);
 
     unmount();
 
     expect(realTimeSyncServiceMock.setStorage).toHaveBeenCalledWith(null);
-    expect(recycleBinServiceMock.setStorage).toHaveBeenCalledWith(null);
-    expect(migrationServiceMock.setStorage).toHaveBeenCalledWith(null);
   });
 
   it('falls back to local storage adapter when no storage is provided', () => {

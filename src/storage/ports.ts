@@ -3,6 +3,7 @@ import type {
   Chain,
   CompletionHistory,
   DeletedChain,
+  ExceptionRule,
   RSIPExecutionRecord,
   RSIPLibraryEntry,
   RSIPMeta,
@@ -10,6 +11,7 @@ import type {
   RSIPNodeGroup,
   RSIPRunRecord,
   RSIPTaskLink,
+  RuleUsageRecord,
   ScheduledSession,
   TaskTimeStats,
 } from '../types';
@@ -33,6 +35,7 @@ import type {
 } from '../domain/userSettings';
 
 export interface ChainStore {
+  /** Order is unspecified; the chain tree sorts by sortOrder. */
   getChains(): Promise<Chain[]>;
   saveChains(chains: Chain[]): Promise<void>;
   upsertChain(chain: Chain): Promise<void>;
@@ -54,6 +57,7 @@ export interface SessionStore {
 }
 
 export interface HistoryStore {
+  /** Oldest first; callers such as the chain detail page rely on it. */
   getCompletionHistory(): Promise<CompletionHistory[]>;
   saveCompletionHistory(history: CompletionHistory[]): Promise<void>;
   appendCompletionHistory(record: CompletionHistory): Promise<void>;
@@ -73,6 +77,7 @@ export interface RsipStore {
   saveRSIPMeta(meta: RSIPMeta): Promise<void>;
   getRSIPGroups(): Promise<RSIPNodeGroup[]>;
   saveRSIPGroups(groups: RSIPNodeGroup[]): Promise<void>;
+  /** Order is unspecified; the library view sorts entries. */
   getRSIPPolicyLibrary(): Promise<RSIPLibraryEntry[]>;
   saveRSIPPolicyLibrary(entries: RSIPLibraryEntry[]): Promise<void>;
   upsertRSIPLibraryEntry(entry: RSIPLibraryEntry): Promise<void>;
@@ -139,6 +144,14 @@ export interface BettingGateway {
 export interface CheckinGateway {
   performDailyCheckin(): Promise<Result<CheckinResult, AppError>>;
   getUserCheckinStats(): Promise<Result<CheckinStats, AppError>>;
+}
+
+/** Exception rules and their usage records; each save replaces the list. */
+export interface RuleStore {
+  getRules(): Promise<ExceptionRule[]>;
+  saveRules(rules: ExceptionRule[]): Promise<void>;
+  getUsageRecords(): Promise<RuleUsageRecord[]>;
+  saveUsageRecords(records: RuleUsageRecord[]): Promise<void>;
 }
 
 export interface PetStore {

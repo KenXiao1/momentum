@@ -6,13 +6,11 @@ import { hasStorageCapability } from '../../storage/ports';
 import { fireAndForget } from '../../utils/fireAndForget';
 import { migrateCompletionHistoryForTiming } from '../../utils/completionHistoryTimingMigration';
 import { toError } from '../../utils/errorMessage';
-import { isDev } from '../../utils/env';
 import { logger } from '../../utils/logger';
 import { runWhenIdle } from '../../utils/runWhenIdle';
 import {
   cleanupExpiredDeletedChains,
   persistCompletionHistoryTimingMigration,
-  runDevDataMigration,
 } from './appDataLoadHelpers';
 import { navigationStore } from '../../stores/navigationStore';
 import { loadAppDataSnapshot } from './appDataSnapshot';
@@ -140,15 +138,6 @@ export function useAppDataLoad({
               },
             );
           });
-        }
-
-        // Run full data migration (dev-only) to validate data.
-        if (isDev && storage.kind === 'local') {
-          runWhenIdle(() => {
-            fireAndForget(runDevDataMigration(), {
-              label: 'APP_SHELL data migration',
-            });
-          }, 5000);
         }
 
         logger.debug('APP_SHELL', 'Setting app state', {

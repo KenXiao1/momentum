@@ -266,10 +266,6 @@ const enTranslations = {
   'rsip.type.goal': 'Goal',
   'rsip.type.trigger': 'Trigger',
   'rsip.type.reminder': 'Reminder',
-  'duplication.nameSuffix.new': 'New',
-  'duplication.nameSuffix.spare': 'Spare',
-  'duplication.nameSuffix.temp': 'Temp',
-  'duplication.nameSuffix.special': 'Special',
   'counts.completion': '{count} completion',
   'counts.completions': '{count} completions',
   'counts.ruleAvailable': '{count} available rule',
@@ -785,15 +781,11 @@ const enTranslations = {
   'focusMode.useExceptionRuleFlow.cancelled': 'Cancelled',
   'focusMode.useExceptionRuleFlow.youCanContinueTheTaskOrChooseAnotherAction':
     'You can continue the task or choose another action.',
-  'focusMode.useExceptionRuleOperations.issueResolved': 'Issue resolved',
   'focusMode.useExceptionRuleOperations.unknownError': 'Unknown error',
   'focusMode.useExceptionRuleOperations.retry': 'Retry',
   'focusMode.useExceptionRuleOperations.refresh': 'Refresh',
   'focusMode.useExceptionRuleOperations.operationFailedPleaseTryAgain':
     'Operation failed. Please try again.',
-  'focusMode.useExceptionRuleOperations.systemError': 'System error',
-  'focusMode.useExceptionRuleOperations.somethingWentWrongWhileHandlingTheErrorRefreshThe':
-    'Something went wrong while handling the error. Refresh the page and try again.',
   'focusMode.useExceptionRuleOperations.invalidRule': 'Invalid rule',
   'focusMode.useExceptionRuleOperations.pausingTask': 'Pausing task...',
   'focusMode.useExceptionRuleOperations.completingTask': 'Completing task...',
@@ -865,6 +857,8 @@ const enTranslations = {
   'importExportModal.exportTab.petState': 'Pet state',
   'importExportModal.exportTab.exceptionRules': 'Exception rules',
   'importExportModal.exportTab.exportAsJson': 'Export as JSON',
+  'importExportModal.exportTab.exportFailed':
+    'Export failed. No file was saved; please try again.',
   'importExportModal.importFields.importData': 'Import data',
   'importExportModal.importFields.importAddsNewDataToYourSystemIncludingChains':
     'Import adds new data to your system, including chains, extended RSIP data, pet state, and exception rules. Imported chains get new IDs and will not overwrite existing data.',
@@ -1192,8 +1186,6 @@ const enTranslations = {
   'ruleManager.ruleManagerViewView.manageExceptionRulesForPausingOrEarlyCompletion':
     'Manage exception rules for pausing or early completion',
   'ruleManager.ruleManagerViewView.export': 'Export',
-  'ruleManager.ruleManagerViewView.createChainSpecificRule':
-    'Create chain-specific rule',
   'ruleManager.ruleManagerViewView.searchRuleNameOrDescription':
     'Search rule name or description...',
   'ruleManager.ruleManagerViewView.allTypes': 'All types',
@@ -1229,8 +1221,6 @@ const enTranslations = {
     'Failed to create rule. Please try again.',
   'ruleManager.useRuleManagerActions.failedToUpdateRulePleaseTryAgain':
     'Failed to update rule. Please try again.',
-  'ruleManager.useRuleManagerActions.failedToUpdateRule':
-    'Failed to update rule',
   'ruleManager.useRuleManagerActions.failedToDeleteRule':
     'Failed to delete rule',
   'ruleManager.useRuleManagerActions.failedToExportRules':
@@ -1369,45 +1359,12 @@ const enTranslations = {
     'Delete failed. Check the console for details, then try again.',
   'useRecycleBinDomain.couldNotRestoreStateAfterTheErrorRefreshThePage':
     "Couldn't restore state after the error. Refresh the page to recover.",
-  'enhancedDuplicationHandler.continue': 'Continue',
-  'enhancedDuplicationHandler.duplicateCheckFailed': 'Duplicate check failed',
-  'enhancedDuplicationHandler.cannotCreateARuleWithADuplicateName':
-    'Cannot create a rule with a duplicate name: "{name}"',
-  'errorRecoveryManager.errorRecoveryFailed': 'Error recovery failed',
-  'errorRecoveryManager.manualFix': 'Manual fix',
-  'errorRecoveryManager.thisRequiresManualIntervention':
-    'This requires manual intervention',
-  'errorRecoveryManager.manualInterventionRequired':
-    'Manual intervention required',
-  'duplication.enhancedHandler.creationHandlers.thisIsACommonRulePatternConsiderCheckingFor':
-    'This is a common rule pattern; consider checking for existing similar rules',
   'duplication.enhancedHandler.creationHandlers.ruleTypeRuleTypeDoesNotMatchRequested':
     'Rule type ({ruleType}) does not match requested type ({requestedType})',
-  'duplication.enhancedHandler.creationHandlers.unableToGenerateAUsableNameSuggestion':
-    'Unable to generate a usable name suggestion',
-  'duplication.enhancedHandler.creationHandlers.nameChangedToNewName':
-    'Name changed to "{newName}"',
   'duplication.enhancedHandler.creationHandlers.similarRulesFoundSimilarNames':
     'Similar rules found: "{similarNames}"',
-  'duplication.enhancedHandler.suggestionHelpers.useExistingRule':
-    'Use existing rule',
-  'duplication.enhancedHandler.suggestionHelpers.useTheExistingRuleExistingRuleName':
-    'Use the existing rule "{existingRuleName}"',
-  'duplication.enhancedHandler.suggestionHelpers.changeName': 'Change name',
-  'duplication.enhancedHandler.suggestionHelpers.useTheSuggestedNameSuggestedName':
-    'Use the suggested name "{suggestedName}"',
-  'duplication.enhancedHandler.suggestionHelpers.nameIsSimilarButNotIdenticalYouCanContinue':
-    'Name is similar but not identical; you can continue creating it',
-  'duplication.enhancedHandler.suggestionHelpers.useSimilarRule':
-    'Use similar rule',
-  'duplication.enhancedHandler.suggestionHelpers.considerUsingTheSimilarRuleMostSimilarName':
-    'Consider using the similar rule "{mostSimilarName}"',
   'duplication.enhancedHandler.suggestionHelpers.ruleNameExistingRules0nameAlreadyExists':
     'Rule name "{existingRules0Name}" already exists',
-  'duplication.enhancedHandler.suggestionHelpers.foundSimilarRuleNameSSimilarNames':
-    'Found similar rule name(s): "{similarNames}"',
-  'duplication.enhancedHandler.suggestionHelpers.noConflictDetected':
-    'No conflict detected',
   'feedback.errorMessageFormatter.invalidRuleTypePleaseCheckTheRuleSettings':
     'Invalid rule type. Please check the rule settings.',
   'feedback.errorMessageFormatter.validationFailedSafeDetail':
@@ -1433,14 +1390,6 @@ const enTranslations = {
     'This rule name already exists. Please choose a different name or use the existing rule.',
   'feedback.errorMessageFormatter.thisRuleTypeDoesNotMatchTheCurrentAction':
     'This rule type does not match the current action. Please choose a compatible rule type.',
-  'feedback.feedbackPresenter.notCompleted': 'Not completed',
-  'feedback.interactiveFeedback.chooseARecoveryAction':
-    'Choose a recovery action',
-  'feedback.interactiveFeedback.chooseHowToHandleThisIssue':
-    'Choose how to handle this issue:',
-  'feedback.interactiveFeedback.confirm': 'Confirm',
-  'feedback.interactiveFeedback.viewErrorDetails': 'View error details',
-  'feedback.interactiveFeedback.errorDetails': 'Error details',
   'importExport.import.chains.invalidImportFormatNoValidChainsFound':
     'Invalid import format: no valid chains found',
   'importExport.import.chains.importDataContainsDuplicateChainIdSourceId':
@@ -1449,139 +1398,12 @@ const enTranslations = {
   'importExport.import.payload.invalidImportFormatFileContentIsNotAnObject':
     'Invalid import format: file content is not an object.',
   'importExport.import.rsipCore.untitledPolicy': 'Untitled policy',
-  'migration.migrationAnalyzer.failedToGetMigrationSuggestionsCheckDataIntegrity':
-    'Failed to get migration suggestions. Check data integrity.',
-  'migration.migrationAnalyzer.foundDuplicateRulesCountDuplicatedRuleSDuplicatesWillBeMergedAfter':
-    'Found {duplicateRulesCount} duplicated rule(s); duplicates will be merged after migration',
-  'migration.migrationAnalyzer.manyRulesDetectedConsiderOrganizingAndCategorizingThemAfter':
-    'Many rules detected; consider organizing and categorizing them after migration',
-  'migration.migrationAnalyzer.foundCommonPatternsCountCommonPatternRuleSConsiderStandardizingNaming':
-    'Found {commonPatternsCount} common-pattern rule(s); consider standardizing naming',
-  'migration.migrationAnalyzer.dataLooksGoodYouCanMigrateDirectly':
-    'Data looks good; you can migrate directly',
-  'migration.migrationAnalyzer.missingMigrationRecord':
-    'Missing migration record',
-  'migration.migrationAnalyzer.migratedRuleCountMismatchExpectedMigrationInfoTotalRulesGotMigratedRulesCount':
-    'Migrated rule count mismatch: expected {migrationInfoTotalRules}, got {migratedRulesCount}',
-  'migration.migrationAnalyzer.ruleRuleIdDataIsIncomplete':
-    'Rule {ruleId} data is incomplete',
-  'migration.migrationAnalyzer.validationErrorOccurredCheckConsoleForDetails':
-    'Validation error occurred. Check console for details.',
-  'migration.migrationAnalyzer.exceptionRuleMigrationReport':
-    'Exception Rule Migration Report',
-  'migration.migrationExecutor.analyzingExistingData':
-    'Analyzing existing data...',
-  'migration.migrationExecutor.noDataToMigrate': 'No data to migrate',
-  'migration.migrationExecutor.startingMigrationForExceptionRulesFromResultTotalChainsChainS':
-    'Starting migration for exception rules from {resultTotalChains} chain(s)...',
-  'migration.migrationExecutor.migrationDoneSavingMigrationInfo':
-    'Migration done. Saving migration info...',
-  'migration.migrationExecutor.migrationCompletedCreatedResultMigratedRulesRuleS':
-    'Migration completed! Created {resultMigratedRules} rule(s)',
-  'migration.migrationExecutor.creatingRuleRuleName':
-    'Creating rule: {ruleName}',
-  'migration.migrationExecutor.noMigrationRecordFound':
-    'No migration record found',
-  'migration.migrationExecutor.rollbackSucceededDeletedDeletedCountRuleS':
-    'Rollback succeeded. Deleted {deletedCount} rule(s)',
-  'migration.migrationExecutor.rollbackFailed': 'Rollback failed',
-  'migration.migrationExecutor.operationFailedCheckConsoleForDetails':
-    'Operation failed. Check console for details.',
   'platform.systemNotificationService.taskFailed': 'Task failed',
   'platform.systemNotificationService.taskEndingSoon': 'Task ending soon',
   'platform.systemNotificationService.scheduleExpiring': 'Schedule expiring',
   'platform.systemNotificationService.scheduleFailed': 'Schedule failed',
-  'recovery.defaultStrategies.unableToAutoRecoverTheMissingRule':
-    'Unable to auto-recover the missing rule',
-  'recovery.defaultStrategies.duplicateRuleNameDetected':
-    'Duplicate rule name detected',
-  'recovery.defaultStrategies.ruleTypeDoesNotMatchTheAction':
-    'Rule type does not match the action',
-  'recovery.defaultStrategies.autoFixedSuccessCountDataIssueS':
-    'Auto-fixed {successCount} data issue(s)',
-  'recovery.defaultStrategies.storageErrorRequiresManualHandling':
-    'Storage error requires manual handling',
-  'recovery.defaultStrategies.validationRequiresYourConfirmation':
-    'Validation requires your confirmation',
-  'recovery.defaultStrategies.fixValidationIssues': 'Fix validation issues',
-  'recovery.defaultStrategies.tryToFixValidationIssues':
-    'Try to fix validation issues',
-  'recovery.defaultStrategies.unknownErrorTypeErrorType':
-    'Unknown error type: {errorType}',
-  'recovery.defaultStrategies.checkDataIntegrity': 'Check data integrity',
-  'recovery.defaultStrategies.checkAndRepairRuleData':
-    'Check and repair rule data',
-  'recovery.defaultStrategies.allAutoRecoveryStrategiesFailed':
-    'All auto-recovery strategies failed',
-  'recovery.defaultStrategies.resetSystem': 'Reset system',
-  'recovery.defaultStrategies.resetTheRuleSystemToTheInitialState':
-    'Reset the rule system to the initial state',
-  'recovery.recoveryHandlers.pleaseCreateANewRule': 'Please create a new rule',
-  'recovery.recoveryHandlers.pleaseSelectAnExistingRule':
-    'Please select an existing rule',
-  'recovery.recoveryHandlers.usingExistingRule': 'Using existing rule',
-  'recovery.recoveryHandlers.noUsableExistingRuleFound':
-    'No usable existing rule found',
-  'recovery.recoveryHandlers.suggestedNameSuggestionsItem':
-    'Suggested name: {suggestionsItem}',
-  'recovery.recoveryHandlers.unableToGenerateANewRuleName':
-    'Unable to generate a new rule name',
-  'recovery.recoveryHandlers.pleaseCreateARuleWithTheCorrectType':
-    'Please create a rule with the correct type',
-  'recovery.recoveryHandlers.pleaseSelectARuleWithAMatchingType':
-    'Please select a rule with a matching type',
-  'recovery.recoveryHandlers.pleaseRetryTheOperation':
-    'Please retry the operation',
-  'recovery.recoveryHandlers.dataIntegrityCheckPassed':
-    'Data integrity check passed',
-  'recovery.recoveryHandlers.foundReportIssuesCountIssueSAutoFixableCountCanBeAutoFixed':
-    'Found {reportIssuesCount} issue(s), {autoFixableCount} can be auto-fixed',
-  'recovery.recoveryHandlers.autoFix': 'Auto-fix',
-  'recovery.recoveryHandlers.automaticallyFixTheFixableIssues':
-    'Automatically fix the fixable issues',
-  'recovery.recoveryHandlers.fixedSuccessCountIssueS':
-    'Fixed {successCount} issue(s)',
-  'recovery.recoveryHandlers.dataIntegrityCheckFailed':
-    'Data integrity check failed',
-  'recovery.recoveryHandlers.fixingValidationRequiresYourInput':
-    'Fixing validation requires your input',
-  'recovery.recoveryHandlers.systemResetIsRiskyAndRequiresConfirmation':
-    'System reset is risky and requires confirmation',
-  'recovery.recoveryOptionsProvider.createNewRule': 'Create new rule',
-  'recovery.recoveryOptionsProvider.createANewRuleToReplaceTheMissingOne':
-    'Create a new rule to replace the missing one',
-  'recovery.recoveryOptionsProvider.selectExistingRule': 'Select existing rule',
-  'recovery.recoveryOptionsProvider.chooseOneFromExistingRules':
-    'Choose one from existing rules',
-  'recovery.recoveryOptionsProvider.useTheExistingRuleWithTheSameName':
-    'Use the existing rule with the same name',
-  'recovery.recoveryOptionsProvider.renameRule': 'Rename rule',
-  'recovery.recoveryOptionsProvider.generateADifferentNameForTheNewRule':
-    'Generate a different name for the new rule',
-  'recovery.recoveryOptionsProvider.createCorrectType': 'Create correct type',
-  'recovery.recoveryOptionsProvider.createANewRuleWithAMatchingType':
-    'Create a new rule with a matching type',
-  'recovery.recoveryOptionsProvider.selectMatchingRule': 'Select matching rule',
-  'recovery.recoveryOptionsProvider.selectAnExistingRuleWithAMatchingType':
-    'Select an existing rule with a matching type',
-  'recovery.recoveryOptionsProvider.tryTheOperationAgain':
-    'Try the operation again',
-  'recovery.recoveryOptionsProvider.runADataIntegrityCheckAndAutoFixIfPossible':
-    'Run a data integrity check and auto-fix if possible',
-  'ruleManager.ruleCreator.ruleCreatedViaErrorRecovery':
-    'Rule created via error recovery',
   'ruleManager.ruleMaintenanceService.similarRulesFoundSimilarRuleNames':
     'Similar rules found: {similarRuleNames}',
-  'ruleManager.ruleMaintenanceService.noActiveExceptionRules':
-    'No active exception rules',
-  'ruleManager.ruleMaintenanceService.rulesExistButNoUsageRecords':
-    'Rules exist but no usage records',
-  'ruleManager.ruleMaintenanceService.noRulesUsedInTheLast30Days':
-    'No rules used in the last 30 days',
-  'ruleManager.ruleMaintenanceService.duplicateRuleNamesFoundDuplicateNames':
-    'Duplicate rule names found: {duplicateNames}',
-  'ruleManager.ruleMaintenanceService.systemCheckFailed':
-    'System check failed: ',
   'storage.storageContext.supabaseIsNotConfiguredSoCloudModeIsUnavailable':
     'Supabase is not configured, so cloud mode is unavailable.',
   'storage.storageContext.failedToLoadCloudStorageSwitchedBackToLocal':
@@ -1622,10 +1444,6 @@ const enTranslations = {
   'ruleSelectionDialog.dialogHeader.chooseARuleForActionLabel':
     'Choose a rule for {actionLabel}',
   'virtualizedRuleList.formatting.diffHoursHAgo': '{diffHours}h ago',
-  'feedback.interactiveFeedback.operationCompleted': '{operation} completed',
-  'feedback.interactiveFeedback.totalTotalSucceededSuccess':
-    'Total {total}, succeeded {success}',
-  'feedback.interactiveFeedback.failedFailed': ', failed {failed}',
   'platform.systemNotificationService.quotedChainNameReason':
     '{quotedChainName}: {reason}',
   'platform.systemNotificationService.chainNameCompletedSuffixCurrentStreakStreak':
@@ -1892,10 +1710,6 @@ const zhTranslations = {
   'rsip.type.goal': '目标',
   'rsip.type.trigger': '触发器',
   'rsip.type.reminder': '提醒',
-  'duplication.nameSuffix.new': '新',
-  'duplication.nameSuffix.spare': '备用',
-  'duplication.nameSuffix.temp': '临时',
-  'duplication.nameSuffix.special': '特殊',
   'counts.completion': '{count} 次完成',
   'counts.completions': '{count} 次完成',
   'counts.ruleAvailable': '{count} 个可用规则',
@@ -2391,15 +2205,11 @@ const zhTranslations = {
   'focusMode.useExceptionRuleFlow.cancelled': '操作已取消',
   'focusMode.useExceptionRuleFlow.youCanContinueTheTaskOrChooseAnotherAction':
     '您可以继续任务或重新选择操作',
-  'focusMode.useExceptionRuleOperations.issueResolved': '问题已解决',
   'focusMode.useExceptionRuleOperations.unknownError': '未知错误',
   'focusMode.useExceptionRuleOperations.retry': '重试操作',
   'focusMode.useExceptionRuleOperations.refresh': '刷新页面',
   'focusMode.useExceptionRuleOperations.operationFailedPleaseTryAgain':
     '操作失败，请重试',
-  'focusMode.useExceptionRuleOperations.systemError': '系统错误',
-  'focusMode.useExceptionRuleOperations.somethingWentWrongWhileHandlingTheErrorRefreshThe':
-    '处理错误时发生问题，请刷新页面重试',
   'focusMode.useExceptionRuleOperations.invalidRule': '规则对象无效',
   'focusMode.useExceptionRuleOperations.pausingTask': '正在暂停任务...',
   'focusMode.useExceptionRuleOperations.completingTask': '正在完成任务...',
@@ -2470,6 +2280,8 @@ const zhTranslations = {
   'importExportModal.exportTab.petState': '宠物状态',
   'importExportModal.exportTab.exceptionRules': '例外规则配置',
   'importExportModal.exportTab.exportAsJson': '导出为 JSON 文件',
+  'importExportModal.exportTab.exportFailed':
+    '导出失败，没有保存任何文件，请重试。',
   'importExportModal.importFields.importData': '导入任务链数据',
   'importExportModal.importFields.importAddsNewDataToYourSystemIncludingChains':
     '导入功能将添加新的数据到您的系统中，包括任务链、国策树扩展数据、宠物状态和例外规则。导入的链条将生成新的ID，不会覆盖现有数据。',
@@ -2781,7 +2593,6 @@ const zhTranslations = {
   'ruleManager.ruleManagerViewView.manageExceptionRulesForPausingOrEarlyCompletion':
     '管理暂停和提前完成的例外规则',
   'ruleManager.ruleManagerViewView.export': '导出',
-  'ruleManager.ruleManagerViewView.createChainSpecificRule': '创建链专属规则',
   'ruleManager.ruleManagerViewView.searchRuleNameOrDescription':
     '搜索规则名称或描述...',
   'ruleManager.ruleManagerViewView.allTypes': '所有类型',
@@ -2815,7 +2626,6 @@ const zhTranslations = {
     '创建规则失败，请重试',
   'ruleManager.useRuleManagerActions.failedToUpdateRulePleaseTryAgain':
     '更新规则失败，请重试',
-  'ruleManager.useRuleManagerActions.failedToUpdateRule': '更新规则失败',
   'ruleManager.useRuleManagerActions.failedToDeleteRule': '删除规则失败',
   'ruleManager.useRuleManagerActions.failedToExportRules': '导出规则失败',
   'ruleManager.useRuleManagerData.failedToLoadRules': '加载规则失败',
@@ -2944,43 +2754,12 @@ const zhTranslations = {
     '删除失败，请重试（详情见控制台）',
   'useRecycleBinDomain.couldNotRestoreStateAfterTheErrorRefreshThePage':
     '发生错误后无法恢复状态，建议刷新页面。',
-  'enhancedDuplicationHandler.continue': '继续创建',
-  'enhancedDuplicationHandler.duplicateCheckFailed': '重复检查失败',
-  'enhancedDuplicationHandler.cannotCreateARuleWithADuplicateName':
-    '不能创建重复名称的规则: "{name}"',
-  'errorRecoveryManager.errorRecoveryFailed': '错误恢复过程失败',
-  'errorRecoveryManager.manualFix': '手动处理',
-  'errorRecoveryManager.thisRequiresManualIntervention': '需要手动解决此问题',
-  'errorRecoveryManager.manualInterventionRequired': '需要手动处理',
-  'duplication.enhancedHandler.creationHandlers.thisIsACommonRulePatternConsiderCheckingFor':
-    '这是一个常见的规则模式，建议检查是否已有类似规则',
   'duplication.enhancedHandler.creationHandlers.ruleTypeRuleTypeDoesNotMatchRequested':
     '使用的规则类型 ({ruleType}) 与请求的类型 ({requestedType}) 不匹配',
-  'duplication.enhancedHandler.creationHandlers.unableToGenerateAUsableNameSuggestion':
-    '无法生成可用的名称建议',
-  'duplication.enhancedHandler.creationHandlers.nameChangedToNewName':
-    '名称已修改为 "{newName}"',
   'duplication.enhancedHandler.creationHandlers.similarRulesFoundSimilarNames':
     '发现相似规则: "{similarNames}"',
-  'duplication.enhancedHandler.suggestionHelpers.useExistingRule':
-    '使用现有规则',
-  'duplication.enhancedHandler.suggestionHelpers.useTheExistingRuleExistingRuleName':
-    '使用已存在的规则 "{existingRuleName}"',
-  'duplication.enhancedHandler.suggestionHelpers.changeName': '修改名称',
-  'duplication.enhancedHandler.suggestionHelpers.useTheSuggestedNameSuggestedName':
-    '使用建议的名称 "{suggestedName}"',
-  'duplication.enhancedHandler.suggestionHelpers.nameIsSimilarButNotIdenticalYouCanContinue':
-    '名称相似但不完全相同，可以继续创建',
-  'duplication.enhancedHandler.suggestionHelpers.useSimilarRule':
-    '使用相似规则',
-  'duplication.enhancedHandler.suggestionHelpers.considerUsingTheSimilarRuleMostSimilarName':
-    '考虑使用相似的规则 "{mostSimilarName}"',
   'duplication.enhancedHandler.suggestionHelpers.ruleNameExistingRules0nameAlreadyExists':
     '规则名称 "{existingRules0Name}" 已存在',
-  'duplication.enhancedHandler.suggestionHelpers.foundSimilarRuleNameSSimilarNames':
-    '发现相似的规则名称: "{similarNames}"',
-  'duplication.enhancedHandler.suggestionHelpers.noConflictDetected':
-    '没有发现冲突',
   'feedback.errorMessageFormatter.invalidRuleTypePleaseCheckTheRuleSettings':
     '规则类型无效，请检查规则设置',
   'feedback.errorMessageFormatter.validationFailedSafeDetail':
@@ -3005,13 +2784,6 @@ const zhTranslations = {
     '规则名称已存在，请选择不同的名称或使用现有规则。',
   'feedback.errorMessageFormatter.thisRuleTypeDoesNotMatchTheCurrentAction':
     '规则类型与当前操作不匹配，请选择正确类型的规则。',
-  'feedback.feedbackPresenter.notCompleted': '操作未完成',
-  'feedback.interactiveFeedback.chooseARecoveryAction': '选择恢复操作',
-  'feedback.interactiveFeedback.chooseHowToHandleThisIssue':
-    '请选择如何处理这个问题：',
-  'feedback.interactiveFeedback.confirm': '确认',
-  'feedback.interactiveFeedback.viewErrorDetails': '查看错误详情',
-  'feedback.interactiveFeedback.errorDetails': '错误详情',
   'importExport.import.chains.invalidImportFormatNoValidChainsFound':
     '导入数据格式错误：未找到有效的链条数据。',
   'importExport.import.chains.importDataContainsDuplicateChainIdSourceId':
@@ -3020,126 +2792,12 @@ const zhTranslations = {
   'importExport.import.payload.invalidImportFormatFileContentIsNotAnObject':
     '导入数据格式错误：文件内容不是对象。',
   'importExport.import.rsipCore.untitledPolicy': '未命名国策',
-  'migration.migrationAnalyzer.failedToGetMigrationSuggestionsCheckDataIntegrity':
-    '获取迁移建议失败，请检查数据完整性',
-  'migration.migrationAnalyzer.foundDuplicateRulesCountDuplicatedRuleSDuplicatesWillBeMergedAfter':
-    '发现 {duplicateRulesCount} 个重复使用的规则，迁移后将合并为单个规则',
-  'migration.migrationAnalyzer.manyRulesDetectedConsiderOrganizingAndCategorizingThemAfter':
-    '规则数量较多，建议迁移后进行整理和分类',
-  'migration.migrationAnalyzer.foundCommonPatternsCountCommonPatternRuleSConsiderStandardizingNaming':
-    '发现 {commonPatternsCount} 个常见模式的规则，建议统一命名规范',
-  'migration.migrationAnalyzer.dataLooksGoodYouCanMigrateDirectly':
-    '数据结构良好，可以直接进行迁移',
-  'migration.migrationAnalyzer.missingMigrationRecord': '缺少迁移记录',
-  'migration.migrationAnalyzer.migratedRuleCountMismatchExpectedMigrationInfoTotalRulesGotMigratedRulesCount':
-    '迁移规则数量不匹配：期望 {migrationInfoTotalRules}，实际 {migratedRulesCount}',
-  'migration.migrationAnalyzer.ruleRuleIdDataIsIncomplete':
-    '规则 {ruleId} 数据不完整',
-  'migration.migrationAnalyzer.validationErrorOccurredCheckConsoleForDetails':
-    '验证过程中发生错误，请查看控制台',
-  'migration.migrationAnalyzer.exceptionRuleMigrationReport':
-    '例外规则迁移报告',
-  'migration.migrationExecutor.analyzingExistingData': '分析现有数据...',
-  'migration.migrationExecutor.noDataToMigrate': '没有需要迁移的数据',
-  'migration.migrationExecutor.startingMigrationForExceptionRulesFromResultTotalChainsChainS':
-    '开始迁移 {resultTotalChains} 个链条的例外规则...',
-  'migration.migrationExecutor.migrationDoneSavingMigrationInfo':
-    '完成迁移，保存迁移信息...',
-  'migration.migrationExecutor.migrationCompletedCreatedResultMigratedRulesRuleS':
-    '迁移完成！创建了 {resultMigratedRules} 个规则',
-  'migration.migrationExecutor.creatingRuleRuleName': '创建规则: {ruleName}',
-  'migration.migrationExecutor.noMigrationRecordFound': '没有找到迁移记录',
-  'migration.migrationExecutor.rollbackSucceededDeletedDeletedCountRuleS':
-    '成功回滚迁移，删除了 {deletedCount} 个规则',
-  'migration.migrationExecutor.rollbackFailed': '回滚失败',
-  'migration.migrationExecutor.operationFailedCheckConsoleForDetails':
-    '操作失败，请查看控制台',
   'platform.systemNotificationService.taskFailed': '任务失败',
   'platform.systemNotificationService.taskEndingSoon': '任务即将结束',
   'platform.systemNotificationService.scheduleExpiring': '预约即将到期',
   'platform.systemNotificationService.scheduleFailed': '预约失败',
-  'recovery.defaultStrategies.unableToAutoRecoverTheMissingRule':
-    '无法自动恢复缺失的规则',
-  'recovery.defaultStrategies.duplicateRuleNameDetected': '发现重复的规则名称',
-  'recovery.defaultStrategies.ruleTypeDoesNotMatchTheAction':
-    '规则类型与操作不匹配',
-  'recovery.defaultStrategies.autoFixedSuccessCountDataIssueS':
-    '已自动修复 {successCount} 个数据问题',
-  'recovery.defaultStrategies.storageErrorRequiresManualHandling':
-    '存储错误需要手动处理',
-  'recovery.defaultStrategies.validationRequiresYourConfirmation':
-    '验证错误需要用户确认',
-  'recovery.defaultStrategies.fixValidationIssues': '修复验证问题',
-  'recovery.defaultStrategies.tryToFixValidationIssues': '尝试修复数据验证问题',
-  'recovery.defaultStrategies.unknownErrorTypeErrorType':
-    '未知错误类型: {errorType}',
-  'recovery.defaultStrategies.checkDataIntegrity': '检查数据完整性',
-  'recovery.defaultStrategies.checkAndRepairRuleData': '检查并修复规则数据',
-  'recovery.defaultStrategies.allAutoRecoveryStrategiesFailed':
-    '所有自动恢复策略都失败了',
-  'recovery.defaultStrategies.resetSystem': '重置系统',
-  'recovery.defaultStrategies.resetTheRuleSystemToTheInitialState':
-    '重置规则系统到初始状态',
-  'recovery.recoveryHandlers.pleaseCreateANewRule': '请创建新规则',
-  'recovery.recoveryHandlers.pleaseSelectAnExistingRule': '请选择现有规则',
-  'recovery.recoveryHandlers.usingExistingRule': '使用现有规则',
-  'recovery.recoveryHandlers.noUsableExistingRuleFound':
-    '无法找到可用的现有规则',
-  'recovery.recoveryHandlers.suggestedNameSuggestionsItem':
-    '建议使用名称: {suggestionsItem}',
-  'recovery.recoveryHandlers.unableToGenerateANewRuleName':
-    '无法生成新的规则名称',
-  'recovery.recoveryHandlers.pleaseCreateARuleWithTheCorrectType':
-    '请创建正确类型的规则',
-  'recovery.recoveryHandlers.pleaseSelectARuleWithAMatchingType':
-    '请选择类型匹配的规则',
-  'recovery.recoveryHandlers.pleaseRetryTheOperation': '请重试操作',
-  'recovery.recoveryHandlers.dataIntegrityCheckPassed': '数据完整性检查通过',
-  'recovery.recoveryHandlers.foundReportIssuesCountIssueSAutoFixableCountCanBeAutoFixed':
-    '发现 {reportIssuesCount} 个问题，其中 {autoFixableCount} 个可自动修复',
-  'recovery.recoveryHandlers.autoFix': '自动修复',
-  'recovery.recoveryHandlers.automaticallyFixTheFixableIssues':
-    '自动修复可修复的问题',
-  'recovery.recoveryHandlers.fixedSuccessCountIssueS':
-    '已修复 {successCount} 个问题',
-  'recovery.recoveryHandlers.dataIntegrityCheckFailed': '数据完整性检查失败',
-  'recovery.recoveryHandlers.fixingValidationRequiresYourInput':
-    '验证修复需要用户输入',
-  'recovery.recoveryHandlers.systemResetIsRiskyAndRequiresConfirmation':
-    '系统重置是危险操作，需要用户确认',
-  'recovery.recoveryOptionsProvider.createNewRule': '创建新规则',
-  'recovery.recoveryOptionsProvider.createANewRuleToReplaceTheMissingOne':
-    '创建一个新的规则来替代缺失的规则',
-  'recovery.recoveryOptionsProvider.selectExistingRule': '选择现有规则',
-  'recovery.recoveryOptionsProvider.chooseOneFromExistingRules':
-    '从现有规则中选择一个',
-  'recovery.recoveryOptionsProvider.useTheExistingRuleWithTheSameName':
-    '使用已存在的同名规则',
-  'recovery.recoveryOptionsProvider.renameRule': '重命名规则',
-  'recovery.recoveryOptionsProvider.generateADifferentNameForTheNewRule':
-    '为新规则生成一个不同的名称',
-  'recovery.recoveryOptionsProvider.createCorrectType': '创建正确类型的规则',
-  'recovery.recoveryOptionsProvider.createANewRuleWithAMatchingType':
-    '创建一个类型匹配的新规则',
-  'recovery.recoveryOptionsProvider.selectMatchingRule': '选择匹配的规则',
-  'recovery.recoveryOptionsProvider.selectAnExistingRuleWithAMatchingType':
-    '选择一个类型匹配的现有规则',
-  'recovery.recoveryOptionsProvider.tryTheOperationAgain': '重新尝试执行操作',
-  'recovery.recoveryOptionsProvider.runADataIntegrityCheckAndAutoFixIfPossible':
-    '运行数据完整性检查和修复',
-  'ruleManager.ruleCreator.ruleCreatedViaErrorRecovery':
-    '通过错误恢复创建了规则',
   'ruleManager.ruleMaintenanceService.similarRulesFoundSimilarRuleNames':
     '发现相似规则: {similarRuleNames}',
-  'ruleManager.ruleMaintenanceService.noActiveExceptionRules':
-    '没有活跃的例外规则',
-  'ruleManager.ruleMaintenanceService.rulesExistButNoUsageRecords':
-    '有规则但没有使用记录',
-  'ruleManager.ruleMaintenanceService.noRulesUsedInTheLast30Days':
-    '超过30天未使用任何规则',
-  'ruleManager.ruleMaintenanceService.duplicateRuleNamesFoundDuplicateNames':
-    '发现重复规则名称: {duplicateNames}',
-  'ruleManager.ruleMaintenanceService.systemCheckFailed': '系统检查失败: ',
   'storage.storageContext.supabaseIsNotConfiguredSoCloudModeIsUnavailable':
     '未检测到 Supabase 配置，无法切换到云端模式。',
   'storage.storageContext.failedToLoadCloudStorageSwitchedBackToLocal':
@@ -3180,10 +2838,6 @@ const zhTranslations = {
   'ruleSelectionDialog.dialogHeader.chooseARuleForActionLabel':
     '为{actionLabel}操作选择适用的规则',
   'virtualizedRuleList.formatting.diffHoursHAgo': '{diffHours}小时前',
-  'feedback.interactiveFeedback.operationCompleted': '{operation}完成',
-  'feedback.interactiveFeedback.totalTotalSucceededSuccess':
-    '总计 {total} 项，成功 {success} 项',
-  'feedback.interactiveFeedback.failedFailed': '，失败 {failed} 项',
   'platform.systemNotificationService.quotedChainNameReason':
     '{quotedChainName}：{reason}',
   'platform.systemNotificationService.chainNameCompletedSuffixCurrentStreakStreak':

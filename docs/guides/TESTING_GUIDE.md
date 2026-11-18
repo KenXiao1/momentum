@@ -28,9 +28,40 @@ storage, API, mapper, and SDK against MSW HTTP handlers in
 for new REST/RPC calls; fake timers are opt-in and the setup restores real timers.
 These tests do not execute database SQL or validate deployed RLS policies.
 
-Mock external boundaries in behavior tests. A composition test can replace a
-local collaborator that has its own behavior coverage. Direct replacement of
-the subject under test and tautological assertions are checked by
+### Storage contract
+
+`src/test/contracts/storageContract.ts` defines the behavior every
+`MomentumStorage` adapter must share. The local adapter runs it in the unit
+suite (`src/storage/__tests__/MomentumStorage.contract.test.ts`);
+`SupabaseStorage` runs it in the integration suite through the real SDK and the
+HTTP fake (`SupabaseStorage.contract.integration.test.ts`). Add a case there
+when you add or change a storage method, and state in `src/storage/ports.ts`
+any ordering the callers rely on. SQL, RLS and RPC behavior is checked on real
+PostgreSQL by `npm run test:database`, not by this contract.
+
+### Test storage and mocks
+
+Hook and component tests use `createTestStorage()` from `src/test/factories`:
+the real local adapter over the in-memory JSDOM `localStorage`, covered by the
+contract above. Seed data through its own save methods and assert on what it
+returns afterwards, not on which methods were called. Override a single method
+only for what local storage cannot do (cloud-only gateways such as betting) or
+to inject a failure; see `src/hooks/domains/__tests__/useSafeSaveChains.test.ts`.
+`createLocalStorageMock()` is the older all-stub mock and should not be used in
+new tests.
+
+Put rules in pure functions under `src/domain/` and test them with tables
+(see `src/domain/__tests__/rsip.test.ts`); hook tests then only need to show
+that results are persisted and committed. Never mock pure modules such as
+`utils/chainTree` or `utils/timeLimit`: feed them real data instead.
+
+Mock packages and native or cloud boundaries (`lib/supabase`,
+`utils/tauri-bridge`, `utils/platform-adapters/`, `utils/platform-capabilities/`),
+not the project's own modules. `npm run quality:test:internal-mocks` counts
+`vi.mock` calls that replace project modules and fails when any test file has
+more than `tools/quality/internal-mock-baseline.json` allows; when you remove
+some, run it with `-- --update` to lower the baseline. Direct replacement of the
+subject under test and tautological assertions are checked by
 `quality:test:assertions`; test-runner and Testing Library rules live in
 `eslint.tests.config.js`.
 
@@ -40,7 +71,7 @@ Install the Chromium test runtime once with `npx playwright install chromium`
 (or `npx playwright install --with-deps chromium` on Linux), then run
 `npm run test:e2e`. Playwright builds and serves the application on port 4173,
 with Supabase configuration empty so tests always use isolated local browser
-storage. Every test gets a new browser context. The four core journeys cover:
+storage. Every test gets a new browser context. The core journeys cover:
 
 - Create a chain, start, pause using an exception rule, refresh while paused,
   resume, complete, and refresh again to verify a single saved completion.
@@ -50,6 +81,8 @@ storage. Every test gets a new browser context. The four core journeys cover:
   preserving chain statistics and completion history across refresh.
 - Create two RSIP policies, cancel deletion, then delete one policy and verify
   the other remains after refreshing and reopening the tree.
+- Create a chain rule from the pause dialog and pause with it; create, rename
+  and delete a global rule in the rule manager and pause another chain with it.
 
 These journeys operate real UI and persistence. The failure scenario injects a
 single browser storage exception; it does not replace the application storage
@@ -75,6 +108,13 @@ required status verifies that every required job succeeded. The exact roster is 
 coverage thresholds live in `vitest.coverage.config.ts`.
 `quality:test:coverage-hotspots` verifies report freshness and reports source inclusion,
 then ranks uncovered behavior. It consumes the preceding coverage run.
+
+The static lane also runs `quality:error-handling` (`tools/quality/error-handling.mjs`).
+It rejects a catch that only logs and rethrows the same error (let it reach the
+boundary that handles it), and a write function (`save*`, `set*`, …) whose catch
+is empty or only returns a fallback. A write that may be lost on purpose needs a
+`// best-effort: <reason>` comment in its catch; any other deliberate exception
+is marked `// error-handling: <reason>`.
 
 [Scheduled mutation CI](../../.github/workflows/mutation-nightly.yml) runs both
 critical and broader mutation checks, with report freshness validation. The

@@ -15,6 +15,6 @@ export function setLanguage(language: Language): void {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEYS.LANGUAGE, language);
   } catch {
-    // ignore quota errors
+    // best-effort: a lost choice falls back to the browser language
   }
 }

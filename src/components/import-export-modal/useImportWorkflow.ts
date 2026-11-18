@@ -164,9 +164,20 @@ export function useImportWorkflow(params: {
     [],
   );
   const handleOpenFile = useCallback(async () => {
-    const content = await file.openFile(['json']);
-    if (content) setImportData(content);
-  }, [file]);
+    try {
+      const content = await file.openFile(['json']);
+      if (content) setImportData(content);
+    } catch (error) {
+      logger.error(
+        'IMPORT_EXPORT',
+        'Opening the import file failed',
+        undefined,
+        normalizeUnknownError(error),
+      );
+      setImportError(getImportErrorMessage(error, language, t));
+      setImportStatus('error');
+    }
+  }, [file, language, t]);
 
   return {
     importData,

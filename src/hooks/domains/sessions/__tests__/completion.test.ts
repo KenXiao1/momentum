@@ -11,15 +11,9 @@ import {
   createUnitChain,
 } from '../../../../test/factories';
 import { createCompletionHandlers } from '../completion';
-import { buildChainTree } from '../../../../utils/chainTree';
 import { forwardTimerManager } from '../../../../utils/forwardTimer';
 import { systemNotificationService } from '../../../../services/platform/SystemNotificationService';
 import { emitPointsChanged } from '../../../../utils/pointsEvents';
-import {
-  incrementGroupCompletionCount,
-  isGroupFullyCompleted,
-  resetGroupCompletionCount,
-} from '../../../../utils/chainTree';
 import { logger } from '../../../../utils/logger';
 
 vi.mock('../../../../utils/logger', () => ({
@@ -46,13 +40,6 @@ vi.mock('../../../../services/platform/SystemNotificationService', () => ({
 
 vi.mock('../../../../utils/pointsEvents', () => ({
   emitPointsChanged: vi.fn(),
-}));
-
-vi.mock('../../../../utils/chainTree', () => ({
-  buildChainTree: vi.fn(() => []),
-  incrementGroupCompletionCount: vi.fn((chains) => chains),
-  isGroupFullyCompleted: vi.fn(() => false),
-  resetGroupCompletionCount: vi.fn((chains) => chains),
 }));
 
 function flushPromises() {
@@ -118,18 +105,6 @@ describe('createCompletionHandlers', () => {
     const onNavigateToDashboard = vi.fn();
     const onTaskLifecycleEvent = vi.fn();
 
-    vi.mocked(buildChainTree).mockReturnValue([
-      { id: group.id, type: 'group', name: group.name },
-    ] as unknown as ReturnType<typeof buildChainTree>);
-    vi.mocked(isGroupFullyCompleted).mockReturnValue(true);
-    vi.mocked(incrementGroupCompletionCount).mockImplementation((chains) =>
-      chains.map((item) =>
-        item.id === group.id
-          ? { ...item, currentStreak: item.currentStreak + 1 }
-          : item,
-      ),
-    );
-
     const { handleCompleteSession } = createCompletionHandlers({
       state: stateRef.getState(),
       setState: stateRef.setState,
@@ -147,7 +122,11 @@ describe('createCompletionHandlers', () => {
 
     const nextState = stateRef.getState();
     const updatedChain = nextState.chains.find((item) => item.id === chain.id);
-    expect(updatedChain?.currentStreak).toBe(2);
+    // The finished cycle resets unit progress for the next cycle.
+    expect(updatedChain?.currentStreak).toBe(0);
+    expect(nextState.chains.find((item) => item.id === group.id)).toMatchObject(
+      { currentStreak: 3, totalCompletions: group.totalCompletions + 1 },
+    );
     expect(updatedChain?.totalCompletions).toBe(4);
     expect(nextState.activeSession).toBeNull();
     expect(onNavigateToDashboard).toHaveBeenCalledTimes(1);
@@ -179,13 +158,6 @@ describe('createCompletionHandlers', () => {
       2,
     );
     expect(setActiveSessionId).toHaveBeenCalledWith(null);
-    expect(isGroupFullyCompleted).toHaveBeenCalledWith(
-      expect.objectContaining({ id: group.id, type: 'group' }),
-    );
-    expect(incrementGroupCompletionCount).toHaveBeenCalledWith(
-      expect.any(Array),
-      group.id,
-    );
     expect(logger.debug).toHaveBeenCalledWith('SESSIONS', expect.any(String));
     expect(
       (vi.mocked(logger.debug).mock.calls[0]?.[1] ?? '').length,
@@ -253,9 +225,6 @@ describe('createCompletionHandlers', () => {
     handleCompleteSession();
     await flushPromises();
 
-    expect(buildChainTree).not.toHaveBeenCalled();
-    expect(isGroupFullyCompleted).not.toHaveBeenCalled();
-    expect(incrementGroupCompletionCount).not.toHaveBeenCalled();
     expect(t).not.toHaveBeenCalled();
   });
 
@@ -267,10 +236,16 @@ describe('createCompletionHandlers', () => {
     const chain = createUnitChain({
       id: 'incomplete-unit',
       parentId: group.id,
+      sortOrder: 1,
+    });
+    const unfinished = createUnitChain({
+      id: 'unfinished-sibling',
+      parentId: group.id,
+      sortOrder: 2,
     });
     const stateRef = createStateContainer(
       createAppState({
-        chains: [group, chain],
+        chains: [group, chain, unfinished],
         activeSession: {
           chainId: chain.id,
           startedAt: new Date('2026-02-01T10:20:00.000Z'),
@@ -286,11 +261,6 @@ describe('createCompletionHandlers', () => {
       updateTaskTimeStats: vi.fn(async () => undefined),
     });
 
-    vi.mocked(buildChainTree).mockReturnValue([
-      { id: group.id, type: 'group', name: group.name },
-    ] as unknown as ReturnType<typeof buildChainTree>);
-    vi.mocked(isGroupFullyCompleted).mockReturnValue(false);
-
     const { handleCompleteSession } = createCompletionHandlers({
       state: stateRef.getState(),
       setState: stateRef.setState,
@@ -304,80 +274,9 @@ describe('createCompletionHandlers', () => {
     handleCompleteSession();
     await flushPromises();
 
-    expect(isGroupFullyCompleted).toHaveBeenCalledWith(
-      expect.objectContaining({ id: group.id }),
-    );
-    expect(incrementGroupCompletionCount).not.toHaveBeenCalled();
-    expect(t).not.toHaveBeenCalled();
-  });
-
-  it('should skip parent group completion notification when parent chain is missing after increment', async () => {
-    const group = createGroupChain({
-      id: 'missing-parent-group',
-      name: 'Missing Parent Group',
-    });
-    const chain = createUnitChain({
-      id: 'missing-parent-unit',
-      parentId: group.id,
-      currentStreak: 2,
-    });
-    const stateRef = createStateContainer(
-      createAppState({
-        chains: [group, chain],
-        activeSession: {
-          chainId: chain.id,
-          startedAt: new Date('2026-02-01T10:30:00.000Z'),
-          duration: 20,
-          isPaused: false,
-          totalPausedTime: 0,
-        },
-      }),
-    );
-    const storage = createLocalStorageMock({
-      appendCompletionHistory: vi.fn(async () => undefined),
-      saveActiveSession: vi.fn(async () => undefined),
-      updateTaskTimeStats: vi.fn(async () => undefined),
-    });
-
-    vi.mocked(buildChainTree).mockReturnValue([
-      { id: group.id, type: 'group', name: group.name },
-    ] as unknown as ReturnType<typeof buildChainTree>);
-    vi.mocked(isGroupFullyCompleted).mockReturnValue(true);
-    vi.mocked(incrementGroupCompletionCount).mockReturnValue(
-      stateRef
-        .getState()
-        .chains.filter((item) => item.id !== group.id)
-        .map((item) =>
-          item.id === chain.id
-            ? { ...item, currentStreak: item.currentStreak + 1 }
-            : item,
-        ),
-    );
-
-    const { handleCompleteSession } = createCompletionHandlers({
-      state: stateRef.getState(),
-      setState: stateRef.setState,
-      storage,
-      safelySaveChains: vi.fn(async () => undefined),
-      activeSessionId: null,
-      setActiveSessionId: vi.fn(),
-      t,
-    });
-
-    handleCompleteSession();
-    await flushPromises();
-
-    expect(incrementGroupCompletionCount).toHaveBeenCalledWith(
-      expect.any(Array),
-      group.id,
-    );
-    expect(systemNotificationService.notifyTaskCompleted).toHaveBeenCalledWith(
-      chain.name,
-      3,
-    );
-    expect(systemNotificationService.notifyTaskCompleted).toHaveBeenCalledTimes(
-      1,
-    );
+    const chains = stateRef.getState().chains;
+    expect(chains.find((item) => item.id === group.id)).toEqual(group);
+    expect(chains.find((item) => item.id === chain.id)?.currentStreak).toBe(1);
     expect(t).not.toHaveBeenCalled();
   });
 
@@ -443,8 +342,6 @@ describe('createCompletionHandlers', () => {
       currentStreak: 9,
       totalCompletions: 99,
     });
-    expect(buildChainTree).not.toHaveBeenCalled();
-    expect(incrementGroupCompletionCount).not.toHaveBeenCalled();
   });
 
   it('should use forward timer for durationless chains and invoke pet callback', async () => {
@@ -779,8 +676,6 @@ describe('createCompletionHandlers', () => {
     const onNavigateToDashboard = vi.fn();
     const onTaskLifecycleEvent = vi.fn();
 
-    vi.mocked(resetGroupCompletionCount).mockImplementation((chains) => chains);
-
     const { handleInterruptSession } = createCompletionHandlers({
       state: stateRef.getState(),
       setState: stateRef.setState,
@@ -817,10 +712,6 @@ describe('createCompletionHandlers', () => {
       wasSuccessful: false,
       reasonForFailure: 'manual-stop',
     });
-    expect(resetGroupCompletionCount).toHaveBeenCalledWith(
-      expect.any(Array),
-      'group-9',
-    );
     expect(logger.debug).toHaveBeenCalledWith('SESSIONS', expect.any(String));
     expect(
       (vi.mocked(logger.debug).mock.calls.at(-1)?.[1] ?? '').length,
@@ -881,6 +772,7 @@ describe('createCompletionHandlers', () => {
   });
 
   it('should not reset group completion count when interrupted chain itself is a group', async () => {
+    const parent = createGroupChain({ id: 'parent-group', currentStreak: 3 });
     const group = createGroupChain({
       id: 'group-self',
       parentId: 'parent-group',
@@ -890,7 +782,7 @@ describe('createCompletionHandlers', () => {
 
     const stateRef = createStateContainer(
       createAppState({
-        chains: [group],
+        chains: [parent, group],
         activeSession: {
           chainId: group.id,
           startedAt: new Date('2026-02-01T13:00:00.000Z'),
@@ -917,7 +809,9 @@ describe('createCompletionHandlers', () => {
     handleInterruptSession('group-fail');
     await flushPromises();
 
-    expect(resetGroupCompletionCount).not.toHaveBeenCalled();
+    expect(
+      stateRef.getState().chains.find((item) => item.id === parent.id),
+    ).toEqual(parent);
   });
 
   it('should no-op when completing or interrupting without active session / chain', async () => {

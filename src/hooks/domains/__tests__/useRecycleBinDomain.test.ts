@@ -423,7 +423,7 @@ describe('useRecycleBinDomain', () => {
     expect(stateRef.getState().chains).toEqual(restored);
   });
 
-  it('should log and propagate a permanent delete failure', async () => {
+  it('should propagate a permanent delete failure without changing state', async () => {
     const chain = createUnitChain({ id: 'chain-permanent' });
     vi.mocked(realTimeSyncService.permanentDeleteWithSync).mockRejectedValue(
       new Error('hard delete failed'),
@@ -432,10 +432,11 @@ describe('useRecycleBinDomain', () => {
       'permission denied',
     );
 
+    const setState = vi.fn();
     const { result } = renderHook(() =>
       useRecycleBinDomain({
         state: createAppState({ chains: [chain] }),
-        setState: vi.fn(),
+        setState,
         storage: createLocalStorageMock(),
       }),
     );
@@ -446,12 +447,7 @@ describe('useRecycleBinDomain', () => {
       ).rejects.toThrow('hard delete failed');
     });
 
-    expect(logger.error).toHaveBeenCalledWith(
-      'RECYCLE_BIN',
-      'Permanent delete failed',
-      { chainIds: [chain.id] },
-      expect.any(Error),
-    );
+    expect(setState).not.toHaveBeenCalled();
     expect(toast.error).not.toHaveBeenCalled();
   });
 

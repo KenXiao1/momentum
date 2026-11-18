@@ -1,13 +1,13 @@
-import type {
-  RSIPLibraryEntry,
-  RSIPMeta,
-  RSIPNode,
-  RSIPStabilityPhase,
-} from '../../../types';
-import { getDescendantCount } from '../../../utils/rsipTree';
+import type { RSIPLibraryEntry, RSIPMeta, RSIPNode } from '../../../types';
+import {
+  absorbViolation,
+  applyExecution,
+  applyReinforcement,
+  calculateConstraintPower,
+  calculatePhaseDistribution,
+  planRSIPViolation,
+} from '../../../domain/rsip';
 import { buildExecutionRecord } from './helpers';
-import { hasExecutedToday, nextExecutionStreak } from './dailyRules';
-import { planRSIPViolation } from './violationPlan';
 import type {
   MarkExecutionOptions,
   MarkViolationOptions,
@@ -49,36 +49,27 @@ export function createNodeOperations({
   archiveToLibrary,
   recordCollapse,
 }: CreateNodeOperationsParams) {
+  const replaceNode = async (
+    nodes: RSIPNode[],
+    updated: RSIPNode,
+  ): Promise<RSIPNode[]> => {
+    const updatedNodes = nodes.map((node) =>
+      node.id === updated.id ? updated : node,
+    );
+    await saveFns.upsertNode(updated, updatedNodes);
+    return updatedNodes;
+  };
+
   const reinforceNode = async (
     nodeId: string,
     nodes: RSIPNode[],
     levelDelta = 1,
   ): Promise<RSIPNode[]> => {
-    const delta = Math.max(1, Math.floor(levelDelta));
-    const updatedNodes = nodes.map((node) => {
-      if (node.id !== nodeId) {
-        return node;
-      }
-      if ((node.stabilityPhase ?? 'E0') !== 'E2') {
-        return node;
-      }
-
-      const reinforcementLevel = (node.reinforcementLevel ?? 0) + delta;
-      return {
-        ...node,
-        reinforcementLevel,
-        maxReinforcementLevel: Math.max(
-          node.maxReinforcementLevel ?? 0,
-          reinforcementLevel,
-        ),
-      };
-    });
-
-    const updatedNode = updatedNodes.find((node) => node.id === nodeId);
-    if (updatedNode) {
-      await saveFns.upsertNode(updatedNode, updatedNodes);
-    }
-    return updatedNodes;
+    const target = nodes.find((node) => node.id === nodeId);
+    if (!target) return nodes;
+    const updated = applyReinforcement(target, levelDelta);
+    if (updated === target) return nodes;
+    return replaceNode(nodes, updated);
   };
 
   const markExecuted = async (
@@ -87,57 +78,10 @@ export function createNodeOperations({
     notes?: string,
     options?: MarkExecutionOptions,
   ): Promise<RSIPNode[]> => {
-    const now = new Date();
     const target = nodes.find((node) => node.id === nodeId);
-    if (!target || hasExecutedToday(target, now)) return nodes;
-    const updatedNodes = nodes.map((node) => {
-      if (node.id !== nodeId) {
-        return node;
-      }
-
-      const consecutiveExecutions = nextExecutionStreak(node, now);
-      const totalExecutions = (node.totalExecutions ?? 0) + 1;
-      const cumulativeExecutionDays = (node.cumulativeExecutionDays ?? 0) + 1;
-
-      let stabilityPhase: RSIPStabilityPhase = node.stabilityPhase ?? 'E0';
-      let phaseStartedAt = node.phaseStartedAt;
-
-      if (stabilityPhase === 'E0' && consecutiveExecutions >= 7) {
-        stabilityPhase = 'E1';
-        phaseStartedAt = now;
-      } else if (stabilityPhase === 'E1' && consecutiveExecutions >= 21) {
-        stabilityPhase = 'E2';
-        phaseStartedAt = now;
-      }
-
-      let reinforcementLevel = node.reinforcementLevel ?? 0;
-      let maxReinforcementLevel = node.maxReinforcementLevel ?? 0;
-      if (stabilityPhase === 'E2' && options?.reinforce) {
-        reinforcementLevel += 1;
-        maxReinforcementLevel = Math.max(
-          maxReinforcementLevel,
-          reinforcementLevel,
-        );
-      }
-
-      return {
-        ...node,
-        lastExecutedAt: now,
-        consecutiveExecutions,
-        consecutiveViolations: 0,
-        totalExecutions,
-        stabilityPhase,
-        phaseStartedAt,
-        cumulativeExecutionDays,
-        reinforcementLevel,
-        maxReinforcementLevel,
-      };
-    });
-
-    const updatedNode = updatedNodes.find((node) => node.id === nodeId);
-    if (updatedNode) {
-      await saveFns.upsertNode(updatedNode, updatedNodes);
-    }
+    const updated = target && applyExecution(target, new Date(), options);
+    if (!updated) return nodes;
+    const updatedNodes = await replaceNode(nodes, updated);
     await ignoreLoggedPostCommitFailure(
       saveFns.appendExecutionRecord(
         buildExecutionRecord(nodeId, 'executed', notes, options),
@@ -159,27 +103,9 @@ export function createNodeOperations({
       return nodes;
     }
 
-    const currentReinforcement = targetNode.reinforcementLevel ?? 0;
-    if (currentReinforcement > 0) {
-      const updatedNodes = nodes.map((node) => {
-        if (node.id !== nodeId) {
-          return node;
-        }
-
-        return {
-          ...node,
-          reinforcementLevel: Math.max(0, currentReinforcement - 1),
-          lastViolatedAt: now,
-          consecutiveViolations: (node.consecutiveViolations ?? 0) + 1,
-          totalViolations: (node.totalViolations ?? 0) + 1,
-          consecutiveExecutions: 0,
-        };
-      });
-
-      const updatedNode = updatedNodes.find((node) => node.id === nodeId);
-      if (updatedNode) {
-        await saveFns.upsertNode(updatedNode, updatedNodes);
-      }
+    const absorbed = absorbViolation(targetNode, now);
+    if (absorbed) {
+      const updatedNodes = await replaceNode(nodes, absorbed);
       await ignoreLoggedPostCommitFailure(
         saveFns.appendExecutionRecord(
           buildExecutionRecord(nodeId, 'violated', notes, options),
@@ -239,48 +165,12 @@ export function createNodeOperations({
     return updatedNodes;
   };
 
-  const calculateConstraintPower = (
-    nodeId: string,
-    nodes: RSIPNode[],
-  ): { descendantCount: number; failureCost: number } => {
-    const node = nodes.find((item) => item.id === nodeId);
-    if (!node) {
-      return { descendantCount: 0, failureCost: 0 };
-    }
-
-    const descendantCount = getDescendantCount(nodes, nodeId);
-    const phaseWeight: Record<RSIPStabilityPhase, number> = {
-      E0: 1,
-      E1: 2,
-      E2: 3,
-    };
-    const weight = phaseWeight[node.stabilityPhase ?? 'E0'];
-    const reinforcementMultiplier =
-      (node.reinforcementLevel ?? 0) > 0 ? 0.3 : 1;
-    const failureCost =
-      Math.round(
-        (descendantCount + 1) * weight * reinforcementMultiplier * 100,
-      ) / 100;
-
-    return { descendantCount, failureCost };
-  };
-
-  const calculatePhaseDistribution = (
-    nodes: RSIPNode[],
-  ): { E0: number; E1: number; E2: number } => {
-    const distribution = { E0: 0, E1: 0, E2: 0 };
-    for (const node of nodes) {
-      const phase = node.stabilityPhase ?? 'E0';
-      distribution[phase]++;
-    }
-    return distribution;
-  };
-
   return {
     reinforceNode,
     markExecuted,
     markViolated,
-    calculateConstraintPower,
+    calculateConstraintPower: (nodeId: string, nodes: RSIPNode[]) =>
+      calculateConstraintPower(nodes, nodeId),
     calculatePhaseDistribution,
   };
 }

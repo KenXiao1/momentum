@@ -3,13 +3,13 @@ import {
   ExceptionRuleError,
   ExceptionRuleType,
   EnhancedExceptionRuleException,
+  ExceptionRuleException,
 } from '../../../types';
 import type {
   ExceptionRule,
   PauseOptions,
   SessionContext,
 } from '../../../types';
-import { errorRecoveryManager } from '../../../services/ErrorRecoveryManager';
 import { exceptionRuleManager } from '../../../services/ExceptionRuleManager';
 import { userFeedbackHandler } from '../../../services/UserFeedbackHandler';
 import { isDev } from '../../../utils/env';
@@ -17,16 +17,6 @@ import { toError } from '../../../utils/errorHandling';
 import { logger } from '../../../utils/logger';
 
 export type PendingActionType = 'pause' | 'early_completion';
-
-type RecoveryResult = Awaited<
-  ReturnType<typeof errorRecoveryManager.attemptRecovery>
->;
-
-function isExceptionRule(value: unknown): value is ExceptionRule {
-  if (!value || typeof value !== 'object') return false;
-  const candidate = value as Partial<ExceptionRule>;
-  return typeof candidate.id === 'string' && typeof candidate.name === 'string';
-}
 
 export function useExceptionRuleOperations(params: {
   pendingActionType: PendingActionType | null;
@@ -45,95 +35,28 @@ export function useExceptionRuleOperations(params: {
 }) {
   const { pendingActionType, sessionContext, t } = params;
 
-  async function applyRecoveredRule(
-    recovery: RecoveryResult,
-    operation: string,
-    context: unknown,
-  ): Promise<void> {
-    if (!recovery.recoveredData || operation !== 'create_rule') return;
-    if (isExceptionRule(recovery.recoveredData)) {
-      await handleRuleSelected(recovery.recoveredData);
+  function showRuleError(error: unknown, context: unknown): void {
+    if (error instanceof ExceptionRuleException) {
+      userFeedbackHandler.showErrorMessage(error, context);
       return;
     }
-    logger.warn('FOCUS_MODE', 'Recovery returned invalid rule data', {
-      operation,
-      context,
-      recoveredData: recovery.recoveredData,
-    });
-  }
-
-  async function handleEnhancedError(
-    error: EnhancedExceptionRuleException,
-    operation: string,
-    context: unknown,
-  ): Promise<void> {
-    const messageId = userFeedbackHandler.showErrorMessage(error, context);
-    const recovery = await errorRecoveryManager.attemptRecovery(
-      error,
-      context,
-      operation,
-    );
-    if (!recovery.success) {
-      if (recovery.requiresUserAction && recovery.actions) {
-        logger.error('FOCUS_MODE', '需要用户操作的恢复失败', {
-          recoveryResult: recovery,
-          operation,
-          context,
-        });
-      }
-      return;
-    }
-    userFeedbackHandler.removeMessage(messageId);
-    userFeedbackHandler.showSuccess(
-      t('focusMode.useExceptionRuleOperations.issueResolved'),
-      recovery.message,
-    );
-    await applyRecoveredRule(recovery, operation, context);
-  }
-
-  async function handleRuleError(
-    error: unknown,
-    operation: string,
-    context: unknown,
-  ): Promise<void> {
-    try {
-      if (error instanceof EnhancedExceptionRuleException) {
-        await handleEnhancedError(error, operation, context);
-        return;
-      }
-      userFeedbackHandler.showErrorMessage(
-        new EnhancedExceptionRuleException(
-          ExceptionRuleError.STORAGE_ERROR,
-          error instanceof Error
-            ? error.message
-            : t('focusMode.useExceptionRuleOperations.unknownError'),
-          context,
-          true,
-          [
-            t('focusMode.useExceptionRuleOperations.retry'),
-            t('focusMode.useExceptionRuleOperations.refresh'),
-          ],
-          'medium',
-          t(
-            'focusMode.useExceptionRuleOperations.operationFailedPleaseTryAgain',
-          ),
-        ),
+    userFeedbackHandler.showErrorMessage(
+      new EnhancedExceptionRuleException(
+        ExceptionRuleError.STORAGE_ERROR,
+        error instanceof Error
+          ? error.message
+          : t('focusMode.useExceptionRuleOperations.unknownError'),
         context,
-      );
-    } catch (handlingError) {
-      logger.error(
-        'FOCUS_MODE',
-        '错误处理失败',
-        { operation, context },
-        toError(handlingError),
-      );
-      userFeedbackHandler.showWarning(
-        t('focusMode.useExceptionRuleOperations.systemError'),
-        t(
-          'focusMode.useExceptionRuleOperations.somethingWentWrongWhileHandlingTheErrorRefreshThe',
-        ),
-      );
-    }
+        true,
+        [
+          t('focusMode.useExceptionRuleOperations.retry'),
+          t('focusMode.useExceptionRuleOperations.refresh'),
+        ],
+        'medium',
+        t('focusMode.useExceptionRuleOperations.operationFailedPleaseTryAgain'),
+      ),
+      context,
+    );
   }
 
   async function handleRuleSelected(
@@ -213,10 +136,7 @@ export function useExceptionRuleOperations(params: {
         { ruleId: rule.id, actionType: pendingActionType },
         toError(error),
       );
-      await handleRuleError(error, 'use_rule', {
-        rule,
-        actionType: pendingActionType,
-      });
+      showRuleError(error, { rule, actionType: pendingActionType });
     }
   }
 
@@ -258,7 +178,7 @@ export function useExceptionRuleOperations(params: {
         name,
         validType,
         undefined,
-        'reuse_exact',
+        { reuseExisting: true },
       );
       userFeedbackHandler.hideProgress();
       userFeedbackHandler.showSuccess(
@@ -283,7 +203,7 @@ export function useExceptionRuleOperations(params: {
         { name, type },
         toError(error),
       );
-      await handleRuleError(error, 'create_rule', { name, type });
+      showRuleError(error, { name, type });
     }
   }
 

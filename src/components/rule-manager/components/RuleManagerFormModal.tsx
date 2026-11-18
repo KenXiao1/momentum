@@ -46,8 +46,16 @@ export function RuleManagerFormModal({
 
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-3xl bg-white p-6 dark:bg-gray-800">
-        <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="rule-form-title"
+        className="w-full max-w-md rounded-3xl bg-white p-6 dark:bg-gray-800"
+      >
+        <h3
+          id="rule-form-title"
+          className="mb-6 text-xl font-bold text-gray-900 dark:text-white"
+        >
           {editingRule
             ? t('ruleManager.ruleManagerFormModal.editRule')
             : t('ruleManager.ruleManagerFormModal.createRule')}
@@ -102,10 +110,14 @@ export function RuleManagerFormModal({
 
         <div className="space-y-4">
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="rule-form-name"
+              className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               {t('ruleManager.ruleManagerFormModal.ruleName')}
             </label>
             <input
+              id="rule-form-name"
               type="text"
               value={formData.name}
               onChange={(event) =>
@@ -119,10 +131,14 @@ export function RuleManagerFormModal({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="rule-form-type"
+              className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               {t('ruleManager.ruleManagerFormModal.ruleType')}
             </label>
             <select
+              id="rule-form-type"
               value={formData.type}
               onChange={(event) =>
                 setFormData({
@@ -146,10 +162,14 @@ export function RuleManagerFormModal({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="rule-form-description"
+              className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               {t('ruleManager.ruleManagerFormModal.descriptionOptional')}
             </label>
             <textarea
+              id="rule-form-description"
               value={formData.description}
               onChange={(event) =>
                 setFormData({ ...formData, description: event.target.value })

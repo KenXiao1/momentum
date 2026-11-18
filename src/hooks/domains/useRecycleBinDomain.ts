@@ -9,7 +9,6 @@
  * - 通过 RealTimeSyncService 确保多端同步
  *
  * @see docs/features/README-回收箱功能.md - 功能说明
- * @see src/services/RecycleBinService.ts - 底层服务
  */
 import type { Dispatch, SetStateAction } from 'react';
 import type { AppState } from '../../types';
@@ -158,26 +157,13 @@ export function useRecycleBinDomain({
     }
   };
 
+  // Failures propagate to the recycle bin modal, which logs and reports them.
   const handlePermanentDeleteChains = async (chainIds: string[]) => {
-    try {
-      const updatedChains = await realTimeSyncService.permanentDeleteWithSync(
-        storage,
-        chainIds,
-      );
-
-      setState((prev) => ({
-        ...prev,
-        chains: updatedChains,
-      }));
-    } catch (error) {
-      logger.error(
-        'RECYCLE_BIN',
-        'Permanent delete failed',
-        { chainIds },
-        normalizeUnknownError(error),
-      );
-      throw error;
-    }
+    const updatedChains = await realTimeSyncService.permanentDeleteWithSync(
+      storage,
+      chainIds,
+    );
+    setState((prev) => ({ ...prev, chains: updatedChains }));
   };
 
   return {

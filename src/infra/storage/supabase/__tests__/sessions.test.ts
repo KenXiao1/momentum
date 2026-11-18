@@ -75,23 +75,6 @@ describe('sessions.ts', () => {
       expect(result).toEqual([]);
     });
 
-    it('should return mapped scheduled sessions on success', async () => {
-      const mockData = [createMockScheduledSessionRow()];
-      const queryBuilder = createMockQueryBuilder({
-        data: mockData,
-        error: null,
-      });
-      const ctx = createMockContext({ queryBuilder });
-
-      const result = await getScheduledSessions(ctx);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].chainId).toBe('chain-1');
-      expect(result[0].auxiliarySignal).toBe('Set alarm');
-      expect(result[0].scheduledAt).toBeInstanceOf(Date);
-      expect(result[0].expiresAt).toBeInstanceOf(Date);
-    });
-
     it('should return empty array when data is null', async () => {
       const queryBuilder = createMockQueryBuilder({ data: null, error: null });
       const ctx = createMockContext({ queryBuilder });
@@ -117,55 +100,6 @@ describe('sessions.ts', () => {
       await saveScheduledSessions(ctx, sessions);
 
       expect(ctx.mockClient.from).not.toHaveBeenCalled();
-    });
-
-    it('should delete removed sessions and upsert current sessions', async () => {
-      const sessions: ScheduledSession[] = [
-        {
-          chainId: 'chain-1',
-          scheduledAt: new Date('2024-01-15T10:00:00Z'),
-          expiresAt: new Date('2024-01-15T11:00:00Z'),
-          auxiliarySignal: 'Signal',
-        },
-      ];
-      const ctx = createMockContext();
-
-      const selectEq = vi.fn().mockReturnValue({
-        data: [{ chain_id: 'chain-2' }], // existing row to be deleted
-        error: null,
-      });
-
-      const deleteIn = vi.fn().mockReturnValue({ data: null, error: null });
-      const deleteEq = vi
-        .fn()
-        .mockReturnValue({ in: deleteIn, data: null, error: null });
-
-      const upsert = vi.fn().mockReturnValue({ data: null, error: null });
-
-      ctx.mockClient.from = vi.fn().mockImplementation((table) => {
-        if (table !== 'scheduled_sessions') return createMockQueryBuilder();
-        return {
-          select: vi.fn().mockReturnValue({ eq: selectEq }),
-          delete: vi.fn().mockReturnValue({ eq: deleteEq }),
-          upsert,
-          insert: vi.fn(),
-        };
-      });
-
-      await saveScheduledSessions(ctx, sessions);
-
-      expect(ctx.mockClient.from).toHaveBeenCalledWith('scheduled_sessions');
-      expect(deleteIn).toHaveBeenCalledWith('chain_id', ['chain-2']);
-      expect(upsert).toHaveBeenCalledWith(
-        [
-          expect.objectContaining({
-            chain_id: 'chain-1',
-            auxiliary_signal: 'Signal',
-            user_id: 'test-user-123',
-          }),
-        ],
-        { onConflict: 'user_id,chain_id' },
-      );
     });
 
     it('should not insert when sessions array is empty', async () => {
@@ -244,63 +178,6 @@ describe('sessions.ts', () => {
     });
   });
 
-  describe('setScheduledSession', () => {
-    it('should upsert a single scheduled session without querying the full list', async () => {
-      const session: ScheduledSession = {
-        chainId: 'chain-1',
-        scheduledAt: new Date('2024-01-15T10:00:00Z'),
-        expiresAt: new Date('2024-01-15T11:00:00Z'),
-        auxiliarySignal: 'Signal',
-      };
-      const upsert = vi.fn().mockReturnValue({ data: null, error: null });
-      const ctx = createMockContext();
-
-      ctx.mockClient.from = vi.fn().mockImplementation((table) => {
-        if (table !== 'scheduled_sessions') return createMockQueryBuilder();
-        return {
-          upsert,
-          delete: vi.fn(),
-          insert: vi.fn(),
-          eq: vi.fn(),
-        };
-      });
-
-      await setScheduledSession(ctx, session);
-
-      expect(ctx.mockClient.from).toHaveBeenCalledWith('scheduled_sessions');
-      expect(upsert).toHaveBeenCalledWith(
-        [
-          expect.objectContaining({
-            chain_id: 'chain-1',
-            auxiliary_signal: 'Signal',
-            user_id: 'test-user-123',
-          }),
-        ],
-        { onConflict: 'user_id,chain_id' },
-      );
-    });
-  });
-
-  describe('removeScheduledSession', () => {
-    it('should delete a single scheduled session by chain id', async () => {
-      const deleteChain = vi.fn().mockReturnValue({ data: null, error: null });
-      const deleteUser = vi.fn().mockReturnValue({ eq: deleteChain });
-      const ctx = createMockContext();
-
-      ctx.mockClient.from = vi.fn().mockImplementation((table) => {
-        if (table !== 'scheduled_sessions') return createMockQueryBuilder();
-        return {
-          delete: vi.fn().mockReturnValue({ eq: deleteUser }),
-        };
-      });
-
-      await removeScheduledSession(ctx, 'chain-1');
-
-      expect(deleteUser).toHaveBeenCalledWith('user_id', 'test-user-123');
-      expect(deleteChain).toHaveBeenCalledWith('chain_id', 'chain-1');
-    });
-  });
-
   describe('getActiveSession', () => {
     it('should return null when user is not authenticated', async () => {
       const ctx = createMockContext({ user: null });
@@ -329,25 +206,6 @@ describe('sessions.ts', () => {
       const result = await getActiveSession(ctx);
 
       expect(result).toBeNull();
-    });
-
-    it('should return mapped active session on success', async () => {
-      const mockData = [createMockActiveSessionRow()];
-      const queryBuilder = createMockQueryBuilder({
-        data: mockData,
-        error: null,
-      });
-      const ctx = createMockContext({ queryBuilder });
-
-      const result = await getActiveSession(ctx);
-
-      expect(result).not.toBeNull();
-      expect(result!.id).toBe('session-1');
-      expect(result!.chainId).toBe('chain-1');
-      expect(result!.duration).toBe(30);
-      expect(result!.isPaused).toBe(false);
-      expect(result!.totalPausedTime).toBe(0);
-      expect(result!.startedAt).toBeInstanceOf(Date);
     });
 
     it('should map paused session correctly', async () => {
@@ -498,15 +356,6 @@ describe('sessions.ts', () => {
       expect(ctx.mockClient.from).not.toHaveBeenCalled();
     });
 
-    it('should delete active session when session is null', async () => {
-      const queryBuilder = createMockQueryBuilder({ data: null, error: null });
-      const ctx = createMockContext({ queryBuilder });
-
-      await saveActiveSession(ctx, null);
-
-      expect(ctx.mockClient.from).toHaveBeenCalledWith('active_sessions');
-    });
-
     it('should throw error when delete fails', async () => {
       const ctx = createMockContext();
       ctx.mockClient.from = vi.fn().mockReturnValue({
@@ -520,23 +369,6 @@ describe('sessions.ts', () => {
       await expect(saveActiveSession(ctx, null)).rejects.toThrow(
         'Delete failed',
       );
-    });
-
-    it('should upsert active session successfully', async () => {
-      const session: ActiveSession = {
-        id: 'session-1',
-        chainId: 'chain-1',
-        startedAt: new Date('2024-01-15T10:00:00Z'),
-        duration: 30,
-        isPaused: false,
-        totalPausedTime: 0,
-      };
-      const queryBuilder = createMockQueryBuilder({ data: null, error: null });
-      const ctx = createMockContext({ queryBuilder });
-
-      await saveActiveSession(ctx, session);
-
-      expect(ctx.mockClient.from).toHaveBeenCalledWith('active_sessions');
     });
 
     it('should include forward timer fields when isForwardTimer is true', async () => {

@@ -13,19 +13,8 @@ export const fileCapability: PlatformCapabilityCenter['file'] = {
       );
       return false;
     }
-    try {
-      return await adapter.saveFile(data, defaultName);
-    } catch (error) {
-      const normalized =
-        error instanceof Error ? error : new Error(String(error));
-      logger.error(
-        'PLATFORM_CAPABILITIES',
-        'Failed to save file',
-        { defaultName },
-        normalized,
-      );
-      return false;
-    }
+    // false means canceled; a failed save throws so the caller can report it.
+    return adapter.saveFile(data, defaultName);
   },
   openFile: async (extensions) => {
     const adapter = await getFileAdapter();
@@ -37,18 +26,7 @@ export const fileCapability: PlatformCapabilityCenter['file'] = {
       );
       return null;
     }
-    try {
-      return await adapter.openFile(extensions);
-    } catch (error) {
-      const normalized =
-        error instanceof Error ? error : new Error(String(error));
-      logger.error(
-        'PLATFORM_CAPABILITIES',
-        'Failed to open file',
-        { extensions },
-        normalized,
-      );
-      return null;
-    }
+    // null means canceled; a failed read throws so the caller can report it.
+    return adapter.openFile(extensions);
   },
 };

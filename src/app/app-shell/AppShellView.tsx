@@ -181,7 +181,6 @@ export function AppShellView({
                 onSaveNodes={rsip.saveNodes}
                 onSaveMeta={rsip.saveMeta}
                 onSaveGroups={rsip.saveGroups}
-                onSaveTaskLinks={rsip.saveTaskLinks}
                 onMarkExecuted={rsip.markExecuted}
                 onMarkViolated={rsip.markViolated}
                 onReinforceNode={rsip.reinforceNode}

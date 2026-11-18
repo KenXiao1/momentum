@@ -15,7 +15,7 @@ export function setAutoResume(data: AutoResumeData): void {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEYS.AUTO_RESUME, JSON.stringify(data));
   } catch {
-    // ignore quota errors
+    // best-effort: a lost auto-resume flag only means a paused task must be resumed by hand
   }
 }
 
@@ -23,6 +23,6 @@ export function clearAutoResume(): void {
   try {
     localStorage.removeItem(LOCAL_STORAGE_KEYS.AUTO_RESUME);
   } catch {
-    // ignore errors
+    // best-effort: a lost auto-resume flag only means a paused task must be resumed by hand
   }
 }

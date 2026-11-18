@@ -101,35 +101,7 @@ describe('useRSIPViewInteractionActions violation actions', () => {
     expect(result.current.violationGroupMessage).toBeUndefined();
   });
 
-  it('deletes the violated node and all descendants through the fallback', async () => {
-    const root = createNode();
-    const child = createNode({ id: 'child', parentId: root.id });
-    const grandchild = createNode({ id: 'grandchild', parentId: child.id });
-    const unrelated = createNode({ id: 'unrelated' });
-    const onSaveNodes = vi.fn();
-    const { result } = renderHook(() =>
-      useRSIPViewInteractionActions({
-        state: createState({ nodes: [root, child, grandchild, unrelated] }),
-        props: createProps(onSaveNodes),
-      }),
-    );
-
-    act(() => {
-      result.current.openViolationDialog(root);
-    });
-    await act(async () => {
-      await result.current.handleConfirmViolation({
-        reasonCode: 'missed',
-        repairHint: 'reduce scope',
-      });
-    });
-
-    expect(onSaveNodes).toHaveBeenCalledWith([unrelated]);
-    expect(result.current.violationDialogNode).toBeNull();
-    expect(result.current.violationDescendants).toEqual([]);
-  });
-
-  it('passes violation evidence to the domain callback without fallback deletion', async () => {
+  it('passes violation evidence to the domain callback and closes the dialog', async () => {
     const root = createNode();
     const nodes = [root, createNode({ id: 'child', parentId: root.id })];
     const returnedNodes = [createNode({ id: 'replacement' })];
@@ -200,36 +172,17 @@ describe('useRSIPViewInteractionActions violation actions', () => {
     expect(result.current.violationDialogNode).toBe(root);
   });
 
-  it('keeps the dialog open when fallback node persistence rejects', async () => {
-    const root = createNode();
-    const failure = new Error('node persistence unavailable');
-    const onSaveNodes = vi.fn(() => Promise.reject(failure));
-    const { result } = renderHook(() =>
-      useRSIPViewInteractionActions({
-        state: createState({ nodes: [root] }),
-        props: createProps(onSaveNodes),
-      }),
-    );
-
-    act(() => {
-      result.current.openViolationDialog(root);
-    });
-
-    await expect(
-      result.current.handleConfirmViolation({ reasonCode: 'missed' }),
-    ).rejects.toBe(failure);
-    expect(onSaveNodes).toHaveBeenCalledWith([]);
-    expect(result.current.violationDialogNode).toBe(root);
-  });
-
-  it('coalesces repeated violation confirmations while persistence is pending', async () => {
+  it('coalesces repeated violation confirmations while the domain is pending', async () => {
     const root = createNode();
     const save = createDeferred();
-    const onSaveNodes = vi.fn(() => save.promise);
+    const onMarkViolated = vi.fn(async () => {
+      await save.promise;
+      return [];
+    });
     const { result } = renderHook(() =>
       useRSIPViewInteractionActions({
         state: createState({ nodes: [root] }),
-        props: createProps(onSaveNodes),
+        props: createProps(vi.fn(), { onMarkViolated }),
       }),
     );
 
@@ -246,7 +199,7 @@ describe('useRSIPViewInteractionActions violation actions', () => {
     });
 
     await duplicateConfirmation;
-    expect(onSaveNodes).toHaveBeenCalledOnce();
+    expect(onMarkViolated).toHaveBeenCalledOnce();
     expect(result.current.violationDialogNode).toBe(root);
 
     await act(async () => {

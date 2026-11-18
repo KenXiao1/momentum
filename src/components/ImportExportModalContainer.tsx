@@ -69,7 +69,7 @@ export const ImportExportModalContainer: React.FC<
       props.userPreferences,
     ],
   );
-  const handleExport = useExportWorkflow(exportData);
+  const { handleExport, exportFailed } = useExportWorkflow(exportData);
   const importWorkflow = useImportWorkflow({
     existingRsipNodes: props.rsipNodes,
     existingRsipGroups: props.rsipGroups,
@@ -92,6 +92,7 @@ export const ImportExportModalContainer: React.FC<
       onFileUpload={importWorkflow.handleFileUpload}
       onOpenFile={importWorkflow.handleOpenFile}
       onExport={handleExport}
+      exportFailed={exportFailed}
       onImport={importWorkflow.handleImport}
       onClose={props.onClose}
       t={t}

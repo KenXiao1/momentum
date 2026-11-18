@@ -3,7 +3,7 @@ import { logger } from '../../utils/logger';
 import { toError } from '../../utils/errorHandling';
 import { rsipTaskIntegrationService } from '../../services/rsip-integration/RSIPTaskIntegrationService';
 import { ensureDate } from './rsip/helpers';
-import { canCreateRSIPNodes } from './rsip/dailyRules';
+import { canCreateRSIPNodes } from '../../domain/rsip';
 import { createGroupOperations } from './rsip/groupOperations';
 import { createLibraryOperations } from './rsip/libraryOperations';
 import { createNodeOperations } from './rsip/nodeOperations';
@@ -22,6 +22,21 @@ function logPersistenceError(
   error: unknown,
 ) {
   logger.error('RSIP', message, context, toError(error));
+}
+
+/** Logs a failed RSIP write with its context for diagnostics, then rethrows. */
+async function logFailure(
+  message: string,
+  context: Record<string, unknown>,
+  write: () => Promise<void>,
+): Promise<void> {
+  try {
+    await write();
+  } catch (error) {
+    // error-handling: the one place RSIP writes are logged with their context
+    logPersistenceError(message, context, error);
+    throw error;
+  }
 }
 
 async function ignoreLoggedPostCommitFailure(
@@ -84,83 +99,64 @@ export function useRsipDomain({
   const appendExecutionRecord: SaveFns['appendExecutionRecord'] = async (
     record,
   ) => {
-    try {
-      await enqueueWrite(['rsipExecutionRecords'], async () => {
-        await storage.appendRSIPExecutionRecord(record);
-        setState((current) => ({
-          ...current,
-          rsipExecutionRecords: [...current.rsipExecutionRecords, record],
-        }));
-      });
-    } catch (error) {
-      logPersistenceError(
-        'Failed to append RSIP execution record',
-        { nodeId: record.nodeId, status: record.status },
-        error,
-      );
-      throw error;
-    }
+    await logFailure(
+      'Failed to append RSIP execution record',
+      { nodeId: record.nodeId, status: record.status },
+      () =>
+        enqueueWrite(['rsipExecutionRecords'], async () => {
+          await storage.appendRSIPExecutionRecord(record);
+          setState((current) => ({
+            ...current,
+            rsipExecutionRecords: [...current.rsipExecutionRecords, record],
+          }));
+        }),
+    );
   };
 
   const saveMeta: SaveFns['saveMeta'] = async (meta) => {
-    try {
-      await enqueueWrite(['rsipMeta'], async () => {
+    await logFailure('Failed to save RSIP meta', { meta }, () =>
+      enqueueWrite(['rsipMeta'], async () => {
         const nextMeta =
           typeof meta === 'function'
             ? meta(readState()?.rsipMeta ?? (await storage.getRSIPMeta()))
             : meta;
         await storage.saveRSIPMeta(nextMeta);
         setState((current) => ({ ...current, rsipMeta: nextMeta }));
-      });
-    } catch (error) {
-      logPersistenceError('Failed to save RSIP meta', { meta }, error);
-      throw error;
-    }
+      }),
+    );
   };
 
   const saveGroups: SaveFns['saveGroups'] = async (groups) => {
-    try {
-      await persistThenCommitSlice('rsipGroups', groups, () =>
-        storage.saveRSIPGroups(groups),
-      );
-    } catch (error) {
-      logPersistenceError(
-        'Failed to save RSIP groups',
-        { count: groups.length },
-        error,
-      );
-      throw error;
-    }
+    await logFailure(
+      'Failed to save RSIP groups',
+      { count: groups.length },
+      () =>
+        persistThenCommitSlice('rsipGroups', groups, () =>
+          storage.saveRSIPGroups(groups),
+        ),
+    );
   };
 
   const savePolicyLibrary: SaveFns['savePolicyLibrary'] = async (entries) => {
-    try {
-      await persistThenCommitSlice('rsipPolicyLibrary', entries, () =>
-        storage.saveRSIPPolicyLibrary(entries),
-      );
-    } catch (error) {
-      logPersistenceError(
-        'Failed to save RSIP policy library',
-        { count: entries.length },
-        error,
-      );
-      throw error;
-    }
+    await logFailure(
+      'Failed to save RSIP policy library',
+      { count: entries.length },
+      () =>
+        persistThenCommitSlice('rsipPolicyLibrary', entries, () =>
+          storage.saveRSIPPolicyLibrary(entries),
+        ),
+    );
   };
 
   const saveRunHistory: SaveFns['saveRunHistory'] = async (records) => {
-    try {
-      await persistThenCommitSlice('rsipRunHistory', records, () =>
-        storage.saveRSIPRunHistory(records),
-      );
-    } catch (error) {
-      logPersistenceError(
-        'Failed to save RSIP run history',
-        { count: records.length },
-        error,
-      );
-      throw error;
-    }
+    await logFailure(
+      'Failed to save RSIP run history',
+      { count: records.length },
+      () =>
+        persistThenCommitSlice('rsipRunHistory', records, () =>
+          storage.saveRSIPRunHistory(records),
+        ),
+    );
   };
 
   const saveTaskLinks: SaveFns['saveTaskLinks'] = async (links) => {
@@ -171,119 +167,96 @@ export function useRsipDomain({
       })),
     );
 
-    try {
-      await persistThenCommitSlice('rsipTaskLinks', normalized, () =>
-        storage.saveRSIPTaskLinks(normalized),
-      );
-    } catch (error) {
-      logPersistenceError(
-        'Failed to save RSIP task links',
-        { count: normalized.length },
-        error,
-      );
-      throw error;
-    }
+    await logFailure(
+      'Failed to save RSIP task links',
+      { count: normalized.length },
+      () =>
+        persistThenCommitSlice('rsipTaskLinks', normalized, () =>
+          storage.saveRSIPTaskLinks(normalized),
+        ),
+    );
   };
 
   const appendRunRecord: SaveFns['appendRunRecord'] = async (
     record,
     nextHistory,
   ) => {
-    try {
-      await persistThenCommitSlice('rsipRunHistory', nextHistory, () =>
-        storage.appendRSIPRunRecord(record),
-      );
-    } catch (error) {
-      logPersistenceError(
-        'Failed to append RSIP run history',
-        { runNumber: record.runNumber },
-        error,
-      );
-      throw error;
-    }
+    await logFailure(
+      'Failed to append RSIP run history',
+      { runNumber: record.runNumber },
+      () =>
+        persistThenCommitSlice('rsipRunHistory', nextHistory, () =>
+          storage.appendRSIPRunRecord(record),
+        ),
+    );
   };
 
   const upsertLibraryEntry: SaveFns['upsertLibraryEntry'] = async (
     entry,
     nextEntries,
   ) => {
-    try {
-      await persistThenCommitSlice('rsipPolicyLibrary', nextEntries, () =>
-        storage.upsertRSIPLibraryEntry(entry),
-      );
-    } catch (error) {
-      logPersistenceError(
-        'Failed to upsert RSIP library entry',
-        { entryId: entry.id },
-        error,
-      );
-      throw error;
-    }
+    await logFailure(
+      'Failed to upsert RSIP library entry',
+      { entryId: entry.id },
+      () =>
+        persistThenCommitSlice('rsipPolicyLibrary', nextEntries, () =>
+          storage.upsertRSIPLibraryEntry(entry),
+        ),
+    );
   };
 
   const upsertNode: SaveFns['upsertNode'] = async (node, nextNodes) => {
-    try {
-      await persistThenCommitSlice('rsipNodes', nextNodes, () =>
+    await logFailure('Failed to upsert RSIP node', { nodeId: node.id }, () =>
+      persistThenCommitSlice('rsipNodes', nextNodes, () =>
         storage.upsertRSIPNode(node),
-      );
-    } catch (error) {
-      logPersistenceError(
-        'Failed to upsert RSIP node',
-        { nodeId: node.id },
-        error,
-      );
-      throw error;
-    }
+      ),
+    );
   };
 
   const removeNodes: SaveFns['removeNodes'] = async (nodeIds, nextNodes) => {
-    try {
-      await persistThenCommitSlice('rsipNodes', nextNodes, () =>
+    await logFailure('Failed to remove RSIP nodes', { nodeIds }, () =>
+      persistThenCommitSlice('rsipNodes', nextNodes, () =>
         storage.removeRSIPNodes(nodeIds),
-      );
-    } catch (error) {
-      logPersistenceError('Failed to remove RSIP nodes', { nodeIds }, error);
-      throw error;
-    }
+      ),
+    );
   };
 
   const createNodes = async (newNodes: RSIPNode[]): Promise<void> => {
     if (newNodes.length === 0) return;
-    try {
-      await enqueueWrite(['rsipNodes', 'rsipMeta'], async () => {
-        const state = readState();
-        const currentNodes = state?.rsipNodes ?? (await storage.getRSIPNodes());
-        const meta = state?.rsipMeta ?? (await storage.getRSIPMeta());
-        const ids = new Set(currentNodes.map((node) => node.id));
-        const addedCount = newNodes.filter((node) => !ids.has(node.id)).length;
-        if (!canCreateRSIPNodes(meta, currentNodes, addedCount)) {
-          throw new Error('Strict mode allows only one new policy per day.');
-        }
-        const createdAt = newNodes[0].createdAt;
-        const persisted = await storage.createRSIPNodesWithMeta(newNodes, {
-          ...meta,
-          lastAddedAt: createdAt,
-          currentRunNumber: meta.currentRunNumber ?? 1,
-          currentRunStartedAt: meta.currentRunStartedAt ?? createdAt,
-        });
-        const requestedIds = new Set(newNodes.map((node) => node.id));
-        setState((current) => ({
-          ...current,
-          rsipNodes: [
-            ...current.rsipNodes.filter((node) => !requestedIds.has(node.id)),
-            ...persisted.nodes,
-          ].sort((left, right) => left.sortOrder - right.sortOrder),
-          rsipMeta: persisted.meta,
-        }));
-      });
-    } catch (error) {
-      logPersistenceError(
-        'Failed to create RSIP nodes',
-        { nodeCount: newNodes.length },
-        error,
-      );
-      throw error;
-    }
+    await logFailure(
+      'Failed to create RSIP nodes',
+      { nodeCount: newNodes.length },
+      () =>
+        enqueueWrite(['rsipNodes', 'rsipMeta'], async () => {
+          const state = readState();
+          const currentNodes =
+            state?.rsipNodes ?? (await storage.getRSIPNodes());
+          const meta = state?.rsipMeta ?? (await storage.getRSIPMeta());
+          const ids = new Set(currentNodes.map((node) => node.id));
+          const addedCount = newNodes.filter(
+            (node) => !ids.has(node.id),
+          ).length;
+          if (!canCreateRSIPNodes(meta, currentNodes, addedCount)) {
+            throw new Error('Strict mode allows only one new policy per day.');
+          }
+          const createdAt = newNodes[0].createdAt;
+          const persisted = await storage.createRSIPNodesWithMeta(newNodes, {
+            ...meta,
+            lastAddedAt: createdAt,
+            currentRunNumber: meta.currentRunNumber ?? 1,
+            currentRunStartedAt: meta.currentRunStartedAt ?? createdAt,
+          });
+          const requestedIds = new Set(newNodes.map((node) => node.id));
+          setState((current) => ({
+            ...current,
+            rsipNodes: [
+              ...current.rsipNodes.filter((node) => !requestedIds.has(node.id)),
+              ...persisted.nodes,
+            ].sort((left, right) => left.sortOrder - right.sortOrder),
+            rsipMeta: persisted.meta,
+          }));
+        }),
+    );
   };
 
   const saveNodes: SaveFns['saveNodes'] = async (nodes) => {
@@ -291,33 +264,31 @@ export function useRsipDomain({
       previousState: null,
     };
 
-    try {
-      await persistThenCommitSlice('rsipNodes', nodes, () => {
-        writeContext.previousState = readState();
-        const previous = writeContext.previousState;
-        if (previous) {
-          const ids = new Set(previous.rsipNodes.map((node) => node.id));
-          const addedCount = nodes.filter((node) => !ids.has(node.id)).length;
-          if (
-            !canCreateRSIPNodes(
-              previous.rsipMeta,
-              previous.rsipNodes,
-              addedCount,
-            )
-          ) {
-            throw new Error('Strict mode allows only one new policy per day.');
+    await logFailure(
+      'Failed to save RSIP nodes',
+      { nodeCount: nodes.length },
+      () =>
+        persistThenCommitSlice('rsipNodes', nodes, () => {
+          writeContext.previousState = readState();
+          const previous = writeContext.previousState;
+          if (previous) {
+            const ids = new Set(previous.rsipNodes.map((node) => node.id));
+            const addedCount = nodes.filter((node) => !ids.has(node.id)).length;
+            if (
+              !canCreateRSIPNodes(
+                previous.rsipMeta,
+                previous.rsipNodes,
+                addedCount,
+              )
+            ) {
+              throw new Error(
+                'Strict mode allows only one new policy per day.',
+              );
+            }
           }
-        }
-        return storage.saveRSIPNodes(nodes);
-      });
-    } catch (error) {
-      logPersistenceError(
-        'Failed to save RSIP nodes',
-        { nodeCount: nodes.length },
-        error,
-      );
-      throw error;
-    }
+          return storage.saveRSIPNodes(nodes);
+        }),
+    );
 
     const previousCount = writeContext.previousState?.rsipNodes.length ?? 0;
     const meta = writeContext.previousState?.rsipMeta;

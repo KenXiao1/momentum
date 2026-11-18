@@ -1,5 +1,4 @@
 import type { MomentumStorage } from '../../storage/MomentumStorage';
-import { migrationCoordinator } from '../../services/migration';
 import { logger } from '../../utils/logger';
 import { toError } from '../../utils/errorMessage';
 
@@ -33,28 +32,6 @@ export async function persistCompletionHistoryTimingMigration(
     logger.warn(
       'APP_SHELL',
       'Failed to persist completion history timing migration',
-      undefined,
-      toError(error),
-    );
-  }
-}
-
-export async function runDevDataMigration(): Promise<void> {
-  try {
-    const migrationResult = await migrationCoordinator.runDataMigrations();
-
-    if (!migrationResult.success || migrationResult.errors.length > 0) {
-      logger.warn('APP_SHELL', 'Data migration completed with warnings', {
-        migrationResult,
-      });
-      return;
-    }
-
-    logger.info('APP_SHELL', 'Data migration completed successfully');
-  } catch (error) {
-    logger.warn(
-      'APP_SHELL',
-      'Error occurred during data migration',
       undefined,
       toError(error),
     );

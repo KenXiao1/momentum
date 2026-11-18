@@ -8,6 +8,7 @@ import {
   type SessionContext,
 } from '../../../../types';
 import { localPreferences } from '../../../../utils/localPreferences';
+import { LOCAL_STORAGE_KEYS } from '../../../../utils/local-preferences/keys';
 import { useExceptionRuleOperations } from '../useExceptionRuleOperations';
 
 const feedback = vi.hoisted(() => ({
@@ -22,15 +23,6 @@ const feedback = vi.hoisted(() => ({
 
 vi.mock('../../../../services/UserFeedbackHandler', () => ({
   userFeedbackHandler: feedback,
-}));
-
-vi.mock('../../../../services/ErrorRecoveryManager', () => ({
-  errorRecoveryManager: {
-    attemptRecovery: vi.fn(async () => ({
-      success: false,
-      message: 'No automatic recovery',
-    })),
-  },
 }));
 
 vi.mock('../../../../utils/logger', () => ({
@@ -63,16 +55,23 @@ function seedRule(type = ExceptionRuleType.PAUSE_ONLY): ExceptionRule {
     isActive: true,
     isArchived: false,
   };
-  localPreferences.setExceptionRules(JSON.stringify([rule]));
+  localStorage.setItem(
+    LOCAL_STORAGE_KEYS.EXCEPTION_RULES,
+    JSON.stringify([rule]),
+  );
   return rule;
 }
 
 function storedRules(): ExceptionRule[] {
-  return JSON.parse(localPreferences.getExceptionRules() ?? '[]');
+  return JSON.parse(
+    localStorage.getItem(LOCAL_STORAGE_KEYS.EXCEPTION_RULES) ?? '[]',
+  );
 }
 
 function storedUsage(): RuleUsageRecord[] {
-  return JSON.parse(localPreferences.getExceptionRulesUsage() ?? '[]');
+  return JSON.parse(
+    localStorage.getItem(LOCAL_STORAGE_KEYS.EXCEPTION_RULES_USAGE) ?? '[]',
+  );
 }
 
 function renderCreation(
@@ -253,21 +252,31 @@ describe('focus-mode rule creation with local persistence', () => {
   });
 
   it('retains unreadable rule data and keeps the flow open', async () => {
-    localPreferences.setExceptionRules('{invalid-json');
+    localStorage.setItem(LOCAL_STORAGE_KEYS.EXCEPTION_RULES, '{invalid-json');
     const { create, params } = renderCreation();
 
     await create('Check the oven');
 
-    expect(localPreferences.getExceptionRules()).toBe('{invalid-json');
+    expect(localStorage.getItem(LOCAL_STORAGE_KEYS.EXCEPTION_RULES)).toBe(
+      '{invalid-json',
+    );
     expect(storedUsage()).toEqual([]);
     expect(feedback.showErrorMessage).toHaveBeenCalled();
     expect(params.onPause).not.toHaveBeenCalled();
     expect(params.finishFlow).not.toHaveBeenCalled();
   });
 
-  it('keeps the flow open when the persistence boundary rejects a write', async () => {
-    vi.spyOn(localPreferences, 'setExceptionRules').mockImplementation(() => {
-      throw new Error('storage unavailable');
+  it('keeps the flow open when the browser rejects the rule write', async () => {
+    const write = Storage.prototype.setItem;
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      this: Storage,
+      key: string,
+      value: string,
+    ) {
+      if (key === LOCAL_STORAGE_KEYS.EXCEPTION_RULES) {
+        throw new DOMException('Quota exceeded', 'QuotaExceededError');
+      }
+      write.call(this, key, value);
     });
     const { create, params } = renderCreation();
 

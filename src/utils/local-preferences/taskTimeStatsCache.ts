@@ -12,6 +12,6 @@ export function setTaskTimeStats(data: string): void {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEYS.TASK_TIME_STATS, data);
   } catch {
-    // ignore quota errors
+    // best-effort: these stats only feed duration hints and are not user data
   }
 }

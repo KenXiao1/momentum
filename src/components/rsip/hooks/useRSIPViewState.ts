@@ -4,7 +4,7 @@ import { useI18n } from '../../../i18n';
 import type { RSIPMode, RSIPTreeNode } from '../../../types';
 import { buildRSIPTree } from '../../../utils/rsipTree';
 import { buildRSIPInsights } from '../../../services/rsip-insights/RSIPInsightsService';
-import { canCreateRSIPNodes } from '../../../hooks/domains/rsip/dailyRules';
+import { canCreateRSIPNodes } from '../../../domain/rsip';
 import { getSplitTemplates } from '../rsipViewHelpers';
 import type { RSIPViewStateSlice } from './useRSIPViewModel.types';
 

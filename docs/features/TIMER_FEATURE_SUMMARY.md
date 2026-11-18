@@ -203,7 +203,6 @@ src/
 │   ├── time.ts                      # 时间格式化工具
 │   ├── timerConfig.ts               # 计时器配置
 │   ├── timerPerformanceTest.ts      # 性能测试工具
-│   ├── dataMigration.ts             # 数据迁移工具
 │   ├── compatibilityCheck.ts       # 兼容性检查
 │   ├── featureValidation.ts        # 功能验证
 │   └── __tests__/                   # 单元测试

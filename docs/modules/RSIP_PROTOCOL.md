@@ -67,21 +67,22 @@ interface RSIPMeta {
 
 ### 关键文件
 
-| 文件                                                          | 职责                                      |
-| ------------------------------------------------------------- | ----------------------------------------- |
-| `src/types/index.ts`                                          | RSIPNode, RSIPTreeNode, RSIPMeta 类型定义 |
-| `src/hooks/domains/useRsipDomain.ts`                          | RSIP 领域 Hook                            |
-| `src/utils/rsipTree.ts`                                       | 树形结构工具函数                          |
-| `src/components/rsip/RSIPCanvas.tsx`                          | 画布渲染组件                              |
-| `src/components/rsip/RSIPTree.tsx`                            | 树形视图组件                              |
-| `src/components/rsip/RSIPFilters.tsx`                         | 过滤器组件                                |
-| `src/infra/storage/supabase/rsip.ts`                          | Supabase 存储实现                         |
-| `src/services/rsip-insights/RSIPInsightsService.ts`           | 分析与推荐引擎                            |
-| `src/services/rsip-integration/RSIPTaskIntegrationService.ts` | 任务联动服务                              |
-| `src/components/rsip/RSIPTaskLinkPanel.tsx`                   | 任务联动面板                              |
-| `src/components/rsip/RSIPInsightsPanel.tsx`                   | 分析与推荐面板                            |
-| `src/components/rsip/RSIPPolicyLibrary.tsx`                   | 国策库面板                                |
-| `src/components/rsip/RSIPRunHistory.tsx`                      | 轮次历史面板                              |
+| 文件                                                          | 职责                                               |
+| ------------------------------------------------------------- | -------------------------------------------------- |
+| `src/types/index.ts`                                          | RSIPNode, RSIPTreeNode, RSIPMeta 类型定义          |
+| `src/domain/rsip.ts`                                          | 阶段晋升、强化、违规吸收与级联、失败代价（纯函数） |
+| `src/hooks/domains/useRsipDomain.ts`                          | RSIP 领域 Hook（持久化与状态提交）                 |
+| `src/utils/rsipTree.ts`                                       | 树形结构工具函数                                   |
+| `src/components/rsip/RSIPCanvas.tsx`                          | 画布渲染组件                                       |
+| `src/components/rsip/RSIPTree.tsx`                            | 树形视图组件                                       |
+| `src/components/rsip/RSIPFilters.tsx`                         | 过滤器组件                                         |
+| `src/infra/storage/supabase/rsip.ts`                          | Supabase 存储实现                                  |
+| `src/services/rsip-insights/RSIPInsightsService.ts`           | 分析与推荐引擎                                     |
+| `src/services/rsip-integration/RSIPTaskIntegrationService.ts` | 任务联动服务                                       |
+| `src/components/rsip/RSIPTaskLinkPanel.tsx`                   | 任务联动面板                                       |
+| `src/components/rsip/RSIPInsightsPanel.tsx`                   | 分析与推荐面板                                     |
+| `src/components/rsip/RSIPPolicyLibrary.tsx`                   | 国策库面板                                         |
+| `src/components/rsip/RSIPRunHistory.tsx`                      | 轮次历史面板                                       |
 
 ### 组件结构
 

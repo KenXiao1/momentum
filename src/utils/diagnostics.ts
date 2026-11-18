@@ -251,7 +251,7 @@ export function clearDiagnostics(): void {
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch {
-    /* Clearing the memory buffer remains available. */
+    // best-effort: the in-memory buffer is already cleared
   }
 }
 

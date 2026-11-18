@@ -1,4 +1,1 @@
-export {
-  ExceptionRuleManager,
-  exceptionRuleManager,
-} from './exception-rule-manager/ExceptionRuleManager';
+export { exceptionRuleManager } from './exception-rule-manager/ExceptionRuleManager';

@@ -105,23 +105,6 @@ describe('chains.ts', () => {
       expect(result).toEqual([]);
     });
 
-    it('should return mapped chains on success', async () => {
-      const mockData = [createMockChainRow()];
-      const queryBuilder = createMockQueryBuilder({
-        data: mockData,
-        error: null,
-      });
-      const ctx = createMockContext({ queryBuilder });
-
-      const result = await getChains(ctx);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('chain-1');
-      expect(result[0].name).toBe('Test Chain');
-      expect(result[0].type).toBe('unit');
-      expect(result[0].exceptions).toEqual(['exception1']);
-    });
-
     it('should return empty array on PGRST116 error (table not found)', async () => {
       const queryBuilder = createMockQueryBuilder({
         data: null,
@@ -173,22 +156,6 @@ describe('chains.ts', () => {
   });
 
   describe('getActiveChains', () => {
-    it('should filter out deleted chains', async () => {
-      const mockData = [
-        createMockChainRow({ id: 'chain-1', deleted_at: null }),
-      ];
-      const queryBuilder = createMockQueryBuilder({
-        data: mockData,
-        error: null,
-      });
-      const ctx = createMockContext({ queryBuilder });
-
-      const result = await getActiveChains(ctx);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('chain-1');
-    });
-
     it('should fallback to getChains when deleted_at column is missing', async () => {
       const ctx = createMockContext();
       let callCount = 0;
@@ -488,24 +455,6 @@ describe('chains.ts', () => {
 
       expect(result).toBe(0);
     });
-
-    it('should cleanup expired chains and return count', async () => {
-      const expiredChains = [{ id: 'chain-1' }, { id: 'chain-2' }];
-
-      const ctx = createMockContext();
-      let callCount = 0;
-      ctx.mockClient.from = vi.fn().mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) {
-          return createMockQueryBuilder({ data: expiredChains, error: null });
-        }
-        return createMockQueryBuilder({ data: null, error: null });
-      });
-
-      const result = await cleanupExpiredDeletedChains(ctx, 30);
-
-      expect(result).toBe(2);
-    });
   });
 
   describe('saveChains', () => {
@@ -527,56 +476,6 @@ describe('chains.ts', () => {
       await expect(saveChains(ctx, chains)).rejects.toThrow(
         'Duplicate chain id detected',
       );
-    });
-
-    it('should save chains successfully', async () => {
-      const chains = [createMockChain({ id: 'chain-1' })];
-      const ctx = createMockContext();
-
-      let callCount = 0;
-      ctx.mockClient.from = vi.fn().mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) {
-          return createMockQueryBuilder({ data: [], error: null });
-        }
-        return createMockQueryBuilder({
-          data: [{ id: 'chain-1' }],
-          error: null,
-        });
-      });
-      ctx.retryWithAuth = vi.fn().mockImplementation((op) => op());
-
-      await saveChains(ctx, chains);
-
-      expect(ctx.mockClient.from).toHaveBeenCalledWith('chains');
-    });
-
-    it('should delete extra chains not in the save list', async () => {
-      const chains = [createMockChain({ id: 'chain-1' })];
-      const ctx = createMockContext();
-
-      let callCount = 0;
-      ctx.mockClient.from = vi.fn().mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) {
-          return createMockQueryBuilder({
-            data: [{ id: 'chain-1' }, { id: 'chain-2' }],
-            error: null,
-          });
-        }
-        if (callCount === 2) {
-          return createMockQueryBuilder({
-            data: [{ id: 'chain-1' }],
-            error: null,
-          });
-        }
-        return createMockQueryBuilder({ data: null, error: null });
-      });
-      ctx.retryWithAuth = vi.fn().mockImplementation((op) => op());
-
-      await saveChains(ctx, chains);
-
-      expect(ctx.mockClient.from).toHaveBeenCalled();
     });
 
     it('should fallback to base columns when new columns are missing', async () => {

@@ -15,6 +15,6 @@ export function setTheme(theme: Theme): void {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, theme);
   } catch {
-    // ignore quota errors
+    // best-effort: a lost choice falls back to the system theme
   }
 }

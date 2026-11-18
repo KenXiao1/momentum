@@ -61,6 +61,24 @@ async function expectSingleCompletion(
   expect(saved.activeSession).toBeNull();
 }
 
+async function openRuleManager(page: Page) {
+  await page
+    .getByRole('button', { name: 'Exception Rules', exact: true })
+    .click();
+  return page.getByRole('dialog', { name: 'Exception Rules' });
+}
+
+async function createManagedRule(page: Page, name: string) {
+  const manager = await openRuleManager(page);
+  await manager.getByRole('button', { name: 'Create rule' }).first().click();
+  const form = page.getByRole('dialog', { name: 'Create rule' });
+  await form.getByLabel('Rule name *').fill(name);
+  await form.getByRole('button', { name: 'Create', exact: true }).click();
+  await expect(form).toBeHidden();
+  await expect(manager.getByText(name, { exact: true })).toBeVisible();
+  return manager;
+}
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('language', 'en'));
 });
@@ -191,4 +209,118 @@ test('exports and imports a completed chain into an empty browser store', async 
   ).toBeVisible();
   await page.reload();
   await expectSingleCompletion(page, 'Portable focus', 'Portable history');
+});
+
+test('creates a chain rule from the pause dialog, pauses with it, and records one use', async ({
+  page,
+}) => {
+  await createChain(page, 'Rule-driven focus');
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  const ruleDialog = page.getByRole('dialog', {
+    name: 'Choose exception rule',
+  });
+  await ruleDialog.getByLabel('Indefinite', { exact: true }).check();
+  await ruleDialog.getByRole('textbox').first().fill('Deep stretch');
+  await ruleDialog
+    .getByRole('button', { name: /Create.*"Deep stretch"/ })
+    .click();
+  await expect(
+    page.getByRole('button', { name: 'Resume', exact: true }),
+  ).toBeVisible();
+
+  const saved = await page.evaluate(() => ({
+    rules: JSON.parse(localStorage.getItem('momentum_exception_rules') ?? '[]'),
+    usage: JSON.parse(
+      localStorage.getItem('momentum_rule_usage_records') ?? '[]',
+    ),
+  }));
+  const created = saved.rules.filter(
+    (rule: { name: string }) => rule.name === 'Deep stretch',
+  );
+  expect(created).toEqual([
+    expect.objectContaining({
+      type: 'pause_only',
+      scope: 'chain',
+      isActive: true,
+      usageCount: 1,
+    }),
+  ]);
+  expect(saved.usage).toEqual([
+    expect.objectContaining({
+      ruleId: created[0].id,
+      actionType: 'pause',
+      ruleScope: 'chain',
+    }),
+  ]);
+
+  await page.reload();
+  await page.getByRole('button', { name: 'Resume', exact: true }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await expect(
+    ruleDialog.getByText('Deep stretch', { exact: true }),
+  ).toBeVisible();
+});
+
+test('manages a global rule from the dashboard and uses it to pause any chain', async ({
+  page,
+}) => {
+  await createChain(page, 'Managed focus');
+  const manager = await createManagedRule(page, 'Refill water');
+
+  await manager.getByRole('button', { name: 'Edit rule' }).click();
+  const editForm = page.getByRole('dialog', { name: 'Edit rule' });
+  await editForm.getByLabel('Rule name *').fill('Refill bottle');
+  await editForm.getByRole('button', { name: 'Update', exact: true }).click();
+  await expect(editForm).toBeHidden();
+  await expect(
+    manager.getByText('Refill bottle', { exact: true }),
+  ).toBeVisible();
+  await manager.getByRole('button', { name: 'Close', exact: true }).click();
+
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  const ruleDialog = page.getByRole('dialog', {
+    name: 'Choose exception rule',
+  });
+  await ruleDialog.getByLabel('Indefinite', { exact: true }).check();
+  await ruleDialog.getByText('Refill bottle', { exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Resume', exact: true }),
+  ).toBeVisible();
+
+  const rules = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem('momentum_exception_rules') ?? '[]'),
+  );
+  expect(
+    rules.filter((rule: { name: string }) => rule.name.startsWith('Refill')),
+  ).toEqual([
+    expect.objectContaining({
+      name: 'Refill bottle',
+      scope: 'global',
+      type: 'pause_only',
+      usageCount: 1,
+      isActive: true,
+    }),
+  ]);
+});
+
+test('deletes a rule from the manager after confirmation', async ({ page }) => {
+  await page.goto('/');
+  const manager = await createManagedRule(page, 'Answer the door');
+
+  await manager.getByRole('button', { name: 'Delete', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Delete', exact: true })
+    .last()
+    .click();
+  await expect(
+    manager.getByText('Answer the door', { exact: true }),
+  ).toBeHidden();
+
+  await page.reload();
+  const reopened = await openRuleManager(page);
+  await expect(
+    reopened.getByText('Answer the door', { exact: true }),
+  ).toBeHidden();
 });

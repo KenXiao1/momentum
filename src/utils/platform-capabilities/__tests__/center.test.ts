@@ -332,7 +332,7 @@ describe('platform capability center', () => {
     ).toBe('hidden');
   });
 
-  it('keeps file cancellation distinct from success and normalizes operation failures', async () => {
+  it('returns false/null for a canceled file dialog and rejects a failed one', async () => {
     const loaded = await loadCenter();
     loaded.fileAdapter.saveFile
       .mockResolvedValueOnce(false)
@@ -344,21 +344,11 @@ describe('platform capability center', () => {
       false,
     );
     await expect(loaded.center.file.openFile(['json'])).resolves.toBeNull();
-    await expect(loaded.center.file.saveFile('{}', 'data.json')).resolves.toBe(
-      false,
-    );
-    await expect(loaded.center.file.openFile(['json'])).resolves.toBeNull();
-    expect(loaded.loggerError).toHaveBeenCalledWith(
-      'PLATFORM_CAPABILITIES',
-      'Failed to save file',
-      { defaultName: 'data.json' },
-      expect.objectContaining({ message: 'disk full' }),
-    );
-    expect(loaded.loggerError).toHaveBeenCalledWith(
-      'PLATFORM_CAPABILITIES',
-      'Failed to open file',
-      { extensions: ['json'] },
-      expect.objectContaining({ message: 'read failed' }),
+    await expect(
+      loaded.center.file.saveFile('{}', 'data.json'),
+    ).rejects.toThrow('disk full');
+    await expect(loaded.center.file.openFile(['json'])).rejects.toThrow(
+      'read failed',
     );
   });
 

@@ -80,6 +80,9 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
         onCancel={() => setDeleteConfirmationRule(null)}
       />
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="rule-manager-title"
         className="max-h-[90vh] w-full max-w-6xl overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-gray-800"
         style={{ maxWidth: 'min(1152px, 100vw - 2rem)' }}
       >
@@ -89,7 +92,10 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
               <Settings className="text-primary-500" size={20} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h2
+                id="rule-manager-title"
+                className="text-2xl font-bold text-gray-900 dark:text-white"
+              >
                 {t('ruleManager.ruleManagerViewView.exceptionRules')}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -114,9 +120,7 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
               className="flex items-center space-x-2 rounded-xl bg-primary-500 px-4 py-2 text-white transition-colors hover:bg-primary-600"
             >
               <Plus size={16} />
-              <span>
-                {t('ruleManager.ruleManagerViewView.createChainSpecificRule')}
-              </span>
+              <span>{t('ruleManager.ruleManagerViewView.createRule')}</span>
             </button>
 
             <button

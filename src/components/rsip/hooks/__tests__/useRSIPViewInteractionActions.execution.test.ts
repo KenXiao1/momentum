@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { RSIPNode } from '../../../../types';
 import { logger } from '../../../../utils/logger';
 import { useRSIPViewInteractionActions } from '../useRSIPViewInteractionActions';
 import {
@@ -24,59 +25,6 @@ describe('useRSIPViewInteractionActions execution actions', () => {
     vi.useRealTimers();
   });
 
-  it('advances execution state and runs only active execution links', async () => {
-    const root = createNode({
-      consecutiveExecutions: 6,
-      consecutiveViolations: 2,
-      cumulativeExecutionDays: 3,
-      totalExecutions: 5,
-      stabilityPhase: 'E0',
-    });
-    const child = createNode({ id: 'child', parentId: root.id });
-    const onSaveNodes = vi.fn();
-    const onStartChain = vi.fn(async () => undefined);
-    const state = createState({
-      nodes: [root, child],
-      chains: [createChainStub('chain-1', 'Morning task')],
-      taskLinks: [
-        createTaskLink(),
-        createTaskLink({ id: 'inactive', isActive: false }),
-        createTaskLink({
-          id: 'wrong-event',
-          triggerEvent: 'task_completed',
-        }),
-        createTaskLink({ id: 'other-node', rsipNodeId: 'node-2' }),
-      ],
-    });
-    const { result } = renderHook(() =>
-      useRSIPViewInteractionActions({
-        state,
-        props: createProps(onSaveNodes, { onStartChain }),
-      }),
-    );
-
-    let updatedNodes = state.nodes;
-    await act(async () => {
-      updatedNodes = await result.current.handleMarkExecuted(root.id);
-    });
-
-    expect(updatedNodes[0]).toMatchObject({
-      id: root.id,
-      stabilityPhase: 'E1',
-      consecutiveExecutions: 7,
-      consecutiveViolations: 0,
-      cumulativeExecutionDays: 4,
-      totalExecutions: 6,
-      phaseStartedAt: expect.any(Date),
-      lastExecutedAt: expect.any(Date),
-    });
-    expect(updatedNodes[1]).toBe(child);
-    expect(root.stabilityPhase).toBe('E0');
-    expect(onSaveNodes).toHaveBeenCalledWith(updatedNodes);
-    expect(onStartChain).toHaveBeenCalledOnce();
-    expect(onStartChain).toHaveBeenCalledWith('chain-1');
-  });
-
   it('honors confirmation, schedules accepted links, and logs missing chains', async () => {
     const confirm = vi
       .spyOn(window, 'confirm')
@@ -91,27 +39,28 @@ describe('useRSIPViewInteractionActions execution actions', () => {
         createChainStub('start-chain', 'Start task'),
         createChainStub('schedule-chain', 'Scheduled task'),
       ],
-      taskLinks: [
-        createTaskLink({ id: 'missing', chainId: 'missing-chain' }),
-        createTaskLink({
-          id: 'start',
-          chainId: 'start-chain',
-          automation: 'confirm',
-        }),
-        createTaskLink({
-          id: 'schedule',
-          chainId: 'schedule-chain',
-          automation: 'confirm',
-          effect: 'prompt_schedule_chain',
-        }),
-      ],
     });
+    const onGetTaskActions = vi.fn(() => [
+      createTaskLink({ id: 'missing', chainId: 'missing-chain' }),
+      createTaskLink({
+        id: 'start',
+        chainId: 'start-chain',
+        automation: 'confirm',
+      }),
+      createTaskLink({
+        id: 'schedule',
+        chainId: 'schedule-chain',
+        automation: 'confirm',
+        effect: 'prompt_schedule_chain',
+      }),
+    ]);
     const { result } = renderHook(() =>
       useRSIPViewInteractionActions({
         state,
         props: createProps(vi.fn(), {
           onStartChain,
           onScheduleChain,
+          onGetTaskActions,
         }),
       }),
     );
@@ -202,47 +151,31 @@ describe('useRSIPViewInteractionActions execution actions', () => {
     expect(onStartChain).not.toHaveBeenCalled();
   });
 
-  it('does not run linked tasks when fallback node persistence rejects', async () => {
-    const failure = new Error('node persistence unavailable');
-    const onSaveNodes = vi.fn(() => Promise.reject(failure));
+  it('coalesces repeated execution requests until the domain and linked actions finish', async () => {
+    const execution = createDeferred();
+    const onMarkExecuted = vi.fn(async (_id: string, nodes: RSIPNode[]) => {
+      await execution.promise;
+      return nodes;
+    });
     const onStartChain = vi.fn(async () => undefined);
+    const onGetTaskActions = vi.fn(() => [createTaskLink()]);
     const state = createState({
       nodes: [createNode()],
       chains: [createChainStub('chain-1', 'Morning task')],
-      taskLinks: [createTaskLink()],
     });
     const { result } = renderHook(() =>
       useRSIPViewInteractionActions({
         state,
-        props: createProps(onSaveNodes, { onStartChain }),
+        props: createProps(vi.fn(), {
+          onMarkExecuted,
+          onStartChain,
+          onGetTaskActions,
+        }),
       }),
     );
 
-    await expect(result.current.handleMarkExecuted('node-1')).rejects.toBe(
-      failure,
-    );
-    expect(onSaveNodes).toHaveBeenCalledOnce();
-    expect(onStartChain).not.toHaveBeenCalled();
-  });
-
-  it('coalesces repeated execution requests until persistence and linked actions finish', async () => {
-    const save = createDeferred();
-    const onSaveNodes = vi.fn(() => save.promise);
-    const onStartChain = vi.fn(async () => undefined);
-    const state = createState({
-      nodes: [createNode()],
-      chains: [createChainStub('chain-1', 'Morning task')],
-      taskLinks: [createTaskLink()],
-    });
-    const { result } = renderHook(() =>
-      useRSIPViewInteractionActions({
-        state,
-        props: createProps(onSaveNodes, { onStartChain }),
-      }),
-    );
-
-    let firstExecution!: Promise<ReturnType<typeof createNode>[]>;
-    let duplicateExecution!: Promise<ReturnType<typeof createNode>[]>;
+    let firstExecution!: Promise<RSIPNode[]>;
+    let duplicateExecution!: Promise<RSIPNode[]>;
     act(() => {
       firstExecution = result.current.handleMarkExecuted('node-1');
       duplicateExecution = result.current.handleMarkExecuted('node-1');
@@ -253,11 +186,11 @@ describe('useRSIPViewInteractionActions execution actions', () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(onSaveNodes).toHaveBeenCalledOnce();
+    expect(onMarkExecuted).toHaveBeenCalledOnce();
     expect(onStartChain).not.toHaveBeenCalled();
 
     await act(async () => {
-      save.resolve();
+      execution.resolve();
       await firstExecution;
     });
 
@@ -265,22 +198,30 @@ describe('useRSIPViewInteractionActions execution actions', () => {
   });
 
   it('serializes different-node executions against the latest saved node state', async () => {
-    const firstSave = createDeferred();
-    const onSaveNodes = vi
-      .fn()
-      .mockImplementationOnce(() => firstSave.promise)
-      .mockResolvedValueOnce(undefined);
+    const firstDone = createDeferred();
+    const execute = (id: string, nodes: RSIPNode[]) =>
+      nodes.map((node) =>
+        node.id === id
+          ? { ...node, totalExecutions: (node.totalExecutions ?? 0) + 1 }
+          : node,
+      );
+    const onMarkExecuted = vi
+      .fn(async (id: string, nodes: RSIPNode[]) => execute(id, nodes))
+      .mockImplementationOnce(async (id, nodes) => {
+        await firstDone.promise;
+        return execute(id, nodes);
+      });
     const first = createNode({ id: 'first', totalExecutions: 0 });
     const second = createNode({ id: 'second', totalExecutions: 0 });
     const { result } = renderHook(() =>
       useRSIPViewInteractionActions({
-        state: createState({ nodes: [first, second], taskLinks: [] }),
-        props: createProps(onSaveNodes),
+        state: createState({ nodes: [first, second] }),
+        props: createProps(vi.fn(), { onMarkExecuted }),
       }),
     );
 
-    let firstExecution!: Promise<ReturnType<typeof createNode>[]>;
-    let secondExecution!: Promise<ReturnType<typeof createNode>[]>;
+    let firstExecution!: Promise<RSIPNode[]>;
+    let secondExecution!: Promise<RSIPNode[]>;
     act(() => {
       firstExecution = result.current.handleMarkExecuted('first');
       secondExecution = result.current.handleMarkExecuted('second');
@@ -290,175 +231,70 @@ describe('useRSIPViewInteractionActions execution actions', () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(onSaveNodes).toHaveBeenCalledOnce();
+    expect(onMarkExecuted).toHaveBeenCalledOnce();
 
+    let finalNodes: RSIPNode[] = [];
     await act(async () => {
-      firstSave.resolve();
+      firstDone.resolve();
       await firstExecution;
-      await secondExecution;
+      finalNodes = await secondExecution;
     });
 
-    expect(onSaveNodes).toHaveBeenCalledTimes(2);
-    expect(onSaveNodes.mock.calls[1][0]).toEqual([
+    expect(onMarkExecuted).toHaveBeenCalledTimes(2);
+    expect(onMarkExecuted.mock.calls[1][1]).toEqual([
+      expect.objectContaining({ id: 'first', totalExecutions: 1 }),
+      second,
+    ]);
+    expect(finalNodes).toEqual([
       expect.objectContaining({ id: 'first', totalExecutions: 1 }),
       expect.objectContaining({ id: 'second', totalExecutions: 1 }),
     ]);
-    expect(first.totalExecutions).toBe(0);
-    expect(second.totalExecutions).toBe(0);
   });
 
-  it('restores a real library entry through the fallback conversion', async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-04-05T12:00:00.000Z'));
-    vi.spyOn(crypto, 'randomUUID').mockReturnValue(
-      '11111111-1111-4111-8111-111111111111',
-    );
-    const existingNode = createNode();
-    const onSaveNodes = vi.fn();
-    const state = createState({ nodes: [existingNode] });
-    const props = createProps(onSaveNodes, {
-      policyLibrary: [
-        {
-          id: 'library-1',
-          title: 'Restored policy',
-          rule: 'Restore this rule',
-          type: 'routine',
-          emoji: '♻️',
-          cumulativeExecutionDays: 12,
-          internalizationProgress: 40,
-          lastActiveAt: new Date('2026-03-01T00:00:00.000Z'),
-          timesUsed: 2,
-          useTimer: true,
-          timerMinutes: 20,
-          isPassive: false,
-        },
-      ],
-    });
-    const { result } = renderHook(() =>
-      useRSIPViewInteractionActions({ state, props }),
-    );
-
-    await act(async () => {
-      await result.current.handleRestoreFromLibrary('library-1', 'parent-1');
-    });
-
-    expect(onSaveNodes).toHaveBeenCalledWith([
-      existingNode,
-      {
-        id: '11111111-1111-4111-8111-111111111111',
-        parentId: 'parent-1',
-        title: 'Restored policy',
-        rule: 'Restore this rule',
-        sortOrder: 1775390400,
-        createdAt: new Date('2026-04-05T12:00:00.000Z'),
-        useTimer: true,
-        timerMinutes: 20,
-        emoji: '♻️',
-        type: 'routine',
-        isPassive: false,
-        cumulativeExecutionDays: 12,
-      },
-    ]);
-  });
-
-  it('delegates library restoration and ignores unknown fallback entries', async () => {
-    const onSaveNodes = vi.fn();
-    const onRestoreFromLibrary = vi.fn(async () => createNode());
-    const delegated = renderHook(() =>
-      useRSIPViewInteractionActions({
-        state: createState(),
-        props: createProps(onSaveNodes, { onRestoreFromLibrary }),
-      }),
-    );
-    const fallback = renderHook(() =>
-      useRSIPViewInteractionActions({
-        state: createState(),
-        props: createProps(onSaveNodes),
-      }),
-    );
-
-    await act(async () => {
-      await delegated.result.current.handleRestoreFromLibrary(
-        'library-1',
-        'parent-1',
-      );
-      await fallback.result.current.handleRestoreFromLibrary('missing');
-    });
-
-    expect(onRestoreFromLibrary).toHaveBeenCalledWith('library-1', 'parent-1');
-    expect(onSaveNodes).not.toHaveBeenCalled();
-  });
-
-  it('propagates fallback library persistence failures', async () => {
+  it('delegates library restoration and propagates its failure', async () => {
     const failure = new Error('library restore persistence unavailable');
-    const onSaveNodes = vi.fn(() => Promise.reject(failure));
-    const state = createState();
-    const props = createProps(onSaveNodes, {
-      policyLibrary: [
-        {
-          id: 'library-1',
-          title: 'Restored policy',
-          rule: 'Restore this rule',
-          cumulativeExecutionDays: 2,
-          internalizationProgress: 10,
-          lastActiveAt: new Date('2026-03-01T00:00:00.000Z'),
-          timesUsed: 1,
-        },
-      ],
-    });
+    const onRestoreFromLibrary = vi
+      .fn(async () => createNode())
+      .mockRejectedValueOnce(failure);
     const { result } = renderHook(() =>
-      useRSIPViewInteractionActions({ state, props }),
+      useRSIPViewInteractionActions({
+        state: createState(),
+        props: createProps(vi.fn(), { onRestoreFromLibrary }),
+      }),
     );
 
     await expect(
-      result.current.handleRestoreFromLibrary('library-1'),
+      result.current.handleRestoreFromLibrary('library-1', 'parent-1'),
     ).rejects.toBe(failure);
-  });
-
-  it('persists task links through the available boundary', async () => {
-    const links = [createTaskLink()];
-    const onUpsertTaskLinks = vi.fn(async () => links);
-    const onSaveTaskLinks = vi.fn();
-    const delegated = renderHook(() =>
-      useRSIPViewInteractionActions({
-        state: createState(),
-        props: createProps(vi.fn(), {
-          onUpsertTaskLinks,
-          onSaveTaskLinks,
-        }),
-      }),
-    );
-    const fallback = renderHook(() =>
-      useRSIPViewInteractionActions({
-        state: createState(),
-        props: createProps(vi.fn(), { onSaveTaskLinks }),
-      }),
-    );
-
     await act(async () => {
-      await delegated.result.current.handleTaskLinkUpsert(links);
-      await fallback.result.current.handleTaskLinkUpsert(links);
+      await result.current.handleRestoreFromLibrary('library-1', 'parent-1');
     });
-
-    expect(onUpsertTaskLinks).toHaveBeenCalledWith(links);
-    expect(onSaveTaskLinks).toHaveBeenCalledOnce();
-    expect(onSaveTaskLinks).toHaveBeenCalledWith(links);
+    expect(onRestoreFromLibrary).toHaveBeenLastCalledWith(
+      'library-1',
+      'parent-1',
+    );
   });
 
-  it('propagates fallback task-link persistence failures', async () => {
-    const failure = new Error('task-link persistence unavailable');
+  it('persists task links through the domain and propagates its failure', async () => {
     const links = [createTaskLink()];
-    const onSaveTaskLinks = vi.fn(() => Promise.reject(failure));
+    const failure = new Error('task-link persistence unavailable');
+    const onUpsertTaskLinks = vi
+      .fn(async (next: typeof links) => next)
+      .mockRejectedValueOnce(failure);
     const { result } = renderHook(() =>
       useRSIPViewInteractionActions({
         state: createState(),
-        props: createProps(vi.fn(), { onSaveTaskLinks }),
+        props: createProps(vi.fn(), { onUpsertTaskLinks }),
       }),
     );
 
     await expect(result.current.handleTaskLinkUpsert(links)).rejects.toBe(
       failure,
     );
+    await act(async () => {
+      await result.current.handleTaskLinkUpsert(links);
+    });
+    expect(onUpsertTaskLinks).toHaveBeenLastCalledWith(links);
   });
 
   it('calculates constraint power from the live node tree and handles missing nodes', () => {

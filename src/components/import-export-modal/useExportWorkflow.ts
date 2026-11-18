@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import type {
   Chain,
   CompletionHistory,
@@ -34,7 +34,9 @@ export function useExportWorkflow(data: {
   userPreferences?: unknown;
 }) {
   const file = getPlatformCapabilityCenter().file;
-  return useCallback(async () => {
+  const [exportFailed, setExportFailed] = useState(false);
+  const handleExport = useCallback(async () => {
+    setExportFailed(false);
     try {
       const exportData: MomentumExportDataV3 =
         importExportService.createExportData({
@@ -54,6 +56,8 @@ export function useExportWorkflow(data: {
         undefined,
         normalizeUnknownError(error),
       );
+      setExportFailed(true);
     }
   }, [data, file]);
+  return { handleExport, exportFailed };
 }

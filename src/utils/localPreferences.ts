@@ -9,15 +9,6 @@ import {
   getCanvasState,
   setCanvasState,
 } from './local-preferences/canvasState';
-import {
-  clearExceptionRulesMigration,
-  getExceptionRules,
-  getExceptionRulesMigration,
-  getExceptionRulesUsage,
-  setExceptionRules,
-  setExceptionRulesMigration,
-  setExceptionRulesUsage,
-} from './local-preferences/exceptionRulesCache';
 import { getLanguage, setLanguage } from './local-preferences/language';
 import {
   getNotificationsEnabled,
@@ -57,13 +48,6 @@ export const localPreferences = {
   clearTimerState,
   getAllTimerKeys,
   cleanupExpiredTimers,
-  getExceptionRules,
-  setExceptionRules,
-  getExceptionRulesUsage,
-  setExceptionRulesUsage,
-  getExceptionRulesMigration,
-  setExceptionRulesMigration,
-  clearExceptionRulesMigration,
   getTaskTimeStats,
   setTaskTimeStats,
   getRaw,

@@ -1,6 +1,4 @@
 import { SupabaseStorage } from '../supabaseStorage';
-import { MigrationHelper } from '../migrationHelper';
-import { schemaChecker } from '../schemaChecker';
 import { Chain } from '../../types';
 import { supabase } from '../../lib/supabase';
 
@@ -24,15 +22,12 @@ const mockSupabase = supabase as unknown as {
 
 describe('Schema Compatibility Tests', () => {
   let storage: SupabaseStorage;
-  let migrationHelper: MigrationHelper;
 
   beforeEach(() => {
     storage = new SupabaseStorage();
-    migrationHelper = new MigrationHelper();
     vi.clearAllMocks();
     mockSupabase.from.mockReset();
     mockSupabase.rpc.mockReset();
-    schemaChecker.clearSchemaCache();
   });
 
   describe('Complete Schema Compatibility', () => {
@@ -173,48 +168,6 @@ describe('Schema Compatibility Tests', () => {
       ]);
 
       expect(result2).toEqual(result1);
-    });
-  });
-
-  describe('Migration Status Detection', () => {
-    it('should correctly identify applied migrations', async () => {
-      mockSupabase.rpc.mockResolvedValueOnce({
-        data: [
-          {
-            column_name: 'id',
-            data_type: 'uuid',
-            is_nullable: 'NO',
-            column_default: null,
-          },
-          {
-            column_name: 'parent_id',
-            data_type: 'uuid',
-            is_nullable: 'YES',
-            column_default: null,
-          },
-          {
-            column_name: 'type',
-            data_type: 'text',
-            is_nullable: 'NO',
-            column_default: null,
-          },
-        ],
-        error: null,
-      });
-
-      const basicApplied = await migrationHelper.isMigrationApplied(
-        '20250730021823_winter_flame',
-      );
-      const hierarchyApplied = await migrationHelper.isMigrationApplied(
-        '20250801160754_peaceful_palace',
-      );
-      const timeLimitApplied = await migrationHelper.isMigrationApplied(
-        '20250808000000_add_group_time_limit',
-      );
-
-      expect(basicApplied).toBe(true);
-      expect(hierarchyApplied).toBe(true);
-      expect(timeLimitApplied).toBe(false);
     });
   });
 

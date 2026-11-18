@@ -15,10 +15,6 @@ const exceptionRuleManagerMock = vi.hoisted(() => ({
   createRule: vi.fn(),
 }));
 
-const errorRecoveryManagerMock = vi.hoisted(() => ({
-  attemptRecovery: vi.fn(),
-}));
-
 const userFeedbackHandlerMock = vi.hoisted(() => ({
   showErrorMessage: vi.fn(),
   showProgress: vi.fn(),
@@ -31,10 +27,6 @@ const userFeedbackHandlerMock = vi.hoisted(() => ({
 
 vi.mock('../../../../services/ExceptionRuleManager', () => ({
   exceptionRuleManager: exceptionRuleManagerMock,
-}));
-
-vi.mock('../../../../services/ErrorRecoveryManager', () => ({
-  errorRecoveryManager: errorRecoveryManagerMock,
 }));
 
 vi.mock('../../../../services/UserFeedbackHandler', () => ({
@@ -87,10 +79,6 @@ describe('useExceptionRuleOperations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     exceptionRuleManagerMock.useRule.mockResolvedValue({ success: true });
-    errorRecoveryManagerMock.attemptRecovery.mockResolvedValue({
-      success: false,
-      message: 'Not recovered',
-    });
     userFeedbackHandlerMock.showErrorMessage.mockReturnValue('error-message-1');
   });
 
@@ -218,25 +206,18 @@ describe('useExceptionRuleOperations', () => {
     expect(displayedError).toBeInstanceOf(EnhancedExceptionRuleException);
     expect(displayedError.type).toBe(ExceptionRuleError.STORAGE_ERROR);
     expect(displayedError.message).toBe('storage unavailable');
-    expect(errorRecoveryManagerMock.attemptRecovery).not.toHaveBeenCalled();
     expect(params.onRuleUsed).not.toHaveBeenCalled();
     expect(params.onPause).not.toHaveBeenCalled();
     expect(params.finishFlow).not.toHaveBeenCalled();
     expect(userFeedbackHandlerMock.hideProgress).toHaveBeenCalledTimes(1);
   });
 
-  it('retains the error message when enhanced-error recovery fails', async () => {
+  it('surfaces an enhanced error unchanged and keeps the flow open', async () => {
     const error = new EnhancedExceptionRuleException(
       ExceptionRuleError.NETWORK_ERROR,
       'offline',
     );
     exceptionRuleManagerMock.useRule.mockRejectedValue(error);
-    errorRecoveryManagerMock.attemptRecovery.mockResolvedValue({
-      success: false,
-      message: 'Still offline',
-      requiresUserAction: true,
-      actions: [],
-    });
     const params = createParams('pause');
     const rule = createRule();
     const { result } = renderHook(() => useExceptionRuleOperations(params));
@@ -245,12 +226,10 @@ describe('useExceptionRuleOperations', () => {
       await result.current.handleRuleSelected(rule);
     });
 
-    expect(errorRecoveryManagerMock.attemptRecovery).toHaveBeenCalledWith(
+    expect(userFeedbackHandlerMock.showErrorMessage).toHaveBeenCalledWith(
       error,
       { rule, actionType: 'pause' },
-      'use_rule',
     );
-    expect(userFeedbackHandlerMock.removeMessage).not.toHaveBeenCalled();
     expect(userFeedbackHandlerMock.showSuccess).not.toHaveBeenCalled();
     expect(params.finishFlow).not.toHaveBeenCalled();
   });
@@ -298,7 +277,7 @@ describe('useExceptionRuleOperations', () => {
       'Finish now',
       ExceptionRuleType.EARLY_COMPLETION_ONLY,
       undefined,
-      'reuse_exact',
+      { reuseExisting: true },
     );
     expect(userFeedbackHandlerMock.showWarning).toHaveBeenCalledWith(
       'Notes',
@@ -315,18 +294,12 @@ describe('useExceptionRuleOperations', () => {
     expect(params.onRequestCompletionDialog).toHaveBeenCalledTimes(1);
   });
 
-  it('applies a recovered created rule and removes the original error message', async () => {
+  it('surfaces a creation error without applying any rule', async () => {
     const error = new EnhancedExceptionRuleException(
       ExceptionRuleError.DUPLICATE_RULE_NAME,
       'duplicate',
     );
-    const recoveredRule = createRule({ id: 'recovered-rule' });
     exceptionRuleManagerMock.createRule.mockRejectedValue(error);
-    errorRecoveryManagerMock.attemptRecovery.mockResolvedValue({
-      success: true,
-      message: 'Recovered existing rule',
-      recoveredData: recoveredRule,
-    });
     const params = createParams('pause');
     const { result } = renderHook(() => useExceptionRuleOperations(params));
 
@@ -337,26 +310,12 @@ describe('useExceptionRuleOperations', () => {
       );
     });
 
-    expect(errorRecoveryManagerMock.attemptRecovery).toHaveBeenCalledWith(
+    expect(userFeedbackHandlerMock.showErrorMessage).toHaveBeenCalledWith(
       error,
       { name: 'Take a break', type: ExceptionRuleType.PAUSE_ONLY },
-      'create_rule',
     );
-    expect(userFeedbackHandlerMock.removeMessage).toHaveBeenCalledWith(
-      'error-message-1',
-    );
-    expect(userFeedbackHandlerMock.showSuccess).toHaveBeenCalledWith(
-      'Issue resolved',
-      'Recovered existing rule',
-    );
-    expect(exceptionRuleManagerMock.createRule).toHaveBeenCalledOnce();
-    expect(exceptionRuleManagerMock.useRule).toHaveBeenCalledWith(
-      recoveredRule.id,
-      sessionContext,
-      'pause',
-      undefined,
-    );
-    expect(params.onPause).toHaveBeenCalledWith(undefined);
-    expect(params.finishFlow).toHaveBeenCalledTimes(1);
+    expect(userFeedbackHandlerMock.hideProgress).toHaveBeenCalledTimes(1);
+    expect(exceptionRuleManagerMock.useRule).not.toHaveBeenCalled();
+    expect(params.finishFlow).not.toHaveBeenCalled();
   });
 });

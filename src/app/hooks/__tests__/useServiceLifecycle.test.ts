@@ -2,13 +2,12 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useServiceLifecycle } from '../useServiceLifecycle';
 import { forwardTimerManager } from '../../../utils/forwardTimer';
-import { migrationCoordinator } from '../../../services/migration';
 import { performanceMonitor } from '../../../utils/performanceMonitor';
-import { initializeRuleSystem } from '../../../utils/initializeRuleSystem';
+import { exceptionRuleManager } from '../../../services/ExceptionRuleManager';
 import { checkForUpdates } from '../../../utils/platform-adapters/updater';
-import { logger } from '../../../utils/logger';
 
-vi.mock('../../../utils/env', () => ({
+vi.mock('../../../utils/env', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../utils/env')>()),
   isDev: false,
 }));
 
@@ -23,8 +22,8 @@ vi.mock('../../../utils/performanceMonitor', () => ({
   performanceMonitor: { start: vi.fn(), stop: vi.fn() },
 }));
 
-vi.mock('../../../utils/initializeRuleSystem', () => ({
-  initializeRuleSystem: vi.fn(async () => ({ success: true, message: 'ok' })),
+vi.mock('../../../services/ExceptionRuleManager', () => ({
+  exceptionRuleManager: { initialize: vi.fn(async () => undefined) },
 }));
 
 vi.mock('../../../services/migration', () => ({
@@ -35,12 +34,6 @@ vi.mock('../../../services/migration', () => ({
 
 vi.mock('../../../utils/platform-adapters/updater', () => ({
   checkForUpdates: vi.fn(async () => undefined),
-}));
-
-vi.mock('../../../utils/logger', () => ({
-  logger: {
-    error: vi.fn(),
-  },
 }));
 
 describe('useServiceLifecycle', () => {
@@ -63,29 +56,11 @@ describe('useServiceLifecycle', () => {
     vi.advanceTimersByTime(150);
     await Promise.resolve();
 
-    expect(initializeRuleSystem).toHaveBeenCalledTimes(1);
-    expect(migrationCoordinator.runStartupMigrations).toHaveBeenCalledTimes(1);
+    expect(exceptionRuleManager.initialize).toHaveBeenCalledTimes(1);
     expect(checkForUpdates).toHaveBeenCalledTimes(1);
 
     unmount();
 
     expect(forwardTimerManager.stop).toHaveBeenCalledTimes(1);
-  });
-
-  it('should log error when non-critical initialization reports failure', async () => {
-    vi.mocked(initializeRuleSystem).mockResolvedValue({
-      success: false,
-      message: 'init failed',
-    });
-
-    renderHook(() => useServiceLifecycle());
-
-    vi.advanceTimersByTime(150);
-    await Promise.resolve();
-
-    expect(logger.error).toHaveBeenCalledWith(
-      'SERVICE_LIFECYCLE',
-      'Rule system initialization failed: init failed',
-    );
   });
 });

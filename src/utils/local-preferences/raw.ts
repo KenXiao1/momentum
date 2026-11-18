@@ -10,7 +10,7 @@ export function setRaw(key: string, value: string): void {
   try {
     localStorage.setItem(key, value);
   } catch {
-    // ignore quota errors
+    // best-effort: only the storage-mode choice and hint use this; a lost write asks again next launch
   }
 }
 
@@ -18,7 +18,7 @@ export function remove(key: string): void {
   try {
     localStorage.removeItem(key);
   } catch {
-    // ignore errors
+    // best-effort: only the storage-mode choice and hint use this; a lost write asks again next launch
   }
 }
 

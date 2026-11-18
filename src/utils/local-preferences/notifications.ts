@@ -20,6 +20,6 @@ export function setNotificationsEnabled(enabled: boolean): void {
       enabled.toString(),
     );
   } catch {
-    // ignore quota errors
+    // best-effort: a lost toggle falls back to the default notification setting
   }
 }

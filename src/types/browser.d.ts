@@ -17,7 +17,6 @@ declare global {
 
     __realTimeSync?: unknown;
     migrateTimerData?: unknown;
-    dataMigrationManager?: unknown;
   }
 
   interface Navigator {

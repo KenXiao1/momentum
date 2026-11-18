@@ -1,112 +1,88 @@
 import { renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  createLocalStorageMock,
-  createUnitChain,
-} from '../../../test/factories';
-import { realTimeSyncService } from '../../../services/RealTimeSyncService';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createTestStorage, createUnitChain } from '../../../test/factories';
 import { useSafeSaveChains } from '../useSafeSaveChains';
 
-vi.mock('../../../utils/env', () => ({
-  isDev: false,
-}));
+const DELETED_AT = new Date('2026-02-01T10:00:00.000Z');
 
-vi.mock('../../../utils/logger', () => ({
-  logger: {
-    debug: vi.fn(),
-    error: vi.fn(),
-  },
-}));
+function failingSaves(errors: Error[]) {
+  const storage = createTestStorage();
+  const save = storage.saveChains;
+  const saveChains = vi.fn(async (chains) => {
+    const error = errors.shift();
+    if (error) throw error;
+    await save(chains);
+  });
+  return { storage: { ...storage, saveChains }, saveChains };
+}
 
-vi.mock('../../../services/RealTimeSyncService', () => ({
-  realTimeSyncService: {
-    saveWithSync: vi.fn(),
-    clearAllCaches: vi.fn(async () => undefined),
-  },
-}));
+async function savedIds(
+  storage: ReturnType<typeof createTestStorage>,
+): Promise<string[]> {
+  return (await storage.getChains()).map((chain) => chain.id).sort();
+}
 
 describe('useSafeSaveChains', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+  afterEach(() => {
     vi.useRealTimers();
   });
 
-  it('should persist active and deleted chains together', async () => {
-    const activeChain = createUnitChain({ id: 'active-1' });
-    const deletedChain = createUnitChain({
-      id: 'deleted-1',
-      deletedAt: new Date('2026-02-01T10:00:00.000Z'),
-    });
-    const storage = createLocalStorageMock({
-      getChains: vi.fn(async () => [activeChain, deletedChain]),
-    });
-    vi.mocked(realTimeSyncService.saveWithSync).mockResolvedValue([
-      activeChain,
+  it('saves the active chains and keeps chains already in the recycle bin', async () => {
+    const storage = createTestStorage();
+    await storage.saveChains([
+      createUnitChain({ id: 'stale-active' }),
+      createUnitChain({ id: 'binned', deletedAt: DELETED_AT }),
     ]);
-
     const { result } = renderHook(() => useSafeSaveChains(storage));
 
-    await result.current([activeChain]);
+    await result.current([createUnitChain({ id: 'active' })]);
 
-    expect(realTimeSyncService.saveWithSync).toHaveBeenCalledWith(storage, [
-      activeChain,
-      deletedChain,
-    ]);
+    expect(await savedIds(storage)).toEqual(['active', 'binned']);
+    const binned = (await storage.getDeletedChains())[0];
+    expect(binned.deletedAt).toEqual(DELETED_AT);
   });
 
-  it('should fail immediately on non-retryable client errors', async () => {
-    const chain = createUnitChain({ id: 'chain-2' });
-    const storage = createLocalStorageMock({
-      getChains: vi.fn(async () => [chain]),
-    });
-    vi.mocked(realTimeSyncService.saveWithSync).mockRejectedValue(
+  it('fails at once on an error that retrying cannot fix', async () => {
+    const { storage, saveChains } = failingSaves([
       new Error('Converting circular structure to JSON'),
-    );
-
+    ]);
     const { result } = renderHook(() => useSafeSaveChains(storage));
 
-    await expect(result.current([chain])).rejects.toThrow(
-      'Converting circular structure to JSON',
-    );
-    expect(realTimeSyncService.clearAllCaches).not.toHaveBeenCalled();
+    await expect(
+      result.current([createUnitChain({ id: 'chain' })]),
+    ).rejects.toThrow('Converting circular structure to JSON');
+    expect(saveChains).toHaveBeenCalledTimes(1);
+    expect(await savedIds(storage)).toEqual([]);
   });
 
-  it('should retry retryable failures with exponential backoff', async () => {
+  it('retries a transient failure after one second and then saves', async () => {
     vi.useFakeTimers();
-    const chain = createUnitChain({ id: 'chain-3' });
-    const storage = createLocalStorageMock({
-      getChains: vi.fn(async () => [chain]),
-    });
-    vi.mocked(realTimeSyncService.saveWithSync)
-      .mockRejectedValueOnce(new Error('temporary network issue'))
-      .mockResolvedValueOnce([chain]);
-
+    const { storage } = failingSaves([new Error('temporary network issue')]);
     const { result } = renderHook(() => useSafeSaveChains(storage));
 
-    const savePromise = result.current([chain]);
-    await vi.advanceTimersByTimeAsync(1000);
-    await savePromise;
+    const saving = result.current([createUnitChain({ id: 'chain' })]);
+    await vi.advanceTimersByTimeAsync(999);
+    expect(await savedIds(storage)).toEqual([]);
+    await vi.advanceTimersByTimeAsync(1);
+    await saving;
 
-    expect(realTimeSyncService.saveWithSync).toHaveBeenCalledTimes(2);
-    expect(realTimeSyncService.clearAllCaches).toHaveBeenCalledWith(storage);
+    expect(await savedIds(storage)).toEqual(['chain']);
   });
 
-  it('should throw when retries exceed max attempts', async () => {
+  it('gives up after three retries spaced 1s, 2s and 4s apart', async () => {
     vi.useFakeTimers();
-    const chain = createUnitChain({ id: 'chain-4' });
-    const storage = createLocalStorageMock({
-      getChains: vi.fn(async () => [chain]),
-    });
-    vi.mocked(realTimeSyncService.saveWithSync).mockRejectedValue(
-      new Error('persistent failure'),
-    );
-
+    const failure = new Error('persistent failure');
+    const { storage, saveChains } = failingSaves(Array(4).fill(failure));
     const { result } = renderHook(() => useSafeSaveChains(storage));
 
-    const savePromise = result.current([chain]);
-    const rejection = expect(savePromise).rejects.toThrow('persistent failure');
-    await vi.advanceTimersByTimeAsync(7000);
+    const saving = result.current([createUnitChain({ id: 'chain' })]);
+    const rejection = expect(saving).rejects.toThrow('persistent failure');
+    await vi.advanceTimersByTimeAsync(6999);
+    expect(saveChains).toHaveBeenCalledTimes(3);
+    await vi.advanceTimersByTimeAsync(1);
     await rejection;
-    expect(realTimeSyncService.saveWithSync).toHaveBeenCalledTimes(4);
+
+    expect(saveChains).toHaveBeenCalledTimes(4);
+    expect(await savedIds(storage)).toEqual([]);
   });
 });

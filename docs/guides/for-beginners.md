@@ -64,7 +64,6 @@ momentum-new-feature-branch/
 │   │   └── supabase.ts          # Supabase 客户端配置
 │   ├── services/                # 业务逻辑服务
 │   │   ├── ExceptionRuleManager.ts    # 例外规则管理
-│   │   ├── RecycleBinService.ts       # 回收箱服务
 │   │   ├── ChainDeletionHandler.ts    # 链条删除处理
 │   │   └── ...                        # 其他业务服务
 │   ├── types/                   # TypeScript 类型定义

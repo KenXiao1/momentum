@@ -41,25 +41,24 @@ export interface RSIPViewProps {
     meta: RSIPMeta | ((current: RSIPMeta) => RSIPMeta),
   ) => void | Promise<void>;
   onSaveGroups?: (groups: RSIPNodeGroup[]) => void | Promise<void>;
-  onSaveTaskLinks?: (links: RSIPTaskLink[]) => void | Promise<void>;
-  onMarkExecuted?: (
+  onMarkExecuted: (
     nodeId: string,
     nodes: RSIPNode[],
     notes?: string,
     options?: RSIPExecutionActionOptions,
   ) => Promise<RSIPNode[]>;
-  onMarkViolated?: (
+  onMarkViolated: (
     nodeId: string,
     nodes: RSIPNode[],
     notes?: string,
     options?: RSIPViolationActionOptions,
   ) => Promise<RSIPNode[]>;
-  onReinforceNode?: (
+  onReinforceNode: (
     nodeId: string,
     nodes: RSIPNode[],
     levelDelta?: number,
   ) => Promise<RSIPNode[]>;
-  onRestoreFromLibrary?: (
+  onRestoreFromLibrary: (
     entryId: string,
     parentId?: string,
   ) => Promise<RSIPNode | null>;
@@ -68,8 +67,8 @@ export interface RSIPViewProps {
     faultTolerance: number,
     emoji?: string,
   ) => Promise<RSIPNodeGroup>;
-  onUpsertTaskLinks?: (links: RSIPTaskLink[]) => Promise<RSIPTaskLink[]>;
-  onGetTaskActions?: (rsipNodeId: string) => RSIPTaskLink[];
+  onUpsertTaskLinks: (links: RSIPTaskLink[]) => Promise<RSIPTaskLink[]>;
+  onGetTaskActions: (rsipNodeId: string) => RSIPTaskLink[];
   onStartChain?: (chainId: string) => Promise<void>;
   onScheduleChain?: (chainId: string) => void;
 }

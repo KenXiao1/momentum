@@ -14,6 +14,5 @@ export const LOCAL_STORAGE_KEYS = {
   TIMER_PREFIX: 'momentum_timer_',
   EXCEPTION_RULES: 'momentum_exception_rules',
   EXCEPTION_RULES_USAGE: 'momentum_rule_usage_records',
-  EXCEPTION_RULES_MIGRATION: 'momentum_exception_rules_migration',
   TASK_TIME_STATS: 'momentum_task_time_stats',
 } as const;

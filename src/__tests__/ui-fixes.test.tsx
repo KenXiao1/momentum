@@ -226,14 +226,13 @@ describe('UI Integration Tests', () => {
     layoutStabilityMonitor.clearIssues();
   });
 
-  test('opens the chain-rule form while preserving overflow containment', async () => {
+  test('opens the create-rule form while preserving overflow containment', async () => {
     const onClose = vi.fn();
 
     const { container } = renderWithI18n(<RuleManagerView onClose={onClose} />);
     await screen.findByText('例外规则管理');
 
-    const createButton = screen.getByText('创建链专属规则');
-    fireEvent.click(createButton);
+    fireEvent.click(screen.getByRole('button', { name: '创建规则' }));
 
     expect(
       await screen.findByRole('heading', { name: '创建新规则' }),

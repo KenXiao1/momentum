@@ -22,7 +22,6 @@
 | 文件                                       | 职责                |
 | ------------------------------------------ | ------------------- |
 | `src/hooks/domains/useRecycleBinDomain.ts` | 回收箱业务逻辑 Hook |
-| `src/services/RecycleBinService.ts`        | 回收箱底层服务      |
 | `src/services/RealTimeSyncService.ts`      | 实时同步服务        |
 | `src/components/RecycleBinModal.tsx`       | 回收箱模态框组件    |
 

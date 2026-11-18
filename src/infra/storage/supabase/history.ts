@@ -92,7 +92,7 @@ export async function getCompletionHistory(
   const { rows } = await getUserScopedOrderedRows(ctx, {
     table: 'completion_history',
     orderBy: 'completed_at',
-    ascending: false,
+    ascending: true,
     errorLabel: 'completion history',
   });
   return (rows as CompletionHistorySelectRow[]).map(mapCompletionHistoryRow);

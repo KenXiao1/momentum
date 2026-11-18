@@ -20,6 +20,7 @@ export function useDashboardController({
   const [showImportExport, setShowImportExport] = useState(false);
   const [showRecycleBin, setShowRecycleBin] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showRuleManager, setShowRuleManager] = useState(false);
   const [showPerformanceMonitor, setShowPerformanceMonitor] = useState(isDev);
   const [recycleBinCount, setRecycleBinCount] = useState(0);
   const storage = useStorage();
@@ -115,6 +116,7 @@ export function useDashboardController({
     showImportExport,
     showRecycleBin,
     showAccountModal,
+    showRuleManager,
     showPerformanceMonitor,
     getScheduledSession: useCallback(
       (chainId: string) =>
@@ -130,6 +132,8 @@ export function useDashboardController({
     hideRecycleBinModal: useCallback(() => setShowRecycleBin(false), []),
     showAccount: useCallback(() => setShowAccountModal(true), []),
     hideAccount: useCallback(() => setShowAccountModal(false), []),
+    showRuleManagerModal: useCallback(() => setShowRuleManager(true), []),
+    hideRuleManagerModal: useCallback(() => setShowRuleManager(false), []),
     togglePerformanceMonitor: useCallback(
       () => setShowPerformanceMonitor((visible) => !visible),
       [],

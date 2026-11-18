@@ -95,7 +95,6 @@ export interface UseRSIPViewInteractionActionsParams {
     RSIPViewProps,
     | 'policyLibrary'
     | 'onSaveNodes'
-    | 'onSaveTaskLinks'
     | 'onMarkExecuted'
     | 'onMarkViolated'
     | 'onReinforceNode'

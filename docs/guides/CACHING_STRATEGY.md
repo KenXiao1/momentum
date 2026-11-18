@@ -42,8 +42,8 @@ there is no universal invalidation mechanism.
 
 The unused rule prevalidation cache was removed in the
 [second ablation round](../plans/ablation-driven-simplification-2026-09-18.md).
-Runtime rule usage still validates through `rule-classification/ruleValidator.ts`;
-creation warnings and health checks call `validateRulesIntegrity.ts` directly.
+Runtime rule usage still validates through `assertRuleUsableForAction` in
+`src/domain/rules.ts`.
 Platform support is read from adapters on demand, without a capability snapshot
 cache. Native notification permission handling remains in the native adapter.
 

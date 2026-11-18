@@ -81,13 +81,12 @@ for these services. Rule creation returns the persisted ID; execution reads stor
 and validates the current rule. There is no service-level temporary ID registry or
 rule-state mirror. The rule manager UI keeps its own optimistic update/rollback.
 
-Focus-mode creation passes `reuse_exact` to the manager: duplicate resolution
-reuses an exact name or creates a similar name with a warning. The creation
-service owns that decision from one read; the UI no longer prechecks and copies
-the first suggestion into a second request. Storage still validates before writing.
-Recovery keeps per-attempt results rather than unused in-memory history lists.
-Repairing data without replaying the failed operation requires a user retry and
-does not clear the original error as a successful operation.
+Exception rules go through `exceptionRuleManager`, which combines pure functions
+in `src/domain/rules.ts` with the `RuleStore` port (`src/storage/localRuleStore.ts`).
+It runs one operation at a time, so concurrent writes cannot overwrite each other.
+Focus-mode creation passes `{ reuseExisting: true }`: an exact name reuses the
+existing rule, a similar name is created with a warning. Rule failures surface to
+the caller; there is no service-level error recovery.
 
 Chain trees are derived from chain arrays. Dashboard and group rendering use
 local React memoization; domain actions build the tree when needed. There is no
@@ -98,10 +97,23 @@ task-link integration. `useTaskLifecycleIntegration` keeps the mounted handler
 current, ignores new dispatches after unmount, and isolates asynchronous errors.
 It does not use a global event bus.
 
-`MigrationCoordinator` in `src/services/migration/` coordinates startup, data,
-and exception-rule migrations. `StorageProvider` in `StorageContext.tsx` supplies
-the current adapter to migration, realtime sync, and recycle-bin services and
-clears that wiring on cleanup.
+Database schema changes are SQL files in `supabase/migrations/`. On the client,
+the only data migration is the completion-history timing normalization that
+`useAppDataLoad` applies after loading (`utils/completionHistoryTimingMigration.ts`).
+Add a client migration only for stored data that cannot be normalized on read,
+and make it run once. `StorageProvider` in `StorageContext.tsx` supplies the
+current adapter to the realtime sync service and clears it on cleanup.
+
+## Error handling
+
+Errors are caught in two places. Storage adapters translate failures into the
+errors their port promises (and keep missing-column fallbacks); UI action entry
+points, such as a modal's submit handler, log the failure once and show it to
+the user. Layers in between let errors propagate, unless they compensate (roll
+back optimistic state, retry) before throwing again. A write must never be reported
+as saved when it was not: only writes whose loss is harmless, such as UI
+preferences, may swallow failures, and they say why with `// best-effort:`.
+`npm run quality:error-handling` enforces this.
 
 ## Platform and Tauri
 

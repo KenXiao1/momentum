@@ -22,6 +22,8 @@ export const SEMANTIC_MUTATION_ROOTS = Object.freeze([
 
 export const SEMANTIC_MUTATION_FILES = Object.freeze([
   'src/components/betting-modal/betPlacementRules.ts',
+  'src/domain/rsip.ts',
+  'src/domain/rules.ts',
   'src/hooks/domains/appStateAccess.ts',
   'src/hooks/domains/importPersistence.ts',
   'src/hooks/domains/useSafeSaveChains.ts',
@@ -55,10 +57,7 @@ const establishedPatterns = [
   'src/domain/errors.ts',
   'src/domain/result.ts',
   'src/infra/storage/supabase/retry.ts',
-  'src/services/errorClassification/ErrorClassifiers.ts',
-  'src/services/rule-classification/RuleTypeValidator.ts',
-  'src/services/rule-classification/ruleValidator.ts',
-  'src/services/recovery/RecoveryStrategy.ts',
+  'src/services/exception-rule-manager/ExceptionRuleManager.ts',
   'src/utils/local-preferences/timerState.ts',
 ];
 

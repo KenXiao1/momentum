@@ -21,15 +21,23 @@ export function useRuleSelectionRules(params: {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const ruleType =
+    actionType === 'pause'
+      ? ExceptionRuleType.PAUSE_ONLY
+      : ExceptionRuleType.EARLY_COMPLETION_ONLY;
+  const isAvailableToChain = useCallback(
+    (rule: ExceptionRule) =>
+      rule.isActive &&
+      (rule.scope === 'global' ||
+        (rule.scope === 'chain' && rule.chainId === chainId)),
+    [chainId],
+  );
+
   const createDefaultRules = useCallback(async () => {
     const names =
       actionType === 'pause'
         ? ['Bathroom break', 'Phone call']
         : ['Reached goal early'];
-    const type =
-      actionType === 'pause'
-        ? ExceptionRuleType.PAUSE_ONLY
-        : ExceptionRuleType.EARLY_COMPLETION_ONLY;
     const allRules = await exceptionRuleManager.getAllRules();
     const chainRules = allRules.filter(
       (rule) => rule.chainId === chainId && rule.scope === 'chain',
@@ -42,8 +50,13 @@ export function useRuleSelectionRules(params: {
         );
         created.push(
           existing ??
-            (await exceptionRuleManager.createChainRule(chainId, name, type))
-              .rule,
+            (
+              await exceptionRuleManager.createChainRule(
+                chainId,
+                name,
+                ruleType,
+              )
+            ).rule,
         );
       } catch (error) {
         logger.warn(
@@ -55,22 +68,14 @@ export function useRuleSelectionRules(params: {
       }
     }
     return created;
-  }, [actionType, chainId]);
+  }, [actionType, chainId, ruleType]);
 
   const fetchRules = useCallback(async () => {
     try {
       const allRules = await exceptionRuleManager.getAllRules();
-      const applicable = allRules.filter((rule) => {
-        if (
-          !rule.isActive ||
-          rule.chainId !== chainId ||
-          rule.scope !== 'chain'
-        )
-          return false;
-        return actionType === 'pause'
-          ? rule.type === ExceptionRuleType.PAUSE_ONLY
-          : rule.type === ExceptionRuleType.EARLY_COMPLETION_ONLY;
-      });
+      const applicable = allRules.filter(
+        (rule) => isAvailableToChain(rule) && rule.type === ruleType,
+      );
       return applicable.length > 0 ? applicable : createDefaultRules();
     } catch (error) {
       logger.error(
@@ -81,7 +86,7 @@ export function useRuleSelectionRules(params: {
       );
       return createDefaultRules();
     }
-  }, [actionType, chainId, createDefaultRules]);
+  }, [actionType, chainId, createDefaultRules, isAvailableToChain, ruleType]);
 
   const loadRules = useCallback(async () => {
     setLoading(true);
@@ -100,10 +105,10 @@ export function useRuleSelectionRules(params: {
 
   const addRule = useCallback(
     (rule: ExceptionRule) => {
-      if (rule.chainId !== chainId || rule.scope !== 'chain') return;
+      if (!isAvailableToChain(rule)) return;
       setRules((current) => [...current, rule]);
     },
-    [chainId],
+    [isAvailableToChain],
   );
 
   return { rules, loading, error, setError, loadRules, addRule };

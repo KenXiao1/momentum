@@ -196,7 +196,7 @@ describe('SupabaseStorage HTTP boundary', () => {
     expect(loaded[0].expiresAt).toEqual(new Date('2026-04-01T09:00:00.000Z'));
   });
 
-  it('appends history in query order and saveCompletionHistory replaces it', async () => {
+  it('returns history oldest first and saveCompletionHistory replaces it', async () => {
     await authenticate();
     await storage.appendCompletionHistory(
       historyRecord('older', '2026-04-01T10:00:00.000Z'),
@@ -206,7 +206,7 @@ describe('SupabaseStorage HTTP boundary', () => {
     );
 
     let loaded = await storage.getCompletionHistory();
-    expect(loaded.map((record) => record.chainId)).toEqual(['newer', 'older']);
+    expect(loaded.map((record) => record.chainId)).toEqual(['older', 'newer']);
     expect(loaded.every((record) => record.completedAt instanceof Date)).toBe(
       true,
     );

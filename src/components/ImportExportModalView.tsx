@@ -28,6 +28,7 @@ interface ImportExportModalViewProps {
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onOpenFile?: () => void;
   onExport: () => void;
+  exportFailed?: boolean;
   onImport: () => void;
   onClose: () => void;
   t: Translator;
@@ -47,6 +48,7 @@ export const ImportExportModalView: React.FC<ImportExportModalViewProps> = ({
   onFileUpload,
   onOpenFile,
   onExport,
+  exportFailed = false,
   onImport,
   onClose,
   t,
@@ -76,6 +78,7 @@ export const ImportExportModalView: React.FC<ImportExportModalViewProps> = ({
         <ExportTab
           chainsCount={chainsCount}
           onExport={onExport}
+          exportFailed={exportFailed}
           language={language}
           t={t}
         />

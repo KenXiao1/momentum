@@ -37,6 +37,15 @@ const AccountModal = lazy(
     'AccountModal',
   ),
 );
+const RuleManagerView = lazy(
+  lazyWithChunkRecovery(
+    () =>
+      import('../RuleManagerView').then((module) => ({
+        default: module.RuleManagerView,
+      })),
+    'RuleManagerView',
+  ),
+);
 const PerformanceMonitor = lazy(
   lazyWithChunkRecovery(
     () =>
@@ -107,6 +116,7 @@ export function DashboardView({
   showImportExport,
   showRecycleBin,
   showAccountModal,
+  showRuleManager,
   showPerformanceMonitor,
   getScheduledSession,
   handleImport,
@@ -118,6 +128,8 @@ export function DashboardView({
   hideRecycleBinModal,
   showAccount,
   hideAccount,
+  showRuleManagerModal,
+  hideRuleManagerModal,
   togglePerformanceMonitor,
   enableCloudMode,
   keepLocalMode,
@@ -129,6 +141,8 @@ export function DashboardView({
           settingsTitle={t('settings.title')}
           settingsButtonText={t('settings.button')}
           onShowAccountModal={showAccount}
+          ruleManagerTitle={t('ruleManager.ruleManagerViewView.exceptionRules')}
+          onShowRuleManager={showRuleManagerModal}
         />
         <DashboardHero
           language={language}
@@ -255,6 +269,11 @@ export function DashboardView({
       {showAccountModal && (
         <Suspense fallback={null}>
           <AccountModal isOpen onClose={hideAccount} />
+        </Suspense>
+      )}
+      {showRuleManager && (
+        <Suspense fallback={null}>
+          <RuleManagerView onClose={hideRuleManagerModal} />
         </Suspense>
       )}
       {isDev && (

@@ -18,17 +18,14 @@
 
 ## 关键文件
 
-| 文件                                        | 职责                                              |
-| ------------------------------------------- | ------------------------------------------------- |
-| `src/types/index.ts`                        | 核心类型定义（ExceptionRule, RuleUsageRecord 等） |
-| `src/hooks/domains/useRulesDomain.ts`       | 业务逻辑 Hook                                     |
-| `src/services/ExceptionRuleManager.ts`      | 核心管理器                                        |
-| `src/services/RuleClassificationService.ts` | 规则分类验证                                      |
-| `src/services/RuleDuplicationDetector.ts`   | 重复检测                                          |
-| `src/services/RuleUsageTracker.ts`          | 使用记录追踪                                      |
-| `src/services/validateRulesIntegrity.ts`    | 创建告警与完整性报告                              |
-| `src/services/DataIntegrityChecker.ts`      | 数据完整性检查                                    |
-| `src/services/ErrorRecoveryManager.ts`      | 错误恢复                                          |
+| 文件                                                          | 职责                                              |
+| ------------------------------------------------------------- | ------------------------------------------------- |
+| `src/types/index.ts`                                          | 核心类型定义（ExceptionRule, RuleUsageRecord 等） |
+| `src/hooks/domains/useRulesDomain.ts`                         | 业务逻辑 Hook                                     |
+| `src/services/exception-rule-manager/ExceptionRuleManager.ts` | 核心管理器（唯一入口）                            |
+| `src/domain/rules.ts`                                         | 校验、重名、动作可用性、使用记录、启动时数据修复  |
+| `src/storage/localRuleStore.ts`                               | 规则与使用记录的 localStorage 存储                |
+| `src/components/rule-manager/`                                | 规则管理页（首页顶栏“例外规则”按钮打开）          |
 
 ---
 
@@ -110,24 +107,15 @@ enum ExceptionRuleError {
 
 ## 服务架构
 
+```text
+ExceptionRuleManager（串行执行每个操作）
+├── domain/rules.ts（纯函数）
+│   └── 校验、重名与相似名称、动作可用性、使用记录、数据修复
+└── RuleStore（storage/ports.ts）
+    └── localRuleStore：localStorage，读写失败直接抛出
 ```
-ExceptionRuleManager (主管理器)
-├── validateRulesIntegrity (完整性函数)
-│   └── 创建告警、健康检查
-├── EnhancedDuplicationHandler (重复处理)
-│   └── 实时检测、智能命名建议
-│   └── 生命周期追踪、ID映射
-├── RuleClassificationService (分类服务)
-│   └── 类型验证、操作匹配
-├── RuleUsageTracker (使用追踪)
-│   └── 记录使用、统计分析
-├── DataIntegrityChecker (完整性检查)
-│   └── 检查问题、自动修复
-├── ErrorRecoveryManager (错误恢复)
-│   └── 智能分析、恢复策略
-└── UserFeedbackHandler (用户反馈)
-    └── 进度指示、错误展示
-```
+
+详见 [系统设计文档](../modules/EXCEPTION_RULE_SYSTEM.md)。
 
 ---
 
@@ -153,9 +141,9 @@ sequenceDiagram
 
     User->>FocusMode: 点击暂停
     FocusMode->>RuleSelectionDialog: 打开（mode=pause）
-    RuleSelectionDialog->>RuleSelectionDialog: 过滤 PAUSE_ONLY 规则
+    RuleSelectionDialog->>RuleSelectionDialog: 列出本链与全局的 PAUSE_ONLY 规则
     User->>RuleSelectionDialog: 选择时长 + 规则
-    RuleSelectionDialog->>ExceptionRuleManager: applyRule(rule, pauseOptions)
+    RuleSelectionDialog->>ExceptionRuleManager: useRule(ruleId, session, 'pause', pauseOptions)
     ExceptionRuleManager->>ExceptionRuleManager: 验证规则类型
     ExceptionRuleManager->>ExceptionRuleManager: 记录使用
     ExceptionRuleManager-->>FocusMode: 成功
@@ -178,9 +166,9 @@ sequenceDiagram
 
     User->>FocusMode: 点击提前完成
     FocusMode->>RuleSelectionDialog: 打开（mode=early_completion）
-    RuleSelectionDialog->>RuleSelectionDialog: 过滤 EARLY_COMPLETION_ONLY 规则
+    RuleSelectionDialog->>RuleSelectionDialog: 列出本链与全局的 EARLY_COMPLETION_ONLY 规则
     User->>RuleSelectionDialog: 选择规则
-    RuleSelectionDialog->>ExceptionRuleManager: applyRule(rule)
+    RuleSelectionDialog->>ExceptionRuleManager: useRule(ruleId, session, 'early_completion')
     ExceptionRuleManager->>ExceptionRuleManager: 验证规则类型
     ExceptionRuleManager->>ExceptionRuleManager: 记录使用
     ExceptionRuleManager-->>FocusMode: 成功
@@ -191,35 +179,19 @@ sequenceDiagram
 
 ## API 参考
 
-### ExceptionRuleManager 主要方法
+### ExceptionRuleManager 方法
 
-| 方法                                              | 说明                     |
-| ------------------------------------------------- | ------------------------ |
-| `initialize()`                                    | 初始化（自动完整性检查） |
-| `createRule(name, type, description, userChoice)` | 创建规则                 |
-| `getRule(id)`                                     | 获取单个规则             |
-| `getAllRules()`                                   | 获取所有规则             |
-| `getRulesForAction(actionType)`                   | 按操作类型获取规则       |
-| `applyRule(rule, context, options)`               | 应用规则                 |
-| `updateRule(id, updates)`                         | 更新规则                 |
-| `deleteRule(id)`                                  | 删除规则                 |
-| `archiveRule(id)`                                 | 归档规则                 |
-
-### RuleClassificationService 方法
-
-| 方法                                      | 说明                   |
-| ----------------------------------------- | ---------------------- |
-| `validateRuleForAction(rule, actionType)` | 验证规则是否适用于操作 |
-| `canUsePauseOnlyRule(rule)`               | 检查是否可用于暂停     |
-| `canUseEarlyCompletionRule(rule)`         | 检查是否可用于提前完成 |
-
-### RuleUsageTracker 方法
-
-| 方法                                         | 说明         |
-| -------------------------------------------- | ------------ |
-| `recordUsage(ruleId, context, pauseOptions)` | 记录使用     |
-| `getRuleUsageStats(ruleId)`                  | 获取规则统计 |
-| `getOverallStats()`                          | 获取总体统计 |
+| 方法                                                             | 说明                                 |
+| ---------------------------------------------------------------- | ------------------------------------ |
+| `initialize()`                                                   | 修复存量数据；首次操作前自动调用     |
+| `getAllRules()`                                                  | 获取所有规则（含已删除）             |
+| `createRule(name, type, description?, { reuseExisting })`        | 创建全局规则；同名时抛错或复用       |
+| `createChainRule(chainId, name, type, description?)`             | 创建链专属规则；名称在同一条链内唯一 |
+| `updateRule(id, { name, type, description })`                    | 更新规则；相似名称附带警告           |
+| `deleteRule(id)`                                                 | 停用规则，保留使用记录               |
+| `useRule(ruleId, session, action, pauseOptions?)`                | 校验可用性并记录一次使用             |
+| `suggestRuleNames(name)`                                         | 给出三个未被占用的带序号名称         |
+| `exportRules(includeUsageData?)` / `importRules(rules, options)` | 导出激活规则 / 一次保存地导入        |
 
 ---
 
@@ -253,34 +225,30 @@ class EnhancedExceptionRuleException extends ExceptionRuleException {
 | -------- | --------------------------------------------- | ------------------ |
 | 用户错误 | VALIDATION_ERROR, DUPLICATE_RULE_NAME         | 显示提示，引导修正 |
 | 系统错误 | STORAGE_ERROR, OPERATION_TIMEOUT              | 重试，降级处理     |
-| 数据错误 | DATA_INTEGRITY_ERROR, RULE_STATE_INCONSISTENT | 自动修复           |
+| 数据错误 | DATA_INTEGRITY_ERROR, RULE_STATE_INCONSISTENT | 显示错误           |
 | 网络错误 | NETWORK_ERROR                                 | 重试，离线模式     |
 
 ---
 
 ## 数据完整性
 
-### 自动检查项
+`ExceptionRuleManager.initialize()` 在启动时调用一次
+`exceptionRuleStorage.repairStoredData()`，由纯函数 `repairRuleData` 修复旧版本
+或外部损坏留下的数据，有改动才写回：
 
-| 检查项       | 说明                        | 自动修复 |
-| ------------ | --------------------------- | :------: |
-| 孤立使用记录 | 引用不存在的规则            |    ✓     |
-| 无效规则类型 | type 字段值非法             |    ✓     |
-| 重复 ID      | 多个规则使用相同 ID         |    ✓     |
-| 状态不一致   | isActive 与 isArchived 冲突 |    ✓     |
+| 问题                       | 处理                              |
+| -------------------------- | --------------------------------- |
+| 规则缺少 ID 或 ID 为空     | 生成新 ID                         |
+| 规则 ID 含空格             | 生成新 ID，使用记录随之改指向     |
+| 多条规则 ID 相同           | 靠后的规则生成新 ID               |
+| type 缺失或非法            | 改为 `pause_only`                 |
+| createdAt 无法解析         | 改为当前时间                      |
+| usageCount 非数字或为负    | 改为 0                            |
+| 激活规则重名（忽略大小写） | 靠后的规则追加序号，如 `午休 (2)` |
+| 使用记录指向不存在的规则   | 删除该记录                        |
+| 使用记录的 usedAt 无法解析 | 改为当前时间                      |
 
-### 手动检查
-
-```typescript
-// 运行完整性检查
-const report = await dataIntegrityChecker.checkRuleDataIntegrity();
-
-if (report.issues.length > 0) {
-  // 自动修复可修复的问题
-  const fixable = report.issues.filter((i) => i.autoFixable);
-  const results = await dataIntegrityChecker.autoFixIssues(fixable);
-}
-```
+缺少名称的规则没有安全的默认值，保持原样。`usageCount` 不再按使用记录条数重算。
 
 ---
 
@@ -288,8 +256,8 @@ if (report.issues.length > 0) {
 
 名称重复检查直接读取当前存储；规则选择列表重新加载时按链、操作类型及激活状态筛选。
 第二轮删除的预验证缓存及第三轮删除的状态镜像均不参与实际规则使用。
-实际执行通过 `ruleClassificationService.validateRuleForAction` 检查规则的有效性和类型；
-创建告警与健康检查直接调用 `validateRulesIntegrity`。
+使用规则时 `assertRuleUsableForAction` 检查规则是否存在、已激活且类型与动作匹配。
+规则选择对话框列出当前链的链专属规则和所有全局规则。
 
 缓存的所有权、失效与清理见 [缓存指南](../guides/CACHING_STRATEGY.md)。
 
@@ -329,56 +297,34 @@ const pauseOptions: PauseOptions = {
   autoResume: true,
 };
 
-await exceptionRuleManager.applyRule(selectedRule, context, pauseOptions);
+await exceptionRuleManager.useRule(
+  selectedRule.id,
+  context,
+  'pause',
+  pauseOptions,
+);
 ```
 
 ### 场景：处理重复规则名称
 
 ```typescript
-const result = await exceptionRuleManager.createRule(
+// 同名时复用已有规则（专注模式的做法）
+const { rule } = await exceptionRuleManager.createRule(
   '午休',
   ExceptionRuleType.PAUSE_ONLY,
   undefined,
-  'modify_name', // 自动修改名称（如"午休 (2)"）
+  { reuseExisting: true },
 );
+
+// 或者在重名错误后给出可用名称（规则管理页的做法）
+const names = await exceptionRuleManager.suggestRuleNames('午休'); // ['午休 2', ...]
 ```
-
----
-
-## 性能指标
-
-### v2.0 改进
-
-| 指标       | 改进前 | 改进后 |
-| ---------- | ------ | ------ |
-| 规则验证   | 500ms  | 200ms  |
-| 重复检查   | 300ms  | 100ms  |
-| 错误恢复   | 1000ms | 500ms  |
-| 创建失败率 | 15%    | 2%     |
-| 验证错误率 | 10%    | 1%     |
 
 ---
 
 ## 初始化流程
 
-ExceptionRuleManager 在首次使用时自动初始化：
-
-```typescript
-async initialize(): Promise<void> {
-  // 1. 运行数据完整性检查
-  const report = await dataIntegrityChecker.checkRuleDataIntegrity();
-
-  // 2. 自动修复可修复的问题
-  if (report.issues.length > 0) {
-    const fixable = report.issues.filter(i => i.autoFixable);
-    await dataIntegrityChecker.autoFixIssues(fixable);
-  }
-
-}
-```
-
-导入服务直接使用固定的 RuleCreator 和 RuleMaintenanceService，不依赖初始化时
-注入 setter。冷启动直接导入也支持 updateExisting，并走同一套创建、更新校验。
+管理器在首次操作前调用一次 `repairRuleData`，有改动才写回；修复失败时下次操作会重试。
 
 ---
 

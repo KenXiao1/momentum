@@ -14,7 +14,6 @@
 - `FocusMode.handleCreateNewRule` - 显示传入的参数
 - `RuleSelectionDialog.handleCreateNewRule` - 显示调用参数
 - `ExceptionRuleManager.createRule` - 显示验证参数
-- `ExceptionRuleStorage.validateRule` - 显示验证过程
 - `ExceptionRuleManager.useRule` - 显示规则ID验证过程
 
 #### 2. 全局调试函数
@@ -36,9 +35,6 @@ emergencyUseRule('rule_id', 'pause');
 
 // 快速修复现有数据
 quickFixRules();
-
-// 系统健康检查
-systemHealthService.performHealthCheck();
 ```
 
 ## 🛠️ 调试步骤
@@ -66,14 +62,6 @@ quickFixRules();
 ```
 
 这会检查并修复现有的规则数据问题。
-
-### 步骤4: 系统健康检查
-
-```javascript
-systemHealthService.performHealthCheck().then(console.log);
-```
-
-这会显示完整的系统健康报告。
 
 ## 🔧 紧急修复方案
 
@@ -174,15 +162,13 @@ exceptionRuleStorage.getRules().then((rules) => {
 1. **错误信息**: 完整的错误消息和堆栈跟踪
 2. **调试日志**: 相关的 `🔧` 调试日志
 3. **操作步骤**: 导致错误的具体操作
-4. **系统状态**: `systemHealthService.performHealthCheck()` 的输出
-5. **浏览器信息**: 浏览器类型和版本
+4. **浏览器信息**: 浏览器类型和版本
 
 ## 🚀 性能优化建议
 
 1. **定期清理**: 运行 `quickFixRules()` 清理数据问题
-2. **健康检查**: 定期运行系统健康检查
-3. **缓存清理**: 刷新页面清理可能的缓存问题
-4. **数据备份**: 在重要操作前备份数据
+2. **缓存清理**: 刷新页面清理可能的缓存问题
+3. **数据备份**: 在重要操作前备份数据
 
 ## 📞 技术支持
 

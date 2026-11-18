@@ -205,14 +205,15 @@ function createTableHandlers(table: TableName) {
       const prefer = request.headers.get('prefer') ?? '';
       const ignoreDuplicates = prefer.includes('resolution=ignore-duplicates');
       const stored: JsonRow[] = [];
-      for (const row of rows) {
+      for (const posted of rows) {
+        // Assign a missing id once so the row is stored under its own id.
+        const row = {
+          id: posted.id ?? `generated-${generatedId++}`,
+          ...posted,
+        };
         const key = tableKey(table, row);
         if (ignoreDuplicates && tables[table].has(key)) continue;
-        const next = {
-          id: row.id ?? `generated-${generatedId++}`,
-          ...tables[table].get(key),
-          ...row,
-        };
+        const next = { ...tables[table].get(key), ...row };
         tables[table].set(key, next);
         stored.push(next);
       }

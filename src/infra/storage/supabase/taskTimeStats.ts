@@ -34,7 +34,7 @@ export async function saveTaskTimeStats(stats: TaskTimeStats[]): Promise<void> {
     statsCache = stats;
     cacheTimestamp = Date.now();
   } catch {
-    // ignore quota errors
+    // best-effort: these stats only feed duration hints and are not user data
   }
 }
 

@@ -27,7 +27,7 @@ export function setCanvasState(state: CanvasState): void {
       JSON.stringify(state),
     );
   } catch {
-    // ignore quota errors
+    // best-effort: a lost canvas position only resets the RSIP view on next open
   }
 }
 
@@ -35,6 +35,6 @@ export function clearCanvasState(): void {
   try {
     localStorage.removeItem(LOCAL_STORAGE_KEYS.RSIP_CANVAS_STATE);
   } catch {
-    // ignore errors
+    // best-effort: a lost canvas position only resets the RSIP view on next open
   }
 }

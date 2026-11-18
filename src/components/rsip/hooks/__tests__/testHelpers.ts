@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { createTranslator } from '../../../../i18n';
 import type {
   Chain,
@@ -133,6 +134,12 @@ export function createProps(
 ): InteractionProps {
   return {
     onSaveNodes,
+    onMarkExecuted: vi.fn(async (_nodeId: string, nodes: RSIPNode[]) => nodes),
+    onMarkViolated: vi.fn(async (_nodeId: string, nodes: RSIPNode[]) => nodes),
+    onReinforceNode: vi.fn(async (_nodeId: string, nodes: RSIPNode[]) => nodes),
+    onRestoreFromLibrary: vi.fn(async () => null),
+    onUpsertTaskLinks: vi.fn(async (links: RSIPTaskLink[]) => links),
+    onGetTaskActions: vi.fn(() => []),
     ...overrides,
   };
 }

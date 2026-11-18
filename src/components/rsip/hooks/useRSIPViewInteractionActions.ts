@@ -3,14 +3,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { RSIPNode, RSIPTaskLink } from '../../../types';
 import { logger } from '../../../utils/logger';
 import type { RSIPViewProps } from '../../RSIPView.types';
+import { calculateConstraintPower as calculateConstraintPowerRule } from '../../../domain/rsip';
 import {
   assessViolationGroup,
-  calculateConstraintPower as calculateConstraintPowerRule,
-  createNodeFromLibraryEntry,
-  getActiveExecutionTaskLinks,
   getViolationDescendants,
-  markNodeExecutedFallback,
-  markNodeViolatedFallback,
 } from '../../../hooks/domains/rsip/viewInteractionRules';
 import type {
   RSIPViewActionSlice,
@@ -109,11 +105,9 @@ export function useRSIPViewInteractionActions({
   | 'onSaveNodes'
   | 'onReinforceNode'
 > {
-  const { language, nodes, groups, taskLinks, chains } = state;
+  const { language, nodes, groups, chains } = state;
   const {
-    policyLibrary = [],
     onSaveNodes,
-    onSaveTaskLinks,
     onMarkExecuted,
     onMarkViolated,
     onReinforceNode,
@@ -148,23 +142,14 @@ export function useRSIPViewInteractionActions({
         .catch(() => undefined)
         .then(async () => {
           const currentNodes = latestNodesRef.current;
-          let updatedNodes: RSIPNode[];
-          if (onMarkExecuted) {
-            updatedNodes = await onMarkExecuted(
-              nodeId,
-              currentNodes,
-              undefined,
-              { reinforce },
-            );
-          } else {
-            updatedNodes = markNodeExecutedFallback(currentNodes, nodeId);
-            await onSaveNodes(updatedNodes);
-          }
-
+          const updatedNodes = await onMarkExecuted(
+            nodeId,
+            currentNodes,
+            undefined,
+            { reinforce },
+          );
           latestNodesRef.current = updatedNodes;
-          const linkedActions =
-            onGetTaskActions?.(nodeId) ??
-            getActiveExecutionTaskLinks(nodeId, taskLinks);
+          const linkedActions = onGetTaskActions(nodeId);
           await runLinkedTaskActions({
             linkedActions,
             chains,
@@ -189,10 +174,8 @@ export function useRSIPViewInteractionActions({
       language,
       onGetTaskActions,
       onMarkExecuted,
-      onSaveNodes,
       onScheduleChain,
       onStartChain,
-      taskLinks,
     ],
   );
 
@@ -244,17 +227,11 @@ export function useRSIPViewInteractionActions({
       const attemptId = violationAttemptIdRef.current;
       violationSaveInFlightRef.current = true;
       try {
-        if (onMarkViolated) {
-          await onMarkViolated(violationDialogNode.id, nodes, undefined, {
-            reasonCode: payload.reasonCode,
-            repairHint: payload.repairHint,
-            collapseReason: payload.reasonCode,
-          });
-        } else {
-          await onSaveNodes(
-            markNodeViolatedFallback(nodes, violationDialogNode.id),
-          );
-        }
+        await onMarkViolated(violationDialogNode.id, nodes, undefined, {
+          reasonCode: payload.reasonCode,
+          repairHint: payload.repairHint,
+          collapseReason: payload.reasonCode,
+        });
 
         if (attemptId === violationAttemptIdRef.current) {
           closeViolationDialog();
@@ -263,49 +240,21 @@ export function useRSIPViewInteractionActions({
         violationSaveInFlightRef.current = false;
       }
     },
-    [
-      closeViolationDialog,
-      nodes,
-      onMarkViolated,
-      onSaveNodes,
-      violationDialogNode,
-    ],
+    [closeViolationDialog, nodes, onMarkViolated, violationDialogNode],
   );
 
   const handleRestoreFromLibrary = useCallback(
     async (entryId: string, parentId?: string) => {
-      if (onRestoreFromLibrary) {
-        await onRestoreFromLibrary(entryId, parentId);
-        return;
-      }
-
-      const entry = policyLibrary.find((item) => item.id === entryId);
-      if (!entry) {
-        return;
-      }
-
-      await onSaveNodes([
-        ...nodes,
-        createNodeFromLibraryEntry(
-          entry,
-          parentId,
-          crypto.randomUUID(),
-          new Date(),
-        ),
-      ]);
+      await onRestoreFromLibrary(entryId, parentId);
     },
-    [nodes, onRestoreFromLibrary, onSaveNodes, policyLibrary],
+    [onRestoreFromLibrary],
   );
 
   const handleTaskLinkUpsert = useCallback(
     async (nextLinks: RSIPTaskLink[]) => {
-      if (onUpsertTaskLinks) {
-        await onUpsertTaskLinks(nextLinks);
-        return;
-      }
-      await onSaveTaskLinks?.(nextLinks);
+      await onUpsertTaskLinks(nextLinks);
     },
-    [onSaveTaskLinks, onUpsertTaskLinks],
+    [onUpsertTaskLinks],
   );
 
   const calculateConstraintPower = useCallback(

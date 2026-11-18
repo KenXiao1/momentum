@@ -1,446 +1,248 @@
-import { createTranslator } from '../../../../i18n/translate';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  ExceptionRuleError,
-  ExceptionRuleException,
-  ExceptionRuleType,
-  type ExceptionRule,
-} from '../../../../types';
+import { createTranslator } from '../../../../i18n/translate';
+import { exceptionRuleManager } from '../../../../services/ExceptionRuleManager';
+import { ExceptionRuleType, type ExceptionRule } from '../../../../types';
+import { LOCAL_STORAGE_KEYS } from '../../../../utils/local-preferences/keys';
+import { localPreferences } from '../../../../utils/localPreferences';
+import type { RuleManagerFormData } from '../../types';
 import { useRuleManagerActions } from '../useRuleManagerActions';
 
-const exceptionRuleManagerMock = vi.hoisted(() => ({
-  createRule: vi.fn(),
-  updateRule: vi.fn(),
-  deleteRule: vi.fn(),
-  exportRules: vi.fn(),
-  getDuplicationSuggestions: vi.fn(),
-}));
+const saveFile = vi.hoisted(() =>
+  vi.fn(async (_content: string, _fileName: string) => true),
+);
 
-const asyncOperationManagerMock = vi.hoisted(() => ({
-  executeOperation: vi.fn(),
-}));
-
-const errorMessageMock = vi.hoisted(() => ({
-  getSafeErrorDetail: vi.fn(),
-  getSafeErrorDetailFromUnknown: vi.fn(),
-  toError: vi.fn((value: unknown) =>
-    value instanceof Error ? value : new Error(String(value)),
-  ),
-}));
-const saveFileMock = vi.hoisted(() => vi.fn(async () => true));
-
-vi.mock('../../../../services/ExceptionRuleManager', () => ({
-  exceptionRuleManager: exceptionRuleManagerMock,
-}));
-
-vi.mock('../../../../utils/AsyncOperationManager', () => ({
-  asyncOperationManager: asyncOperationManagerMock,
-}));
-
-vi.mock('../../../../utils/errorMessage', () => errorMessageMock);
-
+// Native file saving is the only collaborator replaced; rules persist for real.
 vi.mock('../../../../utils/platform-capabilities/center', () => ({
-  getPlatformCapabilityCenter: () => ({
-    file: {
-      saveFile: saveFileMock,
-    },
-  }),
+  getPlatformCapabilityCenter: () => ({ file: { saveFile } }),
 }));
 
-function createRule(overrides: Partial<ExceptionRule> = {}): ExceptionRule {
-  return {
-    id: overrides.id ?? 'rule-1',
-    name: overrides.name ?? 'Rule 1',
-    description: overrides.description,
-    type: overrides.type ?? ExceptionRuleType.PAUSE_ONLY,
-    scope: overrides.scope ?? 'global',
-    chainId: overrides.chainId,
-    createdAt: overrides.createdAt ?? new Date('2026-01-01T00:00:00.000Z'),
-    lastUsedAt: overrides.lastUsedAt,
-    usageCount: overrides.usageCount ?? 0,
-    isActive: overrides.isActive ?? true,
-    isArchived: overrides.isArchived,
-  };
-}
-
-function createState<T>(initial: T) {
+function state<T>(initial: T) {
   let value = initial;
   const set = vi.fn((next: T | ((prev: T) => T)) => {
     value = typeof next === 'function' ? (next as (prev: T) => T)(value) : next;
   });
-
-  return {
-    get: () => value,
-    set,
-  };
+  return { get: () => value, set };
 }
 
-function createArgs(overrides?: {
-  editingRule?: ExceptionRule | null;
-  rules?: ExceptionRule[];
-}) {
-  const rulesState = createState<ExceptionRule[]>(overrides?.rules ?? []);
-  const formErrorsState = createState<string[]>([]);
-  const formWarningsState = createState<string[]>([]);
-  const duplicateSuggestionsState = createState<string[]>([]);
-  const errorState = createState<string | null>(null);
-  const editingRuleState = createState<ExceptionRule | null>(
-    overrides?.editingRule ?? null,
+function storedRules(): ExceptionRule[] {
+  return JSON.parse(
+    localStorage.getItem(LOCAL_STORAGE_KEYS.EXCEPTION_RULES) ?? '[]',
   );
-  const showCreateFormState = createState(true);
+}
 
-  const loadRules = vi.fn(async () => undefined);
+function renderActions(
+  formData: Partial<RuleManagerFormData> = {},
+  editingRule: ExceptionRule | null = null,
+) {
+  const rules = state<ExceptionRule[]>(editingRule ? [editingRule] : []);
+  const formErrors = state<string[]>([]);
+  const formWarnings = state<string[]>([]);
+  const suggestions = state<string[]>([]);
+  const error = state<string | null>(null);
+  const editing = state(editingRule);
+  const showCreateForm = state(true);
   const resetForm = vi.fn();
-  const beginEditRule = vi.fn();
-
-  return {
-    args: {
-      language: 'en' as const,
+  const loadRules = vi.fn(async () => {
+    rules.set(await exceptionRuleManager.getAllRules());
+  });
+  const { result } = renderHook(() =>
+    useRuleManagerActions({
+      language: 'en',
       t: createTranslator('en'),
       loadRules,
-      setError: errorState.set,
+      setError: error.set,
       formData: {
-        name: 'New Rule',
+        name: 'Refill water',
         type: ExceptionRuleType.PAUSE_ONLY,
-        description: 'test description',
+        description: '',
+        ...formData,
       },
-      editingRule: editingRuleState.get(),
-      setEditingRule: editingRuleState.set,
-      setShowCreateForm: showCreateFormState.set,
+      editingRule: editing.get(),
+      setEditingRule: editing.set,
+      setShowCreateForm: showCreateForm.set,
       resetForm,
-      beginEditRule,
-      setRules: rulesState.set,
-      setFormErrors: formErrorsState.set,
-      setFormWarnings: formWarningsState.set,
-      setDuplicateSuggestions: duplicateSuggestionsState.set,
-    },
-    rulesState,
-    formErrorsState,
-    formWarningsState,
-    duplicateSuggestionsState,
-    errorState,
-    loadRules,
+      beginEditRule: vi.fn(),
+      setRules: rules.set,
+      setFormErrors: formErrors.set,
+      setFormWarnings: formWarnings.set,
+      setDuplicateSuggestions: suggestions.set,
+    }),
+  );
+  return {
+    result,
+    rules,
+    formErrors,
+    formWarnings,
+    suggestions,
+    error,
+    editing,
+    showCreateForm,
     resetForm,
-    beginEditRule,
-    showCreateFormState,
-    editingRuleState,
   };
 }
 
 describe('useRuleManagerActions', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    saveFileMock.mockResolvedValue(true);
-    errorMessageMock.getSafeErrorDetail.mockReturnValue('friendly error');
-    errorMessageMock.getSafeErrorDetailFromUnknown.mockReturnValue(
-      'friendly unknown error',
-    );
+    localStorage.clear();
+    localPreferences.setLanguage('en');
+    saveFile.mockClear();
   });
 
-  it('creates rule successfully with optimistic update replacement', async () => {
-    const createdRule = createRule({ id: 'server-rule', name: 'Server Rule' });
-    asyncOperationManagerMock.executeOperation.mockImplementation(
-      async ({ operation, onSuccess }) => {
-        await operation();
-        onSuccess?.({ rule: createdRule, warnings: [] });
-        return undefined;
-      },
-    );
-    exceptionRuleManagerMock.createRule.mockResolvedValue({
-      rule: createdRule,
-      warnings: [],
-    });
+  it('creates a global rule, replaces the placeholder, and closes the form', async () => {
+    const view = renderActions();
 
-    const context = createArgs();
-    const { result } = renderHook(() => useRuleManagerActions(context.args));
+    await act(() => view.result.current.handleCreateRule());
 
-    await act(async () => {
-      await result.current.handleCreateRule();
-    });
+    const [saved] = storedRules();
+    expect(saved).toMatchObject({ name: 'Refill water', scope: 'global' });
+    expect(view.rules.get()).toEqual([
+      expect.objectContaining({ id: saved.id }),
+    ]);
+    expect(view.showCreateForm.get()).toBe(false);
+    expect(view.resetForm).toHaveBeenCalledTimes(1);
+    expect(view.result.current.savingOperations.size).toBe(0);
+    expect(view.result.current.optimisticUpdates.size).toBe(0);
+  });
 
-    expect(exceptionRuleManagerMock.createRule).toHaveBeenCalledWith(
-      'New Rule',
+  it('keeps the form open with a warning when a similar rule exists', async () => {
+    await exceptionRuleManager.createRule(
+      'Refill waters',
       ExceptionRuleType.PAUSE_ONLY,
-      'test description',
     );
-    expect(context.rulesState.get()).toEqual([createdRule]);
-    expect(context.showCreateFormState.set).toHaveBeenCalledWith(false);
-    expect(context.resetForm).toHaveBeenCalledTimes(1);
-    expect(result.current.savingOperations.size).toBe(0);
-    expect(result.current.optimisticUpdates.size).toBe(0);
+    const view = renderActions();
+
+    await act(() => view.result.current.handleCreateRule());
+
+    expect(storedRules()).toHaveLength(2);
+    expect(view.formWarnings.get()).toHaveLength(1);
+    expect(view.showCreateForm.get()).toBe(true);
   });
 
-  it('keeps create form open and shows warnings when creation returns warnings', async () => {
-    const createdRule = createRule({
-      id: 'server-rule-with-warning',
-      name: 'Server Rule Warning',
-    });
-    asyncOperationManagerMock.executeOperation.mockImplementation(
-      async ({ operation, onSuccess }) => {
-        await operation();
-        onSuccess?.({ rule: createdRule, warnings: ['warning-1'] });
-        return undefined;
-      },
+  it('rolls back the placeholder and suggests names on a duplicate', async () => {
+    await exceptionRuleManager.createRule(
+      'Refill water',
+      ExceptionRuleType.PAUSE_ONLY,
     );
-    exceptionRuleManagerMock.createRule.mockResolvedValue({
-      rule: createdRule,
-      warnings: ['warning-1'],
-    });
+    const view = renderActions({ name: 'refill  WATER' });
 
-    const context = createArgs();
-    const { result } = renderHook(() => useRuleManagerActions(context.args));
+    await act(() => view.result.current.handleCreateRule());
 
-    await act(async () => {
-      await result.current.handleCreateRule();
-    });
-
-    expect(context.formWarningsState.get()).toEqual(['warning-1']);
-    expect(context.showCreateFormState.set).not.toHaveBeenCalledWith(false);
-    expect(context.resetForm).not.toHaveBeenCalled();
-  });
-
-  it('handles duplicate name creation errors and loads name suggestions', async () => {
-    asyncOperationManagerMock.executeOperation.mockImplementation(
-      async ({ onError }) => {
-        onError?.(
-          new ExceptionRuleException(
-            ExceptionRuleError.DUPLICATE_RULE_NAME,
-            'duplicate rule name',
-          ),
-        );
-        return undefined;
-      },
-    );
-    exceptionRuleManagerMock.getDuplicationSuggestions.mockResolvedValue({
-      hasExactMatch: true,
-      hasSimilarRules: false,
-      exactMatches: [],
-      similarMatches: [],
-      suggestion: null,
-      nameSuggestions: ['New Rule (1)', 'New Rule (2)'],
-    });
-
-    const context = createArgs();
-    const { result } = renderHook(() => useRuleManagerActions(context.args));
-
-    await act(async () => {
-      await result.current.handleCreateRule();
-    });
-    await act(async () => {
-      await Promise.resolve();
-    });
-
-    expect(context.rulesState.get()).toHaveLength(0);
-    expect(context.formErrorsState.get()).toEqual(['friendly error']);
-    expect(
-      exceptionRuleManagerMock.getDuplicationSuggestions,
-    ).toHaveBeenCalledWith('New Rule');
-    expect(context.duplicateSuggestionsState.get()).toEqual([
-      'New Rule (1)',
-      'New Rule (2)',
+    expect(storedRules()).toHaveLength(1);
+    expect(view.rules.get()).toEqual([]);
+    expect(view.formErrors.get()).toHaveLength(1);
+    expect(view.suggestions.get()).toEqual([
+      'refill  WATER 2',
+      'refill  WATER 3',
+      'refill  WATER 4',
     ]);
   });
 
-  it('rolls back updated rule when async update fails', async () => {
-    const originalRule = createRule({ id: 'rule-123', name: 'Original name' });
-    asyncOperationManagerMock.executeOperation.mockImplementation(
-      async ({ onError }) => {
-        onError?.(
-          new ExceptionRuleException(
-            ExceptionRuleError.VALIDATION_ERROR,
-            'bad input',
-          ),
-        );
-        return undefined;
-      },
+  it('saves an edit and leaves edit mode', async () => {
+    const { rule } = await exceptionRuleManager.createRule(
+      'Refill water',
+      ExceptionRuleType.PAUSE_ONLY,
+    );
+    const view = renderActions(
+      { name: 'Refill bottle', type: ExceptionRuleType.EARLY_COMPLETION_ONLY },
+      rule,
     );
 
-    const context = createArgs({
-      editingRule: originalRule,
-      rules: [originalRule],
-    });
-    context.args.formData = {
-      ...context.args.formData,
-      name: 'Updated name',
-      description: 'updated desc',
+    await act(() => view.result.current.handleUpdateRule());
+
+    expect(storedRules()).toEqual([
+      expect.objectContaining({
+        id: rule.id,
+        name: 'Refill bottle',
+        type: ExceptionRuleType.EARLY_COMPLETION_ONLY,
+      }),
+    ]);
+    expect(view.editing.get()).toBeNull();
+  });
+
+  it('restores the original rule when an edit collides with another name', async () => {
+    const { rule } = await exceptionRuleManager.createRule(
+      'Refill water',
+      ExceptionRuleType.PAUSE_ONLY,
+    );
+    await exceptionRuleManager.createRule(
+      'Answer door',
+      ExceptionRuleType.PAUSE_ONLY,
+    );
+    const view = renderActions({ name: 'Answer door' }, rule);
+
+    await act(() => view.result.current.handleUpdateRule());
+
+    expect(view.rules.get()).toEqual([rule]);
+    expect(view.formErrors.get()).toHaveLength(1);
+    expect(view.editing.get()).toEqual(rule);
+    expect(storedRules().find((item) => item.id === rule.id)?.name).toBe(
+      'Refill water',
+    );
+  });
+
+  it('deletes after confirmation and reloads without the rule', async () => {
+    const { rule } = await exceptionRuleManager.createRule(
+      'Refill water',
+      ExceptionRuleType.PAUSE_ONLY,
+    );
+    const view = renderActions();
+
+    act(() => view.result.current.handleDeleteRule(rule));
+    expect(view.result.current.deleteConfirmationRule).toEqual(rule);
+    await act(() => view.result.current.confirmDeleteRule());
+
+    expect(storedRules()).toEqual([
+      expect.objectContaining({ id: rule.id, isActive: false }),
+    ]);
+    expect(view.result.current.deleteConfirmationRule).toBeNull();
+    expect(view.error.get()).toBeNull();
+  });
+
+  it('reports a delete of a rule that no longer exists', async () => {
+    const view = renderActions();
+    const missing = {
+      ...(
+        await exceptionRuleManager.createRule(
+          'Gone',
+          ExceptionRuleType.PAUSE_ONLY,
+        )
+      ).rule,
+      id: 'missing',
     };
 
-    const { result } = renderHook(() => useRuleManagerActions(context.args));
+    act(() => view.result.current.handleDeleteRule(missing));
+    await act(() => view.result.current.confirmDeleteRule());
 
-    await act(async () => {
-      await result.current.handleUpdateRule();
-    });
-
-    expect(context.formErrorsState.get()).toEqual(['friendly error']);
-    expect(context.rulesState.get()[0]?.name).toBe('Original name');
-    expect(result.current.savingOperations.size).toBe(0);
+    expect(view.error.get()).toEqual(expect.any(String));
   });
 
-  it('handles update success warnings without closing edit mode', async () => {
-    const originalRule = createRule({
-      id: 'rule-update-warning',
-      name: 'Original name',
-    });
-    asyncOperationManagerMock.executeOperation.mockImplementation(
-      async ({ operation, onSuccess }) => {
-        await operation();
-        onSuccess?.({ rule: originalRule, warnings: ['update-warning'] });
-        return undefined;
-      },
+  it('exports active rules with usage data as dated JSON', async () => {
+    await exceptionRuleManager.createRule(
+      'Refill water',
+      ExceptionRuleType.PAUSE_ONLY,
     );
-    exceptionRuleManagerMock.updateRule.mockResolvedValue({
-      rule: originalRule,
-      warnings: ['update-warning'],
-    });
+    const view = renderActions();
 
-    const context = createArgs({
-      editingRule: originalRule,
-      rules: [originalRule],
-    });
-    const { result } = renderHook(() => useRuleManagerActions(context.args));
+    await act(() => view.result.current.handleExportRules());
 
-    await act(async () => {
-      await result.current.handleUpdateRule();
-    });
-
-    expect(context.formWarningsState.get()).toEqual(['update-warning']);
-    expect(context.editingRuleState.set).not.toHaveBeenCalledWith(null);
-    expect(context.resetForm).not.toHaveBeenCalled();
-  });
-
-  it('returns early when trying to update without an editing rule', async () => {
-    const context = createArgs({ editingRule: null, rules: [] });
-    const { result } = renderHook(() => useRuleManagerActions(context.args));
-
-    await act(async () => {
-      await result.current.handleUpdateRule();
-    });
-
-    expect(asyncOperationManagerMock.executeOperation).not.toHaveBeenCalled();
-  });
-
-  it('handles non-exception update errors and executeOperation throws', async () => {
-    const originalRule = createRule({
-      id: 'rule-unknown-error',
-      name: 'Original name',
-    });
-    const context = createArgs({
-      editingRule: originalRule,
-      rules: [originalRule],
-    });
-    const { result, rerender } = renderHook(() =>
-      useRuleManagerActions(context.args),
-    );
-
-    asyncOperationManagerMock.executeOperation.mockImplementationOnce(
-      async ({ onError }) => {
-        onError?.(new Error('unknown update error'));
-        return undefined;
-      },
-    );
-
-    await act(async () => {
-      await result.current.handleUpdateRule();
-    });
-
-    expect(context.formErrorsState.get()).toEqual([
-      'Failed to update rule. Please try again.',
-    ]);
-
-    asyncOperationManagerMock.executeOperation.mockImplementationOnce(
-      async () => {
-        throw new Error('execute failed before handlers');
-      },
-    );
-
-    rerender();
-    await act(async () => {
-      await result.current.handleUpdateRule();
-    });
-
-    expect(context.formErrorsState.get()).toEqual(['Failed to update rule']);
-  });
-
-  it('delegates edit action to beginEditRule', () => {
-    const context = createArgs();
-    const { result } = renderHook(() => useRuleManagerActions(context.args));
-    const rule = createRule({ id: 'edit-rule' });
-
-    act(() => {
-      result.current.handleEditRule(rule);
-    });
-
-    expect(context.beginEditRule).toHaveBeenCalledWith(rule);
-  });
-
-  it('confirms delete and reloads rules', async () => {
-    const rule = createRule({ id: 'delete-me' });
-    exceptionRuleManagerMock.deleteRule.mockResolvedValue(undefined);
-
-    const context = createArgs();
-    const { result } = renderHook(() => useRuleManagerActions(context.args));
-
-    act(() => {
-      result.current.handleDeleteRule(rule);
-    });
-
-    await act(async () => {
-      await result.current.confirmDeleteRule();
-    });
-
-    expect(exceptionRuleManagerMock.deleteRule).toHaveBeenCalledWith(
-      'delete-me',
-    );
-    expect(context.loadRules).toHaveBeenCalledTimes(1);
-  });
-
-  it('surfaces delete errors via translated safe detail', async () => {
-    const rule = createRule({ id: 'delete-fail' });
-    exceptionRuleManagerMock.deleteRule.mockRejectedValue(
-      new Error('delete failed'),
-    );
-
-    const context = createArgs();
-    const { result } = renderHook(() => useRuleManagerActions(context.args));
-
-    act(() => {
-      result.current.handleDeleteRule(rule);
-    });
-
-    await act(async () => {
-      await result.current.confirmDeleteRule();
-    });
-
-    expect(context.errorState.get()).toBe('friendly unknown error');
-  });
-
-  it('exports rules through capability center and handles export failure', async () => {
-    const context = createArgs();
-    const { result } = renderHook(() => useRuleManagerActions(context.args));
-
-    exceptionRuleManagerMock.exportRules.mockResolvedValue({
-      rules: [],
-      usageRecords: [],
-    });
-
-    await act(async () => {
-      await result.current.handleExportRules();
-    });
-
-    expect(saveFileMock).toHaveBeenCalledTimes(1);
-    expect(saveFileMock).toHaveBeenCalledWith(
-      expect.stringContaining('"rules"'),
+    expect(saveFile).toHaveBeenCalledWith(
+      expect.any(String),
       expect.stringMatching(/^exception-rules-\d{4}-\d{2}-\d{2}\.json$/),
     );
+    const exported = JSON.parse(saveFile.mock.calls[0][0]);
+    expect(exported.rules).toEqual([
+      expect.objectContaining({ name: 'Refill water' }),
+    ]);
+    expect(exported.usageRecords).toEqual([]);
+  });
 
-    exceptionRuleManagerMock.exportRules.mockRejectedValue(
-      new Error('cannot export'),
-    );
-    await act(async () => {
-      await result.current.handleExportRules();
-    });
+  it('shows an error when saving the export file fails', async () => {
+    saveFile.mockRejectedValueOnce(new Error('disk full'));
+    const view = renderActions();
 
-    expect(context.errorState.get()).toBe('Failed to export rules');
+    await act(() => view.result.current.handleExportRules());
+
+    expect(view.error.get()).toBe('Failed to export rules');
   });
 });

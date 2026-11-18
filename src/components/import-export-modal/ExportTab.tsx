@@ -7,8 +7,9 @@ export const ExportTab: React.FC<{
   chainsCount: number;
   language: 'zh' | 'en';
   onExport: () => void;
+  exportFailed?: boolean;
   t: Translator;
-}> = ({ chainsCount, onExport, t }) => (
+}> = ({ chainsCount, onExport, exportFailed = false, t }) => (
   <div className="space-y-6">
     <div className="rounded-2xl border border-blue-200 bg-blue-50 p-6 dark:border-blue-700/50 dark:bg-blue-900/20">
       <h3 className="mb-3 font-chinese text-lg font-bold text-blue-900 dark:text-blue-100">
@@ -61,6 +62,14 @@ export const ExportTab: React.FC<{
         <Download size={20} />
         <span>{t('importExportModal.exportTab.exportAsJson')}</span>
       </button>
+      {exportFailed && (
+        <p
+          role="alert"
+          className="mt-4 font-chinese text-sm text-red-600 dark:text-red-400"
+        >
+          {t('importExportModal.exportTab.exportFailed')}
+        </p>
+      )}
     </div>
   </div>
 );

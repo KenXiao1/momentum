@@ -88,27 +88,28 @@ E0 (新建) ──[连续7天执行]──> E1 (稳定) ──[连续21天执行
 
 ## 关键文件
 
-| 文件                                                          | 职责                                             |
-| ------------------------------------------------------------- | ------------------------------------------------ |
-| `src/types/index.ts`                                          | RSIPNode, RSIPMeta, RSIPExecutionRecord 类型定义 |
-| `src/hooks/domains/useRsipDomain.ts`                          | RSIP 业务逻辑 Hook                               |
-| `src/utils/rsipTree.ts`                                       | RSIP 树结构工具函数                              |
-| `src/infra/storage/supabase/rsip.ts`                          | Supabase 存储实现                                |
-| `src/components/RSIPView.tsx`                                 | RSIP 视图组件                                    |
-| `src/components/rsip/RSIPStrictModeCard.tsx`                  | 严格模式定式卡片                                 |
-| `src/components/rsip/RSIPPhaseBadge.tsx`                      | 稳态阶段徽章                                     |
-| `src/components/rsip/RSIPPhaseProgress.tsx`                   | 稳态进度条                                       |
-| `src/components/rsip/RSIPConstraintIndicator.tsx`             | 约束力指标                                       |
-| `src/components/rsip/RSIPModeSwitch.tsx`                      | 模式切换组件                                     |
-| `src/components/rsip/RSIPDailyReminder.tsx`                   | 每日提醒横幅                                     |
-| `src/components/rsip/RSIPViolationDialog.tsx`                 | 违反确认对话框                                   |
-| `src/components/rsip/RSIPTaskLinkPanel.tsx`                   | RSIP-任务联动管理面板                            |
-| `src/components/rsip/RSIPInsightsPanel.tsx`                   | 分析与推荐面板                                   |
-| `src/components/rsip/RSIPPolicyLibrary.tsx`                   | 国策库面板                                       |
-| `src/components/rsip/RSIPRunHistory.tsx`                      | 轮次历史面板                                     |
-| `src/services/rsip-insights/RSIPInsightsService.ts`           | 分析与推荐引擎                                   |
-| `src/services/rsip-integration/RSIPTaskIntegrationService.ts` | 任务联动核心服务                                 |
-| `src/types/rsipIntegration.ts`                                | 联动类型定义                                     |
+| 文件                                                          | 职责                                                   |
+| ------------------------------------------------------------- | ------------------------------------------------------ |
+| `src/types/index.ts`                                          | RSIPNode, RSIPMeta, RSIPExecutionRecord 类型定义       |
+| `src/domain/rsip.ts`                                          | 稳态阶段晋升、强化、违规吸收与级联、失败代价（纯函数） |
+| `src/hooks/domains/useRsipDomain.ts`                          | 持久化与状态提交；调用上面的规则                       |
+| `src/utils/rsipTree.ts`                                       | RSIP 树结构工具函数                                    |
+| `src/infra/storage/supabase/rsip.ts`                          | Supabase 存储实现                                      |
+| `src/components/RSIPView.tsx`                                 | RSIP 视图组件                                          |
+| `src/components/rsip/RSIPStrictModeCard.tsx`                  | 严格模式定式卡片                                       |
+| `src/components/rsip/RSIPPhaseBadge.tsx`                      | 稳态阶段徽章                                           |
+| `src/components/rsip/RSIPPhaseProgress.tsx`                   | 稳态进度条                                             |
+| `src/components/rsip/RSIPConstraintIndicator.tsx`             | 约束力指标                                             |
+| `src/components/rsip/RSIPModeSwitch.tsx`                      | 模式切换组件                                           |
+| `src/components/rsip/RSIPDailyReminder.tsx`                   | 每日提醒横幅                                           |
+| `src/components/rsip/RSIPViolationDialog.tsx`                 | 违反确认对话框                                         |
+| `src/components/rsip/RSIPTaskLinkPanel.tsx`                   | RSIP-任务联动管理面板                                  |
+| `src/components/rsip/RSIPInsightsPanel.tsx`                   | 分析与推荐面板                                         |
+| `src/components/rsip/RSIPPolicyLibrary.tsx`                   | 国策库面板                                             |
+| `src/components/rsip/RSIPRunHistory.tsx`                      | 轮次历史面板                                           |
+| `src/services/rsip-insights/RSIPInsightsService.ts`           | 分析与推荐引擎                                         |
+| `src/services/rsip-integration/RSIPTaskIntegrationService.ts` | 任务联动核心服务                                       |
+| `src/types/rsipIntegration.ts`                                | 联动类型定义                                           |
 
 ---
 

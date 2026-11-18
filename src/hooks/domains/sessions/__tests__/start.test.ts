@@ -6,23 +6,14 @@ import {
   createGroupChain,
   createLocalStorageMock,
   createSupabaseStorageMock,
+  createTestStorage,
   createUnitChain,
 } from '../../../../test/factories';
+import type { MomentumStorage } from '../../../../storage/MomentumStorage';
 import { createStartChainHandler } from '../start';
-import { buildChainTree } from '../../../../utils/chainTree';
 import { logger } from '../../../../utils/logger';
 import { systemNotificationService } from '../../../../services/platform/SystemNotificationService';
 import { toast } from '../../../../utils/toast';
-import {
-  getNextUnitInGroup,
-  incrementGroupCompletionCount,
-} from '../../../../utils/chainTree';
-import {
-  isGroupExpired,
-  resetGroupProgress,
-  startGroupTimer,
-} from '../../../../utils/timeLimit';
-
 vi.mock('../../../../utils/logger', () => ({
   logger: {
     debug: vi.fn(),
@@ -42,18 +33,6 @@ vi.mock('../../../../utils/toast', () => ({
   toast: {
     error: vi.fn(),
   },
-}));
-
-vi.mock('../../../../utils/chainTree', () => ({
-  buildChainTree: vi.fn(() => []),
-  getNextUnitInGroup: vi.fn(() => null),
-  incrementGroupCompletionCount: vi.fn((chains) => chains),
-}));
-
-vi.mock('../../../../utils/timeLimit', () => ({
-  isGroupExpired: vi.fn(() => false),
-  resetGroupProgress: vi.fn((group) => group),
-  startGroupTimer: vi.fn((group) => group),
 }));
 
 function createStateContainer(initialState: AppState) {
@@ -86,7 +65,6 @@ describe('createStartChainHandler', () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-02-02T08:00:00.000Z'));
     vi.clearAllMocks();
-    vi.mocked(isGroupExpired).mockReturnValue(false);
   });
 
   it('should start a local unit chain and switch to focus view', async () => {
@@ -479,479 +457,241 @@ describe('createStartChainHandler', () => {
     expect(onNavigateToFocus).toHaveBeenCalledTimes(1);
   });
 
-  it('should reset an expired group and notify failure', async () => {
-    const group = createGroupChain({
-      id: 'group-expired',
-      name: 'Expired Group',
-    });
-    const untouched = createUnitChain({ id: 'untouched-chain' });
-    const resetGroup = createGroupChain({
-      ...group,
-      totalFailures: group.totalFailures + 1,
-    });
-    const stateRef = createStateContainer(
-      createAppState({ chains: [group, untouched] }),
-    );
-    const storage = createLocalStorageMock();
+  describe('starting a task group (real tree and time-limit rules)', () => {
+    const NOW = new Date('2026-02-02T08:00:00.000Z');
 
-    vi.mocked(isGroupExpired).mockReturnValue(true);
-    vi.mocked(resetGroupProgress).mockReturnValue(resetGroup);
+    function startGroup(params: {
+      chains: AppState['chains'];
+      storage?: MomentumStorage;
+      safelySaveChains?: (chains: AppState['chains']) => Promise<void>;
+      onTaskLifecycleEvent?: () => void;
+      translator?: typeof t;
+    }) {
+      const stateRef = createStateContainer(
+        createAppState({ chains: params.chains }),
+      );
+      const storage = params.storage ?? createTestStorage();
+      const handleStartChain = createStartChainHandler({
+        getState: stateRef.getState,
+        setState: stateRef.setState,
+        storage,
+        safelySaveChains:
+          params.safelySaveChains ?? ((chains) => storage.saveChains(chains)),
+        pendingChainId: null,
+        setPendingChainId: vi.fn(),
+        currentSessionId: null,
+        setCurrentSessionId: vi.fn(),
+        setShowBettingModal: vi.fn(),
+        onTaskLifecycleEvent: params.onTaskLifecycleEvent,
+        t: params.translator ?? t,
+      });
+      const chain = (id: string) =>
+        stateRef.getState().chains.find((item) => item.id === id);
+      return { handleStartChain, stateRef, storage, chain };
+    }
 
-    const handleStartChain = createStartChainHandler({
-      state: stateRef.getState(),
-      setState: stateRef.setState,
-      storage,
-      safelySaveChains: vi.fn(async () => undefined),
-      pendingChainId: null,
-      setPendingChainId: vi.fn(),
-      currentSessionId: null,
-      setCurrentSessionId: vi.fn(),
-      setShowBettingModal: vi.fn(),
-      t,
-    });
+    const expiredGroup = (overrides = {}) =>
+      createGroupChain({
+        id: 'expired',
+        name: 'Expired Group',
+        timeLimitHours: 2,
+        groupStartedAt: new Date('2026-02-02T05:00:00.000Z'),
+        currentStreak: 3,
+        totalFailures: 1,
+        ...overrides,
+      });
 
-    await handleStartChain(group.id);
+    it('resets an expired group, counts a failure and starts nothing', async () => {
+      const untouched = createUnitChain({ id: 'untouched' });
+      const unit = createUnitChain({ id: 'unit', parentId: 'expired' });
+      const { handleStartChain, stateRef, storage, chain } = startGroup({
+        chains: [expiredGroup(), unit, untouched],
+      });
 
-    expect(
-      stateRef.getState().chains.find((item) => item.id === group.id)
-        ?.totalFailures,
-    ).toBe(resetGroup.totalFailures);
-    expect(
-      stateRef.getState().chains.find((item) => item.id === untouched.id),
-    ).toEqual(untouched);
-    expect(systemNotificationService.notifyTaskFailed).toHaveBeenCalledWith(
-      group.name,
-      'Group has expired',
-    );
-  });
+      await handleStartChain('expired');
 
-  it('should use chinese copy for expired group notifications', async () => {
-    const group = createGroupChain({
-      id: 'group-expired-zh',
-      name: '过期任务群',
-    });
-    vi.mocked(isGroupExpired).mockReturnValue(true);
-    vi.mocked(resetGroupProgress).mockReturnValue(group);
-    const handleStartChain = createStartChainHandler({
-      state: createAppState({ chains: [group] }),
-      setState: vi.fn(),
-      storage: createLocalStorageMock(),
-      safelySaveChains: vi.fn(async () => undefined),
-      pendingChainId: null,
-      setPendingChainId: vi.fn(),
-      currentSessionId: null,
-      setCurrentSessionId: vi.fn(),
-      setShowBettingModal: vi.fn(),
-      t: zhTr,
-    });
-
-    await handleStartChain(group.id);
-
-    expect(systemNotificationService.notifyTaskFailed).toHaveBeenCalledWith(
-      group.name,
-      '任务群已超时',
-    );
-  });
-
-  it('should start next unit when group has available child', async () => {
-    const group = createGroupChain({
-      id: 'group-1',
-      name: 'Group',
-      timeLimitHours: 2,
-      groupStartedAt: undefined,
-    });
-    const child = createUnitChain({
-      id: 'child-1',
-      parentId: group.id,
-      duration: 33,
-    });
-    const stateRef = createStateContainer(
-      createAppState({ chains: [group, child] }),
-    );
-    const storage = createLocalStorageMock({
-      saveActiveSession: vi.fn(async () => undefined),
-      removeScheduledSession: vi.fn(async () => undefined),
-    });
-    const safelySaveChains = vi.fn(async () => undefined);
-
-    vi.mocked(buildChainTree).mockReturnValue([
-      {
-        id: group.id,
-        type: 'group',
-        name: group.name,
-        children: [{ id: child.id }],
-      },
-    ] as unknown as ReturnType<typeof buildChainTree>);
-    vi.mocked(isGroupExpired).mockReturnValue(false);
-    vi.mocked(getNextUnitInGroup).mockReturnValue({
-      id: child.id,
-      name: child.name,
-    } as never);
-    vi.mocked(startGroupTimer).mockImplementation((value) => ({
-      ...value,
-      type: 'group',
-      groupStartedAt: new Date(),
-    }));
-
-    const handleStartChain = createStartChainHandler({
-      state: stateRef.getState(),
-      setState: stateRef.setState,
-      storage,
-      safelySaveChains,
-      pendingChainId: null,
-      setPendingChainId: vi.fn(),
-      currentSessionId: null,
-      setCurrentSessionId: vi.fn(),
-      setShowBettingModal: vi.fn(),
-      t,
+      expect(chain('expired')).toMatchObject({
+        currentStreak: 0,
+        totalFailures: 2,
+        groupStartedAt: undefined,
+        groupExpiresAt: undefined,
+      });
+      expect(chain('untouched')).toEqual(untouched);
+      expect(stateRef.getState().activeSession).toBeNull();
+      expect(await storage.getActiveSession()).toBeNull();
+      expect(systemNotificationService.notifyTaskFailed).toHaveBeenCalledWith(
+        'Expired Group',
+        'Group has expired',
+      );
     });
 
-    await handleStartChain(group.id);
+    it('notifies an expired group in Chinese', async () => {
+      const { handleStartChain } = startGroup({
+        chains: [expiredGroup({ name: '过期任务群' })],
+        translator: zhTr,
+      });
 
-    expect(startGroupTimer).toHaveBeenCalledWith(group);
-    expect(storage.saveActiveSession).toHaveBeenCalledWith(
-      expect.objectContaining({
-        chainId: child.id,
-        duration: child.duration,
-      }),
-    );
-    expect(stateRef.getState().activeSession?.chainId).toBe(child.id);
-  });
+      await handleStartChain('expired');
 
-  it('should not start group timer when group already started', async () => {
-    const group = createGroupChain({
-      id: 'group-started',
-      name: 'Started Group',
-      timeLimitHours: 2,
-      groupStartedAt: new Date('2026-02-01T00:00:00.000Z'),
-    });
-    const child = createUnitChain({
-      id: 'group-started-child',
-      parentId: group.id,
-    });
-    const stateRef = createStateContainer(
-      createAppState({ chains: [group, child] }),
-    );
-    const storage = createLocalStorageMock({
-      saveActiveSession: vi.fn(async () => undefined),
-      saveScheduledSessions: vi.fn(async () => undefined),
+      expect(systemNotificationService.notifyTaskFailed).toHaveBeenCalledWith(
+        '过期任务群',
+        '任务群已超时',
+      );
     });
 
-    vi.mocked(buildChainTree).mockReturnValue([
-      {
-        id: group.id,
-        type: 'group',
-        name: group.name,
-        children: [{ id: child.id }],
-      },
-    ] as unknown as ReturnType<typeof buildChainTree>);
-    vi.mocked(getNextUnitInGroup).mockReturnValue({
-      id: child.id,
-      name: child.name,
-    } as never);
+    it('starts the first unfinished unit and starts the group timer', async () => {
+      const group = createGroupChain({ id: 'group', timeLimitHours: 2 });
+      const done = createUnitChain({
+        id: 'done',
+        parentId: 'group',
+        sortOrder: 1,
+        currentStreak: 1,
+      });
+      const next = createUnitChain({
+        id: 'next',
+        parentId: 'group',
+        sortOrder: 2,
+        duration: 33,
+      });
+      const { handleStartChain, stateRef, storage, chain } = startGroup({
+        chains: [group, next, done],
+      });
 
-    const handleStartChain = createStartChainHandler({
-      state: stateRef.getState(),
-      setState: stateRef.setState,
-      storage,
-      safelySaveChains: vi.fn(async () => undefined),
-      pendingChainId: null,
-      setPendingChainId: vi.fn(),
-      currentSessionId: null,
-      setCurrentSessionId: vi.fn(),
-      setShowBettingModal: vi.fn(),
-      t,
+      await handleStartChain('group');
+
+      expect(await storage.getActiveSession()).toMatchObject({
+        chainId: 'next',
+        duration: 33,
+      });
+      expect(stateRef.getState().activeSession?.chainId).toBe('next');
+      expect(chain('group')).toMatchObject({
+        groupStartedAt: NOW,
+        groupExpiresAt: new Date('2026-02-02T10:00:00.000Z'),
+      });
     });
 
-    await handleStartChain(group.id);
+    it('keeps the running timer of a group that already started', async () => {
+      const startedAt = new Date('2026-02-02T07:00:00.000Z');
+      const group = createGroupChain({
+        id: 'group',
+        timeLimitHours: 2,
+        groupStartedAt: startedAt,
+      });
+      const unit = createUnitChain({ id: 'unit', parentId: 'group' });
+      const { handleStartChain, storage, chain } = startGroup({
+        chains: [group, unit],
+      });
 
-    expect(startGroupTimer).not.toHaveBeenCalled();
-    expect(storage.saveActiveSession).toHaveBeenCalledWith(
-      expect.objectContaining({ chainId: child.id }),
-    );
-  });
+      await handleStartChain('group');
 
-  it('should complete group cycle and schedule next cycle attempt when no next unit exists', async () => {
-    vi.useFakeTimers();
-
-    const group = createGroupChain({
-      id: 'group-2',
-      name: 'Cycling Group',
-      totalCompletions: 2,
-    });
-    const incremented = createGroupChain({ ...group, totalCompletions: 3 });
-    const stateRef = createStateContainer(createAppState({ chains: [group] }));
-    const storage = createLocalStorageMock({
-      getActiveChains: vi.fn(async () => [incremented]),
-    });
-    const safelySaveChains = vi.fn(async () => undefined);
-
-    vi.mocked(isGroupExpired).mockReturnValue(false);
-    vi.mocked(buildChainTree).mockReturnValue([
-      { id: group.id, type: 'group', name: group.name, children: [] },
-    ] as unknown as ReturnType<typeof buildChainTree>);
-    vi.mocked(getNextUnitInGroup).mockReturnValue(null);
-    vi.mocked(incrementGroupCompletionCount).mockReturnValue([incremented]);
-
-    const handleStartChain = createStartChainHandler({
-      state: stateRef.getState(),
-      setState: stateRef.setState,
-      storage,
-      safelySaveChains,
-      pendingChainId: null,
-      setPendingChainId: vi.fn(),
-      currentSessionId: null,
-      setCurrentSessionId: vi.fn(),
-      setShowBettingModal: vi.fn(),
-      t,
+      expect(chain('group')?.groupStartedAt).toEqual(startedAt);
+      expect(await storage.getActiveSession()).toMatchObject({
+        chainId: 'unit',
+      });
     });
 
-    await handleStartChain(group.id);
-    await vi.runAllTimersAsync();
+    it('completes a cycle when every unit is done and starts the next cycle', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(NOW);
+      const group = createGroupChain({ id: 'group', totalCompletions: 2 });
+      const unit = createUnitChain({
+        id: 'unit',
+        parentId: 'group',
+        currentStreak: 1,
+      });
+      const onTaskLifecycleEvent = vi.fn();
+      const { handleStartChain, storage, chain } = startGroup({
+        chains: [group, unit],
+        onTaskLifecycleEvent,
+      });
 
-    expect(incrementGroupCompletionCount).toHaveBeenCalledWith(
-      [group],
-      group.id,
-    );
-    expect(safelySaveChains).toHaveBeenCalledWith([incremented]);
-    expect(systemNotificationService.notifyTaskCompleted).toHaveBeenCalledWith(
-      incremented.name,
-      incremented.totalCompletions,
-      'Cycle 3 completed. Starting cycle 4.',
-    );
-  });
+      await handleStartChain('group');
 
-  it('should start first unit in next cycle when group is found in fresh chains', async () => {
-    vi.useFakeTimers();
-
-    const group = createGroupChain({
-      id: 'group-cycle-start',
-      name: 'Cycle Start Group',
-      totalCompletions: 4,
-    });
-    const firstUnit = createUnitChain({
-      id: 'cycle-first-unit',
-      parentId: group.id,
-      name: 'Cycle Unit',
-    });
-    const incremented = createGroupChain({ ...group, totalCompletions: 5 });
-    const stateRef = createStateContainer(
-      createAppState({ chains: [group, firstUnit] }),
-    );
-    const storage = createLocalStorageMock({
-      getActiveChains: vi.fn(async () => [group, firstUnit]),
-      saveActiveSession: vi.fn(async () => undefined),
-      saveScheduledSessions: vi.fn(async () => undefined),
-    });
-    const safelySaveChains = vi.fn(async () => undefined);
-
-    vi.mocked(buildChainTree)
-      .mockReturnValueOnce([
-        { id: group.id, type: 'group', name: group.name, children: [] },
-      ] as never)
-      .mockReturnValueOnce([
-        {
-          id: group.id,
-          type: 'group',
-          name: group.name,
-          children: [{ id: firstUnit.id }],
-        },
-      ] as never);
-    vi.mocked(getNextUnitInGroup)
-      .mockReturnValueOnce(null)
-      .mockReturnValueOnce({ id: firstUnit.id, name: firstUnit.name } as never);
-    vi.mocked(incrementGroupCompletionCount).mockReturnValue([incremented]);
-
-    const handleStartChain = createStartChainHandler({
-      state: stateRef.getState(),
-      setState: stateRef.setState,
-      storage,
-      safelySaveChains,
-      pendingChainId: null,
-      setPendingChainId: vi.fn(),
-      currentSessionId: null,
-      setCurrentSessionId: vi.fn(),
-      setShowBettingModal: vi.fn(),
-      t,
-    });
-
-    await handleStartChain(group.id);
-    await vi.runAllTimersAsync();
-
-    expect(storage.getActiveChains).toHaveBeenCalledTimes(1);
-    expect(storage.saveActiveSession).toHaveBeenCalledWith(
-      expect.objectContaining({
-        chainId: firstUnit.id,
-        duration: firstUnit.duration,
-      }),
-    );
-  });
-
-  it('should publish the exact group cycle lifecycle event', async () => {
-    vi.useFakeTimers();
-
-    const group = createGroupChain({
-      id: 'group-rsip-event',
-      name: 'RSIP Group',
-      totalCompletions: 1,
-    });
-    const incremented = createGroupChain({ ...group, totalCompletions: 2 });
-    const stateRef = createStateContainer(createAppState({ chains: [group] }));
-    const storage = createLocalStorageMock({
-      getActiveChains: vi.fn(async () => [incremented]),
-    });
-    const onTaskLifecycleEvent = vi.fn();
-
-    vi.mocked(buildChainTree).mockReturnValue([
-      { id: group.id, type: 'group', name: group.name, children: [] },
-    ] as never);
-    vi.mocked(getNextUnitInGroup).mockReturnValue(null);
-    vi.mocked(incrementGroupCompletionCount).mockReturnValue([incremented]);
-
-    const handleStartChain = createStartChainHandler({
-      state: stateRef.getState(),
-      setState: stateRef.setState,
-      storage,
-      safelySaveChains: vi.fn(async () => undefined),
-      pendingChainId: null,
-      setPendingChainId: vi.fn(),
-      currentSessionId: null,
-      setCurrentSessionId: vi.fn(),
-      setShowBettingModal: vi.fn(),
-      onTaskLifecycleEvent,
-      t,
-    });
-
-    await handleStartChain(group.id);
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(onTaskLifecycleEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
+      expect(chain('group')).toMatchObject({
+        totalCompletions: 3,
+        currentStreak: 1,
+      });
+      expect(chain('unit')?.currentStreak).toBe(0);
+      expect(
+        (await storage.getChains()).find((item) => item.id === 'group'),
+      ).toMatchObject({ totalCompletions: 3 });
+      expect(
+        systemNotificationService.notifyTaskCompleted,
+      ).toHaveBeenCalledWith(
+        group.name,
+        3,
+        'Cycle 3 completed. Starting cycle 4.',
+      );
+      expect(onTaskLifecycleEvent).toHaveBeenCalledWith({
         type: 'group_cycle_completed',
-        chainId: group.id,
+        chainId: 'group',
         chainKind: 'group',
-      }),
-    );
-  });
+        occurredAt: NOW,
+      });
+      expect(await storage.getActiveSession()).toBeNull();
 
-  it('should log when fetching fresh chains for next cycle fails', async () => {
-    vi.useFakeTimers();
+      await vi.runAllTimersAsync();
 
-    const group = createGroupChain({
-      id: 'group-cycle-error',
-      name: 'Cycle Error Group',
-      totalCompletions: 1,
-    });
-    const incremented = createGroupChain({ ...group, totalCompletions: 2 });
-    const stateRef = createStateContainer(createAppState({ chains: [group] }));
-    const storage = createLocalStorageMock({
-      getActiveChains: vi.fn(async () => {
-        throw new Error('read failed');
-      }),
-    });
-    const safelySaveChains = vi.fn(async () => undefined);
-
-    vi.mocked(buildChainTree).mockReturnValue([
-      { id: group.id, type: 'group', name: group.name, children: [] },
-    ] as never);
-    vi.mocked(getNextUnitInGroup).mockReturnValue(null);
-    vi.mocked(incrementGroupCompletionCount).mockReturnValue([incremented]);
-
-    const handleStartChain = createStartChainHandler({
-      state: stateRef.getState(),
-      setState: stateRef.setState,
-      storage,
-      safelySaveChains,
-      pendingChainId: null,
-      setPendingChainId: vi.fn(),
-      currentSessionId: null,
-      setCurrentSessionId: vi.fn(),
-      setShowBettingModal: vi.fn(),
-      t,
+      expect(await storage.getActiveSession()).toMatchObject({
+        chainId: 'unit',
+      });
     });
 
-    await handleStartChain(group.id);
-    await vi.runAllTimersAsync();
+    it('logs and starts nothing when the next cycle cannot read chains', async () => {
+      vi.useFakeTimers();
+      const storage = createTestStorage({
+        getActiveChains: vi.fn(async () => {
+          throw new Error('read failed');
+        }),
+      });
+      const { handleStartChain } = startGroup({
+        chains: [
+          createGroupChain({ id: 'group' }),
+          createUnitChain({ id: 'unit', parentId: 'group', currentStreak: 1 }),
+        ],
+        storage,
+      });
 
-    expect(logger.error).toHaveBeenCalledWith(
-      'SESSIONS',
-      'Failed to start next cycle first unit',
-      { chainId: group.id },
-      expect.any(Error),
-    );
-  });
+      await handleStartChain('group');
+      await vi.runAllTimersAsync();
 
-  it('should log and stop when group node cannot be found in tree', async () => {
-    const group = createGroupChain({
-      id: 'group-missing-node',
-      name: 'Missing Node Group',
-    });
-    const stateRef = createStateContainer(createAppState({ chains: [group] }));
-    const storage = createLocalStorageMock();
-
-    vi.mocked(buildChainTree).mockReturnValue([] as never);
-
-    const handleStartChain = createStartChainHandler({
-      state: stateRef.getState(),
-      setState: stateRef.setState,
-      storage,
-      safelySaveChains: vi.fn(async () => undefined),
-      pendingChainId: null,
-      setPendingChainId: vi.fn(),
-      currentSessionId: null,
-      setCurrentSessionId: vi.fn(),
-      setShowBettingModal: vi.fn(),
-      t,
+      expect(logger.error).toHaveBeenCalledWith(
+        'SESSIONS',
+        'Failed to start next cycle first unit',
+        { chainId: 'group' },
+        expect.any(Error),
+      );
+      expect(await storage.getActiveSession()).toBeNull();
     });
 
-    await handleStartChain(group.id);
+    it('keeps the old cycle and starts nothing when saving the cycle fails', async () => {
+      vi.useFakeTimers();
+      const group = createGroupChain({ id: 'group', totalCompletions: 7 });
+      const onTaskLifecycleEvent = vi.fn();
+      const { handleStartChain, storage, chain } = startGroup({
+        chains: [
+          group,
+          createUnitChain({ id: 'unit', parentId: 'group', currentStreak: 1 }),
+        ],
+        safelySaveChains: async () => {
+          throw new Error('save group cycle failed');
+        },
+        onTaskLifecycleEvent,
+      });
 
-    expect(logger.error).toHaveBeenCalledWith('SESSIONS', expect.any(String), {
-      chainId: group.id,
+      await handleStartChain('group');
+      await vi.runAllTimersAsync();
+
+      expect(chain('group')?.totalCompletions).toBe(7);
+      expect(onTaskLifecycleEvent).not.toHaveBeenCalled();
+      expect(await storage.getActiveSession()).toBeNull();
+      expect(logger.error).toHaveBeenCalledWith(
+        'SESSIONS',
+        expect.any(String),
+        undefined,
+        expect.any(Error),
+      );
     });
-    expect(stateRef.getState().activeSession).toBeNull();
-  });
-
-  it('should log when saving group cycle progress fails', async () => {
-    const group = createGroupChain({
-      id: 'group-save-fail',
-      name: 'Save Fail Group',
-      totalCompletions: 7,
-    });
-    const incremented = createGroupChain({ ...group, totalCompletions: 8 });
-    const stateRef = createStateContainer(createAppState({ chains: [group] }));
-    const storage = createLocalStorageMock();
-    const safelySaveChains = vi.fn(async () => {
-      throw new Error('save group cycle failed');
-    });
-
-    vi.mocked(buildChainTree).mockReturnValue([
-      { id: group.id, type: 'group', name: group.name, children: [] },
-    ] as never);
-    vi.mocked(getNextUnitInGroup).mockReturnValue(null);
-    vi.mocked(incrementGroupCompletionCount).mockReturnValue([incremented]);
-
-    const handleStartChain = createStartChainHandler({
-      state: stateRef.getState(),
-      setState: stateRef.setState,
-      storage,
-      safelySaveChains,
-      pendingChainId: null,
-      setPendingChainId: vi.fn(),
-      currentSessionId: null,
-      setCurrentSessionId: vi.fn(),
-      setShowBettingModal: vi.fn(),
-      t,
-    });
-
-    await handleStartChain(group.id);
-    expect(logger.error).toHaveBeenCalledWith(
-      'SESSIONS',
-      expect.any(String),
-      undefined,
-      expect.any(Error),
-    );
   });
 
   it('should show toast when betting session creation returns error', async () => {

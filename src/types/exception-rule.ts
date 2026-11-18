@@ -46,32 +46,3 @@ export interface SessionContext {
   remainingTime?: number; // 秒，无时长任务为 undefined
   isDurationless: boolean;
 }
-
-export interface RuleUsageStats {
-  ruleId: string;
-  totalUsage: number;
-  pauseUsage: number;
-  earlyCompletionUsage: number;
-  lastUsedAt?: Date;
-  averageTaskElapsedTime: number;
-  mostUsedWithChains: Array<{
-    chainId: string;
-    chainName: string;
-    count: number;
-  }>;
-}
-
-export interface OverallUsageStats {
-  totalRules: number;
-  activeRules: number;
-  totalUsage: number;
-  pauseUsage: number;
-  earlyCompletionUsage: number;
-  mostUsedRules: Array<{ ruleId: string; ruleName: string; count: number }>;
-}
-
-export interface ExceptionRuleStorage {
-  rules: ExceptionRule[];
-  usageRecords: RuleUsageRecord[];
-  lastSyncAt?: Date;
-}

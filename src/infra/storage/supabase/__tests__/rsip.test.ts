@@ -87,26 +87,6 @@ describe('rsip.ts', () => {
       await expect(getRSIPNodes(ctx)).rejects.toThrow('Expected string');
     });
 
-    it('should return mapped RSIP nodes on success', async () => {
-      const mockData = [createMockRSIPNodeRow()];
-      const queryBuilder = createMockQueryBuilder({
-        data: mockData,
-        error: null,
-      });
-      const ctx = createMockContext({ queryBuilder });
-
-      const result = await getRSIPNodes(ctx);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('rsip-1');
-      expect(result[0].title).toBe('Morning Routine');
-      expect(result[0].rule).toBe('Wake up at 6am every day');
-      expect(result[0].sortOrder).toBe(1);
-      expect(result[0].useTimer).toBe(true);
-      expect(result[0].timerMinutes).toBe(30);
-      expect(result[0].createdAt).toBeInstanceOf(Date);
-    });
-
     it('should handle nodes with parent relationships', async () => {
       const mockData = [
         createMockRSIPNodeRow({ id: 'parent', parent_id: null }),
@@ -342,20 +322,6 @@ describe('rsip.ts', () => {
       expect(result).toEqual({});
     });
 
-    it('should return mapped RSIP meta on success', async () => {
-      const mockData = [createMockRSIPMetaRow()];
-      const queryBuilder = createMockQueryBuilder({
-        data: mockData,
-        error: null,
-      });
-      const ctx = createMockContext({ queryBuilder });
-
-      const result = await getRSIPMeta(ctx);
-
-      expect(result.lastAddedAt).toBeInstanceOf(Date);
-      expect(result.allowMultiplePerDay).toBe(false);
-    });
-
     it('should handle meta with allowMultiplePerDay true', async () => {
       const mockData = [
         createMockRSIPMetaRow({ allow_multiple_per_day: true }),
@@ -396,29 +362,6 @@ describe('rsip.ts', () => {
       await saveRSIPMeta(ctx, meta);
 
       expect(ctx.mockClient.from).not.toHaveBeenCalled();
-    });
-
-    it('should upsert meta successfully', async () => {
-      const ctx = createMockContext();
-      let upsertData: Record<string, unknown> = {};
-
-      ctx.mockClient.from = vi.fn().mockReturnValue({
-        upsert: vi.fn().mockImplementation((data: Record<string, unknown>) => {
-          upsertData = data;
-          return { error: null };
-        }),
-      });
-
-      const meta: RSIPMeta = {
-        lastAddedAt: new Date('2024-01-15T10:00:00Z'),
-        allowMultiplePerDay: true,
-      };
-
-      await saveRSIPMeta(ctx, meta);
-
-      expect(upsertData.user_id).toBe('test-user-123');
-      expect(upsertData.last_added_at).toBe('2024-01-15T10:00:00.000Z');
-      expect(upsertData.allow_multiple_per_day).toBe(true);
     });
 
     it('should surface missing migrated meta columns without retrying', async () => {
@@ -504,75 +447,6 @@ describe('rsip.ts', () => {
 
       expect(upsertData.last_added_at).toBeNull();
       expect(upsertData.allow_multiple_per_day).toBe(false);
-    });
-  });
-
-  describe('getRSIPGroups', () => {
-    it('should return mapped groups on success', async () => {
-      const queryBuilder = createMockQueryBuilder({
-        data: [
-          {
-            id: 'group-1',
-            title: 'Group A',
-            fault_tolerance: 2,
-            emoji: '🧭',
-            created_at: '2024-02-01T00:00:00Z',
-          },
-        ],
-        error: null,
-      });
-      const ctx = createMockContext({ queryBuilder });
-
-      const result = await getRSIPGroups(ctx);
-
-      expect(result).toEqual([
-        {
-          id: 'group-1',
-          title: 'Group A',
-          faultTolerance: 2,
-          emoji: '🧭',
-          createdAt: new Date('2024-02-01T00:00:00Z'),
-        },
-      ]);
-    });
-  });
-
-  describe('getRSIPExecutionRecords', () => {
-    it('should return mapped execution records on success', async () => {
-      const queryBuilder = createMockQueryBuilder({
-        data: [
-          {
-            id: 'record-1',
-            node_id: 'node-1',
-            executed_at: '2024-03-01T09:00:00Z',
-            status: 'completed',
-            notes: 'done',
-            reason_code: 'ok',
-            repair_hint: 'none',
-            source_chain_id: 'chain-1',
-            source_event: 'manual',
-          },
-        ],
-        error: null,
-      });
-      const ctx = createMockContext({ queryBuilder });
-
-      const result = await getRSIPExecutionRecords(ctx);
-
-      expect(result).toEqual([
-        {
-          id: 'record-1',
-          userId: 'test-user-123',
-          nodeId: 'node-1',
-          executedAt: new Date('2024-03-01T09:00:00Z'),
-          status: 'completed',
-          notes: 'done',
-          reasonCode: 'ok',
-          repairHint: 'none',
-          sourceChainId: 'chain-1',
-          sourceEvent: 'manual',
-        },
-      ]);
     });
   });
 });

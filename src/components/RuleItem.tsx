@@ -133,6 +133,8 @@ const RuleItem: React.FC<RuleItemProps> = memo(
 
           <div className="flex items-center space-x-2">
             <button
+              type="button"
+              aria-label={t('ruleManager.ruleManagerFormModal.editRule')}
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(rule);
@@ -142,6 +144,8 @@ const RuleItem: React.FC<RuleItemProps> = memo(
               <Edit2 size={16} />
             </button>
             <button
+              type="button"
+              aria-label={t('deletedChainCard.delete')}
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(rule);
