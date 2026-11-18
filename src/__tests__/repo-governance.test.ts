@@ -96,6 +96,8 @@ describe('repo governance', () => {
 
     expect(commands).toEqual([
       'build',
+      'lint:md',
+      'lint:spell:docs',
       'quality:ci:info',
       'quality:ci:static',
       'quality:ci:tests',
@@ -104,7 +106,7 @@ describe('repo governance', () => {
       'test:e2e',
     ]);
     expect(workflow).toMatch(/required:\s+if: always\(\)/);
-    expect(workflow).toContain('job.result !== "success"');
+    expect(workflow).toContain('run: node tools/quality/ci-scope.mjs --check');
 
     const packageJson = JSON.parse(readFile(PACKAGE_JSON_PATH)) as {
       scripts: Record<string, string>;

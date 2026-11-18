@@ -313,7 +313,7 @@ npm run tauri build
 
 ## 📞 联系方式
 
-如有问题或建议，发送邮件至：xiaofucheng1@gmail.com
+如有问题或建议，发送邮件至：fxiao@haverford.edu
 <br>
 我的知乎账号：https://www.zhihu.com/people/blues-68-53
 <br>
