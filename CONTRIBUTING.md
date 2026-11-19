@@ -106,8 +106,9 @@ versions between a Rust crate and its `@tauri-apps/*` package, so
 `quality:tauri-versions`, part of `quality:rust`, fails a PR that upgrades only
 one side; upgrade both together.
 
-The September 2026 dependency refresh keeps the Node 20 toolchain and uses
-same-major overrides for vulnerable transitive YAML, Markdown, glob, and query
+The toolchain runs on Node 24 (`.nvmrc`); Node 20 reached end of life in April
+2026 and current Vitest, jsdom, Stylelint, and cspell majors require Node 22+.
+The September 2026 dependency refresh uses same-major overrides for vulnerable transitive YAML, Markdown, glob, and query
 parsers whose parents pin older versions. Keep the overrides until the parents
 adopt patched versions; review removals with a fresh `npm audit` and the affected
 lint/test tools. No npm vulnerability exemptions are currently needed.
