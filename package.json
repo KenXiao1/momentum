@@ -71,21 +71,21 @@
     "security:gitleaks": "node tools/quality/run-gitleaks.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.91.0",
-    "@tauri-apps/api": "^2.0.0",
-    "@tauri-apps/plugin-dialog": "^2.0.0",
-    "@tauri-apps/plugin-fs": "^2.0.0",
-    "@tauri-apps/plugin-haptics": "^2.0.0",
-    "@tauri-apps/plugin-notification": "^2.0.0",
-    "@tauri-apps/plugin-process": "^2.0.0",
-    "@tauri-apps/plugin-updater": "^2.0.0",
+    "@supabase/supabase-js": "^2.119.0",
+    "@tauri-apps/api": "^2.12.4",
+    "@tauri-apps/plugin-dialog": "^2.8.4",
+    "@tauri-apps/plugin-fs": "^2.7.1",
+    "@tauri-apps/plugin-haptics": "^2.4.2",
+    "@tauri-apps/plugin-notification": "^2.8.1",
+    "@tauri-apps/plugin-process": "^2.4.0",
+    "@tauri-apps/plugin-updater": "^2.14.1",
     "lucide-react": "^0.562.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-zoom-pan-pinch": "^3.7.0",
     "web-vitals": "^5.1.0",
     "zod": "^4.6.7",
-    "zustand": "^5.0.11"
+    "zustand": "^5.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
