@@ -105,13 +105,6 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
   },
-  resolve: {
-    alias: {
-      // 优化 lucide-react barrel file 导入
-      // 将 import { X } from 'lucide-react' 转换为直接导入
-      'lucide-react': 'lucide-react/dist/esm/lucide-react',
-    },
-  },
   optimizeDeps: {
     include: ['lucide-react'],
     // 强制预构建以避免开发时的延迟

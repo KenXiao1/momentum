@@ -8,8 +8,8 @@ import {
   ShieldCheck,
   TrendingUp,
   Zap,
-  Github,
 } from 'lucide-react';
+import { GithubMark } from './GithubMark';
 import { useI18n } from '../../i18n';
 import {
   getIntroTranslations,
@@ -95,7 +95,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({
             title={translate(lang, 'intro.openProject')}
             className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/5 bg-white/60 text-slate-700 shadow-sm transition hover:bg-white/80 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
           >
-            <Github className="h-5 w-5" aria-hidden="true" />
+            <GithubMark className="h-5 w-5" />
           </a>
           <ThemeToggle />
         </div>

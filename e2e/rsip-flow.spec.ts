@@ -72,3 +72,31 @@ test('cancels a policy deletion, then removes only that policy and preserves the
     expect.objectContaining({ title: 'Keep this policy' }),
   ]);
 });
+
+test('zoom controls change the canvas scale and fit restores it', async ({
+  page,
+}) => {
+  await page.addInitScript(() => localStorage.setItem('language', 'en'));
+  await page.goto('/');
+  await page.getByRole('button', { name: 'RSIP Tree', exact: true }).click();
+  await page.getByRole('button', { name: 'Free', exact: true }).click();
+  await addPolicy(page, 'Zoom target');
+
+  const canvas = page.locator('.rsip-canvas-content');
+  const scale = () =>
+    canvas.evaluate((element) =>
+      Number(/scale\(([\d.]+)\)/.exec(element.style.transform)?.[1]),
+    );
+  await expect.poll(scale).toBe(1);
+
+  // The buttons must not forward their click event as the zoom step.
+  await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
+  await expect.poll(scale).toBeGreaterThan(1);
+  await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
+  await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
+  await expect.poll(scale).toBeLessThan(1);
+  await page
+    .getByRole('button', { name: 'Fit to content', exact: true })
+    .click();
+  await expect.poll(scale).toBe(1);
+});

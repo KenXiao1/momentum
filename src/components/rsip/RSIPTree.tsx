@@ -109,7 +109,7 @@ export const RSIPTree: React.FC<RSIPTreeProps> = ({
           maxScale={2}
           limitToBounds={false}
           panning={{ excluded: ['rsip-node'] }}
-          onTransformed={(_, state) => onTransformed(state)}
+          onTransform={(_, state) => onTransformed(state)}
         >
           {({ zoomIn, zoomOut }) => (
             <>
@@ -266,8 +266,8 @@ export const RSIPTree: React.FC<RSIPTreeProps> = ({
               )}
 
               <RSIPControls
-                onZoomIn={zoomIn}
-                onZoomOut={zoomOut}
+                onZoomIn={() => void zoomIn()}
+                onZoomOut={() => void zoomOut()}
                 onFitToContent={onFitToContent}
                 t={t}
               />
