@@ -12,5 +12,5 @@
     "src/**/*.test.*",
     "src/**/*.spec.*"
   ],
-  "ignoreBinaries": ["python3"]
+  "ignoreBinaries": ["python3", "pwsh"]
 }

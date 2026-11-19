@@ -1,18 +1,18 @@
-export type RSIPTaskLinkChainKind = 'group' | 'unit';
+type RSIPTaskLinkChainKind = 'group' | 'unit';
 
-export type RSIPTaskLinkTriggerEvent =
+type RSIPTaskLinkTriggerEvent =
   | 'task_completed'
   | 'task_interrupted'
   | 'group_cycle_completed'
   | 'rsip_mark_executed';
 
-export type RSIPTaskLinkEffect =
+type RSIPTaskLinkEffect =
   | 'mark_rsip_executed'
   | 'mark_rsip_violated'
   | 'prompt_start_chain'
   | 'prompt_schedule_chain';
 
-export type RSIPTaskLinkAutomation = 'auto' | 'confirm';
+type RSIPTaskLinkAutomation = 'auto' | 'confirm';
 
 export interface RSIPTaskLink {
   id: string;

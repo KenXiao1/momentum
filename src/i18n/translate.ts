@@ -5,7 +5,7 @@ import {
 } from './translations';
 
 export type TranslationValue = string | number | boolean | null | undefined;
-export type TranslationParams = Record<string, TranslationValue>;
+type TranslationParams = Record<string, TranslationValue>;
 
 type PlaceholderNames<Template extends string> =
   Template extends `${string}{${infer Name}}${infer Rest}`

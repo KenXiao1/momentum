@@ -22,7 +22,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   onToggle,
 }) => {
   const [stats, setStats] = useState<PerformanceSnapshot | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (isVisible) {

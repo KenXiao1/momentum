@@ -1,8 +1,7 @@
 // RSIP（递归稳态迭代协议）类型定义
 
 // 定式执行状态
-export type RSIPExecutionStatus =
-  'pending' | 'executed' | 'violated' | 'skipped';
+type RSIPExecutionStatus = 'pending' | 'executed' | 'violated' | 'skipped';
 
 // 稳态阶段：E0（新建）→ E1（稳定，7天）→ E2（内化，21天）
 export type RSIPStabilityPhase = 'E0' | 'E1' | 'E2';

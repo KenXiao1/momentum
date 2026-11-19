@@ -53,9 +53,21 @@ function runArchitectureFixture(files: Record<string, string>) {
     return spawnSync(
       process.execPath,
       [
+        // Read the bin path from the package so a relocated entry point
+        // (dependency-cruiser 18 renamed it) does not break the test.
         path.join(
           REPO_ROOT,
-          'node_modules/dependency-cruiser/bin/dependency-cruise.mjs',
+          'node_modules/dependency-cruiser',
+          (
+            JSON.parse(
+              readFile(
+                path.join(
+                  REPO_ROOT,
+                  'node_modules/dependency-cruiser/package.json',
+                ),
+              ),
+            ) as { bin: Record<string, string> }
+          ).bin.depcruise,
         ),
         'src',
         '--config',

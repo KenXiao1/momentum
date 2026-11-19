@@ -16,5 +16,7 @@ module.exports = {
     'media-feature-name-value-no-unknown': null,
     'no-descending-specificity': null,
     'no-duplicate-selectors': null,
+    // Stylelint 18 cannot parse Tailwind variants or arbitrary values in @apply.
+    'at-rule-prelude-no-invalid': [true, { ignoreAtRules: ['apply'] }],
   },
 };

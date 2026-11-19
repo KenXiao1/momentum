@@ -1,4 +1,4 @@
-export type TaskLifecycleEventType =
+type TaskLifecycleEventType =
   'task_completed' | 'task_interrupted' | 'group_cycle_completed';
 
 export interface TaskLifecycleEvent {

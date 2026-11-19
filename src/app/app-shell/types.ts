@@ -19,7 +19,7 @@ import type {
 } from '../../types';
 import type { PetState } from '../../types/pet';
 
-export interface ImportChainsOptions {
+interface ImportChainsOptions {
   history?: CompletionHistory[];
   rsipNodes?: RSIPNode[];
   rsipMeta?: RSIPMeta;
@@ -32,7 +32,7 @@ export interface ImportChainsOptions {
   exceptionRules?: ExceptionRule[];
 }
 
-export interface RSIPExecutionActionOptions {
+interface RSIPExecutionActionOptions {
   reinforce?: boolean;
   reasonCode?: string;
   repairHint?: string;
@@ -40,7 +40,7 @@ export interface RSIPExecutionActionOptions {
   sourceEvent?: string;
 }
 
-export interface RSIPViolationActionOptions {
+interface RSIPViolationActionOptions {
   reasonCode?: string;
   repairHint?: string;
   sourceChainId?: string;
