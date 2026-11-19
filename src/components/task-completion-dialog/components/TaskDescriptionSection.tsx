@@ -8,7 +8,7 @@ export const TaskDescriptionSection: React.FC<{
   description: string;
   onDescriptionChange: (value: string) => void;
   onDescriptionKeyDown: (event: React.KeyboardEvent) => void;
-  descriptionInputRef: React.RefObject<HTMLInputElement>;
+  descriptionInputRef: React.RefObject<HTMLInputElement | null>;
   recentDescriptions: string[];
   showQuickFill: boolean;
   onToggleQuickFill: () => void;

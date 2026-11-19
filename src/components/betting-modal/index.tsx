@@ -35,7 +35,7 @@ interface BettingModalViewProps {
   onReload: () => void;
 
   // Refs
-  focusTrapRef: React.RefObject<HTMLDivElement>;
+  focusTrapRef: React.RefObject<HTMLDivElement | null>;
 }
 
 const BettingModalViewComponent: React.FC<BettingModalViewProps> = ({

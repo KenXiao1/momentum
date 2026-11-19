@@ -8,7 +8,7 @@ export const NotesSection: React.FC<{
   notes: string;
   onNotesChange: (value: string) => void;
   onNotesKeyDown: (event: React.KeyboardEvent) => void;
-  notesTextareaRef: React.RefObject<HTMLTextAreaElement>;
+  notesTextareaRef: React.RefObject<HTMLTextAreaElement | null>;
   onShowNotes: () => void;
 }> = ({
   t,

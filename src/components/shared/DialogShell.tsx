@@ -62,7 +62,7 @@ interface DialogShellProps {
   overlayClassName?: string;
   style?: CSSProperties;
   dialogRef?: { current: HTMLDivElement | null };
-  initialFocusRef?: RefObject<HTMLElement>;
+  initialFocusRef?: RefObject<HTMLElement | null>;
   initialFocusDelayMs?: number;
 }
 

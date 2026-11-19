@@ -11,7 +11,7 @@ interface UseRSIPConnectorsParams {
   nodePositions: Record<string, NodePosition>;
   hoveredChainIds: Set<string>;
   layoutNodeHeight: number;
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
   nodeRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
   latestTransformRef: React.MutableRefObject<CanvasState>;
 }

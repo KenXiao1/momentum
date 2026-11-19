@@ -138,7 +138,7 @@ export const layoutStabilityMonitor = new LayoutStabilityMonitor();
 
 // React Hook
 export const useLayoutStability = (
-  containerRef?: React.RefObject<HTMLElement>,
+  containerRef?: React.RefObject<HTMLElement | null>,
 ) => {
   const startMonitoring = useCallback(() => {
     const container = containerRef?.current || undefined;

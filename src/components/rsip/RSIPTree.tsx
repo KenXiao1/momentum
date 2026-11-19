@@ -26,9 +26,9 @@ interface RSIPTreeProps {
     width: number;
     height: number;
   } | null;
-  viewportRef: React.RefObject<HTMLDivElement>;
-  containerRef: React.RefObject<HTMLDivElement>;
-  transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
+  viewportRef: React.RefObject<HTMLDivElement | null>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  transformRef: React.RefObject<ReactZoomPanPinchContentRef | null>;
   onTransformed: (state: {
     scale: number;
     positionX: number;

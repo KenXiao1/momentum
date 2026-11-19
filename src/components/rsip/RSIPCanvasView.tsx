@@ -40,9 +40,9 @@ interface RSIPCanvasViewProps {
   relationError: string | null;
   language: string;
   t: Translator;
-  viewportRef: React.RefObject<HTMLDivElement>;
-  containerRef: React.RefObject<HTMLDivElement>;
-  transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
+  viewportRef: React.RefObject<HTMLDivElement | null>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  transformRef: React.RefObject<ReactZoomPanPinchContentRef | null>;
   onFilterTypeChange: (type: string | null) => void;
   onConfirmAction: () => void;
   onCancelConfirm: () => void;

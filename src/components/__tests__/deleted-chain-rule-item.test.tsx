@@ -11,7 +11,7 @@ import {
 } from '../../types';
 import { createUnitChain } from '../../test/factories/chainFactory';
 
-function renderWithI18n(ui: JSX.Element) {
+function renderWithI18n(ui: React.JSX.Element) {
   localStorage.setItem('language', 'en');
   return render(<I18nProvider>{ui}</I18nProvider>);
 }

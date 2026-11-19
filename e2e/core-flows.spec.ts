@@ -1,6 +1,18 @@
 import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
 
+// The pet adoption prompt opens 500 ms after any load without a pet, and its
+// dismissal is not persisted, so it can appear after every reload. Dismiss it
+// whenever it blocks an action instead of racing it.
+test.beforeEach(async ({ page }) => {
+  await page.addLocatorHandler(
+    page.getByRole('button', { name: 'Maybe Later', exact: true }),
+    async (dismiss) => {
+      await dismiss.click();
+    },
+  );
+});
+
 async function createChain(page: Page, name: string) {
   await page.goto('/');
   await page.getByRole('button', { name: 'Create chain', exact: true }).click();
@@ -40,11 +52,6 @@ async function expectSingleCompletion(
     page.getByRole('button', { name: 'Start', exact: true }),
   ).toBeVisible();
   await expect(page.getByText('1 completion', { exact: true })).toBeVisible();
-  const dismissPet = page.getByRole('button', {
-    name: 'Maybe Later',
-    exact: true,
-  });
-  if (await dismissPet.isVisible()) await dismissPet.click();
   const saved = await page.evaluate(() => ({
     chains: JSON.parse(localStorage.getItem('momentum_chains') ?? '[]'),
     history: JSON.parse(

@@ -9,7 +9,7 @@ export function SearchBar({
   onChange,
 }: {
   t: Translator;
-  searchInputRef: React.RefObject<HTMLInputElement>;
+  searchInputRef: React.RefObject<HTMLInputElement | null>;
   value: string;
   onChange: (value: string) => void;
 }) {

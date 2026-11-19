@@ -12,9 +12,9 @@ interface UseRSIPCameraParams {
 }
 
 interface UseRSIPCameraResult {
-  viewportRef: React.RefObject<HTMLDivElement>;
-  containerRef: React.RefObject<HTMLDivElement>;
-  transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
+  viewportRef: React.RefObject<HTMLDivElement | null>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  transformRef: React.RefObject<ReactZoomPanPinchContentRef | null>;
   latestTransformRef: React.MutableRefObject<CanvasState>;
   contentBounds: {
     minX: number;

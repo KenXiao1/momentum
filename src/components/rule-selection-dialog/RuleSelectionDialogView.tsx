@@ -19,7 +19,7 @@ interface RuleSelectionDialogViewProps {
   t: Translator;
 
   containerRef: React.MutableRefObject<HTMLDivElement | null>;
-  searchInputRef: React.RefObject<HTMLInputElement>;
+  searchInputRef: React.RefObject<HTMLInputElement | null>;
 
   searchQuery: string;
   onSearchQueryChange: (value: string) => void;

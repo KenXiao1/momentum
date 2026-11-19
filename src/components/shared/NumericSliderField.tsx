@@ -42,7 +42,7 @@ export function NumericSliderField({
 }: NumericSliderFieldProps) {
   const [localValue, setLocalValue] = useState(value);
   const [numberDraft, setNumberDraft] = useState(String(value));
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // A new value from the parent replaces the local slider and draft values.
   const [syncedValue, setSyncedValue] = useState(value);
