@@ -32,13 +32,13 @@ describe('webNotificationAdapter', () => {
     vi.unstubAllGlobals();
   });
 
-  it('reports notification capabilities when the browser API is present', () => {
+  it('reports notification capabilities when the browser API is present', async () => {
     expect(webNotificationAdapter.isSupported()).toBe(true);
     expect(webNotificationAdapter.getCapabilities()).toEqual({
       canRequestPermission: true,
       canShow: true,
     });
-    expect(webNotificationAdapter.getPermissionState()).resolves.toBe(
+    await expect(webNotificationAdapter.getPermissionState()).resolves.toBe(
       'default',
     );
   });

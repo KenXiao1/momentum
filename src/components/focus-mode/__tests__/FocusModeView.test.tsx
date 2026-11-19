@@ -111,7 +111,9 @@ describe('FocusModeView', () => {
   });
 
   it('should trigger fullscreen and interrupt handlers when session is active', async () => {
-    vi.useFakeTimers();
+    // RTL 16 drains microtasks with setTimeout(0) and only advances Jest's
+    // fake timers; let the fake clock follow real time so that timer fires.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const props = createProps();
 

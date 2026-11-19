@@ -1,4 +1,5 @@
 import { LayoutStabilityMonitor } from '../LayoutStabilityMonitor';
+import { cssValue } from '../../test/utils/cssValue';
 
 const ensureWindowProp = (key: string, value: unknown) => {
   Object.defineProperty(window, key, {
@@ -282,7 +283,9 @@ describe('LayoutStabilityMonitor', () => {
 
       flushRaf();
 
-      expect(popover.style.transform).toContain('translateZ(0)');
+      expect(popover.style.transform).toContain(
+        cssValue('transform', 'translateZ(0)'),
+      );
       expect(popover.style.backfaceVisibility).toBe('hidden');
     });
 

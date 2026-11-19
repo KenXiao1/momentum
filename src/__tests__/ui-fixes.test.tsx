@@ -14,6 +14,7 @@ import { I18nProvider } from '../i18n';
 import { exceptionRuleManager } from '../services/ExceptionRuleManager';
 import { ExceptionRuleType, type ExceptionRule } from '../types';
 import type { Mocked } from 'vitest';
+import { cssValue } from '../test/utils/cssValue';
 
 // Mock dependencies
 vi.mock('../services/ExceptionRuleManager', () => ({
@@ -106,7 +107,9 @@ describe('UI Fixes and Improvements', () => {
 
       const dialog = screen.getByRole('dialog');
       expect(dialog).toHaveClass('overflow-hidden');
-      expect(dialog).toHaveStyle({ maxWidth: 'min(640px, 100vw - 2rem)' });
+      expect(dialog.style.maxWidth).toBe(
+        cssValue('max-width', 'min(640px, 100vw - 2rem)'),
+      );
     });
 
     test('ResponsiveContainer should use a stable width mapping', () => {
@@ -208,9 +211,9 @@ describe('UI Fixes and Improvements', () => {
       await screen.findByText('例外规则管理');
 
       const modal = container.querySelector('div[style*="100vw"]');
-      expect(modal).toHaveStyle({
-        maxWidth: 'min(1152px, 100vw - 2rem)',
-      });
+      expect((modal as HTMLElement).style.maxWidth).toBe(
+        cssValue('max-width', 'min(1152px, 100vw - 2rem)'),
+      );
     });
   });
 });

@@ -388,7 +388,9 @@ describe('RuleSelectionDialog', () => {
     });
 
     it('should support keyboard navigation', async () => {
-      vi.useFakeTimers();
+      // RTL 16 drains microtasks with setTimeout(0) and only advances Jest's
+      // fake timers; let the fake clock follow real time so that timer fires.
+      vi.useFakeTimers({ shouldAdvanceTime: true });
       try {
         const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
         renderWithI18n(<RuleSelectionDialog {...defaultProps} />);

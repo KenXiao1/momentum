@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
 import { setupServer } from 'msw/node';
 import {
@@ -15,7 +15,7 @@ const server = setupServer(...supabaseMockHandlers);
 
 // Start server before all tests
 beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledFrame: 'error' });
 });
 
 // Clean up after each test
