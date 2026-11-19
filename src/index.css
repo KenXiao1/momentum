@@ -1,67 +1,25 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
+@config '../tailwind.config.js';
+
+/* ThemeToggle puts `dark` on <html>; match the v3 `darkMode: 'class'` scope. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
 @layer base {
-  :root {
-    --safe-area-top: env(safe-area-inset-top);
-    --safe-area-bottom: env(safe-area-inset-bottom);
-    --safe-area-left: env(safe-area-inset-left);
-    --safe-area-right: env(safe-area-inset-right);
-    --font-sans:
-      -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    --font-chinese:
-      'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-      'WenQuanYi Micro Hei', system-ui, sans-serif;
-    --font-mono:
-      ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
-    --surface-canvas: oklch(97% 0.012 275);
-    --surface-raised: oklch(99% 0.006 275);
-    --surface-subtle: oklch(94% 0.018 275);
-    --border-subtle: oklch(87% 0.024 275);
-    --text-strong: oklch(23% 0.025 275);
-    --text-muted: oklch(47% 0.03 275);
-    --accent: oklch(55% 0.2 276);
-    --accent-strong: oklch(47% 0.21 276);
-  }
-
-  .dark {
-    --surface-canvas: oklch(15% 0.018 275);
-    --surface-raised: oklch(20% 0.022 275);
-    --surface-subtle: oklch(24% 0.025 275);
-    --border-subtle: oklch(32% 0.03 275);
-    --text-strong: oklch(94% 0.012 275);
-    --text-muted: oklch(72% 0.025 275);
-    --accent: oklch(68% 0.17 276);
-    --accent-strong: oklch(76% 0.13 276);
-  }
-
-  body {
-    margin: 0;
-    padding: 0;
-    font-family: var(--font-sans);
-    background-color: var(--surface-canvas);
-    color: var(--text-strong);
-    @apply antialiased selection:bg-gray-900 selection:text-white dark:bg-[#0F0F12] dark:text-[#F2F2F7] dark:selection:bg-white dark:selection:text-black;
-  }
-
-  .font-chinese {
-    font-family: var(--font-chinese);
-  }
-
-  .font-mono {
-    font-family: var(--font-mono);
-  }
-
-  h1,
-  h2,
-  h3 {
-    font-family: var(--font-chinese);
-    font-weight: 700;
-  }
-
-  #root {
-    min-height: 100vh;
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
   }
 }
 
@@ -144,7 +102,7 @@
 
 @layer utilities {
   .focus-ring {
-    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800;
+    @apply focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-800;
   }
 
   .glass-panel {
@@ -164,6 +122,69 @@
     filter: invert(1) hue-rotate(180deg) brightness(1.25) contrast(1.25)
       saturate(1.2) drop-shadow(0 0 16px rgba(167, 139, 250, 0.28));
     mix-blend-mode: screen;
+  }
+}
+
+@layer base {
+  :root {
+    --safe-area-top: env(safe-area-inset-top);
+    --safe-area-bottom: env(safe-area-inset-bottom);
+    --safe-area-left: env(safe-area-inset-left);
+    --safe-area-right: env(safe-area-inset-right);
+    --font-sans:
+      -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-chinese:
+      'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+      'WenQuanYi Micro Hei', system-ui, sans-serif;
+    --font-mono:
+      ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+    --surface-canvas: oklch(97% 0.012 275);
+    --surface-raised: oklch(99% 0.006 275);
+    --surface-subtle: oklch(94% 0.018 275);
+    --border-subtle: oklch(87% 0.024 275);
+    --text-strong: oklch(23% 0.025 275);
+    --text-muted: oklch(47% 0.03 275);
+    --accent: oklch(55% 0.2 276);
+    --accent-strong: oklch(47% 0.21 276);
+  }
+
+  .dark {
+    --surface-canvas: oklch(15% 0.018 275);
+    --surface-raised: oklch(20% 0.022 275);
+    --surface-subtle: oklch(24% 0.025 275);
+    --border-subtle: oklch(32% 0.03 275);
+    --text-strong: oklch(94% 0.012 275);
+    --text-muted: oklch(72% 0.025 275);
+    --accent: oklch(68% 0.17 276);
+    --accent-strong: oklch(76% 0.13 276);
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    background-color: var(--surface-canvas);
+    color: var(--text-strong);
+    @apply antialiased selection:bg-gray-900 selection:text-white dark:bg-[#0F0F12] dark:text-[#F2F2F7] dark:selection:bg-white dark:selection:text-black;
+  }
+
+  .font-chinese {
+    font-family: var(--font-chinese);
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-chinese);
+    font-weight: 700;
+  }
+
+  #root {
+    min-height: 100vh;
   }
 }
 

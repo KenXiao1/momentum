@@ -35,7 +35,7 @@ export function RSIPModeSwitch({ mode, onModeChange }: RSIPModeSwitchProps) {
           onClick={() => onModeChange('free')}
           className={`cursor-pointer rounded-lg px-4 py-2 transition ${
             mode === 'free'
-              ? 'bg-white text-gray-900 shadow-sm dark:bg-white/20 dark:text-white'
+              ? 'bg-white text-gray-900 shadow-xs dark:bg-white/20 dark:text-white'
               : 'text-gray-500 hover:text-gray-700 dark:text-white/50 dark:hover:text-white/70'
           }`}
         >
@@ -46,7 +46,7 @@ export function RSIPModeSwitch({ mode, onModeChange }: RSIPModeSwitchProps) {
           onClick={() => onModeChange('strict')}
           className={`cursor-pointer rounded-lg px-4 py-2 transition ${
             mode === 'strict'
-              ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white'
+              ? 'bg-linear-to-r from-purple-500 to-violet-500 text-white'
               : 'text-gray-500 hover:text-gray-700 dark:text-white/50 dark:hover:text-white/70'
           }`}
         >

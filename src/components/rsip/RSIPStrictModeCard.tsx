@@ -44,7 +44,7 @@ export function RSIPStrictModeCard({
   const depthShadowClass =
     descendantCount > 3
       ? 'shadow-md shadow-indigo-500/10 dark:shadow-indigo-500/10'
-      : 'shadow-sm';
+      : 'shadow-xs';
 
   return (
     <div
@@ -52,14 +52,14 @@ export function RSIPStrictModeCard({
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="group/title relative flex min-w-0 flex-1 items-center gap-2">
-          <span className="flex-shrink-0 text-xl">{node.emoji || '🧭'}</span>
+          <span className="shrink-0 text-xl">{node.emoji || '🧭'}</span>
           <h3
-            className="cursor-help break-words font-medium text-slate-900 dark:text-white"
+            className="cursor-help font-medium wrap-break-word text-slate-900 dark:text-white"
             title={node.title}
           >
             {node.title}
           </h3>
-          <div className="pointer-events-none invisible absolute left-0 top-full z-50 mt-1 max-w-xs break-words rounded-lg bg-gray-800 p-2 text-sm text-white opacity-0 shadow-xl transition group-hover/title:visible group-hover/title:opacity-100">
+          <div className="pointer-events-none invisible absolute top-full left-0 z-50 mt-1 max-w-xs rounded-lg bg-gray-800 p-2 text-sm wrap-break-word text-white opacity-0 shadow-xl transition group-hover/title:visible group-hover/title:opacity-100">
             {node.title}
           </div>
         </div>
@@ -74,7 +74,7 @@ export function RSIPStrictModeCard({
         </div>
       </div>
 
-      <p className="mb-4 break-words text-sm text-slate-700 dark:text-white/60">
+      <p className="mb-4 text-sm wrap-break-word text-slate-700 dark:text-white/60">
         {node.rule}
       </p>
 
@@ -104,7 +104,7 @@ export function RSIPStrictModeCard({
         <button
           type="button"
           onClick={onMarkExecuted}
-          className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 font-medium text-white shadow-sm transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-emerald-500/20 dark:text-emerald-200 dark:shadow-none dark:hover:bg-emerald-500/30 dark:focus-visible:ring-emerald-500/60 dark:focus-visible:ring-offset-slate-950"
+          className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 font-medium text-white shadow-xs transition hover:bg-emerald-700 focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:outline-hidden dark:bg-emerald-500/20 dark:text-emerald-200 dark:shadow-none dark:hover:bg-emerald-500/30 dark:focus-visible:ring-emerald-500/60 dark:focus-visible:ring-offset-slate-950"
         >
           <Check size={18} />
           <span>{t('rsip.rsipStrictModeCard.executed')}</span>
@@ -113,7 +113,7 @@ export function RSIPStrictModeCard({
         <button
           type="button"
           onClick={onMarkViolated}
-          className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-red-600 py-2.5 font-medium text-white shadow-sm transition hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-red-500/20 dark:text-red-200 dark:shadow-none dark:hover:bg-red-500/30 dark:focus-visible:ring-red-500/60 dark:focus-visible:ring-offset-slate-950"
+          className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-red-600 py-2.5 font-medium text-white shadow-xs transition hover:bg-red-700 focus-visible:ring-2 focus-visible:ring-red-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:outline-hidden dark:bg-red-500/20 dark:text-red-200 dark:shadow-none dark:hover:bg-red-500/30 dark:focus-visible:ring-red-500/60 dark:focus-visible:ring-offset-slate-950"
         >
           <X size={18} />
           <span>{t('rsip.rsipStrictModeCard.violated')}</span>

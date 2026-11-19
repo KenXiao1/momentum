@@ -102,7 +102,7 @@ export function RSIPSplitModeSection({
           {splitItems.map((item) => (
             <div
               key={item.id}
-              className="grid grid-cols-1 gap-2 rounded-xl border border-gray-200 p-3 dark:border-slate-700 md:grid-cols-12"
+              className="grid grid-cols-1 gap-2 rounded-xl border border-gray-200 p-3 md:grid-cols-12 dark:border-slate-700"
             >
               <input
                 value={item.title}
@@ -110,7 +110,7 @@ export function RSIPSplitModeSection({
                   updateSplitItem(item.id, { title: event.target.value })
                 }
                 placeholder={t('rsip.rsipSplitModeSection.subPolicyTitle')}
-                className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 md:col-span-4"
+                className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm md:col-span-4 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
               />
               <input
                 value={item.rule}
@@ -118,9 +118,9 @@ export function RSIPSplitModeSection({
                   updateSplitItem(item.id, { rule: event.target.value })
                 }
                 placeholder={t('rsip.rsipSplitModeSection.subPolicyRule')}
-                className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 md:col-span-6"
+                className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm md:col-span-6 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
               />
-              <label className="inline-flex items-center justify-center gap-2 text-xs text-gray-600 dark:text-slate-300 md:col-span-2">
+              <label className="inline-flex items-center justify-center gap-2 text-xs text-gray-600 md:col-span-2 dark:text-slate-300">
                 <input
                   type="checkbox"
                   checked={item.isPassive}

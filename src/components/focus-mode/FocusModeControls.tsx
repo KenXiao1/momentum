@@ -40,7 +40,7 @@ export function FocusModeControls({
               <button
                 type="button"
                 onClick={onPauseClick}
-                className="focus-ring flex min-h-12 items-center gap-2 rounded-xl border border-gray-300 bg-[var(--surface-raised)] px-5 py-3 font-chinese font-medium text-gray-700 transition-colors hover:border-gray-400 hover:text-gray-950 dark:border-slate-600 dark:text-slate-200 dark:hover:text-white"
+                className="focus-ring flex min-h-12 items-center gap-2 rounded-xl border border-gray-300 bg-(--surface-raised) px-5 py-3 font-chinese font-medium text-gray-700 transition-colors hover:border-gray-400 hover:text-gray-950 dark:border-slate-600 dark:text-slate-200 dark:hover:text-white"
               >
                 <Settings size={16} />
                 <span>{t('focusMode.focusModeControls.pause')}</span>
@@ -87,7 +87,7 @@ export function FocusModeControls({
               <button
                 type="button"
                 onClick={onPauseClick}
-                className="focus-ring flex min-h-12 items-center gap-2 rounded-xl border border-gray-300 bg-[var(--surface-raised)] px-5 py-3 font-chinese font-medium text-gray-700 transition-colors hover:border-gray-400 hover:text-gray-950 dark:border-slate-600 dark:text-slate-200 dark:hover:text-white"
+                className="focus-ring flex min-h-12 items-center gap-2 rounded-xl border border-gray-300 bg-(--surface-raised) px-5 py-3 font-chinese font-medium text-gray-700 transition-colors hover:border-gray-400 hover:text-gray-950 dark:border-slate-600 dark:text-slate-200 dark:hover:text-white"
               >
                 <Settings size={16} />
                 <span>{t('focusMode.focusModeControls.pause')}</span>
@@ -136,7 +136,7 @@ export function FocusModeControls({
               <button
                 type="button"
                 onClick={onCancelAutoResume}
-                className="focus-ring min-h-12 rounded-xl border border-gray-300 bg-[var(--surface-raised)] px-6 py-3 font-chinese text-gray-800 transition-colors hover:bg-gray-100 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800"
+                className="focus-ring min-h-12 rounded-xl border border-gray-300 bg-(--surface-raised) px-6 py-3 font-chinese text-gray-800 transition-colors hover:bg-gray-100 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800"
               >
                 {t('focusMode.focusModeControls.cancelAutoResume')}
               </button>

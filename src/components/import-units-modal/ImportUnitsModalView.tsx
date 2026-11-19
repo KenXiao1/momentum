@@ -94,7 +94,7 @@ export function ImportUnitsModalView(props: ImportUnitsModalViewProps) {
           {t('importUnitsModal.importUnitsModalView.searchUnits')}
         </label>
         <Search
-          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+          className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-gray-400"
           size={20}
           aria-hidden="true"
         />
@@ -108,7 +108,7 @@ export function ImportUnitsModalView(props: ImportUnitsModalViewProps) {
           placeholder={t(
             'importUnitsModal.importUnitsModalView.searchUnitsVariant2',
           )}
-          className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pl-12 pr-4 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
+          className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pr-4 pl-12 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
         />
       </div>
       <div className="mb-8 max-h-96 space-y-4 overflow-y-auto">

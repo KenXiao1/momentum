@@ -16,10 +16,10 @@ export const IntroTheorySection: React.FC<IntroTheorySectionProps> = ({
       <div className="mx-auto grid max-w-6xl items-start gap-16 lg:grid-cols-2">
         <div className="sticky top-32 space-y-12">
           <div className="space-y-4">
-            <h2 className="pl-1 text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400">
+            <h2 className="pl-1 text-[10px] font-bold tracking-widest text-violet-600 uppercase dark:text-violet-400">
               {translate('en', 'intro.theory.title')}
             </h2>
-            <h3 className="text-4xl font-extrabold tracking-tight text-slate-800 dark:text-white md:text-5xl">
+            <h3 className="text-4xl font-extrabold tracking-tight text-slate-800 md:text-5xl dark:text-white">
               {translate(lang, 'intro.theory.heading')}
             </h3>
             <p className="max-w-md text-lg leading-relaxed text-slate-600 dark:text-slate-300">
@@ -65,16 +65,16 @@ export const IntroTheorySection: React.FC<IntroTheorySectionProps> = ({
         </div>
 
         <div className="glass-panel relative overflow-hidden rounded-[40px] p-8 shadow-2xl md:p-12">
-          <div className="pointer-events-none absolute right-0 top-0 p-8 opacity-10">
+          <div className="pointer-events-none absolute top-0 right-0 p-8 opacity-10">
             <Brain size={200} className="text-black dark:text-white" />
           </div>
 
           <div className="relative z-10 space-y-12">
             <div className="space-y-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400">
+              <span className="text-[10px] font-bold tracking-widest text-violet-600 uppercase dark:text-violet-400">
                 {translations.theory.modelTitle}
               </span>
-              <div className="inline-block w-full rounded-2xl border border-violet-200/50 bg-violet-50/50 p-6 text-center font-serif text-3xl italic text-slate-800 dark:border-violet-500/20 dark:bg-violet-900/10 dark:text-white">
+              <div className="inline-block w-full rounded-2xl border border-violet-200/50 bg-violet-50/50 p-6 text-center font-serif text-3xl text-slate-800 italic dark:border-violet-500/20 dark:bg-violet-900/10 dark:text-white">
                 I = ∫ V(τ) · W(τ) dτ
               </div>
             </div>
@@ -82,7 +82,7 @@ export const IntroTheorySection: React.FC<IntroTheorySectionProps> = ({
             <div className="space-y-8">
               <div className="flex gap-6">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#007AFF]/20 bg-[#007AFF]/10 dark:border-[#0A84FF]/30 dark:bg-[#0A84FF]/20">
-                  <span className="font-serif font-bold italic text-[#007AFF] dark:text-[#0A84FF]">
+                  <span className="font-serif font-bold text-[#007AFF] italic dark:text-[#0A84FF]">
                     V
                   </span>
                 </div>
@@ -97,7 +97,7 @@ export const IntroTheorySection: React.FC<IntroTheorySectionProps> = ({
               </div>
               <div className="flex gap-6">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#AF52DE]/20 bg-[#AF52DE]/10 dark:border-[#BF5AF2]/30 dark:bg-[#BF5AF2]/20">
-                  <span className="font-serif font-bold italic text-[#AF52DE] dark:text-[#BF5AF2]">
+                  <span className="font-serif font-bold text-[#AF52DE] italic dark:text-[#BF5AF2]">
                     W
                   </span>
                 </div>

@@ -39,7 +39,7 @@ export function DeleteConfirmDialogShell({
       descriptionId={descriptionId}
       role="alertdialog"
       onClose={onCancel}
-      className="w-full max-w-lg animate-scale-in overflow-y-auto rounded-3xl border border-gray-200/60 bg-white/95 p-6 shadow-2xl backdrop-blur-xl dark:border-slate-600/60 dark:bg-slate-800/95 sm:p-8"
+      className="w-full max-w-lg animate-scale-in overflow-y-auto rounded-3xl border border-gray-200/60 bg-white/95 p-6 shadow-2xl backdrop-blur-xl sm:p-8 dark:border-slate-600/60 dark:bg-slate-800/95"
     >
       <div className="mb-8 text-center">
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 dark:bg-red-500/20">
@@ -61,7 +61,7 @@ export function DeleteConfirmDialogShell({
 
       {warningContent}
 
-      <div className="flex flex-col space-y-3 sm:flex-row sm:space-x-4 sm:space-y-0">
+      <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-4">
         <button
           type="button"
           data-cancel-button

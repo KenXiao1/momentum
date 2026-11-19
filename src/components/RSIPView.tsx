@@ -26,10 +26,10 @@ export function RSIPView(props: RSIPViewProps) {
               className="rounded-2xl p-3 text-gray-400 hover:bg-white/60 hover:text-gray-700 dark:hover:bg-slate-800/60 dark:hover:text-slate-200"
             />
             <div>
-              <h1 className="font-chinese text-3xl font-bold text-gray-900 dark:text-slate-100 md:text-4xl">
+              <h1 className="font-chinese text-3xl font-bold text-gray-900 md:text-4xl dark:text-slate-100">
                 {model.t('rsipView.rsipPolicyTree')}
               </h1>
-              <p className="font-mono text-xs uppercase tracking-wider text-gray-600 dark:text-slate-400">
+              <p className="font-mono text-xs tracking-wider text-gray-600 uppercase dark:text-slate-400">
                 {model.t('rsipView.rsipProcessCollaboration')}
               </p>
             </div>

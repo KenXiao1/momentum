@@ -18,7 +18,7 @@ export function RSIPDailyReminder({
   }
 
   return (
-    <div className="mb-4 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/20 to-orange-500/20 p-4">
+    <div className="mb-4 rounded-2xl border border-amber-500/30 bg-linear-to-r from-amber-500/20 to-orange-500/20 p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="rounded-xl bg-amber-500/20 p-2">

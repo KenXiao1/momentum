@@ -5,4 +5,6 @@ module.exports = {
   trailingComma: 'all',
   printWidth: 80,
   plugins: ['prettier-plugin-tailwindcss'],
+  // Tailwind 4 has no JS entry point; the plugin reads the theme from CSS.
+  tailwindStylesheet: './src/index.css',
 };

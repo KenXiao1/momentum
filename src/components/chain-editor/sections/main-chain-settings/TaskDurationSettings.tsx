@@ -53,7 +53,7 @@ export function TaskDurationSettings({
               onChange={(event) => form.setIsDurationless(event.target.checked)}
               className="peer sr-only"
             />
-            <span className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition after:content-[''] peer-checked:bg-purple-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-purple-800" />
+            <span className="peer h-6 w-11 rounded-full bg-gray-200 peer-checked:bg-purple-500 peer-focus:ring-4 peer-focus:ring-purple-300 peer-focus:outline-hidden after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-purple-800" />
           </label>
         </div>
       </div>
@@ -74,7 +74,7 @@ export function TaskDurationSettings({
                 form.setDuration(Number(event.target.value));
               }
             }}
-            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
             required
           >
             {DURATION_PRESETS.map((preset) => (

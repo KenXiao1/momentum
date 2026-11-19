@@ -151,7 +151,7 @@ export function DashboardView({
         />
 
         {isChoicePending && (
-          <section className="mb-8 rounded-2xl border border-blue-200 bg-blue-50 p-6 shadow-sm dark:border-blue-800/60 dark:bg-blue-900/20">
+          <section className="mb-8 rounded-2xl border border-blue-200 bg-blue-50 p-6 shadow-xs dark:border-blue-800/60 dark:bg-blue-900/20">
             <h3 className="mb-2 font-chinese text-lg font-semibold text-blue-900 dark:text-blue-100">
               {t('dashboard.dashboardView.chooseYourDataMode')}
             </h3>

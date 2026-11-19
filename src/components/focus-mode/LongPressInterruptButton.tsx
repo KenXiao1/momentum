@@ -18,16 +18,16 @@ export function LongPressInterruptButton({
   });
 
   return (
-    <div className="fixed bottom-4 right-4 z-30 sm:bottom-6 sm:right-6">
+    <div className="fixed right-4 bottom-4 z-30 sm:right-6 sm:bottom-6">
       <button
         type="button"
         {...handlers}
         aria-label={label}
-        className="focus-ring relative flex min-h-11 items-center justify-center gap-2 overflow-hidden rounded-xl border border-red-200 bg-[var(--surface-raised)] px-3 py-2 text-red-700 transition-colors dark:border-red-900/60 dark:text-red-300"
+        className="focus-ring relative flex min-h-11 items-center justify-center gap-2 overflow-hidden rounded-xl border border-red-200 bg-(--surface-raised) px-3 py-2 text-red-700 transition-colors dark:border-red-900/60 dark:text-red-300"
         title={label}
       >
         <span
-          className={`absolute inset-0 origin-left bg-red-400/20 transition-transform dark:bg-red-500/20 ${isActive ? 'scale-x-100 duration-[700ms]' : 'scale-x-0 duration-75'}`}
+          className={`absolute inset-0 origin-left bg-red-400/20 transition-transform dark:bg-red-500/20 ${isActive ? 'scale-x-100 duration-700' : 'scale-x-0 duration-75'}`}
           aria-hidden="true"
         />
         <AlertTriangle size={18} aria-hidden="true" className="relative z-10" />

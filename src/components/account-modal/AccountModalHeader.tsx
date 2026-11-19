@@ -23,7 +23,7 @@ export function AccountModalHeader({
         type="button"
         onClick={onClose}
         aria-label={closeLabel}
-        className="focus-ring rounded text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-slate-300"
+        className="focus-ring rounded-sm text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-slate-300"
       >
         <X size={24} />
       </button>

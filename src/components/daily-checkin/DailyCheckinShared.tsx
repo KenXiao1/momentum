@@ -19,7 +19,7 @@ export function DailyCheckinStatsGrid({
   return (
     <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3">
       {/* 总积分 */}
-      <div className="rounded-lg bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 dark:from-yellow-900/20 dark:to-yellow-800/20">
+      <div className="rounded-lg bg-linear-to-br from-yellow-50 to-yellow-100 p-4 dark:from-yellow-900/20 dark:to-yellow-800/20">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
@@ -34,7 +34,7 @@ export function DailyCheckinStatsGrid({
       </div>
 
       {/* 连续签到天数 */}
-      <div className="rounded-lg bg-gradient-to-br from-red-50 to-red-100 p-4 dark:from-red-900/20 dark:to-red-800/20">
+      <div className="rounded-lg bg-linear-to-br from-red-50 to-red-100 p-4 dark:from-red-900/20 dark:to-red-800/20">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-red-700 dark:text-red-300">
@@ -49,7 +49,7 @@ export function DailyCheckinStatsGrid({
       </div>
 
       {/* 总签到次数 */}
-      <div className="col-span-2 rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-4 dark:from-green-900/20 dark:to-green-800/20 md:col-span-1">
+      <div className="col-span-2 rounded-lg bg-linear-to-br from-green-50 to-green-100 p-4 md:col-span-1 dark:from-green-900/20 dark:to-green-800/20">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-green-700 dark:text-green-300">

@@ -8,7 +8,7 @@ export const TaskCompletionDialogHeader: React.FC<{
   onCancel: () => void;
 }> = ({ chainName, t, onCancel }) => {
   return (
-    <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
+    <div className="flex shrink-0 items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
       <div className="flex items-center space-x-3">
         <div className="flex h-10 w-10 animate-completion-pop items-center justify-center rounded-2xl border border-green-200 bg-green-50 dark:border-green-500/30 dark:bg-green-500/10">
           <CheckCircle

@@ -42,7 +42,7 @@ export function BasicInfoSection({ form }: BasicInfoSectionProps) {
           placeholder={t(
             'chainEditor.basicInfoSection.eGLearnPythonWorkout30MinutesDistractionFreeWriting',
           )}
-          className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-6 py-4 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
+          className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-6 py-4 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
           required
         />
       </div>
@@ -64,7 +64,7 @@ export function BasicInfoSection({ form }: BasicInfoSectionProps) {
           name="chainType"
           value={form.type}
           onChange={(e) => form.setType(e.target.value as UnitChainType)}
-          className="w-full rounded-2xl border border-gray-200 bg-white px-6 py-4 font-chinese text-gray-900 transition duration-300 hover:border-primary-300 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-primary-400"
+          className="w-full rounded-2xl border border-gray-200 bg-white px-6 py-4 font-chinese text-gray-900 transition duration-300 hover:border-primary-300 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-primary-400"
         >
           <option value="unit">{t('chainEditor.basicInfoSection.unit')}</option>
           <option value="assault">
@@ -113,7 +113,7 @@ export function BasicInfoSection({ form }: BasicInfoSectionProps) {
                   form.setParentId(undefined);
                   form.setIsCopyMode(true);
                 }}
-                className="flex items-center space-x-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-indigo-500 shadow-sm transition-colors hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-800"
+                className="flex items-center space-x-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-indigo-500 shadow-xs transition-colors hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-800"
                 title={t(
                   'chainEditor.basicInfoSection.duplicateThisTaskAndRemoveItFromTheGroup',
                 )}
@@ -124,7 +124,7 @@ export function BasicInfoSection({ form }: BasicInfoSectionProps) {
               <button
                 type="button"
                 onClick={() => form.setParentId(undefined)}
-                className="flex items-center space-x-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-red-500 shadow-sm transition-colors hover:text-red-600 dark:border-slate-700 dark:bg-slate-800"
+                className="flex items-center space-x-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-red-500 shadow-xs transition-colors hover:text-red-600 dark:border-slate-700 dark:bg-slate-800"
                 title={t(
                   'chainEditor.basicInfoSection.removeThisTaskFromTheGroup',
                 )}

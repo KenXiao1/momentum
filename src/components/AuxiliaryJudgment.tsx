@@ -77,7 +77,7 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
             )}
           </p>
           <div className="rounded-2xl border border-blue-200 bg-blue-50 p-6 dark:border-blue-700/50 dark:bg-blue-900/20">
-            <div className="grid grid-cols-1 gap-4 text-blue-700 dark:text-blue-300 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 text-blue-700 md:grid-cols-3 dark:text-blue-300">
               <div className="text-center">
                 <div className="mb-2 flex items-center justify-center space-x-2">
                   <Bell className="text-blue-500" size={16} />

@@ -36,6 +36,11 @@ Native builds require Rust stable, Node from `.nvmrc`, and platform dependencies
 | macOS    | Xcode Command Line Tools                                                 |
 | Linux    | WebKitGTK, AppIndicator, librsvg; exact packages in the release workflow |
 
+The macOS app requires macOS 13.3 or later (`bundle.macOS.minimumSystemVersion`).
+Its WebView is the system WebKit, and Tailwind CSS 4 needs Safari 16.4 features
+such as `@property` and `color-mix()`. Windows (WebView2) and Android System
+WebView update independently of the OS; Tailwind 4 needs Chromium 111 or later.
+
 ```sh
 npm run tauri dev
 npm run quality:rust

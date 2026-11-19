@@ -52,7 +52,7 @@ export function ChainCardMetrics({
   return (
     <>
       <div className="mb-6 grid grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-primary-200/50 bg-gradient-to-br from-primary-500/10 to-primary-600/5 p-4 text-center dark:border-primary-400/30 dark:from-primary-500/20 dark:to-primary-600/10">
+        <div className="rounded-2xl border border-primary-200/50 bg-linear-to-br from-primary-500/10 to-primary-600/5 p-4 text-center dark:border-primary-400/30 dark:from-primary-500/20 dark:to-primary-600/10">
           {chain.currentStreak === 0 ? (
             <div className="flex flex-col items-center justify-center gap-1 py-0.5">
               <Sparkles
@@ -78,7 +78,7 @@ export function ChainCardMetrics({
             {t('chainCard.chainCardMetrics.mainStreak')}
           </div>
         </div>
-        <div className="rounded-2xl border border-blue-200/50 bg-gradient-to-br from-blue-500/10 to-blue-600/5 p-4 text-center dark:border-blue-400/30 dark:from-blue-500/20 dark:to-blue-600/10">
+        <div className="rounded-2xl border border-blue-200/50 bg-linear-to-br from-blue-500/10 to-blue-600/5 p-4 text-center dark:border-blue-400/30 dark:from-blue-500/20 dark:to-blue-600/10">
           {chain.auxiliaryStreak === 0 ? (
             <div className="flex flex-col items-center justify-center gap-1 py-0.5">
               <Calendar

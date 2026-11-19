@@ -218,8 +218,8 @@ export const RSIPTree: React.FC<RSIPTreeProps> = ({
               </TransformComponent>
 
               {reparentingId && (
-                <div className="pointer-events-none absolute left-4 right-4 top-4 z-30">
-                  <div className="pointer-events-auto flex flex-col gap-3 rounded-2xl border border-white/50 bg-white/70 px-4 py-3 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.5)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/50 sm:flex-row sm:items-center sm:justify-between">
+                <div className="pointer-events-none absolute top-4 right-4 left-4 z-30">
+                  <div className="pointer-events-auto flex flex-col gap-3 rounded-2xl border border-white/50 bg-white/70 px-4 py-3 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-slate-900/50">
                     <div className="min-w-0">
                       <div className="font-chinese text-sm text-gray-900 dark:text-slate-100">
                         {t('rsip.rsipTree.selectANewParent')}
@@ -243,7 +243,7 @@ export const RSIPTree: React.FC<RSIPTreeProps> = ({
                         onClick={() =>
                           onCommitReparent(reparentingId, undefined)
                         }
-                        className="inline-flex items-center gap-2 rounded-2xl border border-gray-200/60 bg-white/80 px-3 py-2 shadow-sm transition hover:shadow-md dark:border-slate-600/60 dark:bg-slate-800/70"
+                        className="inline-flex items-center gap-2 rounded-2xl border border-gray-200/60 bg-white/80 px-3 py-2 shadow-xs transition hover:shadow-md dark:border-slate-600/60 dark:bg-slate-800/70"
                       >
                         <CornerUpLeft size={16} />
                         <span className="font-chinese text-sm">
@@ -253,7 +253,7 @@ export const RSIPTree: React.FC<RSIPTreeProps> = ({
                       <button
                         type="button"
                         onClick={onCancelReparent}
-                        className="inline-flex items-center gap-2 rounded-2xl border border-gray-200/60 bg-white/80 px-3 py-2 shadow-sm transition hover:shadow-md dark:border-slate-600/60 dark:bg-slate-800/70"
+                        className="inline-flex items-center gap-2 rounded-2xl border border-gray-200/60 bg-white/80 px-3 py-2 shadow-xs transition hover:shadow-md dark:border-slate-600/60 dark:bg-slate-800/70"
                       >
                         <X size={16} />
                         <span className="font-chinese text-sm">

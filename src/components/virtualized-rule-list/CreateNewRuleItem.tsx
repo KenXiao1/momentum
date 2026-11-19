@@ -36,7 +36,7 @@ export function CreateNewRuleItem({
         style={{ height: itemHeight }}
       >
         <Plus
-          className="flex-shrink-0 text-primary-500"
+          className="shrink-0 text-primary-500"
           size={20}
           aria-hidden="true"
         />

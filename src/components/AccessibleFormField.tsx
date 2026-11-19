@@ -58,7 +58,7 @@ export const AccessibleFormField: React.FC<AccessibleFormFieldProps> = ({
   const baseInputClasses = `
     w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 
     rounded-2xl px-4 py-3 text-gray-900 dark:text-slate-100 
-    focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 
+    focus:outline-hidden focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 
     transition duration-300 font-chinese
     ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}
     ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
@@ -142,7 +142,7 @@ export const AccessibleFormField: React.FC<AccessibleFormFieldProps> = ({
               checked={(value as boolean) || false}
               className="sr-only"
             />
-            <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition after:content-[''] peer-checked:bg-primary-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:border-slate-600 dark:bg-slate-600 dark:bg-slate-700 dark:peer-focus:ring-primary-800"></div>
+            <div className="peer h-6 w-11 rounded-full bg-gray-200 peer-checked:bg-primary-600 peer-focus:ring-4 peer-focus:ring-primary-300 peer-focus:outline-hidden after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-slate-600 dark:bg-slate-600 dark:bg-slate-700 dark:peer-focus:ring-primary-800"></div>
             <span className="ml-3 font-chinese text-sm font-medium text-gray-700 dark:text-slate-300">
               {label}
             </span>

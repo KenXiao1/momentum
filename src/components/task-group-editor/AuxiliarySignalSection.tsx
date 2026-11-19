@@ -60,7 +60,7 @@ const AuxiliarySignalSectionComponent: React.FC<
         errors.auxiliarySignal
           ? ERROR_INPUT_BORDER_CLASSES
           : 'border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 dark:border-slate-600'
-      } rounded-2xl px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:outline-none focus:ring-2 dark:text-slate-100`}
+      } rounded-2xl px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:ring-2 focus:outline-hidden dark:text-slate-100`}
       required
     >
       <option value="" disabled className="text-gray-400">
@@ -91,7 +91,7 @@ const AuxiliarySignalSectionComponent: React.FC<
           errors.auxiliarySignal
             ? ERROR_INPUT_BORDER_CLASSES
             : 'border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 dark:border-slate-600'
-        } rounded-2xl px-4 py-3 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:outline-none focus:ring-2 dark:text-slate-100 dark:placeholder-slate-400`}
+        } rounded-2xl px-4 py-3 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:ring-2 focus:outline-hidden dark:text-slate-100 dark:placeholder-slate-400`}
         required
       />
     )}

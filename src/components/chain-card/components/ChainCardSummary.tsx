@@ -17,7 +17,7 @@ export function ChainCardSummary({
       <div className="min-w-0 flex-1 pr-4">
         <div className="mb-3 flex items-center space-x-3">
           <div
-            className={`h-8 w-8 rounded-xl ${typeConfig.bgColor} flex flex-shrink-0 items-center justify-center`}
+            className={`h-8 w-8 rounded-xl ${typeConfig.bgColor} flex shrink-0 items-center justify-center`}
           >
             <Icon
               name={typeConfig.icon}

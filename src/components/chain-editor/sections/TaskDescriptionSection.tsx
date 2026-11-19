@@ -24,7 +24,7 @@ export function TaskDescriptionSection({ form }: TaskDescriptionSectionProps) {
           onChange={(e) => form.setDescription(e.target.value)}
           placeholder={t('chainEditor.description.placeholder')}
           rows={4}
-          className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-6 py-4 font-chinese leading-relaxed text-gray-900 placeholder-gray-400 transition duration-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
+          className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-6 py-4 font-chinese leading-relaxed text-gray-900 placeholder-gray-400 transition duration-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
           required
         />
       </div>

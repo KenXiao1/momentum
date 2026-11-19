@@ -50,7 +50,7 @@ export const DeletedChainCard: React.FC<DeletedChainCardProps> = ({
     >
       {/* Selection Indicator */}
       <div
-        className={`absolute right-4 top-4 z-10 flex h-7 w-7 items-center justify-center rounded-full transition duration-200 ${
+        className={`absolute top-4 right-4 z-10 flex h-7 w-7 items-center justify-center rounded-full transition duration-200 ${
           isSelected
             ? 'bg-blue-500 text-white shadow-md'
             : 'bg-gray-100 text-gray-400 hover:bg-gray-200 dark:bg-slate-700 dark:text-slate-500 dark:hover:bg-slate-600'
@@ -63,7 +63,7 @@ export const DeletedChainCard: React.FC<DeletedChainCardProps> = ({
         {/* Chain Type and Name */}
         <div className="mb-4 flex items-start space-x-3 pr-8">
           <div
-            className={`h-11 w-11 rounded-xl ${typeConfig.bgColor} flex flex-shrink-0 items-center justify-center`}
+            className={`h-11 w-11 rounded-xl ${typeConfig.bgColor} flex shrink-0 items-center justify-center`}
           >
             <Icon
               name={typeConfig.icon}
@@ -72,7 +72,7 @@ export const DeletedChainCard: React.FC<DeletedChainCardProps> = ({
             />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="mb-1 truncate font-chinese text-base font-bold leading-tight text-gray-900 dark:text-slate-100">
+            <h3 className="mb-1 truncate font-chinese text-base leading-tight font-bold text-gray-900 dark:text-slate-100">
               {chain.name}
             </h3>
             <span
@@ -89,7 +89,7 @@ export const DeletedChainCard: React.FC<DeletedChainCardProps> = ({
             <div className="text-2xl font-bold text-gray-900 dark:text-slate-100">
               {chain.currentStreak}
             </div>
-            <div className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">
+            <div className="font-mono text-xs tracking-wide text-gray-500 uppercase dark:text-slate-400">
               {t('deletedChainCard.currentStreak')}
             </div>
           </div>
@@ -97,7 +97,7 @@ export const DeletedChainCard: React.FC<DeletedChainCardProps> = ({
             <div className="text-2xl font-bold text-gray-900 dark:text-slate-100">
               {chain.totalCompletions}
             </div>
-            <div className="font-mono text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">
+            <div className="font-mono text-xs tracking-wide text-gray-500 uppercase dark:text-slate-400">
               {t('deletedChainCard.totalCompletions')}
             </div>
           </div>
@@ -147,7 +147,7 @@ export const DeletedChainCard: React.FC<DeletedChainCardProps> = ({
         {/* Description (if exists) */}
         {chain.description && (
           <div className="mt-4 border-t border-gray-200 pt-4 dark:border-slate-600">
-            <p className="line-clamp-2 break-words text-sm text-gray-600 dark:text-slate-400">
+            <p className="line-clamp-2 text-sm wrap-break-word text-gray-600 dark:text-slate-400">
               {chain.description}
             </p>
           </div>

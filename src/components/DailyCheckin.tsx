@@ -41,7 +41,7 @@ export const DailyCheckin: React.FC<DailyCheckinProps> = ({
   if (isLoading) {
     return (
       <div
-        className={`rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 ${className}`}
+        className={`rounded-xl border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-800 ${className}`}
       >
         <div className="flex items-center justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
@@ -57,7 +57,7 @@ export const DailyCheckin: React.FC<DailyCheckinProps> = ({
   if (error && !stats) {
     return (
       <div
-        className={`rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 ${className}`}
+        className={`rounded-xl border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-800 ${className}`}
       >
         <div className="flex items-center justify-center py-8">
           <AlertCircle className="h-8 w-8 text-red-500" />
@@ -84,7 +84,7 @@ export const DailyCheckin: React.FC<DailyCheckinProps> = ({
 
   return (
     <div
-      className={`rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 ${className}`}
+      className={`rounded-xl border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-800 ${className}`}
     >
       {/* 标题 */}
       <div className="mb-6 flex items-center justify-between">
@@ -172,7 +172,7 @@ export const DailyCheckin: React.FC<DailyCheckinProps> = ({
               className={`w-full rounded-xl px-6 py-4 text-lg font-semibold transition duration-200 ${
                 isCheckingIn
                   ? 'cursor-not-allowed bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
-                  : 'transform bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg hover:scale-[1.02] hover:from-primary-600 hover:to-primary-700 hover:shadow-xl active:scale-[0.98]'
+                  : 'transform bg-linear-to-r from-primary-500 to-primary-600 text-white shadow-lg hover:scale-[1.02] hover:from-primary-600 hover:to-primary-700 hover:shadow-xl active:scale-[0.98]'
               } `}
             >
               {isCheckingIn ? (

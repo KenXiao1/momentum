@@ -74,7 +74,7 @@ export const TaskDescriptionSection: React.FC<{
         }
         aria-label={t('chainEditor.description.title')}
         aria-required={isDurationless}
-        className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 transition focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500"
+        className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 transition focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:outline-hidden dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500"
         required={isDurationless}
       />
 

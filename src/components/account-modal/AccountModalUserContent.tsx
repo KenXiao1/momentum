@@ -89,7 +89,7 @@ export function AccountModalUserContent({
       <div className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-600 dark:bg-slate-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-orange-500 shadow-lg">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-lg">
               <Dices className="text-white" size={16} />
             </div>
             <div>
@@ -176,7 +176,7 @@ export function AccountModalUserContent({
         onClick={onSignOut}
         disabled={signingOut}
         aria-label={t('accountModal.accountModalUserContent.signOut')}
-        className="flex w-full items-center justify-center space-x-3 rounded-2xl border border-red-200 bg-red-50 px-6 py-4 font-chinese font-medium text-red-600 shadow-sm transition duration-300 hover:scale-105 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
+        className="flex w-full items-center justify-center space-x-3 rounded-2xl border border-red-200 bg-red-50 px-6 py-4 font-chinese font-medium text-red-600 shadow-xs transition duration-300 hover:scale-105 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
       >
         {signingOut ? (
           <>

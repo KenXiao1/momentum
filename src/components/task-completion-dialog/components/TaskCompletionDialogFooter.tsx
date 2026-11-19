@@ -8,7 +8,7 @@ export const TaskCompletionDialogFooter: React.FC<{
   onSubmit: () => void;
 }> = ({ t, disableComplete, onCancel, onSubmit }) => {
   return (
-    <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-700/50">
+    <div className="shrink-0 border-t border-gray-200 bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-700/50">
       <div className="flex justify-end space-x-3">
         <button
           type="button"

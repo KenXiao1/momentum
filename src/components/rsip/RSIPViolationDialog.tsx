@@ -54,7 +54,7 @@ export function RSIPViolationDialog({
           type="button"
           onClick={onCancel}
           aria-label={t('rsip.rsipViolationDialog.closeDialog')}
-          className="focus-ring absolute right-4 top-4 cursor-pointer rounded p-1 text-white/40 transition-colors hover:text-white/70"
+          className="focus-ring absolute top-4 right-4 cursor-pointer rounded-sm p-1 text-white/40 transition-colors hover:text-white/70"
         >
           <X size={20} aria-hidden="true" />
         </button>
@@ -109,13 +109,13 @@ export function RSIPViolationDialog({
             value={reasonCode}
             onChange={(event) => setReasonCode(event.target.value)}
             placeholder={t('rsip.rsipViolationDialog.violationReasonOptional')}
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-red-400 focus:outline-none"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-red-400 focus:outline-hidden"
           />
           <input
             value={repairHint}
             onChange={(event) => setRepairHint(event.target.value)}
             placeholder={t('rsip.rsipViolationDialog.repairHintOptional')}
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-red-400 focus:outline-none"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-red-400 focus:outline-hidden"
           />
         </div>
 

@@ -126,7 +126,7 @@ export function RuleManagerFormModal({
               placeholder={t(
                 'ruleManager.ruleManagerFormModal.eGBathroomBreakWaterPhoneCall',
               )}
-              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
 
@@ -146,7 +146,7 @@ export function RuleManagerFormModal({
                   type: event.target.value as ExceptionRuleType,
                 })
               }
-              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value={ExceptionRuleType.PAUSE_ONLY}>
                 {t(
@@ -178,7 +178,7 @@ export function RuleManagerFormModal({
                 'ruleManager.ruleManagerFormModal.describeThisException',
               )}
               rows={3}
-              className="w-full resize-none rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="w-full resize-none rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
         </div>

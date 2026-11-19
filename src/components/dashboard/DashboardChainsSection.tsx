@@ -45,7 +45,7 @@ const DashboardChainsSectionComponent: React.FC<
   <div className="animate-slide-up">
     <div className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div className="min-w-0">
-        <h2 className="mb-1 font-chinese text-2xl font-bold tracking-tight text-gray-950 dark:text-slate-100 sm:text-3xl">
+        <h2 className="mb-1 font-chinese text-2xl font-bold tracking-tight text-gray-950 sm:text-3xl dark:text-slate-100">
           {t('dashboard.dashboardChainsSection.yourTaskChains')}
         </h2>
         <p className="font-chinese text-sm text-gray-500 dark:text-slate-400">
@@ -90,7 +90,7 @@ const DashboardChainsSectionComponent: React.FC<
             {t('dashboard.dashboardChainsSection.recycleBin')}
           </span>
           {recycleBinCount > 0 && (
-            <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+            <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
               {recycleBinCount > 99 ? '99+' : recycleBinCount}
             </span>
           )}

@@ -42,7 +42,7 @@ export function RSIPInsightsPanel({ insights }: RSIPInsightsPanelProps) {
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="bento-card">
-          <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">
+          <p className="text-xs tracking-wide text-gray-500 uppercase dark:text-slate-400">
             {t('rsip.rsipinsightsPanel.activePolicies')}
           </p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-slate-100">
@@ -50,7 +50,7 @@ export function RSIPInsightsPanel({ insights }: RSIPInsightsPanelProps) {
           </p>
         </div>
         <div className="bento-card">
-          <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">
+          <p className="text-xs tracking-wide text-gray-500 uppercase dark:text-slate-400">
             {t('rsip.rsipinsightsPanel.14dSuccessRate')}
           </p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-slate-100">
@@ -58,7 +58,7 @@ export function RSIPInsightsPanel({ insights }: RSIPInsightsPanelProps) {
           </p>
         </div>
         <div className="bento-card">
-          <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">
+          <p className="text-xs tracking-wide text-gray-500 uppercase dark:text-slate-400">
             {t('rsip.rsipinsightsPanel.passiveCoverage')}
           </p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-slate-100">
@@ -66,7 +66,7 @@ export function RSIPInsightsPanel({ insights }: RSIPInsightsPanelProps) {
           </p>
         </div>
         <div className="bento-card">
-          <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">
+          <p className="text-xs tracking-wide text-gray-500 uppercase dark:text-slate-400">
             {t('rsip.rsipinsightsPanel.reinforcementCoverage')}
           </p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-slate-100">

@@ -9,10 +9,10 @@ export function ChainCardSkeleton() {
       {/* 标题行 */}
       <div className="mb-6 flex items-start justify-between">
         <div className="flex flex-1 items-center space-x-3 pr-4">
-          <div className="h-8 w-8 flex-shrink-0 rounded-xl bg-gray-200 dark:bg-slate-700" />
+          <div className="h-8 w-8 shrink-0 rounded-xl bg-gray-200 dark:bg-slate-700" />
           <div className="flex-1 space-y-2">
             <div className="h-6 w-3/4 rounded-lg bg-gray-200 dark:bg-slate-700" />
-            <div className="h-3 w-1/2 rounded bg-gray-100 dark:bg-slate-800" />
+            <div className="h-3 w-1/2 rounded-sm bg-gray-100 dark:bg-slate-800" />
           </div>
         </div>
         <div className="h-8 w-8 rounded-lg bg-gray-100 dark:bg-slate-800" />
@@ -20,8 +20,8 @@ export function ChainCardSkeleton() {
 
       {/* 描述行 */}
       <div className="mb-6 space-y-2">
-        <div className="h-3 w-full rounded bg-gray-100 dark:bg-slate-800" />
-        <div className="h-3 w-5/6 rounded bg-gray-100 dark:bg-slate-800" />
+        <div className="h-3 w-full rounded-sm bg-gray-100 dark:bg-slate-800" />
+        <div className="h-3 w-5/6 rounded-sm bg-gray-100 dark:bg-slate-800" />
       </div>
 
       {/* 两个 stat box */}

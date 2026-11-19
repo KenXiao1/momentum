@@ -61,7 +61,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
       <button
         type="button"
         onClick={onToggle}
-        className="fixed bottom-4 right-4 z-50 rounded-full bg-blue-500 p-2 text-white shadow-lg hover:bg-blue-600"
+        className="fixed right-4 bottom-4 z-50 rounded-full bg-blue-500 p-2 text-white shadow-lg hover:bg-blue-600"
         title="Show Performance Monitor"
       >
         PM
@@ -70,7 +70,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 max-w-md rounded-lg border border-gray-200 bg-white p-4 text-sm shadow-xl dark:border-slate-600 dark:bg-slate-800">
+    <div className="fixed right-4 bottom-4 z-50 max-w-md rounded-lg border border-gray-200 bg-white p-4 text-sm shadow-xl dark:border-slate-600 dark:bg-slate-800">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-bold text-gray-900 dark:text-white">
           Performance Monitor
@@ -136,7 +136,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
           <button
             type="button"
             onClick={() => realTimeSyncService.forceRefresh()}
-            className="rounded bg-blue-500 px-2 py-1 text-xs text-white hover:bg-blue-600"
+            className="rounded-sm bg-blue-500 px-2 py-1 text-xs text-white hover:bg-blue-600"
           >
             Force Refresh
           </button>

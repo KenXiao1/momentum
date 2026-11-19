@@ -31,7 +31,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       type="button"
       onClick={onReload}
       aria-label={t('bettingModal.bettingStates.reloadData')}
-      className="focus-ring rounded font-medium text-primary-500 transition-colors hover:text-primary-600"
+      className="focus-ring rounded-sm font-medium text-primary-500 transition-colors hover:text-primary-600"
     >
       {t('bettingModal.bettingStates.reload')}
     </button>

@@ -110,7 +110,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
             className="mb-8 flex items-center space-x-2 pl-2 text-slate-500 transition-colors hover:text-violet-600 dark:text-slate-400 dark:hover:text-violet-400"
           >
             <ArrowLeft size={20} />
-            <span className="text-xs font-bold uppercase tracking-wide">
+            <span className="text-xs font-bold tracking-wide uppercase">
               {t('common.back')}
             </span>
           </button>
@@ -132,7 +132,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-1">
-              <label className="ml-4 text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400">
+              <label className="ml-4 text-[10px] font-bold tracking-widest text-violet-600 uppercase dark:text-violet-400">
                 {t('authForm.email')}
               </label>
               <div className="relative">
@@ -144,14 +144,14 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-14 w-full rounded-2xl border border-violet-200/50 bg-violet-50/50 pl-4 pr-4 font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-violet-500/20 dark:bg-violet-900/10 dark:text-white dark:placeholder:text-slate-500"
+                  className="h-14 w-full rounded-2xl border border-violet-200/50 bg-violet-50/50 pr-4 pl-4 font-medium text-slate-800 outline-hidden transition placeholder:text-slate-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-violet-500/20 dark:bg-violet-900/10 dark:text-white dark:placeholder:text-slate-500"
                   placeholder={t('authForm.enterYourEmail')}
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="ml-4 text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400">
+              <label className="ml-4 text-[10px] font-bold tracking-widest text-violet-600 uppercase dark:text-violet-400">
                 {t('authForm.password')}
               </label>
               <div className="relative">
@@ -163,7 +163,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="h-14 w-full rounded-2xl border border-violet-200/50 bg-violet-50/50 pl-4 pr-12 font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-violet-500/20 dark:bg-violet-900/10 dark:text-white dark:placeholder:text-slate-500"
+                  className="h-14 w-full rounded-2xl border border-violet-200/50 bg-violet-50/50 pr-12 pl-4 font-medium text-slate-800 outline-hidden transition placeholder:text-slate-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-violet-500/20 dark:bg-violet-900/10 dark:text-white dark:placeholder:text-slate-500"
                   placeholder={t('authForm.enterYourPassword')}
                 />
                 <button
@@ -175,7 +175,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                       : t('authForm.showPassword')
                   }
                   aria-pressed={showPassword}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 rounded text-slate-400 transition-colors hover:text-violet-600 focus:outline-none focus:ring-2 focus:ring-violet-500/50 dark:hover:text-violet-400"
+                  className="absolute top-1/2 right-4 -translate-y-1/2 rounded-sm text-slate-400 transition-colors hover:text-violet-600 focus:ring-2 focus:ring-violet-500/50 focus:outline-hidden dark:hover:text-violet-400"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -207,7 +207,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
             <button
               type="submit"
               disabled={loading}
-              className="mt-8 flex h-14 w-full items-center justify-center space-x-2 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:from-violet-700 hover:to-purple-700 hover:shadow-xl hover:shadow-violet-500/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-8 flex h-14 w-full items-center justify-center space-x-2 rounded-2xl bg-linear-to-r from-violet-600 to-purple-600 font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:from-violet-700 hover:to-purple-700 hover:shadow-xl hover:shadow-violet-500/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <Loader2 className="animate-spin" size={20} />
@@ -234,7 +234,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                     ? t('authForm.switchToSignIn')
                     : t('authForm.switchToSignUp')
                 }
-                className="rounded font-bold text-violet-600 transition hover:underline focus:outline-none focus:ring-2 focus:ring-violet-500/50 dark:text-violet-400"
+                className="rounded-sm font-bold text-violet-600 transition hover:underline focus:ring-2 focus:ring-violet-500/50 focus:outline-hidden dark:text-violet-400"
               >
                 {isSignUp ? t('authForm.signIn') : t('authForm.signUp')}
               </button>
@@ -244,7 +244,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
               <button
                 type="button"
                 onClick={onUseLocalMode}
-                className="mt-3 rounded text-xs font-medium text-slate-500 transition hover:text-slate-700 hover:underline dark:text-slate-400 dark:hover:text-slate-200"
+                className="mt-3 rounded-sm text-xs font-medium text-slate-500 transition hover:text-slate-700 hover:underline dark:text-slate-400 dark:hover:text-slate-200"
               >
                 {t('authForm.switchToLocalMode')}
               </button>

@@ -15,7 +15,7 @@ export function DialogFooter({
       : t('counts.rulesAvailable', { count });
 
   return (
-    <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-700/50">
+    <div className="shrink-0 border-t border-gray-200 bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-700/50">
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-500 dark:text-gray-400">
           {availableRulesText}

@@ -31,7 +31,7 @@ export function PetAvatar({
 
   return (
     <div
-      className={` ${containerSizes[size]} relative flex items-center justify-center rounded-full bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900/30 dark:to-blue-900/30 ${onClick ? 'cursor-pointer hover:scale-105 active:scale-95' : ''} transition-transform duration-200`}
+      className={` ${containerSizes[size]} relative flex items-center justify-center rounded-full bg-linear-to-br from-green-100 to-blue-100 dark:from-green-900/30 dark:to-blue-900/30 ${onClick ? 'cursor-pointer hover:scale-105 active:scale-95' : ''} transition-transform duration-200`}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -51,7 +51,7 @@ export function PetAvatar({
 
       {/* Mood indicator */}
       <span
-        className="absolute -bottom-1 -right-1 rounded-full bg-white p-0.5 text-lg shadow-sm dark:bg-gray-800"
+        className="absolute -right-1 -bottom-1 rounded-full bg-white p-0.5 text-lg shadow-xs dark:bg-gray-800"
         title={`Mood: ${mood}`}
       >
         {moodEmoji}

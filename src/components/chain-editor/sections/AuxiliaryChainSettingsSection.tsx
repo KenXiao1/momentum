@@ -46,7 +46,7 @@ export function AuxiliaryChainSettingsSection({
             name="auxiliarySignal"
             value={form.auxiliarySignal}
             onChange={(e) => form.handleAuxiliarySignalSelect(e.target.value)}
-            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
             required
           >
             <option value="" disabled className="text-gray-400">
@@ -75,7 +75,7 @@ export function AuxiliaryChainSettingsSection({
               placeholder={t(
                 'chainEditor.auxiliaryChainSettingsSection.enterYourCustomBookingSignal',
               )}
-              className="mt-3 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
+              className="mt-3 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
               required
             />
           )}
@@ -112,7 +112,7 @@ export function AuxiliaryChainSettingsSection({
                   form.setAuxiliaryDuration(Number(e.target.value));
                 }
               }}
-              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
               required
             >
               {AUXILIARY_DURATION_PRESETS.map((preset) => (
@@ -185,7 +185,7 @@ export function AuxiliaryChainSettingsSection({
             placeholder={t(
               'chainEditor.auxiliaryChainSettingsSection.eGOpenYourIdeSitAtYourDesk',
             )}
-            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
+            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
             required
           />
 

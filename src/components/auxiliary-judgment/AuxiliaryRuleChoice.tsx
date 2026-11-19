@@ -67,7 +67,7 @@ export function AuxiliaryRuleChoice(props: {
             onChange={(event) =>
               props.onSelectedExistingRuleChange(event.target.value)
             }
-            className="w-full rounded-2xl border border-green-300 bg-white px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-green-600 dark:bg-slate-700 dark:text-slate-100"
+            className="w-full rounded-2xl border border-green-300 bg-white px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-hidden dark:border-green-600 dark:bg-slate-700 dark:text-slate-100"
           >
             {[...new Set(exceptions)].map((exception) => (
               <option
@@ -109,7 +109,7 @@ export function AuxiliaryRuleChoice(props: {
             placeholder={props.t(
               'auxiliaryJudgment.auxiliaryRuleChoice.eGForgotTheBookingGotInterruptedByAnUrgent',
             )}
-            className="w-full resize-none rounded-2xl border border-yellow-300 bg-white px-4 py-3 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 dark:border-yellow-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
+            className="w-full resize-none rounded-2xl border border-yellow-300 bg-white px-4 py-3 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-hidden dark:border-yellow-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
             rows={3}
           />
           {props.reason.trim() && exceptions.includes(props.reason.trim()) && (

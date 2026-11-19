@@ -20,7 +20,7 @@ export function MainChainSettingsSection({
         'chainEditor.mainChainSettingsSection.configureTheMainTaskExecutionSettings',
       )}
     >
-      <div className="grid grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-2xl border border-gray-200 bg-white/90 shadow-sm dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800/80 md:grid-cols-2 md:divide-x md:divide-y-0">
+      <div className="grid grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-2xl border border-gray-200 bg-white/90 shadow-xs md:grid-cols-2 md:divide-x md:divide-y-0 dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800/80">
         <SacredSeatSettings form={form} language={language} t={t} />
         <TaskDurationSettings form={form} t={t} />
       </div>

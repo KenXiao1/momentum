@@ -56,10 +56,6 @@ export default {
       backdropBlur: {
         xs: '2px',
       },
-      screens: {
-        'reduce-motion': { raw: '(prefers-reduced-motion: reduce)' },
-        'high-contrast': { raw: '(prefers-contrast: high)' },
-      },
     },
   },
   plugins: [],

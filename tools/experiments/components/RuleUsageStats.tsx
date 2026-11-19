@@ -215,7 +215,7 @@ export const RuleUsageStats: React.FC<RuleUsageStatsProps> = ({
               onChange={(e) =>
                 setTimeRange(Number(e.target.value) as 7 | 30 | 90)
               }
-              className="rounded-xl border-0 bg-gray-100 px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-gray-300"
+              className="rounded-xl border-0 bg-gray-100 px-3 py-2 text-gray-700 focus:ring-2 focus:ring-primary-500 focus:outline-none dark:bg-gray-700 dark:text-gray-300"
             >
               <option value={7}>最近7天</option>
               <option value={30}>最近30天</option>

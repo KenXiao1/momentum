@@ -73,7 +73,7 @@ export function GroupOverview({
       </div>
       <div className="mb-4 h-4 w-full rounded-full bg-gray-200 dark:bg-slate-700">
         <div
-          className="flex h-4 items-center justify-end rounded-full bg-gradient-to-r from-primary-500 to-primary-600 pr-2 transition-[width] duration-500"
+          className="flex h-4 items-center justify-end rounded-full bg-linear-to-r from-primary-500 to-primary-600 pr-2 transition-[width] duration-500"
           style={{
             width: `${unitProgress.total > 0 ? (unitProgress.completed / unitProgress.total) * 100 : 0}%`,
           }}

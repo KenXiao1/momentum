@@ -15,18 +15,18 @@ const DashboardHeroComponent: React.FC<DashboardHeroProps> = ({
 }) => (
   <header
     data-testid="dashboard-hero"
-    className="mb-10 max-w-4xl animate-fade-in border-b border-gray-200/80 pb-8 text-left dark:border-slate-700/80 md:mb-12 md:pb-10"
+    className="mb-10 max-w-4xl animate-fade-in border-b border-gray-200/80 pb-8 text-left md:mb-12 md:pb-10 dark:border-slate-700/80"
   >
-    <div className="mb-5 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary-600 dark:text-primary-300">
+    <div className="mb-5 flex items-center gap-3 text-xs font-semibold tracking-[0.18em] text-primary-600 uppercase dark:text-primary-300">
       <span className="h-px w-8 bg-primary-500" aria-hidden="true" />
       <span>{t('dashboard.dashboardHero.ctdpProtocol')}</span>
     </div>
 
-    <h1 className="mb-4 font-chinese text-4xl font-bold tracking-tight text-gray-950 dark:text-slate-50 sm:text-5xl md:text-6xl">
+    <h1 className="mb-4 font-chinese text-4xl font-bold tracking-tight text-gray-950 sm:text-5xl md:text-6xl dark:text-slate-50">
       Momentum
     </h1>
 
-    <p className="max-w-3xl font-chinese text-base leading-7 text-gray-600 dark:text-slate-300 sm:text-lg sm:leading-8">
+    <p className="max-w-3xl font-chinese text-base leading-7 text-gray-600 sm:text-lg sm:leading-8 dark:text-slate-300">
       <InlineTranslation
         text={t('dashboard.hero.protocolDescription', {
           sacredSeat: '[[sacredSeat]]',

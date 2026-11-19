@@ -43,7 +43,7 @@ export function RSIPPhaseBadge({ phase, size = 'md' }: RSIPPhaseBadgeProps) {
 
   return (
     <span
-      className={`inline-flex flex-shrink-0 items-center whitespace-nowrap rounded-full border font-medium ${config.className} ${sizeClasses} `}
+      className={`inline-flex shrink-0 items-center rounded-full border font-medium whitespace-nowrap ${config.className} ${sizeClasses} `}
     >
       <span aria-hidden>{config.icon}</span>
       <span>{labels[phase]}</span>

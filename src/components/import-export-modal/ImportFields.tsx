@@ -62,7 +62,7 @@ export const FileUploadSection: React.FC<{
       accept=".json"
       onChange={onFileUpload}
       aria-label={t('importExportModal.importFields.chooseAFileToImport')}
-      className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 transition duration-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+      className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 transition duration-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
     />
   </div>
 );
@@ -84,7 +84,7 @@ export const ManualInputSection: React.FC<{
         'importExportModal.importFields.pasteTheJsonExportedFromMomentum',
       )}
       aria-label={t('importExportModal.importFields.jsonData')}
-      className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-mono text-sm text-gray-900 placeholder-gray-400 transition duration-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
+      className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-mono text-sm text-gray-900 placeholder-gray-400 transition duration-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
       rows={8}
     />
   </div>
@@ -105,7 +105,7 @@ const OptionCheckbox: React.FC<{
       checked={checked}
       onChange={(event) => onChange(event.target.checked)}
       aria-label={ariaLabel}
-      className="form-checkbox h-4 w-4 rounded text-primary-500 focus:ring-primary-500"
+      className="form-checkbox h-4 w-4 rounded-sm text-primary-500 focus:ring-primary-500"
     />
     <div className="flex items-center space-x-2">
       {icon}

@@ -96,7 +96,7 @@ export function PetCreationDialog({
               aria-label={t('pet.petCreationDialog.petNameVariant2')}
               aria-invalid={!!error}
               aria-describedby={error ? 'pet-name-error' : undefined}
-              className={`w-full rounded-xl border-2 px-4 py-3 ${error ? 'border-red-400' : 'border-gray-200 dark:border-gray-600'} bg-gray-50 text-gray-800 placeholder-gray-400 transition-colors focus:border-green-400 focus:outline-none dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:border-green-500`}
+              className={`w-full rounded-xl border-2 px-4 py-3 ${error ? 'border-red-400' : 'border-gray-200 dark:border-gray-600'} bg-gray-50 text-gray-800 placeholder-gray-400 transition-colors focus:border-green-400 focus:outline-hidden dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:border-green-500`}
               maxLength={20}
             />
             {error && (
@@ -117,7 +117,7 @@ export function PetCreationDialog({
             </button>
             <button
               type="submit"
-              className="flex-1 rounded-xl bg-gradient-to-r from-green-400 to-emerald-500 py-3 font-medium text-white transition-colors hover:from-green-500 hover:to-emerald-600"
+              className="flex-1 rounded-xl bg-linear-to-r from-green-400 to-emerald-500 py-3 font-medium text-white transition-colors hover:from-green-500 hover:to-emerald-600"
             >
               {t('pet.petCreationDialog.adopt')} 🎉
             </button>

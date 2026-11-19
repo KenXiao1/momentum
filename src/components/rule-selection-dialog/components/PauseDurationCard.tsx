@@ -40,7 +40,7 @@ export function PauseDurationCard({
           }}
           placeholder={t('ruleSelectionDialog.pauseDurationCard.minutes')}
           disabled={isIndefinite}
-          className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:disabled:bg-gray-600"
+          className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-primary-500 focus:outline-hidden disabled:bg-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:disabled:bg-gray-600"
         />
       </div>
 
@@ -62,7 +62,7 @@ export function PauseDurationCard({
               onDurationMinutesChange(undefined);
             }
           }}
-          className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+          className="h-4 w-4 rounded-sm border-gray-300 bg-gray-100 text-primary-600 focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
         />
       </div>
     </div>

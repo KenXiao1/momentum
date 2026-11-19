@@ -79,7 +79,7 @@ export const RuleSelectionDialogView: React.FC<
       onCancel={onCancel}
     />
 
-    <div className="flex-shrink-0">
+    <div className="shrink-0">
       <ChainInfoCard
         actionType={actionType}
         sessionContext={sessionContext}

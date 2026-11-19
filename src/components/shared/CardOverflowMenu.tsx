@@ -16,7 +16,7 @@ export function CardOverflowMenu({
   onDelete,
 }: CardOverflowMenuProps) {
   return (
-    <div className="absolute right-6 top-6">
+    <div className="absolute top-6 right-6">
       <button
         type="button"
         onClick={(event) => {
@@ -35,7 +35,7 @@ export function CardOverflowMenu({
         <div
           role="menu"
           aria-orientation="vertical"
-          className="absolute right-0 top-12 z-10 min-w-36 rounded-2xl border border-gray-200 bg-white py-2 shadow-xl dark:border-slate-600 dark:bg-slate-800 dark:shadow-2xl"
+          className="absolute top-12 right-0 z-10 min-w-36 rounded-2xl border border-gray-200 bg-white py-2 shadow-xl dark:border-slate-600 dark:bg-slate-800 dark:shadow-2xl"
         >
           <button
             type="button"

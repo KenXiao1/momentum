@@ -35,7 +35,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
       onClose={onCancel}
       initialFocusRef={cancelButtonRef}
       role="dialog"
-      overlayClassName="z-[60]"
+      overlayClassName="z-60"
       className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-slate-800"
     >
       {/* Header */}
@@ -67,7 +67,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 
       {/* Content */}
       <div className="p-6">
-        <p className="whitespace-pre-line leading-relaxed text-gray-700 dark:text-slate-300">
+        <p className="leading-relaxed whitespace-pre-line text-gray-700 dark:text-slate-300">
           {message}
         </p>
       </div>

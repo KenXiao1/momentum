@@ -69,7 +69,7 @@ export const ImportExportModalView: React.FC<ImportExportModalViewProps> = ({
     <DialogShell
       titleId="import-export-modal-title"
       onClose={onClose}
-      className="w-full max-w-2xl animate-scale-in overflow-y-auto rounded-3xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-slate-600 dark:bg-slate-800 sm:p-6"
+      className="w-full max-w-2xl animate-scale-in overflow-y-auto rounded-3xl border border-gray-200 bg-white p-5 shadow-2xl sm:p-6 dark:border-slate-600 dark:bg-slate-800"
     >
       <ModalHeader onClose={onClose} t={t} />
       <TabNavigation activeTab={activeTab} onTabChange={onTabChange} t={t} />
@@ -153,7 +153,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
       onClick={() => onTabChange('export')}
       className={`flex flex-1 items-center justify-center space-x-2 rounded-xl px-4 py-3 font-chinese font-medium transition duration-300 ${
         activeTab === 'export'
-          ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-600 dark:text-slate-100'
+          ? 'bg-white text-gray-900 shadow-xs dark:bg-slate-600 dark:text-slate-100'
           : 'text-gray-600 hover:text-gray-900 dark:text-slate-400 dark:hover:text-slate-200'
       }`}
     >
@@ -165,7 +165,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
       onClick={() => onTabChange('import')}
       className={`flex flex-1 items-center justify-center space-x-2 rounded-xl px-4 py-3 font-chinese font-medium transition duration-300 ${
         activeTab === 'import'
-          ? 'bg-white text-gray-900 shadow-sm dark:bg-slate-600 dark:text-slate-100'
+          ? 'bg-white text-gray-900 shadow-xs dark:bg-slate-600 dark:text-slate-100'
           : 'text-gray-600 hover:text-gray-900 dark:text-slate-400 dark:hover:text-slate-200'
       }`}
     >

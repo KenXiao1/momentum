@@ -272,7 +272,7 @@ export function AppShellView({
       <a
         href="#main"
         onClick={() => document.getElementById('main')?.focus()}
-        className="focus-ring sr-only z-[200] rounded-xl bg-white/95 px-4 py-2 text-sm font-medium text-gray-900 shadow-lg focus:not-sr-only focus:fixed focus:left-4 focus:top-4 dark:bg-slate-900/90 dark:text-slate-100"
+        className="focus-ring sr-only z-200 rounded-xl bg-white/95 px-4 py-2 text-sm font-medium text-gray-900 shadow-lg focus:not-sr-only focus:fixed focus:top-4 focus:left-4 dark:bg-slate-900/90 dark:text-slate-100"
       >
         {t('app.appShell.appShellView.skipToMainContent')}
       </a>

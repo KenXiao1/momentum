@@ -75,11 +75,11 @@ export function PetWidget({
         <button
           type="button"
           onClick={() => setShowCreationDialog(true)}
-          className="fixed bottom-4 right-4 z-40 flex items-center gap-3 rounded-full border border-gray-200/60 bg-white/90 px-3 py-2 shadow-lg shadow-black/5 backdrop-blur-md transition hover:-translate-y-0.5 hover:shadow-xl dark:border-gray-700/60 dark:bg-gray-800/90"
+          className="fixed right-4 bottom-4 z-40 flex items-center gap-3 rounded-full border border-gray-200/60 bg-white/90 px-3 py-2 shadow-lg shadow-black/5 backdrop-blur-md transition hover:-translate-y-0.5 hover:shadow-xl dark:border-gray-700/60 dark:bg-gray-800/90"
           title={t('pet.widget.petWidget.adoptAPet')}
           aria-label={t('pet.widget.petWidget.adoptAPet')}
         >
-          <div className="flex h-12 w-12 select-none items-center justify-center rounded-full bg-gradient-to-br from-green-100 to-blue-100 text-3xl dark:from-green-900/30 dark:to-blue-900/30">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-green-100 to-blue-100 text-3xl select-none dark:from-green-900/30 dark:to-blue-900/30">
             🥚
           </div>
           <div className="pr-1 text-left leading-tight">
@@ -123,7 +123,7 @@ export function PetWidget({
             </button>
           ) : (
             <div className="overflow-hidden rounded-2xl border border-gray-200/50 bg-white/95 shadow-lg backdrop-blur-md dark:border-gray-700/50 dark:bg-gray-800/95">
-              <div className="flex items-center justify-between bg-gradient-to-r from-green-50 to-emerald-50 px-3 py-2 dark:from-green-900/20 dark:to-emerald-900/20">
+              <div className="flex items-center justify-between bg-linear-to-r from-green-50 to-emerald-50 px-3 py-2 dark:from-green-900/20 dark:to-emerald-900/20">
                 <button
                   type="button"
                   onMouseDown={handleMouseDown}
@@ -143,7 +143,7 @@ export function PetWidget({
                       event.stopPropagation();
                       void handleMinimize();
                     }}
-                    className="rounded p-1 transition-colors hover:bg-white/50 dark:hover:bg-gray-700/50"
+                    className="rounded-sm p-1 transition-colors hover:bg-white/50 dark:hover:bg-gray-700/50"
                     title={t('pet.widget.petWidget.minimize')}
                     aria-label={t('pet.widget.petWidget.minimize')}
                   >
@@ -170,7 +170,7 @@ export function PetWidget({
                   className={`mb-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 ${
                     pet.hunger <= 5
                       ? 'cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700'
-                      : 'bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:from-amber-500 hover:to-orange-600'
+                      : 'bg-linear-to-r from-amber-400 to-orange-500 text-white hover:from-amber-500 hover:to-orange-600'
                   } text-sm font-medium transition ${isFeeding ? 'animate-pulse' : ''} `}
                 >
                   <Cookie size={16} aria-hidden="true" />

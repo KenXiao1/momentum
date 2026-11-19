@@ -120,7 +120,7 @@ describe('DialogShell', () => {
             <DialogShell
               titleId="child-title"
               onClose={() => setChildOpen(false)}
-              overlayClassName="z-[60]"
+              overlayClassName="z-60"
             >
               <h2 id="child-title">Child</h2>
               <button type="button">Child action</button>

@@ -127,7 +127,7 @@ export function NumericSliderField({
             onBlur={() => {
               if (numberDraft === '') commitValue(localValue);
             }}
-            className="w-20 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-center font-mono text-gray-900 transition duration-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+            className="w-20 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-center font-mono text-gray-900 transition duration-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
           />
           {unit && (
             <span className="font-chinese text-sm text-gray-500 dark:text-slate-400">

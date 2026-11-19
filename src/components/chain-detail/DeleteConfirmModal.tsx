@@ -166,7 +166,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
         t={t}
       />
 
-      <div className="flex flex-col space-y-3 sm:flex-row sm:space-x-4 sm:space-y-0">
+      <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-4">
         <button
           onClick={onCancel}
           className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-chinese font-medium text-gray-700 transition duration-300 hover:scale-105 hover:bg-gray-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"

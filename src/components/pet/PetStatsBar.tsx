@@ -81,7 +81,7 @@ export function PetStatsBar({
       {/* XP Progress */}
       <div className="h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
         <div
-          className="h-full bg-gradient-to-r from-purple-400 to-purple-600 transition-[width] duration-300"
+          className="h-full bg-linear-to-r from-purple-400 to-purple-600 transition-[width] duration-300"
           style={{ width: `${levelProgress}%` }}
         />
       </div>
@@ -91,20 +91,20 @@ export function PetStatsBar({
         <StatBar
           label={t('pet.stats.fullness')}
           value={hunger}
-          colorClass="bg-gradient-to-r from-amber-400 to-orange-500"
+          colorClass="bg-linear-to-r from-amber-400 to-orange-500"
           icon="🍖"
           inverted={true}
         />
         <StatBar
           label={t('pet.stats.happiness')}
           value={happiness}
-          colorClass="bg-gradient-to-r from-pink-400 to-rose-500"
+          colorClass="bg-linear-to-r from-pink-400 to-rose-500"
           icon="💖"
         />
         <StatBar
           label={t('pet.stats.health')}
           value={health}
-          colorClass="bg-gradient-to-r from-green-400 to-emerald-500"
+          colorClass="bg-linear-to-r from-green-400 to-emerald-500"
           icon="💚"
         />
       </div>

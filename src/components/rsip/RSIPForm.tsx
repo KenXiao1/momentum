@@ -81,7 +81,7 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
           <select
             value={selectedParentId || ''}
             onChange={(e) => setSelectedParentId(e.target.value || undefined)}
-            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
           >
             <option value="">{t('rsip.rsipForm.noParentCreateNewRoot')}</option>
             {parentOptions.map((n) => (
@@ -102,7 +102,7 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
             placeholder={t(
               'rsip.rsipForm.eGStartShoweringWithin15MinutesOfGettingHome',
             )}
-            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
+            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
           />
         </div>
         <div>
@@ -115,7 +115,7 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
             placeholder={t(
               'rsip.rsipForm.eGStartA15MinuteTimerWhenHomeEnterThe',
             )}
-            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
+            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 placeholder-gray-400 transition duration-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400"
           />
         </div>
       </div>
@@ -139,7 +139,7 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
               onChange={(e) => setCreateUseTimer(e.target.checked)}
               className="peer sr-only"
             />
-            <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-emerald-800"></div>
+            <div className="peer h-6 w-11 rounded-full bg-gray-200 peer-checked:bg-emerald-500 peer-focus:ring-4 peer-focus:ring-emerald-300 peer-focus:outline-hidden after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-emerald-800"></div>
           </label>
         </div>
 
@@ -158,7 +158,7 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
                 Math.max(1, Math.min(180, Number(e.target.value) || 1)),
               )
             }
-            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
           />
         </div>
       </div>
@@ -176,7 +176,7 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
               setCreateType(t);
               setCreateEmoji(rsipTypeEmojiMap[t] || '📜');
             }}
-            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-2 font-chinese text-gray-900 transition duration-200 focus:outline-none dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-2 font-chinese text-gray-900 transition duration-200 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
           >
             {Object.entries(rsipTypeEmojiMap).map(([type, emoji]) => (
               <option key={type} value={type}>
@@ -196,7 +196,7 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
               onChange={(e) =>
                 setSelectedGroupId?.(e.target.value || undefined)
               }
-              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-2 font-chinese text-gray-900 transition duration-200 focus:outline-none dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-2 font-chinese text-gray-900 transition duration-200 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
             >
               <option value="">{t('rsip.rsipForm.noGroup')}</option>
               {(groups ?? []).map((group) => (
@@ -233,7 +233,7 @@ export const RSIPForm: React.FC<RSIPFormProps> = ({
               onChange={(e) => setCreateIsPassive?.(e.target.checked)}
               className="peer sr-only"
             />
-            <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition after:content-[''] peer-checked:bg-indigo-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-indigo-800"></div>
+            <div className="peer h-6 w-11 rounded-full bg-gray-200 peer-checked:bg-indigo-500 peer-focus:ring-4 peer-focus:ring-indigo-300 peer-focus:outline-hidden after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-indigo-800"></div>
           </label>
         </div>
       </div>

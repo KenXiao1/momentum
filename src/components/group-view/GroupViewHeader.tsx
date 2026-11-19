@@ -40,11 +40,11 @@ export function GroupViewHeader(props: Props) {
           </div>
           <div className="min-w-0">
             <div className="mb-2 flex flex-wrap items-center gap-2 md:space-x-3">
-              <h1 className="break-words font-chinese text-3xl font-bold text-[#161615] dark:text-slate-100 md:text-5xl">
+              <h1 className="font-chinese text-3xl font-bold wrap-break-word text-[#161615] md:text-5xl dark:text-slate-100">
                 {props.group.name}
               </h1>
               {props.group.totalCompletions > 0 && (
-                <div className="rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-white shadow-lg">
+                <div className="rounded-2xl bg-linear-to-r from-amber-500 to-orange-500 px-4 py-2 text-white shadow-lg">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg font-bold">
                       #{props.group.totalCompletions}
@@ -56,7 +56,7 @@ export function GroupViewHeader(props: Props) {
                 </div>
               )}
             </div>
-            <p className="font-mono text-sm uppercase text-gray-500 md:tracking-wider">
+            <p className="font-mono text-sm text-gray-500 uppercase md:tracking-wider">
               {props.typeConfig.name} · {props.unitProgress.completed}/
               {props.unitProgress.total}{' '}
               {props.t('groupView.groupOverview.completed')}
@@ -79,21 +79,21 @@ export function GroupViewHeader(props: Props) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:flex md:items-center">
         <button
           onClick={props.onAddUnit}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-gray-100 px-3 py-3 font-chinese text-sm font-medium text-gray-700 transition duration-300 hover:scale-105 hover:bg-gray-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 md:px-4 md:text-base"
+          className="flex items-center justify-center gap-2 rounded-2xl bg-gray-100 px-3 py-3 font-chinese text-sm font-medium text-gray-700 transition duration-300 hover:scale-105 hover:bg-gray-200 md:px-4 md:text-base dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
         >
           <Plus size={16} />
           <span>{props.t('groupView.groupViewHeader.addUnit')}</span>
         </button>
         <button
           onClick={() => props.setShowImportModal(true)}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-blue-100 px-3 py-3 font-chinese text-sm font-medium text-blue-700 transition duration-300 hover:scale-105 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 md:px-4 md:text-base"
+          className="flex items-center justify-center gap-2 rounded-2xl bg-blue-100 px-3 py-3 font-chinese text-sm font-medium text-blue-700 transition duration-300 hover:scale-105 hover:bg-blue-200 md:px-4 md:text-base dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
         >
           <Import size={16} />
           <span>{props.t('groupView.groupViewHeader.importUnits')}</span>
         </button>
         <button
           onClick={() => props.onEditChain(props.group.id)}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-gray-100 px-3 py-3 font-chinese text-sm font-medium text-gray-700 transition duration-300 hover:scale-105 hover:bg-gray-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 md:px-4 md:text-base"
+          className="flex items-center justify-center gap-2 rounded-2xl bg-gray-100 px-3 py-3 font-chinese text-sm font-medium text-gray-700 transition duration-300 hover:scale-105 hover:bg-gray-200 md:px-4 md:text-base dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
           title={props.t('groupView.groupViewHeader.editGroup')}
         >
           <Pencil size={16} />

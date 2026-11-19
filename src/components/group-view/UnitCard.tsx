@@ -102,7 +102,7 @@ export const UnitCard: React.FC<UnitCardProps> = ({
   return (
     <div
       className={`bento-card relative cursor-pointer transition duration-300 hover:shadow-md ${
-        isNext ? 'ring-2 ring-primary-500 ring-opacity-50' : ''
+        isNext ? 'ring-opacity-50 ring-2 ring-primary-500' : ''
       } ${isCompleted ? 'bg-green-50 dark:bg-green-900/10' : ''}`}
       onClick={() => onViewDetail(unit.id)}
       role="button"
@@ -263,7 +263,7 @@ export const UnitCard: React.FC<UnitCardProps> = ({
           e.stopPropagation();
           onOpenRepeatModal(unit);
         }}
-        className="absolute bottom-3 right-3 flex items-center space-x-1 rounded-md border border-slate-600 bg-slate-800 px-2 py-1 text-xs font-bold text-white shadow-md transition duration-200 hover:scale-105 hover:bg-slate-700 hover:shadow-lg dark:border-slate-400 dark:bg-slate-200 dark:text-slate-800 dark:hover:bg-slate-300"
+        className="absolute right-3 bottom-3 flex items-center space-x-1 rounded-md border border-slate-600 bg-slate-800 px-2 py-1 text-xs font-bold text-white shadow-md transition duration-200 hover:scale-105 hover:bg-slate-700 hover:shadow-lg dark:border-slate-400 dark:bg-slate-200 dark:text-slate-800 dark:hover:bg-slate-300"
         title={t('groupView.unitCard.setRepeatCountCurrentCurrentRepeatCount', {
           currentRepeatCount: currentRepeatCount,
         })}

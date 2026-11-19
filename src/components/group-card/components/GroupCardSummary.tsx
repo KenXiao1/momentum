@@ -45,7 +45,7 @@ export function GroupCardSummary(props: {
                   </div>
                 )}
               </div>
-              <p className="font-mono text-xs uppercase tracking-wide text-gray-500">
+              <p className="font-mono text-xs tracking-wide text-gray-500 uppercase">
                 {typeConfig.name}
                 {group.totalCompletions > 0 && (
                   <span className="ml-2 text-amber-600 dark:text-amber-400">
@@ -75,7 +75,7 @@ export function GroupCardSummary(props: {
         </div>
         <div className="h-3 w-full rounded-full bg-gray-200 dark:bg-slate-700">
           <div
-            className="h-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 transition-[width] duration-500"
+            className="h-3 rounded-full bg-linear-to-r from-blue-500 to-blue-600 transition-[width] duration-500"
             style={{
               width: `${progress.total > 0 ? (progress.completed / progress.total) * 100 : 0}%`,
             }}
@@ -83,7 +83,7 @@ export function GroupCardSummary(props: {
         </div>
       </div>
       <div className="mb-6 grid grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-blue-200/50 bg-gradient-to-br from-blue-500/10 to-blue-600/5 p-4 text-center dark:border-blue-400/30 dark:from-blue-500/20 dark:to-blue-600/10">
+        <div className="rounded-2xl border border-blue-200/50 bg-linear-to-br from-blue-500/10 to-blue-600/5 p-4 text-center dark:border-blue-400/30 dark:from-blue-500/20 dark:to-blue-600/10">
           <div className="mb-2 flex items-center justify-center space-x-2 text-blue-500">
             <Users size={16} />
             <span className="font-mono text-2xl font-bold">
@@ -94,7 +94,7 @@ export function GroupCardSummary(props: {
             {t('groupCard.groupCardSummary.tasks')}
           </div>
         </div>
-        <div className="rounded-2xl border border-primary-200/50 bg-gradient-to-br from-primary-500/10 to-primary-600/5 p-4 text-center dark:border-primary-400/30 dark:from-primary-500/20 dark:to-primary-600/10">
+        <div className="rounded-2xl border border-primary-200/50 bg-linear-to-br from-primary-500/10 to-primary-600/5 p-4 text-center dark:border-primary-400/30 dark:from-primary-500/20 dark:to-primary-600/10">
           <div className="mb-2 flex items-center justify-center space-x-2 text-primary-500">
             <Flame size={18} />
             <span className="font-mono text-2xl font-bold">

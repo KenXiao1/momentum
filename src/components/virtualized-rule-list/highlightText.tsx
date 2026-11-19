@@ -20,7 +20,7 @@ export function highlightText(
     parts.push(
       <mark
         key={`${range.start}-${range.end}`}
-        className="rounded bg-yellow-200 px-1 dark:bg-yellow-600"
+        className="rounded-sm bg-yellow-200 px-1 dark:bg-yellow-600"
       >
         {safeText.slice(range.start, range.end)}
       </mark>,

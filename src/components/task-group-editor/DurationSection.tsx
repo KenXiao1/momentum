@@ -48,7 +48,7 @@ const DurationSectionComponent: React.FC<DurationSectionProps> = ({
             onAuxiliaryDurationModeChange(false, Number(e.target.value));
           }
         }}
-        className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+        className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 font-chinese text-gray-900 transition duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
         required
       >
         {AUXILIARY_DURATION_PRESETS.map((preset) => (

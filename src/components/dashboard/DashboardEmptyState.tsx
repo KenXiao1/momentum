@@ -23,7 +23,7 @@ const DashboardEmptyStateComponent: React.FC<DashboardEmptyStateProps> = ({
       <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-300">
         <Link size={24} />
       </div>
-      <h2 className="mb-3 font-chinese text-3xl font-bold tracking-tight text-gray-950 dark:text-slate-100 sm:text-4xl">
+      <h2 className="mb-3 font-chinese text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl dark:text-slate-100">
         {t('dashboard.dashboardEmptyState.createYourFirstChain')}
       </h2>
       <p className="mb-7 max-w-xl leading-7 text-gray-600 dark:text-slate-300">

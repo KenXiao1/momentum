@@ -105,7 +105,7 @@ export const UserFeedbackDisplay: React.FC<UserFeedbackDisplayProps> = ({
   };
 
   return (
-    <div className={`fixed right-4 top-4 z-50 max-w-md space-y-3 ${className}`}>
+    <div className={`fixed top-4 right-4 z-50 max-w-md space-y-3 ${className}`}>
       {/* 进度指示器 */}
       {progress && (
         <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800">
@@ -145,7 +145,7 @@ export const UserFeedbackDisplay: React.FC<UserFeedbackDisplayProps> = ({
           className={`rounded-lg border p-4 shadow-lg ${getMessageStyles(message.type)} animate-slide-in-right`}
         >
           <div className="flex items-start space-x-3">
-            <div className="mt-0.5 flex-shrink-0">
+            <div className="mt-0.5 shrink-0">
               {getMessageIcon(message.type)}
             </div>
 
@@ -153,7 +153,7 @@ export const UserFeedbackDisplay: React.FC<UserFeedbackDisplayProps> = ({
               <div className="text-sm font-medium text-gray-900 dark:text-white">
                 {message.title}
               </div>
-              <div className="mt-1 whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-300">
+              <div className="mt-1 text-sm whitespace-pre-wrap text-gray-600 dark:text-gray-300">
                 {message.message}
               </div>
 
@@ -164,7 +164,7 @@ export const UserFeedbackDisplay: React.FC<UserFeedbackDisplayProps> = ({
                     <button
                       key={action.id}
                       onClick={() => handleActionClick(action)}
-                      className={`rounded px-3 py-1.5 text-xs font-medium transition-colors ${getButtonStyles(action.type)}`}
+                      className={`rounded-sm px-3 py-1.5 text-xs font-medium transition-colors ${getButtonStyles(action.type)}`}
                     >
                       {action.label}
                     </button>
@@ -177,7 +177,7 @@ export const UserFeedbackDisplay: React.FC<UserFeedbackDisplayProps> = ({
             {!message.persistent && (
               <button
                 onClick={() => handleMessageClose(message.id)}
-                className="flex-shrink-0 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
+                className="shrink-0 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <X className="h-4 w-4" />
               </button>

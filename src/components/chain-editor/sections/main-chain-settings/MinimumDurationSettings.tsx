@@ -62,7 +62,7 @@ export function MinimumDurationSettings({
                 className={`rounded-xl px-3 py-1.5 font-chinese text-xs transition duration-200 ${
                   form.minimumDuration === preset &&
                   !form.isCustomMinimumDuration
-                    ? 'bg-indigo-500 text-white shadow-sm'
+                    ? 'bg-indigo-500 text-white shadow-xs'
                     : 'border border-gray-200/60 bg-white/70 text-gray-700 hover:bg-indigo-50 dark:border-slate-600/60 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:bg-indigo-900/30'
                 }`}
               >
@@ -99,7 +99,7 @@ export function MinimumDurationSettings({
               placeholder={t(
                 'chainEditor.mainChainSettings.minimumDurationSettings.customMinutes',
               )}
-              className="flex-1 rounded-2xl border border-gray-200 bg-white/70 px-4 py-2.5 font-chinese text-gray-900 placeholder-gray-400 transition duration-200 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-100 dark:placeholder-slate-400"
+              className="flex-1 rounded-2xl border border-gray-200 bg-white/70 px-4 py-2.5 font-chinese text-gray-900 placeholder-gray-400 transition duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-100 dark:placeholder-slate-400"
             />
             <button
               type="button"

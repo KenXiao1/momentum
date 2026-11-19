@@ -26,7 +26,7 @@ export function FocusSessionHeader({
 
   return (
     <>
-      <div className="fixed right-4 top-4 z-20">
+      <div className="fixed top-4 right-4 z-20">
         <button
           type="button"
           onClick={isFullscreen ? onExitFullscreen : onEnterFullscreen}
@@ -45,7 +45,7 @@ export function FocusSessionHeader({
           )}
         </button>
       </div>
-      <header className="mb-12 border-b border-gray-200 pb-6 dark:border-slate-700 sm:mb-16">
+      <header className="mb-12 border-b border-gray-200 pb-6 sm:mb-16 dark:border-slate-700">
         <div className="flex items-center gap-4">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-900/30">
             <Flame
@@ -55,7 +55,7 @@ export function FocusSessionHeader({
             />
           </div>
           <div className="min-w-0 text-left">
-            <h1 className="truncate font-chinese text-2xl font-semibold tracking-tight text-gray-950 dark:text-white sm:text-3xl">
+            <h1 className="truncate font-chinese text-2xl font-semibold tracking-tight text-gray-950 sm:text-3xl dark:text-white">
               {chain.name}
             </h1>
             <p className="mt-1 truncate font-chinese text-sm text-gray-500 dark:text-gray-400">

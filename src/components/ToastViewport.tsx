@@ -98,7 +98,7 @@ export function ToastViewport() {
 
   return (
     <div
-      className="fixed right-4 top-4 z-[100] w-[min(380px,calc(100vw-2rem))] space-y-3"
+      className="fixed top-4 right-4 z-100 w-[min(380px,calc(100vw-2rem))] space-y-3"
       aria-live="polite"
       aria-atomic="false"
     >
@@ -119,14 +119,14 @@ export function ToastViewport() {
 
             <div className="min-w-0 flex-1">
               {t.title && <div className="mb-0.5 font-medium">{t.title}</div>}
-              <div className="whitespace-pre-line break-words text-sm leading-snug">
+              <div className="text-sm leading-snug wrap-break-word whitespace-pre-line">
                 {t.message}
               </div>
             </div>
 
             <button
               onClick={() => dismiss(t.id)}
-              className="focus-ring rounded text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="focus-ring rounded-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               aria-label="Close notification"
             >
               <X className="h-4 w-4" />

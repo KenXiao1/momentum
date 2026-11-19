@@ -16,11 +16,11 @@ export const RSIPControls: React.FC<RSIPControlsProps> = ({
   t,
 }) => {
   return (
-    <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
+    <div className="absolute right-4 bottom-4 z-20 flex flex-col gap-2">
       <button
         type="button"
         onClick={onZoomIn}
-        className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 bg-white/80 shadow-sm transition hover:shadow-md dark:border-slate-600 dark:bg-slate-800/80"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 bg-white/80 shadow-xs transition hover:shadow-md dark:border-slate-600 dark:bg-slate-800/80"
         aria-label={t('rsip.rsipControls.zoomIn')}
         title={t('rsip.rsipControls.zoomIn')}
       >
@@ -29,7 +29,7 @@ export const RSIPControls: React.FC<RSIPControlsProps> = ({
       <button
         type="button"
         onClick={onZoomOut}
-        className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 bg-white/80 shadow-sm transition hover:shadow-md dark:border-slate-600 dark:bg-slate-800/80"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 bg-white/80 shadow-xs transition hover:shadow-md dark:border-slate-600 dark:bg-slate-800/80"
         aria-label={t('rsip.rsipControls.zoomOut')}
         title={t('rsip.rsipControls.zoomOut')}
       >
@@ -38,7 +38,7 @@ export const RSIPControls: React.FC<RSIPControlsProps> = ({
       <button
         type="button"
         onClick={onFitToContent}
-        className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 bg-white/80 shadow-sm transition hover:shadow-md dark:border-slate-600 dark:bg-slate-800/80"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 bg-white/80 shadow-xs transition hover:shadow-md dark:border-slate-600 dark:bg-slate-800/80"
         aria-label={t('rsip.rsipControls.fitToContent')}
         title={t('rsip.rsipControls.fitToContent')}
       >

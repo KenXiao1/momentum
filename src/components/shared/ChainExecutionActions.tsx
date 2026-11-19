@@ -44,16 +44,16 @@ export function ChainExecutionActions({
   return (
     <>
       {scheduled && (
-        <div className="mb-6 rounded-2xl border border-blue-200/50 bg-gradient-to-r from-blue-500/10 to-blue-600/5 p-4 dark:border-blue-400/30 dark:from-blue-500/20 dark:to-blue-600/10">
+        <div className="mb-6 rounded-2xl border border-blue-200/50 bg-linear-to-r from-blue-500/10 to-blue-600/5 p-4 dark:border-blue-400/30 dark:from-blue-500/20 dark:to-blue-600/10">
           <div className="mb-3 flex items-center justify-between">
             <div className="mr-2 flex min-w-0 flex-1 items-center space-x-2 text-blue-600">
-              <Bell size={14} className="flex-shrink-0" aria-hidden="true" />
+              <Bell size={14} className="shrink-0" aria-hidden="true" />
               <span className="truncate font-chinese text-sm font-medium">
                 {signalPrefix}
                 {scheduled.signal}
               </span>
             </div>
-            <div className="flex-shrink-0 font-mono text-lg font-bold text-blue-700 dark:text-blue-400">
+            <div className="shrink-0 font-mono text-lg font-bold text-blue-700 dark:text-blue-400">
               {formatDuration(scheduled.timeRemaining)}
             </div>
           </div>

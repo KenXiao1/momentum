@@ -29,7 +29,7 @@ export const SettingSection: React.FC<SettingSectionProps> = ({
 
   const headerContent = (
     <>
-      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500/20 to-primary-600/10">
+      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-br from-primary-500/20 to-primary-600/10">
         {icon}
       </div>
       <div className="flex-1">

@@ -140,7 +140,7 @@ const DashboardRecommendSectionComponent: React.FC<
               </div>
               <Flame
                 size={16}
-                className={`flex-shrink-0 ${urgency === 'at-risk' ? 'text-amber-500' : 'text-primary-400'}`}
+                className={`shrink-0 ${urgency === 'at-risk' ? 'text-amber-500' : 'text-primary-400'}`}
                 aria-hidden="true"
               />
             </button>

@@ -13,9 +13,9 @@ const PHASE_THRESHOLDS: Record<RSIPStabilityPhase, number> = {
 };
 
 const PHASE_GRADIENT_CLASS: Record<RSIPStabilityPhase, string> = {
-  E0: 'bg-gradient-to-r from-slate-400 to-blue-500',
-  E1: 'bg-gradient-to-r from-blue-500 to-emerald-500',
-  E2: 'bg-gradient-to-r from-emerald-500 to-emerald-400',
+  E0: 'bg-linear-to-r from-slate-400 to-blue-500',
+  E1: 'bg-linear-to-r from-blue-500 to-emerald-500',
+  E2: 'bg-linear-to-r from-emerald-500 to-emerald-400',
 };
 
 export function RSIPPhaseProgress({

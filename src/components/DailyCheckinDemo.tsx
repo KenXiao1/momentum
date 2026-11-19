@@ -42,7 +42,7 @@ export const DailyCheckinDemo: React.FC<DailyCheckinDemoProps> = ({
 
   return (
     <div
-      className={`rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 ${className}`}
+      className={`rounded-xl border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-800 ${className}`}
     >
       {/* 演示标签 */}
       <div className="mb-4 text-center">
@@ -93,7 +93,7 @@ export const DailyCheckinDemo: React.FC<DailyCheckinDemoProps> = ({
             className={`w-full rounded-xl px-6 py-4 text-lg font-semibold transition duration-200 ${
               isCheckingIn
                 ? 'cursor-not-allowed bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
-                : 'transform bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg hover:scale-105 hover:from-blue-600 hover:to-purple-700 hover:shadow-xl'
+                : 'transform bg-linear-to-r from-blue-500 to-purple-600 text-white shadow-lg hover:scale-105 hover:from-blue-600 hover:to-purple-700 hover:shadow-xl'
             } `}
           >
             <div className="flex items-center justify-center space-x-2">
@@ -123,7 +123,7 @@ export const DailyCheckinDemo: React.FC<DailyCheckinDemoProps> = ({
       {/* 演示说明 */}
       <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
         <div className="flex items-start space-x-3">
-          <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-500" />
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-blue-500" />
           <div>
             <p className="mb-1 text-sm font-medium text-blue-800 dark:text-blue-200">
               {t('dailyCheckinDemo.demoNotes')}

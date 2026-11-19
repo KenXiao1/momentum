@@ -214,7 +214,7 @@ export const VirtualizedChainList: React.FC<VirtualizedChainListProps> =
           id="chain-list-container"
           role="list"
           aria-label={t('virtualizedChainList.taskChainsList')}
-          className={`relative max-h-[calc(100vh-16rem)] overflow-auto rounded-lg border border-gray-200 transition-opacity dark:border-slate-600 md:max-h-[calc(100vh-12rem)] ${isPending ? 'opacity-70' : ''}`}
+          className={`relative max-h-[calc(100vh-16rem)] overflow-auto rounded-lg border border-gray-200 transition-opacity md:max-h-[calc(100vh-12rem)] dark:border-slate-600 ${isPending ? 'opacity-70' : ''}`}
           onScroll={handleScroll}
           style={{
             height: Math.min(
@@ -225,7 +225,7 @@ export const VirtualizedChainList: React.FC<VirtualizedChainListProps> =
         >
           <div className="relative" style={{ height: totalHeight }}>
             <div
-              className="absolute left-0 right-0 top-0 grid grid-cols-1 gap-6 p-6 md:grid-cols-2 xl:grid-cols-3"
+              className="absolute top-0 right-0 left-0 grid grid-cols-1 gap-6 p-6 md:grid-cols-2 xl:grid-cols-3"
               style={{
                 transform: `translateY(${Math.floor(scrollTop / ITEM_HEIGHT) * ITEM_HEIGHT}px)`,
               }}
@@ -240,7 +240,7 @@ export const VirtualizedChainList: React.FC<VirtualizedChainListProps> =
 
           {/* Virtual scrolling indicator */}
           {isDev && (
-            <div className="absolute right-2 top-2 rounded bg-blue-100 px-2 py-1 text-xs text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+            <div className="absolute top-2 right-2 rounded-sm bg-blue-100 px-2 py-1 text-xs text-blue-800 dark:bg-blue-900 dark:text-blue-200">
               Virtual: {visibleItems.length}/{topLevelChains.length} items
             </div>
           )}

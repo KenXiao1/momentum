@@ -151,7 +151,7 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
               <div className="flex items-center space-x-4">
                 <div className="relative flex-1">
                   <Search
-                    className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-400"
+                    className="absolute top-1/2 left-3 -translate-y-1/2 transform text-gray-400"
                     size={20}
                   />
                   <input
@@ -161,7 +161,7 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
                     )}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full rounded-xl border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full rounded-xl border border-gray-300 bg-white py-2 pr-4 pl-10 text-gray-900 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
 
@@ -170,7 +170,7 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
                   onChange={(e) =>
                     setTypeFilter(e.target.value as ExceptionRuleType | 'all')
                   }
-                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="all">
                     {t('ruleManager.ruleManagerViewView.allTypes')}
@@ -186,7 +186,7 @@ export const RuleManagerViewView: React.FC<RuleManagerViewViewProps> = ({
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="usage">
                     {t('ruleManager.ruleManagerViewView.mostUsed')}

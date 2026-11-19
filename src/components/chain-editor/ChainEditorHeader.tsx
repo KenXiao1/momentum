@@ -20,12 +20,12 @@ export function ChainEditorHeader({
         className="rounded-2xl p-3 text-gray-400 transition-colors hover:bg-white/50 hover:text-[#161615]"
       />
       <div>
-        <h1 className="mb-2 font-chinese text-4xl font-bold text-[#161615] dark:text-slate-100 md:text-5xl">
+        <h1 className="mb-2 font-chinese text-4xl font-bold text-[#161615] md:text-5xl dark:text-slate-100">
           {isEditing
             ? t('chainEditor.editTitle')
             : t('chainEditor.createTitle')}
         </h1>
-        <p className="font-mono text-sm uppercase tracking-wider text-gray-500">
+        <p className="font-mono text-sm tracking-wider text-gray-500 uppercase">
           {isEditing
             ? t('chainEditor.editSubtitle')
             : t('chainEditor.createSubtitle')}

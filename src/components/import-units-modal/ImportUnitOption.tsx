@@ -42,7 +42,7 @@ export function ImportUnitOption({
     >
       <div className="flex items-center space-x-4">
         <span
-          className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${selected ? 'border-blue-500 bg-blue-500' : 'border-gray-300 dark:border-slate-500'}`}
+          className={`flex h-5 w-5 items-center justify-center rounded-sm border-2 transition-colors ${selected ? 'border-blue-500 bg-blue-500' : 'border-gray-300 dark:border-slate-500'}`}
           aria-hidden="true"
         >
           {selected && <CheckCircle className="h-4 w-4 text-white" />}

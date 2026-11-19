@@ -103,7 +103,7 @@ export function RuleListItem({
             ))}
           </div>
           <CheckCircle
-            className="flex-shrink-0 text-gray-400 transition-colors hover:text-primary-500"
+            className="shrink-0 text-gray-400 transition-colors hover:text-primary-500"
             size={20}
             aria-hidden="true"
           />

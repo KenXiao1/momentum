@@ -58,7 +58,7 @@ export function FocusTimerPanel({
             className="h-[min(300px,72vw)] w-[min(300px,72vw)]"
           />
         </div>
-        <div className="focus-timer-value relative z-10 px-8 font-mono text-[clamp(4rem,15vw,9rem)] font-light leading-none tracking-tight text-gray-950 dark:text-white">
+        <div className="focus-timer-value relative z-10 px-8 font-mono text-[clamp(4rem,15vw,9rem)] leading-none font-light tracking-tight text-gray-950 dark:text-white">
           {isDurationless
             ? formatElapsedTime(elapsedSeconds)
             : formatDuration(timeRemaining)}

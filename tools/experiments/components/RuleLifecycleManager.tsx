@@ -499,7 +499,7 @@ export const RuleLifecycleManager: React.FC<RuleLifecycleManagerProps> = ({
 
             <div className="relative flex-1">
               <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-400"
+                className="absolute top-1/2 left-3 -translate-y-1/2 transform text-gray-400"
                 size={16}
               />
               <input
@@ -507,7 +507,7 @@ export const RuleLifecycleManager: React.FC<RuleLifecycleManagerProps> = ({
                 placeholder="搜索规则..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                className="w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-10 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               />
             </div>
 
