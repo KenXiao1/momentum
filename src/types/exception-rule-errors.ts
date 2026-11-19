@@ -33,15 +33,9 @@ export class ExceptionRuleException extends Error {
 }
 
 export type ExceptionRuleExceptionSeverity =
-  | 'low'
-  | 'medium'
-  | 'high'
-  | 'critical';
+  'low' | 'medium' | 'high' | 'critical';
 export type ExceptionRuleExceptionCategory =
-  | 'user_error'
-  | 'system_error'
-  | 'data_error'
-  | 'network_error';
+  'user_error' | 'system_error' | 'data_error' | 'network_error';
 
 export interface EnhancedExceptionRuleExceptionSerialized {
   name: string;

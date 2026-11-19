@@ -9,7 +9,12 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 // 检查环境变量是否存在，如果不存在则创建一个模拟客户端
 export const supabase =
   supabaseUrl && supabaseAnonKey
-    ? createClient<Database>(supabaseUrl, supabaseAnonKey)
+    ? createClient<Database>(supabaseUrl, supabaseAnonKey, {
+        // Retries belong to infra/storage/supabase/retry.ts, which also waits
+        // for authentication. supabase-js >=2.119 retries GET/HEAD by
+        // default; leaving both on multiplies attempts and backoff delays.
+        db: { retry: false },
+      })
     : null;
 
 interface AuthenticationResult {

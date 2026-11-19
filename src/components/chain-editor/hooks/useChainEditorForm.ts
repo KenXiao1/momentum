@@ -80,7 +80,7 @@ export function useChainEditorForm({
     chain ? chain.parentId : initialParentId,
   );
   const [sortOrder] = useState(
-    chain?.sortOrder || Math.floor(Date.now() / 1000),
+    () => chain?.sortOrder || Math.floor(Date.now() / 1000),
   );
 
   const isCustomTriggerValue = !!(

@@ -3,8 +3,7 @@ import { planRSIPViolation } from '../../../domain/rsip';
 import { getDescendantIds } from '../../../utils/rsipTree';
 
 type ViolationGroupAssessment =
-  | { status: 'none' }
-  | { status: 'tolerated' | 'collapse'; groupTitle: string };
+  { status: 'none' } | { status: 'tolerated' | 'collapse'; groupTitle: string };
 
 export function assessViolationGroup(
   node: RSIPNode,

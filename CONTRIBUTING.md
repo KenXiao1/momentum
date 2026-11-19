@@ -112,6 +112,16 @@ parsers whose parents pin older versions. Keep the overrides until the parents
 adopt patched versions; review removals with a fresh `npm audit` and the affected
 lint/test tools. No npm vulnerability exemptions are currently needed.
 
+Two overrides exist only to let npm resolve peers, not for security:
+
+- `eslint-plugin-jsx-a11y` → `eslint: $eslint`. Its latest release (6.10.2)
+  still declares ESLint ≤9, but it uses only `context.report` and AST
+  traversal, none of the context APIs ESLint 10 removed. Remove it once a
+  release declares ESLint 10.
+- `@babel/plugin-transform-runtime` → `^7.29.0`. `@vitejs/plugin-react` 6
+  reaches it only through optional peers, and npm otherwise picks the
+  8.0.0 prerelease, which conflicts with Stryker's Babel 7. It is not installed.
+
 ## License
 
 Contributions use the repository [license](LICENSE).

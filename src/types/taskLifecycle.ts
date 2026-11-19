@@ -1,7 +1,5 @@
 export type TaskLifecycleEventType =
-  | 'task_completed'
-  | 'task_interrupted'
-  | 'group_cycle_completed';
+  'task_completed' | 'task_interrupted' | 'group_cycle_completed';
 
 export interface TaskLifecycleEvent {
   type: TaskLifecycleEventType;

@@ -15,14 +15,24 @@ updates:
     groups:
       tauri:
         patterns: ['@tauri-apps/*']
+      # Dependabot assigns a dependency to the most specific matching group,
+      # not the first, so the broader groups must exclude Tauri explicitly.
       npm-production:
         dependency-type: production
         update-types: [minor, patch]
+        exclude-patterns: ['@tauri-apps/*']
       npm-development:
         dependency-type: development
         update-types: [minor, patch]
+        exclude-patterns: ['@tauri-apps/*']
       npm-major:
         update-types: [major]
+        exclude-patterns: ['@tauri-apps/*']
+    ignore:
+      # 1.6.28 raised its TypeScript peer to >=6 in a patch release, which
+      # blocks the whole development group. Remove once TypeScript is >=6.
+      - dependency-name: '@vitest/eslint-plugin'
+        versions: ['>=1.6.28']
 
   - package-ecosystem: cargo
     directory: /src-tauri
@@ -35,6 +45,7 @@ updates:
         patterns: ['tauri', 'tauri-*']
       cargo:
         patterns: ['*']
+        exclude-patterns: ['tauri', 'tauri-*']
 
   - package-ecosystem: github-actions
     directory: /

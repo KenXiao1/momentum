@@ -42,6 +42,9 @@ export default tseslint.config(
     rules: {
       ...jsxA11y.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
+      // New in react-hooks 7 (React Compiler rules). Existing effects that
+      // synchronously set state need individual refactors; warn until done.
+      'react-hooks/set-state-in-effect': 'warn',
       '@typescript-eslint/no-explicit-any': 'off',
       'no-restricted-syntax': [
         'error',

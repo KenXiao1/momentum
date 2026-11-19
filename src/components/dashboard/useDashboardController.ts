@@ -123,7 +123,7 @@ export function useDashboardController({
         scheduledSessions.find((session) => session.chainId === chainId),
       [scheduledSessions],
     ),
-    handleImport: useCallback(onImportChains, [onImportChains]),
+    handleImport: onImportChains,
     handleRestore,
     handlePermanentDelete,
     showImportExportModal: useCallback(() => setShowImportExport(true), []),

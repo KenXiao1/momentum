@@ -14,7 +14,7 @@ interface UseRSIPTimersResult {
 }
 
 export function useRSIPTimers(t: Translator): UseRSIPTimersResult {
-  const [now, setNow] = useState<number>(Date.now());
+  const [now, setNow] = useState<number>(() => Date.now());
   const [activeTimers, setActiveTimers] = useState<Record<string, number>>({});
 
   useEffect(() => {

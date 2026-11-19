@@ -118,34 +118,34 @@ export default defineConfig({
     force: false,
   },
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: (id) => {
-          // 核心 React 库 - 首屏必需
-          if (
-            id.includes('node_modules/react/') ||
-            id.includes('node_modules/react-dom/')
-          ) {
-            return 'vendor-react';
-          }
-          // Supabase 客户端 - 延迟加载
-          if (
-            id.includes('@supabase/supabase-js') ||
-            id.includes('@supabase/')
-          ) {
-            return 'vendor-supabase';
-          }
-          // 图标库 - 单独分块以便tree-shaking
-          if (id.includes('lucide-react')) {
-            return 'vendor-icons';
-          }
+        codeSplitting: {
+          groups: [
+            // 核心 React 库 - 首屏必需
+            {
+              name: 'vendor-react',
+              test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+            },
+            // Supabase 客户端 - 延迟加载
+            {
+              name: 'vendor-supabase',
+              test: /node_modules[\\/]@supabase[\\/]/,
+            },
+            // 图标库 - 单独分块以便tree-shaking
+            {
+              name: 'vendor-icons',
+              test: /node_modules[\\/]lucide-react[\\/]/,
+            },
+          ],
         },
+        // Merged into Vite's oxc minifier options; build-only, so no
+        // NODE_ENV check. Legal comments are already stripped when minifying.
+        minify: { compress: { dropConsole: true, dropDebugger: true } },
       },
     },
     // 调整警告阈值
     chunkSizeWarningLimit: 500,
-    // 使用esbuild压缩，比terser更快
-    minify: 'esbuild',
     // 禁用源码映射以减小体积
     sourcemap: false,
     // 启用CSS代码分割
@@ -158,10 +158,5 @@ export default defineConfig({
     modulePreload: {
       polyfill: true,
     },
-  },
-  // 预构建优化
-  esbuild: {
-    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
-    legalComments: 'none',
   },
 });

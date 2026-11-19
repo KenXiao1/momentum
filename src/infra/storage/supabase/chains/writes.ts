@@ -51,7 +51,9 @@ async function upsertWithFallback(
     return result.map((row) => row.id);
   } catch (error) {
     if (!isMissingSchemaCapabilityError(error)) {
-      throw new Error(`Failed to save chains: ${formatDbError(error)}`);
+      throw new Error(`Failed to save chains: ${formatDbError(error)}`, {
+        cause: error,
+      });
     }
     cacheMissingCapabilitiesFromError(ctx, TABLE, STRICT_CAPABILITIES, error, {
       markAllOnSchemaCacheError: true,

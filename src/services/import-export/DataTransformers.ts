@@ -31,10 +31,7 @@ type ExportedCompletionHistory = Omit<CompletionHistory, 'completedAt'> & {
 };
 
 type RSIPNodeDateFields =
-  | 'createdAt'
-  | 'phaseStartedAt'
-  | 'lastExecutedAt'
-  | 'lastViolatedAt';
+  'createdAt' | 'phaseStartedAt' | 'lastExecutedAt' | 'lastViolatedAt';
 type ExportedRSIPNode = Omit<RSIPNode, RSIPNodeDateFields> & {
   createdAt: string;
   phaseStartedAt?: string;
@@ -43,9 +40,7 @@ type ExportedRSIPNode = Omit<RSIPNode, RSIPNodeDateFields> & {
 };
 
 type RSIPMetaDateFields =
-  | 'lastAddedAt'
-  | 'lastTreeOpenedAt'
-  | 'currentRunStartedAt';
+  'lastAddedAt' | 'lastTreeOpenedAt' | 'currentRunStartedAt';
 type ExportedRSIPMeta = Omit<RSIPMeta, RSIPMetaDateFields> & {
   lastAddedAt?: string;
   lastTreeOpenedAt?: string;
