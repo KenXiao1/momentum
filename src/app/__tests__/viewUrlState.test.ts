@@ -1,6 +1,7 @@
 import type { ActiveSession, Chain } from '../../types';
 import { describe, expect, test } from 'vitest';
 import {
+  parseInitialViewState,
   parseViewStateFromSearch,
   serializeViewStateToSearch,
 } from '../viewUrlState';
@@ -162,5 +163,42 @@ describe('viewUrlState', () => {
       activeSessionChainId: null,
     });
     expect(editorSearch).toBe('?view=editor&parent=parent-1');
+  });
+
+  describe('parseInitialViewState', () => {
+    const activeSession = { chainId: 'unit-1' } as ActiveSession;
+    const chains = [{ id: 'unit-1', type: 'unit' } as Chain];
+
+    test.each([
+      '?view=rsip',
+      '?view=detail&chain=unit-1',
+      '?view=editor&edit=unit-1',
+      '',
+    ])('opens focus for an active session with search %j', (search) => {
+      expect(parseInitialViewState({ search, chains, activeSession })).toEqual({
+        currentView: 'focus',
+        viewingChainId: null,
+        editingChainId: null,
+      });
+    });
+
+    test('follows the URL when no session is active', () => {
+      expect(
+        parseInitialViewState({
+          search: '?view=rsip',
+          chains,
+          activeSession: null,
+        }).currentView,
+      ).toBe('rsip');
+    });
+  });
+
+  test('parseViewStateFromSearch keeps the URL view during an active session', () => {
+    const state = parseViewStateFromSearch({
+      search: '?view=rsip',
+      chains: [],
+      activeSession: { chainId: 'unit-1' } as ActiveSession,
+    });
+    expect(state.currentView).toBe('rsip');
   });
 });

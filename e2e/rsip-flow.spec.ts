@@ -19,16 +19,13 @@ async function addPolicy(page: Page, title: string) {
   ).toBeVisible();
 }
 
+// A reload keeps the view from the URL, so the RSIP tree reopens directly.
 async function reloadTree(page: Page) {
   await page.reload();
-  const openTree = page.getByRole('button', { name: 'RSIP Tree', exact: true });
-  await expect(openTree).toBeVisible();
-  const dismissPet = page.getByRole('button', {
-    name: 'Maybe Later',
-    exact: true,
-  });
-  if (await dismissPet.isVisible()) await dismissPet.click();
-  await openTree.click();
+  await expect(page).toHaveURL(/[?&]view=rsip\b/);
+  await expect(
+    page.getByRole('heading', { name: 'RSIP Policy Tree', exact: true }),
+  ).toBeVisible();
 }
 
 test('cancels a policy deletion, then removes only that policy and preserves the other across refresh', async ({

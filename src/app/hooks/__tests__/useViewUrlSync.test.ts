@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
+import type { ActiveSession } from '../../../types';
 import { createUnitChain } from '../../../test/factories';
 import { useViewUrlSync } from '../useViewUrlSync';
 import {
@@ -80,6 +81,45 @@ describe('useViewUrlSync', () => {
     expect(pushStateSpy).toHaveBeenCalled();
     expect(window.location.search).toContain('view=detail');
     expect(window.location.search).toContain(`chain=${chain.id}`);
+  });
+
+  it('opens focus over the URL view when a session is active after load', () => {
+    const chain = createUnitChain({ id: 'chain-session' });
+    window.history.replaceState(null, '', '/?view=rsip');
+    const activeSession = { chainId: chain.id } as ActiveSession;
+
+    const { rerender } = renderHook(
+      ({ isLoadingData }) =>
+        useViewUrlSync({
+          chains: [chain],
+          activeSession,
+          shouldLoadData: true,
+          isLoadingData,
+        }),
+      { initialProps: { isLoadingData: true } },
+    );
+    rerender({ isLoadingData: false });
+
+    expect(navigationStore.getState().currentView).toBe('focus');
+  });
+
+  it('applies the URL view after load when no session is active', () => {
+    window.history.replaceState(null, '', '/?view=rsip');
+
+    const { rerender } = renderHook(
+      ({ isLoadingData }) =>
+        useViewUrlSync({
+          chains: [],
+          activeSession: null,
+          shouldLoadData: true,
+          isLoadingData,
+        }),
+      { initialProps: { isLoadingData: true } },
+    );
+    expect(navigationStore.getState().currentView).toBe('dashboard');
+    rerender({ isLoadingData: false });
+
+    expect(navigationStore.getState().currentView).toBe('rsip');
   });
 
   it('updates state on popstate navigation', () => {

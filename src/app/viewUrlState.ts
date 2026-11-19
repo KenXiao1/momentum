@@ -140,3 +140,20 @@ export function parseViewStateFromSearch(input: {
 
   return dashboardState();
 }
+
+/**
+ * View to open when the app starts with this URL. A running focus session
+ * takes precedence over any URL view, so a reload never hides its timer.
+ * (Back/forward navigation uses `parseViewStateFromSearch` directly and may
+ * leave focus.)
+ */
+export function parseInitialViewState(input: {
+  search: string;
+  chains: Chain[];
+  activeSession: ActiveSession | null;
+}): UrlSyncedViewState {
+  if (input.activeSession) {
+    return { currentView: 'focus', viewingChainId: null, editingChainId: null };
+  }
+  return parseViewStateFromSearch(input);
+}

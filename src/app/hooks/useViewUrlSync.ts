@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import type { ActiveSession, Chain } from '../../types';
 import {
+  parseInitialViewState,
   parseViewStateFromSearch,
   serializeViewStateToSearch,
 } from '../viewUrlState';
@@ -64,7 +65,7 @@ export function useViewUrlSync({
     if (hasProcessedInitialUrlRef.current) return;
     hasProcessedInitialUrlRef.current = true;
 
-    const next = parseViewStateFromSearch({
+    const next = parseInitialViewState({
       search: window.location.search,
       chains: stateRef.current.chains,
       activeSession: stateRef.current.activeSession,
