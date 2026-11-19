@@ -33,6 +33,9 @@ updates:
       # blocks the whole development group. Remove once TypeScript is >=6.
       - dependency-name: '@vitest/eslint-plugin'
         versions: ['>=1.6.28']
+      # Types must match the Node major in .nvmrc; bump both together.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: cargo
     directory: /src-tauri

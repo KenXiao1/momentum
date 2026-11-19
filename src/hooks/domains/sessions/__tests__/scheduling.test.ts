@@ -407,6 +407,58 @@ describe('createSchedulingHandlers', () => {
     expect(stateRef.getState().scheduledSessions).toEqual([]);
   });
 
+  it('persists a schedule once when the same chain is scheduled twice before the save settles', async () => {
+    const chain = createUnitChain({ id: 'double-schedule' });
+    const stateRef = createStateContainer(createAppState({ chains: [chain] }));
+    const storage = createLocalStorageMock();
+    const handlers = createSchedulingHandlers({
+      ...stateRef,
+      storage,
+      safelySaveChains: vi.fn(async () => undefined),
+      setShowAuxiliaryJudgment: vi.fn(),
+      t,
+    });
+
+    // The second call starts while the first save is still pending, so only
+    // the in-flight guard (not the stored schedule) can reject it.
+    await Promise.all([
+      handlers.handleScheduleChain(chain.id),
+      handlers.handleScheduleChain(chain.id),
+    ]);
+
+    expect(storage.setScheduledSession).toHaveBeenCalledTimes(1);
+    expect(stateRef.getState().scheduledSessions).toHaveLength(1);
+  });
+
+  it('saves and notifies once when a booking is completed twice before the save settles', async () => {
+    const chain = createUnitChain({ id: 'double-complete' });
+    const stateRef = createStateContainer(createAppState({ chains: [chain] }));
+    const storage = createLocalStorageMock();
+    const save = vi.fn(async () => undefined);
+    const handlers = createSchedulingHandlers({
+      ...stateRef,
+      storage,
+      safelySaveChains: save,
+      setShowAuxiliaryJudgment: vi.fn(),
+      t,
+    });
+    await handlers.handleScheduleChain(chain.id);
+
+    // Both completions read the same snapshot, so the final streak is 1 with
+    // or without the guard; the duplicate shows up only as extra side effects.
+    await Promise.all([
+      handlers.handleCompleteBooking(chain.id),
+      handlers.handleCompleteBooking(chain.id),
+    ]);
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(storage.removeScheduledSession).toHaveBeenCalledTimes(1);
+    expect(systemNotificationService.notifyTaskCompleted).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(stateRef.getState().chains[0].auxiliaryStreak).toBe(1);
+  });
+
   it('B03 routes an expired booking to judgment instead of crediting it', async () => {
     const chain = createUnitChain({ id: 'expired' });
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
