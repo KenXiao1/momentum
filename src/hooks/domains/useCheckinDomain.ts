@@ -14,10 +14,11 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CheckinResult, CheckinStats } from '../../domain/checkin';
+import type { MomentumStorage } from '../../storage/MomentumStorage';
 import { useStorage } from '../../storage/useStorage';
 import { hasStorageCapability } from '../../storage/ports';
 import { logger } from '../../utils/logger';
-import { useI18n } from '../../i18n';
+import { useI18n, type Language, type Translator } from '../../i18n';
 import {
   getSafeErrorDetail,
   getSafeErrorDetailFromUnknown,
@@ -25,13 +26,44 @@ import {
 } from '../../utils/errorMessage';
 import { POINTS_CHANGED_EVENT } from '../../utils/pointsEvents';
 
+interface CheckinStatsOutcome {
+  /** `undefined` leaves the current stats unchanged. */
+  stats: CheckinStats | null | undefined;
+  error: string | null;
+}
+
+async function readCheckinStats(
+  storage: Pick<MomentumStorage, 'getUserCheckinStats'>,
+  language: Language,
+  t: Translator,
+): Promise<CheckinStatsOutcome> {
+  try {
+    const result = await storage.getUserCheckinStats();
+    if (result.ok) return { stats: result.value, error: null };
+    return {
+      stats: null,
+      error:
+        getSafeErrorDetail(result.error.message, language) ??
+        t('useCheckinDomain.failedToLoadCheckInDataCheckTheConsoleFor'),
+    };
+  } catch (err) {
+    logger.error('CHECKIN', '加载签到统计失败', undefined, toError(err));
+    return {
+      stats: undefined,
+      error:
+        getSafeErrorDetailFromUnknown(err, language) ??
+        t('useCheckinDomain.failedToLoadCheckInDataCheckTheConsoleFor'),
+    };
+  }
+}
+
 export function useCheckinDomain() {
   const { language, t } = useI18n();
   const storage = useStorage();
   const canUseCheckin = hasStorageCapability(storage, 'checkin');
 
   const [stats, setStats] = useState<CheckinStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(canUseCheckin);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
 
   // Refs to access latest values without re-creating callbacks
@@ -53,7 +85,9 @@ export function useCheckinDomain() {
     languageRef.current = language;
     tRef.current = t;
   }, [language, t]);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() =>
+    canUseCheckin ? null : t('useCheckinDomain.dailyCheckInRequiresLogin'),
+  );
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -65,6 +99,26 @@ export function useCheckinDomain() {
     setIsCollapsed((prev) => !prev);
   }, []);
 
+  const applyStatsLoad = useCallback((outcome: CheckinStatsOutcome) => {
+    if (outcome.stats !== undefined) setStats(outcome.stats);
+    setError(outcome.error);
+    setIsLoading(false);
+  }, []);
+
+  // Each storage (and language) starts a fresh load; storage without check-in
+  // support shows why instead.
+  const [loadedFor, setLoadedFor] = useState<{
+    storage: typeof storage;
+    t: typeof t;
+  }>({ storage, t });
+  if (loadedFor.storage !== storage || loadedFor.t !== t) {
+    setLoadedFor({ storage, t });
+    setError(
+      canUseCheckin ? null : t('useCheckinDomain.dailyCheckInRequiresLogin'),
+    );
+    setIsLoading(canUseCheckin);
+  }
+
   const loadStats = useCallback(async () => {
     if (!canUseCheckin) {
       setError(t('useCheckinDomain.dailyCheckInRequiresLogin'));
@@ -72,31 +126,21 @@ export function useCheckinDomain() {
       return;
     }
 
-    try {
-      setError(null);
-      setIsLoading(true);
-      const result = await storage.getUserCheckinStats();
-      if (!result.ok) {
-        const safeDetail = getSafeErrorDetail(result.error.message, language);
-        setError(
-          safeDetail ??
-            t('useCheckinDomain.failedToLoadCheckInDataCheckTheConsoleFor'),
-        );
-        setStats(null);
-        return;
-      }
-      setStats(result.value);
-    } catch (err) {
-      logger.error('CHECKIN', '加载签到统计失败', undefined, toError(err));
-      const safeDetail = getSafeErrorDetailFromUnknown(err, language);
-      setError(
-        safeDetail ??
-          t('useCheckinDomain.failedToLoadCheckInDataCheckTheConsoleFor'),
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [canUseCheckin, language, storage, t]);
+    setError(null);
+    setIsLoading(true);
+    applyStatsLoad(await readCheckinStats(storage, language, t));
+  }, [applyStatsLoad, canUseCheckin, language, storage, t]);
+
+  useEffect(() => {
+    if (!canUseCheckin) return;
+    let cancelled = false;
+    void readCheckinStats(storage, language, t).then((outcome) => {
+      if (!cancelled) applyStatsLoad(outcome);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [applyStatsLoad, canUseCheckin, language, storage, t]);
 
   const handleCheckin = useCallback(async () => {
     // Use refs to get latest values without causing callback recreation
@@ -179,10 +223,6 @@ export function useCheckinDomain() {
       setIsCheckingIn(false);
     }
   }, [storage]); // Reduced dependencies: only storage is needed
-
-  useEffect(() => {
-    loadStats();
-  }, [loadStats]);
 
   useEffect(() => {
     if (!canUseCheckin) return;

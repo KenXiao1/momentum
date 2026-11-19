@@ -6,18 +6,12 @@ export type { CanvasState };
 const DEBOUNCE_MS = 500;
 
 export function useCanvasState() {
-  const [savedState, setSavedState] = useState<CanvasState | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+  // Read synchronously from localStorage on mount, so state is loaded at once.
+  const [savedState, setSavedState] = useState<CanvasState | null>(
+    () => localPreferences.getCanvasState() ?? null,
+  );
+  const isLoaded = true;
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Load state from localStorage on mount
-  useEffect(() => {
-    const stored = localPreferences.getCanvasState();
-    if (stored) {
-      setSavedState(stored);
-    }
-    setIsLoaded(true);
-  }, []);
 
   // Save state to localStorage with debounce
   const saveCanvasState = useCallback((state: CanvasState) => {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../../i18n';
+import type { MomentumStorage } from '../../storage/MomentumStorage';
 import { hasStorageCapability } from '../../storage/ports';
 import { useStorage } from '../../storage/useStorage';
 import { useStorageMode } from '../../storage/useStorageMode';
@@ -9,6 +10,26 @@ import { toError } from '../../utils/errorMessage';
 import { logger } from '../../utils/logger';
 import { buildChainTree } from '../../utils/chainTree';
 import type { DashboardProps } from './types';
+
+/** Counts recycle-bin chains, or returns null when they cannot be read. */
+async function readRecycleBinCount(
+  storage: Pick<MomentumStorage, 'getDeletedChains'>,
+): Promise<number | null> {
+  try {
+    const deletedChains = await storage.getDeletedChains();
+    return deletedChains.length;
+  } catch (error) {
+    if (isDev) {
+      logger.error(
+        'DASHBOARD',
+        'Failed to load recycle bin statistics',
+        undefined,
+        toError(error),
+      );
+    }
+    return null;
+  }
+}
 
 export function useDashboardController({
   chains,
@@ -62,24 +83,21 @@ export function useDashboardController({
   }, [chainTree]);
 
   const loadRecycleBinStats = useCallback(async () => {
-    try {
-      const deletedChains = await storage.getDeletedChains();
-      setRecycleBinCount(deletedChains.length);
-    } catch (error) {
-      if (isDev) {
-        logger.error(
-          'DASHBOARD',
-          'Failed to load recycle bin statistics',
-          undefined,
-          toError(error),
-        );
-      }
-    }
+    const count = await readRecycleBinCount(storage);
+    if (count !== null) setRecycleBinCount(count);
   }, [storage]);
 
+  // Refresh the count when the number of live chains changes (a chain may
+  // have been deleted into, or restored from, the recycle bin).
   useEffect(() => {
-    loadRecycleBinStats();
-  }, [chains.length, loadRecycleBinStats]);
+    let cancelled = false;
+    void readRecycleBinCount(storage).then((count) => {
+      if (!cancelled && count !== null) setRecycleBinCount(count);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [chains.length, storage]);
 
   const handleRestore = useCallback(
     async (chainIds: string[]) => {

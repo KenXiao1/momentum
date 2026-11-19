@@ -1,6 +1,6 @@
 import { translate } from '../../i18n/translate';
 import { type Translator } from '../../i18n';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type {
   BetPlacementRequest,
   BetPlacementResult,
@@ -50,6 +50,18 @@ export function useBetPlacementForm(params: {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isPlacingBet, setIsPlacingBet] = useState(false);
+
+  // Closing the modal discards the transient form state.
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen);
+    if (!isOpen) {
+      setBetAmount('');
+      setError(null);
+      setValidationError(null);
+      setSuccessMessage(null);
+    }
+  }
 
   const handleBetAmountChange = useCallback((value: string) => {
     setBetAmount(value);
@@ -142,15 +154,6 @@ export function useBetPlacementForm(params: {
     todayBetAmount,
     t,
   ]);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setBetAmount('');
-      setError(null);
-      setValidationError(null);
-      setSuccessMessage(null);
-    }
-  }, [isOpen, setError]);
 
   const quickBetOptions = useMemo(
     () => [10, 25, 50, 100].filter((amount) => amount <= availablePoints),

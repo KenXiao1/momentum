@@ -25,6 +25,7 @@ import type {
   TaskCompletionReward,
   FeedResult,
 } from '../../types/pet';
+import type { MomentumStorage } from '../../storage/MomentumStorage';
 import { useStorage } from '../../storage/useStorage';
 import { logger } from '../../utils/logger';
 import { normalizeUnknownError } from '../../utils/errors/normalizeError';
@@ -61,6 +62,34 @@ export interface UsePetDomainReturn {
 
 const DECAY_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
+/**
+ * Loads the saved pet with decay applied, reports it, then persists the
+ * decayed state. Failures are logged and leave the reported pet unchanged.
+ */
+async function loadDecayedPet(
+  storage: Pick<MomentumStorage, 'getPetState' | 'savePetState'>,
+  onLoaded: (pet: PetState | null) => void,
+): Promise<void> {
+  try {
+    const savedPet = await storage.getPetState();
+    if (!savedPet) {
+      onLoaded(null);
+      return;
+    }
+    const decayedState = calculateDecay(savedPet, new Date());
+    const updatedPet = { ...savedPet, ...decayedState };
+    onLoaded(updatedPet);
+    await storage.savePetState(updatedPet);
+  } catch (error) {
+    logger.error(
+      'PET',
+      'Failed to load pet state',
+      undefined,
+      normalizeUnknownError(error),
+    );
+  }
+}
+
 export function usePetDomain(): UsePetDomainReturn {
   const storage = useStorage();
   const [pet, setPet] = useState<PetState | null>(null);
@@ -68,31 +97,35 @@ export function usePetDomain(): UsePetDomainReturn {
   const [mood, setMood] = useState<PetMood>('neutral');
   const decayIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const applyLoadedPet = useCallback((loadedPet: PetState | null) => {
+    setPet(loadedPet);
+    setMood(loadedPet ? calculateMood(loadedPet) : 'neutral');
+  }, []);
+
+  // A new storage starts a fresh load.
+  const [loadedStorage, setLoadedStorage] = useState(storage);
+  if (loadedStorage !== storage) {
+    setLoadedStorage(storage);
+    setIsLoading(true);
+  }
+
   const loadPet = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const savedPet = await storage.getPetState();
-      if (savedPet) {
-        const decayedState = calculateDecay(savedPet, new Date());
-        const updatedPet = { ...savedPet, ...decayedState };
-        setPet(updatedPet);
-        setMood(calculateMood(updatedPet));
-        await storage.savePetState(updatedPet);
-      } else {
-        setPet(null);
-        setMood('neutral');
-      }
-    } catch (error) {
-      logger.error(
-        'PET',
-        'Failed to load pet state',
-        undefined,
-        normalizeUnknownError(error),
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [storage]);
+    setIsLoading(true);
+    await loadDecayedPet(storage, applyLoadedPet);
+    setIsLoading(false);
+  }, [applyLoadedPet, storage]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadDecayedPet(storage, (loadedPet) => {
+      if (!cancelled) applyLoadedPet(loadedPet);
+    }).then(() => {
+      if (!cancelled) setIsLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [applyLoadedPet, storage]);
 
   const createPet = useCallback(
     async (name: string): Promise<PetState> => {
@@ -288,10 +321,6 @@ export function usePetDomain(): UsePetDomainReturn {
       }
     };
   }, [pet, storage]);
-
-  useEffect(() => {
-    loadPet();
-  }, [loadPet]);
 
   return {
     pet,

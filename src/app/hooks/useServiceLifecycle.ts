@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { isDev } from '../../utils/env';
 import { fireAndForget } from '../../utils/fireAndForget';
 import { forwardTimerManager } from '../../utils/forwardTimer';
@@ -10,16 +10,38 @@ interface ServiceLifecycleResult {
   isInitialized: boolean;
 }
 
+// Number of mounted owners whose global services are running. Kept outside
+// React because the services themselves are module singletons.
+let runningServiceOwners = 0;
+const serviceStatusListeners = new Set<() => void>();
+
+function setServicesRunning(running: boolean): void {
+  runningServiceOwners += running ? 1 : -1;
+  serviceStatusListeners.forEach((listener) => listener());
+}
+
+function subscribeToServiceStatus(listener: () => void): () => void {
+  serviceStatusListeners.add(listener);
+  return () => {
+    serviceStatusListeners.delete(listener);
+  };
+}
+
+const getServicesRunning = () => runningServiceOwners > 0;
+const getServerServicesRunning = () => false;
+
 /**
  * Manages global service lifecycle (start/stop) for the application.
  * Handles the forward timer and dev-only monitoring.
  */
 export function useServiceLifecycle(): ServiceLifecycleResult {
-  const [isInitialized, setIsInitialized] = useState(false);
+  const isInitialized = useSyncExternalStore(
+    subscribeToServiceStatus,
+    getServicesRunning,
+    getServerServicesRunning,
+  );
 
   useEffect(() => {
-    setIsInitialized(true);
-
     forwardTimerManager.start();
 
     let devCleanup: (() => void) | undefined;
@@ -42,7 +64,10 @@ export function useServiceLifecycle(): ServiceLifecycleResult {
       setTimeout(initializeNonCritical, 100);
     }
 
+    setServicesRunning(true);
+
     return () => {
+      setServicesRunning(false);
       forwardTimerManager.stop();
       devCleanup?.();
     };

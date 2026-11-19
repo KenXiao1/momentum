@@ -1,5 +1,5 @@
 import { type Translator } from '../../../i18n';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { RSIPNode, RSIPTreeNode } from '../../../types';
 import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
 import { logger } from '../../../utils/logger';
@@ -40,9 +40,7 @@ export function useRSIPReparent({
   const [pinnedId, setPinnedId] = useState<string | null>(null);
   const [reparentingId, setReparentingId] = useState<string | null>(null);
   const [relationError, setRelationError] = useState<string | null>(null);
-  const [hoveredChainIds, setHoveredChainIds] = useState<Set<string>>(
-    new Set(),
-  );
+
   const saveAttemptIdRef = useRef(0);
   const saveInFlightRef = useRef(false);
 
@@ -216,17 +214,14 @@ export function useRSIPReparent({
     setRelationError(null);
   }, []);
 
-  useEffect(() => {
+  const hoveredChainIds = useMemo(() => {
     const activeId = reparentingId ?? pinnedId ?? hoveredId;
-    if (!activeId) {
-      setHoveredChainIds(new Set());
-      return;
-    }
     const ids = new Set<string>();
+    if (!activeId) return ids;
     ids.add(activeId);
     getAncestors(activeId).forEach((id) => ids.add(id));
     getDescendantsFromTree(activeId).forEach((id) => ids.add(id));
-    setHoveredChainIds(ids);
+    return ids;
   }, [
     hoveredId,
     pinnedId,

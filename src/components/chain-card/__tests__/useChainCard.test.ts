@@ -24,11 +24,14 @@ const getChainTypeConfigMock = vi.hoisted(() =>
   })),
 );
 
+// The storage context value is stable across renders, as in production.
+const storageMock = vi.hoisted(() => ({
+  kind: 'local',
+  getLastCompletionTime: getLastCompletionTimeMock,
+}));
+
 vi.mock('../../../storage/useStorage', () => ({
-  useStorage: () => ({
-    kind: 'local',
-    getLastCompletionTime: getLastCompletionTimeMock,
-  }),
+  useStorage: () => storageMock,
 }));
 
 vi.mock('../../../utils/time', () => ({

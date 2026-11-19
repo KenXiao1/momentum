@@ -27,21 +27,31 @@ export function useRecycleBinModal({
 
   const [deletedChains, setDeletedChains] = useState<DeletedChain[]>([]);
   const [selectedChains, setSelectedChains] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(isOpen);
   const [showConfirmDialog, setShowConfirmDialog] =
     useState<ConfirmDialogState | null>(null);
   const loadRequestIdRef = useRef(0);
   const operationInFlightRef = useRef(false);
 
-  const loadDeletedChains = useCallback(async () => {
-    const requestId = ++loadRequestIdRef.current;
-    setIsLoading(true);
-    try {
-      const chains = await storage.getDeletedChains();
+  // Opening the modal starts loading; closing it stops showing a load.
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen);
+    setIsLoading(isOpen);
+  }
+
+  // Applies a load's outcome unless a newer load or a close superseded it.
+  const applyLoadedChains = useCallback(
+    (requestId: number, chains: DeletedChain[]) => {
       if (requestId !== loadRequestIdRef.current) return;
       setDeletedChains(chains);
       setSelectedChains(new Set());
-    } catch (error) {
+      setIsLoading(false);
+    },
+    [],
+  );
+  const applyLoadFailure = useCallback(
+    (requestId: number, error: unknown) => {
       if (requestId !== loadRequestIdRef.current) return;
       logger.error(
         'RECYCLE_BIN',
@@ -54,24 +64,35 @@ export function useRecycleBinModal({
           'recycleBinModal.useRecycleBinModal.failedToLoadRecycleBinPleaseTryAgain',
         ),
       );
-    } finally {
-      if (requestId === loadRequestIdRef.current) {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
+    },
+    [t],
+  );
+
+  const loadDeletedChains = useCallback(async () => {
+    const requestId = ++loadRequestIdRef.current;
+    setIsLoading(true);
+    try {
+      applyLoadedChains(requestId, await storage.getDeletedChains());
+    } catch (error) {
+      applyLoadFailure(requestId, error);
     }
-  }, [storage, t]);
+  }, [applyLoadFailure, applyLoadedChains, storage]);
 
   useEffect(() => {
     if (!isOpen) {
       loadRequestIdRef.current += 1;
-      setIsLoading(false);
       return;
     }
-    void loadDeletedChains();
+    const requestId = ++loadRequestIdRef.current;
+    storage.getDeletedChains().then(
+      (chains) => applyLoadedChains(requestId, chains),
+      (error: unknown) => applyLoadFailure(requestId, error),
+    );
     return () => {
       loadRequestIdRef.current += 1;
     };
-  }, [isOpen, loadDeletedChains]);
+  }, [applyLoadFailure, applyLoadedChains, isOpen, storage]);
 
   const handleSelectChain = useCallback(
     (chainId: string, selected: boolean) => {

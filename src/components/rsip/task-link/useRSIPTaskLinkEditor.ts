@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Chain, RSIPNode, RSIPTaskLink } from '../../../types';
 import type { TaskLinkMode, Tr } from './taskLinkUi';
 
@@ -12,7 +12,7 @@ export function useRSIPTaskLinkEditor(params: {
 }) {
   const [mode, setMode] = useState<TaskLinkMode>('task_to_rsip');
   const [selectedNodeId, setSelectedNodeId] = useState('');
-  const [selectedChainId, setSelectedChainId] = useState(
+  const [chosenChainId, setSelectedChainId] = useState(
     params.fixedChainId ?? '',
   );
   const [triggerEvent, setTriggerEvent] =
@@ -35,17 +35,13 @@ export function useRSIPTaskLinkEditor(params: {
         : params.links,
     [params.fixedChainId, params.links],
   );
-  useEffect(() => {
-    if (params.fixedChainId) {
-      setSelectedChainId(params.fixedChainId);
-      return;
-    }
-    setSelectedChainId((current) =>
-      current && availableChains.some((chain) => chain.id === current)
-        ? current
-        : '',
-    );
-  }, [availableChains, params.fixedChainId]);
+  // A fixed chain always wins; otherwise a choice that is no longer
+  // available reads as no selection.
+  const selectedChainId =
+    params.fixedChainId ||
+    (availableChains.some((chain) => chain.id === chosenChainId)
+      ? chosenChainId
+      : '');
 
   const handleModeChange = (nextMode: TaskLinkMode) => {
     setMode(nextMode);

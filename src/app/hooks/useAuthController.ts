@@ -28,20 +28,28 @@ export function useAuthController({
   setState,
   resetUIState,
 }: UseAuthControllerParams): AuthControllerResult {
-  const [authUserId, setAuthUserId] = useState<string | null>(null);
+  // The user id is reported by the storage it came from; it is only current
+  // while that storage is active and supports auth.
+  const [authSnapshot, setAuthSnapshot] = useState<{
+    storage: MomentumStorage;
+    userId: string | null;
+  } | null>(null);
   const prevAuthUserIdRef = useRef<string | null>(null);
   const canUseAuth = hasStorageCapability(storage, 'auth');
+  const authUserId =
+    canUseAuth && authSnapshot?.storage === storage
+      ? authSnapshot.userId
+      : null;
 
   useEffect(() => {
     if (!canUseAuth) {
-      setAuthUserId(null);
       prevAuthUserIdRef.current = null;
       return;
     }
 
     const unsubscribeResult = storage.onAuthStateChange((event, session) => {
       const nextUserId = session.user?.id ?? null;
-      setAuthUserId(nextUserId);
+      setAuthSnapshot({ storage, userId: nextUserId });
 
       const prevUserId = prevAuthUserIdRef.current;
       if (prevUserId !== nextUserId) {

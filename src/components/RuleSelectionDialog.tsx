@@ -38,8 +38,18 @@ interface RuleSelectionDialogProps {
   onCancel: () => void;
 }
 
+type RuleSelectionDialogContentProps = Omit<RuleSelectionDialogProps, 'isOpen'>;
+
+/**
+ * Mounted only while the dialog is open, so closing it discards the search
+ * text, errors and duration choices and reopening starts fresh.
+ */
 export const RuleSelectionDialog: React.FC<RuleSelectionDialogProps> = ({
   isOpen,
+  ...props
+}) => (isOpen ? <RuleSelectionDialogContent {...props} /> : null);
+
+const RuleSelectionDialogContent: React.FC<RuleSelectionDialogContentProps> = ({
   actionType,
   sessionContext,
   onRuleSelected,
@@ -73,19 +83,13 @@ export const RuleSelectionDialog: React.FC<RuleSelectionDialogProps> = ({
   const { detectDuplicates, results: searchResults } = search;
 
   useEffect(() => {
-    if (isOpen) {
-      startMonitoring();
-      void loadRules();
-    } else {
-      stopMonitoring();
-      setSearchQuery('');
-      setRuleError(null);
-    }
+    startMonitoring();
+    void loadRules();
 
     return () => {
       stopMonitoring();
     };
-  }, [isOpen, loadRules, setRuleError, startMonitoring, stopMonitoring]);
+  }, [loadRules, startMonitoring, stopMonitoring]);
 
   const handleRuleSelect = useCallback(
     async (rule: ExceptionRule) => {
@@ -176,8 +180,6 @@ export const RuleSelectionDialog: React.FC<RuleSelectionDialogProps> = ({
       t,
     ],
   );
-
-  if (!isOpen) return null;
 
   return (
     <RuleSelectionDialogView

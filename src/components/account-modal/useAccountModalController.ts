@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AuthUser } from '../../domain/auth';
 import type { GamblingSettings } from '../../domain/userSettings';
 import { useDiagnosticsExport } from './useDiagnosticsExport';
-import { useI18n } from '../../i18n';
+import { useI18n, type Language, type Translator } from '../../i18n';
+import type { MomentumStorage } from '../../storage/MomentumStorage';
 import { hasStorageCapability } from '../../storage/ports';
 import { useStorage } from '../../storage/useStorage';
 import { useStorageMode } from '../../storage/useStorageMode';
@@ -19,6 +20,70 @@ const DEFAULT_GAMBLING_SETTINGS: GamblingSettings = {
   max_single_bet: null,
 };
 
+interface UserLoadOutcome {
+  /** `undefined` leaves the current user unchanged. */
+  user: AuthUser | null | undefined;
+  error: string | null;
+}
+
+async function readCurrentUser(
+  storage: Pick<MomentumStorage, 'getCurrentUser'>,
+  language: Language,
+  t: Translator,
+): Promise<UserLoadOutcome> {
+  try {
+    const result = await storage.getCurrentUser();
+    if (result.ok) return { user: result.value, error: null };
+    return {
+      user: null,
+      error:
+        getSafeErrorDetail(result.error.message || '', language) ??
+        t(
+          'accountModal.useAccountModalController.failedToLoadUserInfoCheckTheConsoleFor',
+        ),
+    };
+  } catch (error) {
+    logger.error(
+      'ACCOUNT',
+      'Failed to get user info',
+      undefined,
+      normalizeUnknownError(error),
+    );
+    return {
+      user: undefined,
+      error: t('accountModal.useAccountModalController.failedToLoadUserInfo'),
+    };
+  }
+}
+
+async function readGamblingSettings(
+  storage: Pick<MomentumStorage, 'getGamblingSettings'>,
+  language: Language,
+  t: Translator,
+): Promise<{ settings?: GamblingSettings; error: string | null }> {
+  try {
+    const result = await storage.getGamblingSettings();
+    if (result.ok) return { settings: result.value, error: null };
+    return {
+      error:
+        getSafeErrorDetail(result.error.message || '', language) ??
+        t(
+          'accountModal.useAccountModalController.failedToLoadSettingsCheckTheConsoleForDetails',
+        ),
+    };
+  } catch (error) {
+    logger.error(
+      'ACCOUNT',
+      'Failed to load gambling settings',
+      undefined,
+      normalizeUnknownError(error),
+    );
+    return {
+      error: t('accountModal.useAccountModalController.failedToLoadSettings'),
+    };
+  }
+}
+
 export function useAccountModalController(params: {
   isOpen: boolean;
   onClose: () => void;
@@ -30,8 +95,11 @@ export function useAccountModalController(params: {
   const { language, t } = i18n;
   const canUseAuth = hasStorageCapability(storage, 'auth');
   const canUseBetting = hasStorageCapability(storage, 'betting');
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadedUser, setUser] = useState<AuthUser | null>(null);
+  const [userLoading, setLoading] = useState(true);
+  // Without auth there is no user to load.
+  const user = canUseAuth ? loadedUser : null;
+  const loading = canUseAuth && userLoading;
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gamblingSettings, setGamblingSettings] = useState(
@@ -45,75 +113,56 @@ export function useAccountModalController(params: {
     return typeof value === 'string' ? value : null;
   }, [user]);
 
+  // Opening the modal (or switching storage while open) starts a fresh load.
+  const loadRequest = params.isOpen && canUseAuth ? storage : null;
+  const [previousLoadRequest, setPreviousLoadRequest] = useState(loadRequest);
+  if (loadRequest !== previousLoadRequest) {
+    setPreviousLoadRequest(loadRequest);
+    if (loadRequest) {
+      setLoading(true);
+      setError(null);
+      setGamblingError(null);
+    }
+  }
+
+  const applyUserLoad = useCallback((outcome: UserLoadOutcome) => {
+    if (outcome.user !== undefined) setUser(outcome.user);
+    setError(outcome.error);
+    setLoading(false);
+  }, []);
+
   const loadUser = useCallback(async () => {
     if (!canUseAuth) return;
     setLoading(true);
     setError(null);
-    try {
-      const result = await storage.getCurrentUser();
-      if (result.ok) {
-        setUser(result.value);
-      } else {
-        setUser(null);
-        setError(
-          getSafeErrorDetail(result.error.message || '', language) ??
-            t(
-              'accountModal.useAccountModalController.failedToLoadUserInfoCheckTheConsoleFor',
-            ),
-        );
-      }
-    } catch (error) {
-      logger.error(
-        'ACCOUNT',
-        'Failed to get user info',
-        undefined,
-        normalizeUnknownError(error),
-      );
-      setError(
-        t('accountModal.useAccountModalController.failedToLoadUserInfo'),
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [canUseAuth, language, storage, t]);
-
-  const loadGamblingSettings = useCallback(async () => {
-    if (!canUseBetting) return;
-    try {
-      setGamblingError(null);
-      const result = await storage.getGamblingSettings();
-      if (result.ok) setGamblingSettings(result.value);
-      else {
-        setGamblingError(
-          getSafeErrorDetail(result.error.message || '', language) ??
-            t(
-              'accountModal.useAccountModalController.failedToLoadSettingsCheckTheConsoleForDetails',
-            ),
-        );
-      }
-    } catch (error) {
-      logger.error(
-        'ACCOUNT',
-        'Failed to load gambling settings',
-        undefined,
-        normalizeUnknownError(error),
-      );
-      setGamblingError(
-        t('accountModal.useAccountModalController.failedToLoadSettings'),
-      );
-    }
-  }, [canUseBetting, language, storage, t]);
+    applyUserLoad(await readCurrentUser(storage, language, t));
+  }, [applyUserLoad, canUseAuth, language, storage, t]);
 
   useEffect(() => {
-    if (!params.isOpen) return;
-    if (!canUseAuth) {
-      setUser(null);
-      setLoading(false);
-      return;
+    if (!params.isOpen || !canUseAuth) return;
+    let cancelled = false;
+    void readCurrentUser(storage, language, t).then((outcome) => {
+      if (!cancelled) applyUserLoad(outcome);
+    });
+    if (canUseBetting) {
+      void readGamblingSettings(storage, language, t).then((outcome) => {
+        if (cancelled) return;
+        if (outcome.settings) setGamblingSettings(outcome.settings);
+        setGamblingError(outcome.error);
+      });
     }
-    void loadUser();
-    void loadGamblingSettings();
-  }, [canUseAuth, loadGamblingSettings, loadUser, params.isOpen]);
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    applyUserLoad,
+    canUseAuth,
+    canUseBetting,
+    language,
+    params.isOpen,
+    storage,
+    t,
+  ]);
 
   const toggleGambling = async () => {
     if (!canUseBetting) return;

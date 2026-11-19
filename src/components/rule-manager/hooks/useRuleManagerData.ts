@@ -15,23 +15,44 @@ export function useRuleManagerData(args: {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadRules = useCallback(async () => {
-    try {
-      setLoading(true);
-      const allRules = await exceptionRuleManager.getAllRules();
-      setRules(allRules);
-      setError(null);
-    } catch (err) {
+  const applyRules = useCallback((allRules: ExceptionRule[]) => {
+    setRules(allRules);
+    setError(null);
+    setLoading(false);
+  }, []);
+  const applyLoadFailure = useCallback(
+    (err: unknown) => {
       const safe = getSafeErrorDetailFromUnknown(err, language);
       setError(safe ?? t('ruleManager.useRuleManagerData.failedToLoadRules'));
-    } finally {
       setLoading(false);
-    }
-  }, [language, t]);
+    },
+    [language, t],
+  );
 
+  const loadRules = useCallback(async () => {
+    setLoading(true);
+    try {
+      applyRules(await exceptionRuleManager.getAllRules());
+    } catch (err) {
+      applyLoadFailure(err);
+    }
+  }, [applyLoadFailure, applyRules]);
+
+  // Initial load; `loading` starts true.
   useEffect(() => {
-    void loadRules();
-  }, [loadRules]);
+    let cancelled = false;
+    exceptionRuleManager.getAllRules().then(
+      (allRules) => {
+        if (!cancelled) applyRules(allRules);
+      },
+      (err: unknown) => {
+        if (!cancelled) applyLoadFailure(err);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [applyLoadFailure, applyRules]);
 
   return {
     rules,

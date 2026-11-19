@@ -37,6 +37,7 @@ export function AppShellView({
     return (
       <Suspense fallback={null}>
         <AuxiliaryJudgment
+          key={auxiliaryJudgmentChain.id}
           chain={auxiliaryJudgmentChain}
           onJudgmentFailure={() =>
             session.handleAuxiliaryJudgmentFailure(auxiliaryJudgmentChain.id)

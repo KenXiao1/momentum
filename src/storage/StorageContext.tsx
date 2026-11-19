@@ -22,7 +22,7 @@ interface StorageProviderProps {
 
 export function StorageProvider({ storage, children }: StorageProviderProps) {
   const { t } = useI18n();
-  const [mode, setModeState] = useState<StorageMode>(() => {
+  const [selectedMode, setModeState] = useState<StorageMode>(() => {
     if (storage) return storage.kind;
 
     if (isTauri) {
@@ -35,26 +35,29 @@ export function StorageProvider({ storage, children }: StorageProviderProps) {
 
     return isSupabaseConfigured ? 'supabase' : 'local';
   });
-  const [isChoicePending, setIsChoicePending] = useState<boolean>(() => {
+  const [isChoiceStatePending, setIsChoicePending] = useState<boolean>(() => {
     if (storage || !isTauri || !isSupabaseConfigured) return false;
     return (
       localPreferences.getStorageMode() === null &&
       !localPreferences.getStorageModeHintDismissed()
     );
   });
-  const [dynamicStorage, setDynamicStorage] = useState<MomentumStorage | null>(
-    () => {
-      if (storage) return storage;
-      if (mode === 'supabase' && isSupabaseConfigured) return null;
-      return localStorageAdapter;
-    },
-  );
+  // Supabase storage is imported on demand; null until it has loaded.
+  const [loadedSupabaseStorage, setLoadedSupabaseStorage] =
+    useState<MomentumStorage | null>(null);
+
+  // An injected storage fixes the mode and skips the first-launch choice.
+  const mode = storage ? storage.kind : selectedMode;
+  const isChoicePending = storage ? false : isChoiceStatePending;
+  const needsSupabase = mode === 'supabase' && isSupabaseConfigured;
+  const dynamicStorage = needsSupabase
+    ? loadedSupabaseStorage
+    : localStorageAdapter;
 
   const dismissFirstLaunchHint = useCallback(() => {
     if (storage) return;
 
     setModeState('local');
-    setDynamicStorage(localStorageAdapter);
     setIsChoicePending(false);
     localPreferences.setStorageMode('local');
     localPreferences.setStorageModeHintDismissed(true);
@@ -84,30 +87,9 @@ export function StorageProvider({ storage, children }: StorageProviderProps) {
   );
 
   useEffect(() => {
-    if (!storage) return;
-
-    setModeState(storage.kind);
-    setDynamicStorage(storage);
-    setIsChoicePending(false);
-  }, [storage]);
-
-  useEffect(() => {
-    if (storage) return;
-
-    if (mode === 'local') {
-      setDynamicStorage(localStorageAdapter);
-      return;
-    }
-
-    if (!isSupabaseConfigured) {
-      setDynamicStorage(localStorageAdapter);
-      return;
-    }
-
-    if (dynamicStorage?.kind === 'supabase') return;
+    if (storage || !needsSupabase || loadedSupabaseStorage) return;
 
     let cancelled = false;
-    setDynamicStorage(null);
 
     const loadSupabase = async () => {
       try {
@@ -115,7 +97,7 @@ export function StorageProvider({ storage, children }: StorageProviderProps) {
         if (cancelled) return;
 
         logger.debug('STORAGE', 'Supabase storage loaded dynamically');
-        setDynamicStorage(supabaseStorage);
+        setLoadedSupabaseStorage(supabaseStorage);
       } catch (error) {
         const normalizedError = normalizeUnknownError(error);
         logger.error(
@@ -128,7 +110,6 @@ export function StorageProvider({ storage, children }: StorageProviderProps) {
         if (cancelled) return;
 
         setModeState('local');
-        setDynamicStorage(localStorageAdapter);
         localPreferences.setStorageMode('local');
         toast.error(
           t(
@@ -143,7 +124,7 @@ export function StorageProvider({ storage, children }: StorageProviderProps) {
     return () => {
       cancelled = true;
     };
-  }, [storage, mode, dynamicStorage?.kind, t]);
+  }, [storage, needsSupabase, loadedSupabaseStorage, t]);
 
   const resolvedStorage = useMemo<MomentumStorage | null>(() => {
     if (storage) return storage;

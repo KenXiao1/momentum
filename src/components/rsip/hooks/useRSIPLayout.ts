@@ -32,10 +32,6 @@ export function useRSIPLayout(
   const [layoutNodeHeight, setLayoutNodeHeight] = useState<number>(
     MIN_RSIP_NODE_SPACING_Y,
   );
-  const [nodePositions, setNodePositions] = useState<
-    Record<string, NodePosition>
-  >({});
-  const [containerHeight, setContainerHeight] = useState<number>(600);
 
   const setNodeRef = useCallback(
     (nodeId: string, el: HTMLDivElement | null) => {
@@ -71,11 +67,9 @@ export function useRSIPLayout(
     return buildRSIPTree(finalNodes);
   }, [tree, filterType, nodes, nodesById]);
 
-  useEffect(() => {
+  const { nodePositions, containerHeight } = useMemo(() => {
     if (filteredTree.length === 0) {
-      setNodePositions({});
-      setContainerHeight(200);
-      return;
+      return { nodePositions: {}, containerHeight: 200 };
     }
 
     const positions: Record<string, NodePosition> = {};
@@ -114,8 +108,10 @@ export function useRSIPLayout(
       currentY += 40;
     });
 
-    setNodePositions(positions);
-    setContainerHeight(Math.max(600, currentY + 100));
+    return {
+      nodePositions: positions,
+      containerHeight: Math.max(600, currentY + 100),
+    };
   }, [filteredTree, layoutNodeHeight]);
 
   useEffect(() => {

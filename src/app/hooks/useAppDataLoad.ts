@@ -12,6 +12,12 @@ import { cleanupExpiredDeletedChains } from './appDataLoadHelpers';
 import { navigationStore } from '../../stores/navigationStore';
 import { loadAppDataSnapshot } from './appDataSnapshot';
 
+interface SettledLoad {
+  storage: MomentumStorage;
+  attempt: number;
+  error: Error | null;
+}
+
 interface UseAppDataLoadParams {
   storage: MomentumStorage;
   isInitialized: boolean;
@@ -48,25 +54,31 @@ export function useAppDataLoad({
   isInitialized,
   setState,
 }: UseAppDataLoadParams) {
-  const [isLoadingData, setIsLoadingData] = useState(true);
-  const [loadError, setLoadError] = useState<Error | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
+  // Outcome of the most recent load that ran to completion. Loading and error
+  // state are derived from whether it belongs to the current request, so a new
+  // request (storage change or retry) reads as loading without resetting state
+  // from the effect.
+  const [settledLoad, setSettledLoad] = useState<SettledLoad | null>(null);
   const canUseAuth = hasStorageCapability(storage, 'auth');
   const retryDataLoad = useCallback(
     () => setLoadAttempt((attempt) => attempt + 1),
     [],
   );
+  const currentLoadSettled =
+    settledLoad?.storage === storage && settledLoad.attempt === loadAttempt;
+  const isLoadingData = isInitialized && !currentLoadSettled;
+  const loadError = currentLoadSettled ? settledLoad.error : null;
 
   useEffect(() => {
     let cancelled = false;
 
     const loadData = async () => {
+      let loadFailure: Error | null = null;
       logger.debug('APP_SHELL', 'Starting data load', {
         storage: storage.kind,
         attempt: loadAttempt,
       });
-      setIsLoadingData(true);
-      setLoadError(null);
 
       try {
         if (canUseAuth) {
@@ -112,16 +124,16 @@ export function useAppDataLoad({
         if (cancelled) return;
         const normalized = toError(error);
         logger.error('APP_SHELL', 'Failed to load data', undefined, normalized);
-        setLoadError(normalized);
+        loadFailure = normalized;
       } finally {
-        if (!cancelled) setIsLoadingData(false);
+        if (!cancelled) {
+          setSettledLoad({ storage, attempt: loadAttempt, error: loadFailure });
+        }
       }
     };
 
     if (isInitialized) {
       fireAndForget(loadData(), { label: 'APP_SHELL loadData' });
-    } else {
-      setIsLoadingData(false);
     }
 
     return () => {

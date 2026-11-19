@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type React from 'react';
 import {
   AlertTriangle,
@@ -31,14 +31,11 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
 }) => {
   const { language, t } = useI18n();
   const [reason, setReason] = useState('');
-  const [selectedExistingRule, setSelectedExistingRule] = useState('');
+  // Callers key this component by chain id, so a new chain starts fresh.
+  const [selectedExistingRule, setSelectedExistingRule] = useState(
+    () => chain.auxiliaryExceptions?.[0] ?? '',
+  );
   const [useExistingRule, setUseExistingRule] = useState(false);
-
-  useEffect(() => {
-    if (chain.auxiliaryExceptions?.length) {
-      setSelectedExistingRule(chain.auxiliaryExceptions[0]);
-    }
-  }, [chain.auxiliaryExceptions]);
 
   const handleRuleTypeChange = (useExisting: boolean) => {
     setUseExistingRule(useExisting);

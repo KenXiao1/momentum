@@ -18,33 +18,33 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
   const { t } = useI18n();
   const storage = useStorage();
   const { setMode } = useStorageMode();
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Auth result reported by a storage; it is only current for that storage.
+  // Until the active storage reports, the wrapper is loading.
+  const [authState, setAuthState] = useState<{
+    storage: typeof storage;
+    user: AuthUser | null;
+  } | null>(null);
   const [view, setView] = useState<'intro' | 'auth'>('intro');
   const [initialIsSignUp, setInitialIsSignUp] = useState(false);
   const canUseAuth = hasStorageCapability(storage, 'auth');
+  const loading = authState?.storage !== storage;
+  const user = loading ? null : authState.user;
 
   const handleSwitchToLocalMode = useCallback(() => {
     setMode('local');
   }, [setMode]);
 
   useEffect(() => {
-    if (!canUseAuth) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
+    if (!canUseAuth) return;
 
     let isMounted = true;
-    setLoading(true);
 
     const unsubscribeResult = storage.onAuthStateChange((event, session) => {
       logger.debug('AUTH', 'Auth state changed', {
         event,
         hasUser: Boolean(session.user),
       });
-      setUser(session.user);
-      setLoading(false);
+      setAuthState({ storage, user: session.user });
     });
 
     const init = async () => {
@@ -56,13 +56,11 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
           code: authResult.error.code,
           message: authResult.error.message,
         });
-        setUser(null);
-        setLoading(false);
+        setAuthState({ storage, user: null });
         return;
       }
 
-      setUser(authResult.value.user);
-      setLoading(false);
+      setAuthState({ storage, user: authResult.value.user });
     };
 
     init();
