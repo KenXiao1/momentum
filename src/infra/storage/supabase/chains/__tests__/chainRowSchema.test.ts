@@ -48,6 +48,15 @@ describe('chainRowSchema', () => {
     expect(chainRowSchema.safeParse(row).success).toBe(true);
   });
 
+  it('accepts a row from a database without the newer JSON columns', () => {
+    const {
+      exceptions: _exceptions,
+      auxiliary_exceptions: _auxiliaryExceptions,
+      ...legacyRow
+    } = validRow;
+    expect(chainRowSchema.safeParse(legacyRow).success).toBe(true);
+  });
+
   it('rejects a row missing a required field', () => {
     const { id: _id, ...withoutId } = validRow;
     expect(chainRowSchema.safeParse(withoutId).success).toBe(false);

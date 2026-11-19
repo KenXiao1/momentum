@@ -61,6 +61,8 @@ describe('quality lane tooling', () => {
     const staleReportPath = path.join(tempDir, 'stale.json');
 
     await fs.writeFile(staleReportPath, JSON.stringify({ ok: true }), 'utf8');
+    const anHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    await fs.utimes(staleReportPath, anHourAgo, anHourAgo);
 
     vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
     vi.spyOn(process.stderr, 'write').mockImplementation(() => true);

@@ -51,7 +51,17 @@ export function usePetWidgetController(params: {
 
   useEffect(() => {
     if (!isLoading && !hasPet && !dismissedCreationDialog) {
-      const timer = window.setTimeout(() => setShowCreationDialog(true), 500);
+      // Never open the adoption prompt over a dialog the user is working in;
+      // wait until no modal is open.
+      let timer: number;
+      const showWhenNoModalIsOpen = () => {
+        if (document.querySelector('[aria-modal="true"]')) {
+          timer = window.setTimeout(showWhenNoModalIsOpen, 500);
+          return;
+        }
+        setShowCreationDialog(true);
+      };
+      timer = window.setTimeout(showWhenNoModalIsOpen, 500);
       return () => window.clearTimeout(timer);
     }
   }, [dismissedCreationDialog, hasPet, isLoading]);

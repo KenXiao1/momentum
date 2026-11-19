@@ -74,13 +74,17 @@ function defaultExecuteCheck(check, { repoRoot }) {
   };
 }
 
+// File mtimes come from a coarser clock than Date.now() on Linux, so a report
+// written during the check can carry an mtime a few ms before the check began.
+const MTIME_CLOCK_SKEW_MS = 1000;
+
 async function readFreshness(reportPath, startedAtMs) {
   try {
     const stats = await fs.stat(reportPath);
     return {
       path: reportPath,
       exists: true,
-      isFresh: stats.mtimeMs >= startedAtMs,
+      isFresh: stats.mtimeMs >= startedAtMs - MTIME_CLOCK_SKEW_MS,
       modifiedAt: new Date(stats.mtimeMs).toISOString(),
     };
   } catch {

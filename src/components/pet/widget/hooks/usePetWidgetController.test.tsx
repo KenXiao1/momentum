@@ -117,6 +117,27 @@ describe('usePetWidgetController', () => {
     expect(clearTimeoutSpy).toHaveBeenCalled();
   });
 
+  it('waits for an open modal dialog to close before opening the creation dialog', () => {
+    vi.useFakeTimers();
+    const openDialog = document.createElement('div');
+    openDialog.setAttribute('role', 'dialog');
+    openDialog.setAttribute('aria-modal', 'true');
+    document.body.appendChild(openDialog);
+    const params = createParams({ pet: null, hasPet: false });
+    const { result } = renderHook(() => usePetWidgetController(params));
+
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+    expect(result.current.showCreationDialog).toBe(false);
+
+    openDialog.remove();
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(result.current.showCreationDialog).toBe(true);
+  });
+
   it('reports successful and no-op feeding outcomes through real controller logic', async () => {
     const onFeedPet = vi
       .fn<() => Promise<FeedResult | null>>()

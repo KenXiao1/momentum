@@ -32,8 +32,8 @@ export class OperationReadError extends Error {
 
 const changeSchema = z.object({
   table: z.string(),
-  before: z.array(z.record(z.unknown())),
-  after: z.array(z.record(z.unknown())),
+  before: z.array(z.record(z.string(), z.unknown())),
+  after: z.array(z.record(z.string(), z.unknown())),
 });
 const pendingSchema = z.object({
   version: z.literal(1),

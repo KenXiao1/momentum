@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
-const jsonValue = z.unknown();
+// JSON columns may be absent on databases with pending migrations. zod 4 no
+// longer treats `z.unknown()` keys as optional, so say so explicitly.
+const jsonValue = z.unknown().optional();
 
 export const chainRowSchema = z.object({
   id: z.string(),

@@ -84,7 +84,7 @@ describe('rsip.ts', () => {
           error: null,
         }),
       });
-      await expect(getRSIPNodes(ctx)).rejects.toThrow('Expected string');
+      await expect(getRSIPNodes(ctx)).rejects.toThrow(/expected string/i);
     });
 
     it('should handle nodes with parent relationships', async () => {
