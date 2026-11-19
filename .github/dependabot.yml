@@ -1,22 +1,47 @@
+# One PR per group instead of one per package. Tauri packages get their own
+# group in npm and in Cargo, on the same weekday, because `tauri build` refuses
+# mismatched major.minor versions between @tauri-apps/* and the Rust crates
+# (`npm run quality:tauri-versions` checks the pairing on every PR).
+# Semver-major npm updates arrive as one grouped PR to plan manually; they
+# usually need coordinated peer upgrades that a bot cannot make.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
+      day: monday
     open-pull-requests-limit: 5
     groups:
-      vitest:
-        patterns: ['vitest', '@vitest/*']
-      stryker:
-        patterns: ['@stryker-mutator/*']
+      tauri:
+        patterns: ['@tauri-apps/*']
+      npm-production:
+        dependency-type: production
+        update-types: [minor, patch]
+      npm-development:
+        dependency-type: development
+        update-types: [minor, patch]
+      npm-major:
+        update-types: [major]
+
   - package-ecosystem: cargo
     directory: /src-tauri
     schedule:
       interval: weekly
+      day: monday
     open-pull-requests-limit: 5
+    groups:
+      tauri:
+        patterns: ['tauri', 'tauri-*']
+      cargo:
+        patterns: ['*']
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+      day: monday
     open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns: ['*']

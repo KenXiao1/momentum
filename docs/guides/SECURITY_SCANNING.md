@@ -31,10 +31,15 @@ It applies only to the generic API-key rule and those two paths; default rules
 remain enabled. A full-history scan still detects the historical Supabase token
 below. No credential, directory, or entire rule is exempted.
 
-`npm run security:npm-audit` audits development and runtime dependencies. The
-September 2026 dependency refresh has no known npm audit findings or exemptions.
-The lockfile and narrow same-major overrides carry the patched transitive
-versions; verify parent upgrades before removing those overrides.
+`npm run security:npm-audit` audits development and runtime dependencies and
+fails on high or critical advisories. On pull requests, CI sets
+`AUDIT_BASE_SHA` and the gate also audits the base commit's lockfile in the same
+run: only advisories the change introduces fail, and advisories already on the
+base branch are reported as warnings. Without a base, such as on pushes and
+local runs, every high or critical advisory fails, so the branch still turns red
+when a new advisory affects it. An audit that cannot run fails. There are no
+exemptions. The lockfile and narrow same-major overrides carry the patched
+transitive versions; verify parent upgrades before removing those overrides.
 
 ## Open historical Supabase credential finding
 

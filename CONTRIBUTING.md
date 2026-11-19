@@ -97,7 +97,14 @@ Security scans are available as `security:npm-audit`, `security:semgrep`,
 for the historical credential that still needs verified revocation. Install the Semgrep version pinned in its workflow; missing tools,
 scan errors, findings, and absent or empty scan reports fail the Semgrep command.
 SQL lint requires SQLFluff and PowerShell; missing SQLFluff is advisory locally
-and fails in CI. Dependabot opens weekly npm, Cargo, and Actions updates.
+and fails in CI.
+
+Dependabot opens grouped weekly updates: npm production and development
+minor/patch updates, npm majors as one PR to plan manually, Cargo, Actions, and
+a Tauri group on each side. `tauri build` rejects mismatched major.minor
+versions between a Rust crate and its `@tauri-apps/*` package, so
+`quality:tauri-versions`, part of `quality:rust`, fails a PR that upgrades only
+one side; upgrade both together.
 
 The September 2026 dependency refresh keeps the Node 20 toolchain and uses
 same-major overrides for vulnerable transitive YAML, Markdown, glob, and query
