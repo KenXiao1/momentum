@@ -315,6 +315,15 @@ class DatabaseContracts(unittest.TestCase):
         self.assertEqual(min(row['points_before'] for row in winners), 700)
         self.assertEqual(max(row['points_after'] for row in winners), 1300)
 
+    def test_same_chain_completions_get_distinct_timestamps(self):
+        # now() is fixed per transaction; completed_at from the column default
+        # made the second completion violate the (user, chain, completed_at)
+        # unique index, the race behind the concurrent completion failure.
+        first, second = self.session(), self.session()
+        self.db.sql(f"BEGIN; SELECT public.complete_task_with_betting('{first}',true,NULL);"
+            f" SELECT public.complete_task_with_betting('{second}',true,NULL); COMMIT;", 'authenticated', A)
+        self.assertEqual(self.db.sql('SELECT count(DISTINCT completed_at) FROM public.completion_history'), '2')
+
     def test_completion_racing_cancellation_is_one_outcome(self):
         sid = self.session(); self.bet(sid)
         def finish(_):
