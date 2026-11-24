@@ -1,0 +1,43 @@
+import { chromium } from 'playwright';
+import { readFile } from 'node:fs/promises';
+import { APP_URL, L, initScript } from './common.mjs';
+const out = process.argv[2];
+const seed = JSON.parse(await readFile(new URL('./seed.json', import.meta.url)));
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+const page = await ctx.newPage();
+await page.clock.install();
+await page.addInitScript(initScript(seed));
+page.on('pageerror', (e) => console.error('pageerror', e.message));
+let n = 0;
+const shot = (name, full) => page.screenshot({ path: `${out}/g${String(++n).padStart(2, '0')}-${name}.png`, fullPage: !!full });
+await page.goto(APP_URL);
+await page.waitForTimeout(1500);
+// schedule
+await page.getByRole('button', { name: '预约', exact: true }).first().click();
+await page.waitForTimeout(1500);
+await shot('scheduled');
+await page.clock.fastForward((14 * 60 + 40) * 1000);
+await page.waitForTimeout(800);
+await shot('scheduled-late');
+console.log('btns', JSON.stringify(await page.getByRole('button').allInnerTexts()));
+await page.getByRole('button', { name: '开始任务', exact: true }).first().click();
+await page.waitForTimeout(1200);
+// interrupt
+const intr = page.getByRole('button', { name: '长按中断' });
+const box = await intr.boundingBox();
+await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+await page.mouse.down();
+await page.waitForTimeout(1200);
+await shot('holding');
+await page.waitForTimeout(2500);
+await page.mouse.up();
+await page.waitForTimeout(800);
+await shot('interrupt-dialog');
+console.log('btns2', JSON.stringify(await page.getByRole('button').allInnerTexts()));
+// rsip
+await page.goto(APP_URL + '?view=rsip');
+await page.waitForTimeout(1500);
+await shot('rsip', true);
+console.log('btns3', JSON.stringify((await page.getByRole('button').allInnerTexts()).slice(0, 80)));
+await browser.close();

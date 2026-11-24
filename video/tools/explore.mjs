@@ -1,0 +1,14 @@
+import { chromium } from 'playwright';
+const out = process.argv[2];
+const lang = process.argv[3] || 'zh';
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, colorScheme: 'dark' });
+const page = await ctx.newPage();
+await page.addInitScript((l) => localStorage.setItem('language', l), lang);
+page.on('console', (m) => { if (m.type() === 'error') console.log('console:', m.text()); });
+await page.goto('http://127.0.0.1:5199/');
+await page.waitForTimeout(1500);
+await page.screenshot({ path: `${out}/01-home.png` });
+const buttons = await page.getByRole('button').allInnerTexts();
+console.log('buttons:', JSON.stringify(buttons.slice(0, 60)));
+await browser.close();
