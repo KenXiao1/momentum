@@ -46,15 +46,6 @@ export const formatElapsedTime = (seconds: number): string => {
   return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
 
-/**
- * 格式化用时描述（如"25分钟"、"1小时30分钟"）
- * @param minutes 总分钟数
- * @returns 格式化的用时描述
- */
-export const formatTimeDescription = (minutes: number): string => {
-  return formatTimeDescriptionByLanguage(minutes);
-};
-
 export const formatTimeDescriptionByLanguage = (
   minutes: number,
   language: TimeLanguage = 'en',

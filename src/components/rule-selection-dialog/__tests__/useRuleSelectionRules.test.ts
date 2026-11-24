@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTranslator } from '../../../i18n/translate';
-import { exceptionRuleManager } from '../../../services/ExceptionRuleManager';
+import { exceptionRuleManager } from '../../../services/exception-rule-manager/ExceptionRuleManager';
 import { ExceptionRuleType } from '../../../types';
 import {
   useRuleSelectionRules,

@@ -94,5 +94,4 @@ export type DeletedChain = Chain & {
 // 任务树节点，用于前端渲染层级结构
 export type ChainTreeNode = Chain & {
   children: ChainTreeNode[];
-  depth: number;
 };

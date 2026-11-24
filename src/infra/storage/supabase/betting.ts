@@ -145,7 +145,7 @@ export async function placeBet(
       });
     }
 
-    writeSessionToken = writeSessionData.session_token as string;
+    writeSessionToken = writeSessionData.session_token;
 
     const { data, error } = await client.rpc('place_task_bet', {
       p_user_id: user.id,
@@ -170,7 +170,7 @@ export async function placeBet(
       // ignore
     }
 
-    return ok(data as BetPlacementResult);
+    return ok(data);
   } catch (e) {
     if (writeSessionToken) {
       try {

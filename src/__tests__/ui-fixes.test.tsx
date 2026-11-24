@@ -5,38 +5,23 @@
 
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { RuleManagerView } from '../components/RuleManagerView';
+import { RuleManagerView } from '../components/rule-manager/RuleManagerViewContainer';
 import { RuleSelectionDialog } from '../components/RuleSelectionDialog';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
-import { layoutStabilityMonitor } from '../utils/LayoutStabilityMonitor';
-import { performanceMonitor } from '../utils/performanceMonitor';
+import { performanceMonitor } from '../utils/performance-monitor/PerformanceMonitor';
 import { I18nProvider } from '../i18n';
-import { exceptionRuleManager } from '../services/ExceptionRuleManager';
+import { exceptionRuleManager } from '../services/exception-rule-manager/ExceptionRuleManager';
 import { ExceptionRuleType, type ExceptionRule } from '../types';
 import type { Mocked } from 'vitest';
 import { cssValue } from '../test/utils/cssValue';
 
 // Mock dependencies
-vi.mock('../services/ExceptionRuleManager', () => ({
+vi.mock('../services/exception-rule-manager/ExceptionRuleManager', () => ({
   exceptionRuleManager: {
     getAllRules: vi.fn(),
     createChainRule: vi.fn(),
   },
 }));
-
-vi.mock('../utils/LayoutStabilityMonitor', async () => {
-  const actual = await vi.importActual<any>('../utils/LayoutStabilityMonitor');
-  return {
-    ...actual,
-    useLayoutStability: vi.fn(() => ({
-      startMonitoring: vi.fn(),
-      stopMonitoring: vi.fn(),
-      checkNow: vi.fn(),
-      getReport: vi.fn(),
-      clearIssues: vi.fn(),
-    })),
-  };
-});
 
 const renderWithI18n = (ui: React.ReactElement) => {
   return render(ui, { wrapper: I18nProvider });
@@ -65,8 +50,6 @@ describe('UI Fixes and Improvements', () => {
     localStorage.setItem('language', 'zh');
     mockedRuleManager.getAllRules.mockResolvedValue(mockRules);
 
-    // Reset monitors
-    layoutStabilityMonitor.clearIssues();
     performanceMonitor.setBackgroundMode(false);
     performanceMonitor.setReportingEnabled(false);
   });
@@ -152,35 +135,6 @@ describe('UI Fixes and Improvements', () => {
       performanceMonitor.setReportingEnabled(false);
       performanceMonitor.setBackgroundMode(false);
     });
-
-    test('Layout stability monitor should detect issues', async () => {
-      const testContainer = document.createElement('div');
-      testContainer.style.width = '100px';
-      testContainer.style.overflow = 'hidden';
-
-      const wideChild = document.createElement('div');
-      wideChild.style.width = '200px';
-      testContainer.appendChild(wideChild);
-
-      document.body.appendChild(testContainer);
-
-      // JSDOM doesn't calculate layout metrics; simulate overflow explicitly.
-      Object.defineProperty(testContainer, 'clientWidth', {
-        configurable: true,
-        value: 100,
-      });
-      Object.defineProperty(testContainer, 'scrollWidth', {
-        configurable: true,
-        value: 200,
-      });
-
-      layoutStabilityMonitor.checkNow(testContainer);
-
-      const report = layoutStabilityMonitor.getStabilityReport();
-      expect(report.totalIssues).toBeGreaterThan(0);
-
-      document.body.removeChild(testContainer);
-    });
   });
 
   describe('Responsive Design', () => {
@@ -226,7 +180,6 @@ describe('UI Integration Tests', () => {
     mockedRuleManager.getAllRules.mockResolvedValue(mockRules);
     performanceMonitor.setReportingEnabled(false);
     performanceMonitor.setBackgroundMode(false);
-    layoutStabilityMonitor.clearIssues();
   });
 
   test('opens the create-rule form while preserving overflow containment', async () => {

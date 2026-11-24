@@ -20,7 +20,7 @@ const countdownMock = vi.hoisted(() => ({
   useGroupCardScheduleCountdown: vi.fn(() => ({ timeRemaining: 0 })),
 }));
 
-vi.mock('../../../utils/chainTree', () => chainTreeMock);
+vi.mock('../../../utils/chain-tree', () => chainTreeMock);
 vi.mock('../hooks/useGroupCardScheduleCountdown', () => countdownMock);
 vi.mock('../../../i18n', () => ({
   useI18n: () => ({
@@ -77,7 +77,6 @@ function createGroup(overrides: Partial<ChainTreeNode> = {}): ChainTreeNode {
     isDurationless: overrides.isDurationless ?? false,
     createdAt: overrides.createdAt ?? new Date('2026-01-01T00:00:00.000Z'),
     children: overrides.children ?? [],
-    depth: overrides.depth ?? 0,
   } as ChainTreeNode;
 }
 

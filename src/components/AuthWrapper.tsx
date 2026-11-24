@@ -5,7 +5,7 @@ import { hasStorageCapability } from '../storage/ports';
 import { useStorageMode } from '../storage/useStorageMode';
 import { logger } from '../utils/logger';
 import { AuthForm } from './AuthForm';
-import { IntroScreen } from './IntroScreen';
+import { IntroScreen } from './intro/IntroScreen';
 import { Loader2 } from 'lucide-react';
 import { useI18n } from '../i18n';
 import { isTauri } from '../utils/platform';

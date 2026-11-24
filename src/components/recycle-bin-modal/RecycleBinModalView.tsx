@@ -1,7 +1,7 @@
 import { type Translator } from '../../i18n';
 import React from 'react';
 import type { DeletedChain } from '../../types';
-import type { ConfirmDialogState } from '../useRecycleBinModal';
+import type { ConfirmDialogState } from './hooks/useRecycleBinModal';
 import { BulkActionsBar } from './components/BulkActionsBar';
 import { ChainsList } from './components/ChainsList';
 import { ConfirmDialog } from './components/ConfirmDialog';

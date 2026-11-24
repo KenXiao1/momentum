@@ -1,5 +1,4 @@
 import type { Chain } from '../../types';
-import { performanceLogger } from '../performanceLogger';
 
 type ChainById = Map<string, Chain>;
 type ChildrenByParentId = Map<string, Chain[]>;
@@ -30,17 +29,7 @@ function resetGroupTaskProgress(chains: Chain[], groupId: string): Chain[] {
   const { chainById, childrenByParentId } = buildChainLookups(chains);
   const groupNode = chainById.get(groupId);
 
-  if (!groupNode || groupNode.type !== 'group') {
-    performanceLogger.warn(
-      `resetGroupTaskProgress: 群组节点未找到或类型不正确`,
-      {
-        groupId,
-        nodeFound: !!groupNode,
-        nodeType: groupNode?.type,
-      },
-    );
-    return chains;
-  }
+  if (groupNode?.type !== 'group') return chains;
 
   const childUnitIds = new Set<string>();
   const visited = new Set<string>();
@@ -62,25 +51,11 @@ function resetGroupTaskProgress(chains: Chain[], groupId: string): Chain[] {
     }
   }
 
-  performanceLogger.debugLazy(
-    `resetGroupTaskProgress: 群组 ${groupNode.name} 将重置 ${childUnitIds.size} 个子任务的进度`,
-    () => ({
-      groupId,
-      childIds: [...childUnitIds],
-    }),
-  );
-
   if (childUnitIds.size === 0) return chains;
 
-  return chains.map((chain) => {
-    if (childUnitIds.has(chain.id)) {
-      performanceLogger.debug(
-        `重置任务进度: ${chain.name} (${chain.id}) currentStreak: ${chain.currentStreak} -> 0`,
-      );
-      return { ...chain, currentStreak: 0 };
-    }
-    return chain;
-  });
+  return chains.map((chain) =>
+    childUnitIds.has(chain.id) ? { ...chain, currentStreak: 0 } : chain,
+  );
 }
 
 /**

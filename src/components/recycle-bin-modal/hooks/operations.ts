@@ -2,8 +2,10 @@ import { type Translator } from '../../../i18n';
 import type { Language } from '../../../i18n';
 import { logger } from '../../../utils/logger';
 import { toast } from '../../../utils/toast';
-import { getSafeErrorDetailFromUnknown } from '../../../utils/errorMessage';
-import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
+import {
+  getSafeErrorDetailFromUnknown,
+  toError,
+} from '../../../utils/errorMessage';
 import type {
   AsyncOrSyncVoid,
   ConfirmDialogState,
@@ -64,7 +66,7 @@ async function performRestoreOperation(params: {
       'RECYCLE_BIN',
       'Restore operation failed',
       result.details,
-      normalizeUnknownError(error),
+      toError(error),
     );
 
     if (isPartialRestoreFailureMessage(rawErrorMessage)) {
@@ -127,7 +129,7 @@ async function performPermanentDeleteOperation(params: {
       'RECYCLE_BIN',
       'Permanent delete operation failed',
       result.details,
-      normalizeUnknownError(error),
+      toError(error),
     );
     toast.error(message);
     return result;

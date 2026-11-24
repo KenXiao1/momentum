@@ -6,15 +6,15 @@ import type { SafelySaveChains } from '../useChainsDomain';
 import {
   getNextUnitInGroup,
   incrementGroupCompletionCount,
-} from '../../../utils/chainTree';
+} from '../../../utils/chain-tree';
 import { logger } from '../../../utils/logger';
-import { buildChainTree } from '../../../utils/chainTree';
+import { buildChainTree } from '../../../utils/chain-tree';
 import {
   isGroupExpired,
   resetGroupProgress,
   startGroupTimer,
 } from '../../../utils/timeLimit';
-import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
+import { toError } from '../../../utils/errorMessage';
 import { notifyTaskCompleted, notifyTaskFailed } from './sessionNotifications';
 
 type Chain = AppState['chains'][number];
@@ -81,7 +81,7 @@ export function createGroupStartFlow({
             'SESSIONS',
             'Failed to start next cycle first unit',
             { chainId: params.groupId },
-            normalizeUnknownError(error),
+            toError(error),
           );
         });
     }, 100);
@@ -134,7 +134,7 @@ export function createGroupStartFlow({
         'SESSIONS',
         '保存任务群完成计数失败',
         undefined,
-        normalizeUnknownError(error),
+        toError(error),
       );
     }
   }

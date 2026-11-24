@@ -9,7 +9,7 @@ const groupCardRenderSpy = vi.hoisted(() => vi.fn());
 const getNextUnitInGroupMock = vi.hoisted(() => vi.fn());
 const devFlag = vi.hoisted(() => ({ value: false }));
 
-vi.mock('../ChainCard', () => ({
+vi.mock('../chain-card/ChainCardContainer', () => ({
   ChainCard: (props: { chain: { id: string } }) => {
     chainCardRenderSpy(props);
     return (
@@ -18,7 +18,7 @@ vi.mock('../ChainCard', () => ({
   },
 }));
 
-vi.mock('../GroupCard', () => ({
+vi.mock('../group-card/GroupCard', () => ({
   GroupCard: (props: { group: { id: string } }) => {
     groupCardRenderSpy(props);
     return (
@@ -27,7 +27,7 @@ vi.mock('../GroupCard', () => ({
   },
 }));
 
-vi.mock('../../utils/chainTree', () => ({
+vi.mock('../../utils/chain-tree', () => ({
   getNextUnitInGroup: getNextUnitInGroupMock,
 }));
 
@@ -71,7 +71,6 @@ function createChainNode(
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     deletedAt: null,
     children: [],
-    depth: 0,
   };
 }
 

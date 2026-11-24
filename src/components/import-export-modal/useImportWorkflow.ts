@@ -4,12 +4,11 @@ import type React from 'react';
 import type { RSIPNode, RSIPNodeGroup } from '../../types';
 import { useI18n, type Language } from '../../i18n';
 import { prepareImportPlan } from '../../services/import-export/importPlan';
-import { exceptionRuleManager } from '../../services/ExceptionRuleManager';
+import { exceptionRuleManager } from '../../services/exception-rule-manager/ExceptionRuleManager';
 import { type ImportExportImportOptions } from '../../services/ImportExportService';
 import { hasStorageCapability } from '../../storage/ports';
 import { useStorage } from '../../storage/useStorage';
-import { getSafeErrorDetail } from '../../utils/errorMessage';
-import { normalizeUnknownError } from '../../utils/errors/normalizeError';
+import { getSafeErrorDetail, toError } from '../../utils/errorMessage';
 import { logger } from '../../utils/logger';
 import { getPlatformCapabilityCenter } from '../../utils/platform-capabilities/center';
 import type { ImportCallback, ImportStatus } from './types';
@@ -139,12 +138,7 @@ export function useImportWorkflow(params: {
       setImportStatus('success');
       setTimeout(params.onClose, 3000);
     } catch (error) {
-      logger.error(
-        'IMPORT_EXPORT',
-        'Import failed',
-        undefined,
-        normalizeUnknownError(error),
-      );
+      logger.error('IMPORT_EXPORT', 'Import failed', undefined, toError(error));
       setImportError(getImportErrorMessage(error, language, t));
       setImportStatus('error');
     } finally {
@@ -172,7 +166,7 @@ export function useImportWorkflow(params: {
         'IMPORT_EXPORT',
         'Opening the import file failed',
         undefined,
-        normalizeUnknownError(error),
+        toError(error),
       );
       setImportError(getImportErrorMessage(error, language, t));
       setImportStatus('error');

@@ -7,8 +7,8 @@ import {
   createLocalStorageMock,
 } from '../../../../test/factories';
 import { createCompletionHandlers } from '../completion';
-import { buildChainTree } from '../../../../utils/chainTree';
-import { getGroupProgress } from '../../../../utils/chainTree';
+import { buildChainTree } from '../../../../utils/chain-tree';
+import { getGroupProgress } from '../../../../utils/chain-tree';
 
 vi.mock('../../../../services/platform/SystemNotificationService', () => ({
   systemNotificationService: {

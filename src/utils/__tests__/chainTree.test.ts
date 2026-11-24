@@ -4,7 +4,7 @@ import {
   getNextUnitInGroup,
   getGroupProgress,
   getGroupUnitProgress,
-} from '../chainTree';
+} from '../chain-tree';
 import { ChainRecord, Chain, ChainTreeNode } from '../../types';
 
 // Mock chain data for testing
@@ -39,11 +39,6 @@ const createMockChain = (overrides: Partial<Chain> = {}): Chain => {
 
 describe('chainTree utilities', () => {
   describe('buildChainTree', () => {
-    it('should return empty array when input is not an array', () => {
-      const result = buildChainTree(null as unknown as Chain[]);
-      expect(result).toEqual([]);
-    });
-
     it('should handle empty input', () => {
       const result = buildChainTree([]);
       expect(result).toEqual([]);
@@ -161,7 +156,6 @@ describe('chainTree utilities', () => {
       const unit: ChainTreeNode = {
         ...createMockChain({ id: 'unit1', currentStreak: 0 }),
         children: [],
-        depth: 0,
       };
 
       const result = getNextUnitInGroup(unit);
@@ -172,7 +166,6 @@ describe('chainTree utilities', () => {
       const unit: ChainTreeNode = {
         ...createMockChain({ id: 'unit1', currentStreak: 1 }),
         children: [],
-        depth: 0,
       };
 
       const result = getNextUnitInGroup(unit);
@@ -187,7 +180,6 @@ describe('chainTree utilities', () => {
           taskRepeatCount: 3,
         }),
         children: [],
-        depth: 0,
       };
 
       const result = getNextUnitInGroup(unit);
@@ -202,7 +194,6 @@ describe('chainTree utilities', () => {
           taskRepeatCount: 3,
         }),
         children: [],
-        depth: 0,
       };
 
       const result = getNextUnitInGroup(unit);
@@ -216,20 +207,16 @@ describe('chainTree utilities', () => {
           {
             ...createMockChain({ id: 'unit1', currentStreak: 1 }),
             children: [],
-            depth: 1,
           },
           {
             ...createMockChain({ id: 'unit2', currentStreak: 0 }),
             children: [],
-            depth: 1,
           },
           {
             ...createMockChain({ id: 'unit3', currentStreak: 0 }),
             children: [],
-            depth: 1,
           },
         ],
-        depth: 0,
       };
 
       const result = getNextUnitInGroup(group);
@@ -248,7 +235,6 @@ describe('chainTree utilities', () => {
               taskRepeatCount: 2,
             }),
             children: [],
-            depth: 1,
           },
           {
             // Unit 2: completed all repeats (1/1)
@@ -258,7 +244,6 @@ describe('chainTree utilities', () => {
               taskRepeatCount: 1,
             }),
             children: [],
-            depth: 1,
           },
           {
             // Unit 3: not completed (0/3) - should be next
@@ -268,7 +253,6 @@ describe('chainTree utilities', () => {
               taskRepeatCount: 3,
             }),
             children: [],
-            depth: 1,
           },
           {
             // Unit 4: not completed (0/1)
@@ -278,10 +262,8 @@ describe('chainTree utilities', () => {
               taskRepeatCount: 1,
             }),
             children: [],
-            depth: 1,
           },
         ],
-        depth: 0,
       };
 
       const result = getNextUnitInGroup(group);
@@ -295,15 +277,12 @@ describe('chainTree utilities', () => {
           {
             ...createMockChain({ id: 'unit1', currentStreak: 1 }),
             children: [],
-            depth: 1,
           },
           {
             ...createMockChain({ id: 'unit2', currentStreak: 1 }),
             children: [],
-            depth: 1,
           },
         ],
-        depth: 0,
       };
 
       const result = getNextUnitInGroup(group);
@@ -314,7 +293,6 @@ describe('chainTree utilities', () => {
       const group: ChainTreeNode = {
         ...createMockChain({ id: 'group1', type: 'group' }),
         children: [],
-        depth: 0,
       };
 
       const result = getNextUnitInGroup(group);
@@ -331,18 +309,14 @@ describe('chainTree utilities', () => {
               {
                 ...createMockChain({ id: 'unit1', currentStreak: 1 }),
                 children: [],
-                depth: 2,
               },
               {
                 ...createMockChain({ id: 'unit2', currentStreak: 0 }),
                 children: [],
-                depth: 2,
               },
             ],
-            depth: 1,
           },
         ],
-        depth: 0,
       };
 
       const result = getNextUnitInGroup(group);
@@ -355,7 +329,6 @@ describe('chainTree utilities', () => {
       const unit: ChainTreeNode = {
         ...createMockChain({ id: 'unit1', currentStreak: 0 }),
         children: [],
-        depth: 0,
       };
 
       const result = getGroupProgress(unit);
@@ -366,7 +339,6 @@ describe('chainTree utilities', () => {
       const unit: ChainTreeNode = {
         ...createMockChain({ id: 'unit1', currentStreak: 1 }),
         children: [],
-        depth: 0,
       };
 
       const result = getGroupProgress(unit);
@@ -381,7 +353,6 @@ describe('chainTree utilities', () => {
           taskRepeatCount: 3,
         }),
         children: [],
-        depth: 0,
       };
 
       const result = getGroupProgress(unit);
@@ -396,7 +367,6 @@ describe('chainTree utilities', () => {
           taskRepeatCount: 3,
         }),
         children: [],
-        depth: 0,
       };
 
       const result = getGroupProgress(unit);
@@ -416,7 +386,6 @@ describe('chainTree utilities', () => {
               taskRepeatCount: 2,
             }),
             children: [],
-            depth: 1,
           },
           {
             // Task 2: completed its repeat count (1/1)
@@ -426,7 +395,6 @@ describe('chainTree utilities', () => {
               taskRepeatCount: 1,
             }),
             children: [],
-            depth: 1,
           },
           {
             // Task 3: not completed (0/3)
@@ -436,7 +404,6 @@ describe('chainTree utilities', () => {
               taskRepeatCount: 3,
             }),
             children: [],
-            depth: 1,
           },
           {
             // Task 4: not completed (0/1)
@@ -446,10 +413,8 @@ describe('chainTree utilities', () => {
               taskRepeatCount: 1,
             }),
             children: [],
-            depth: 1,
           },
         ],
-        depth: 0,
       };
 
       const result = getGroupProgress(group);
@@ -463,20 +428,16 @@ describe('chainTree utilities', () => {
           {
             ...createMockChain({ id: 'unit1', currentStreak: 1 }),
             children: [],
-            depth: 1,
           },
           {
             ...createMockChain({ id: 'unit2', currentStreak: 0 }),
             children: [],
-            depth: 1,
           },
           {
             ...createMockChain({ id: 'unit3', currentStreak: 1 }),
             children: [],
-            depth: 1,
           },
         ],
-        depth: 0,
       };
 
       const result = getGroupProgress(group);
@@ -487,7 +448,6 @@ describe('chainTree utilities', () => {
       const group: ChainTreeNode = {
         ...createMockChain({ id: 'group1', type: 'group' }),
         children: [],
-        depth: 0,
       };
 
       const result = getGroupProgress(group);
@@ -500,7 +460,6 @@ describe('chainTree utilities', () => {
       const unit: ChainTreeNode = {
         ...createMockChain({ id: 'unit1', currentStreak: 0 }),
         children: [],
-        depth: 0,
       };
 
       const result = getGroupUnitProgress(unit);
@@ -511,7 +470,6 @@ describe('chainTree utilities', () => {
       const unit: ChainTreeNode = {
         ...createMockChain({ id: 'unit1', currentStreak: 1 }),
         children: [],
-        depth: 0,
       };
 
       const result = getGroupUnitProgress(unit);
@@ -526,7 +484,6 @@ describe('chainTree utilities', () => {
           taskRepeatCount: 3,
         }),
         children: [],
-        depth: 0,
       };
 
       const result = getGroupUnitProgress(unit);
@@ -541,7 +498,6 @@ describe('chainTree utilities', () => {
           taskRepeatCount: 3,
         }),
         children: [],
-        depth: 0,
       };
 
       const result = getGroupUnitProgress(unit);
@@ -561,7 +517,6 @@ describe('chainTree utilities', () => {
               taskRepeatCount: 2,
             }),
             children: [],
-            depth: 1,
           },
           {
             // Task 2: completed its repeat count (1/1) - COMPLETED UNIT
@@ -571,7 +526,6 @@ describe('chainTree utilities', () => {
               taskRepeatCount: 1,
             }),
             children: [],
-            depth: 1,
           },
           {
             // Task 3: not completed (0/3) - INCOMPLETE UNIT
@@ -581,10 +535,8 @@ describe('chainTree utilities', () => {
               taskRepeatCount: 3,
             }),
             children: [],
-            depth: 1,
           },
         ],
-        depth: 0,
       };
 
       const unitResult = getGroupUnitProgress(group);
@@ -602,20 +554,16 @@ describe('chainTree utilities', () => {
           {
             ...createMockChain({ id: 'unit1', currentStreak: 1 }),
             children: [],
-            depth: 1,
           },
           {
             ...createMockChain({ id: 'unit2', currentStreak: 0 }),
             children: [],
-            depth: 1,
           },
           {
             ...createMockChain({ id: 'unit3', currentStreak: 1 }),
             children: [],
-            depth: 1,
           },
         ],
-        depth: 0,
       };
 
       const result = getGroupUnitProgress(group);
@@ -626,7 +574,6 @@ describe('chainTree utilities', () => {
       const group: ChainTreeNode = {
         ...createMockChain({ id: 'group1', type: 'group' }),
         children: [],
-        depth: 0,
       };
 
       const result = getGroupUnitProgress(group);
@@ -643,23 +590,18 @@ describe('chainTree utilities', () => {
               {
                 ...createMockChain({ id: 'unit1', currentStreak: 1 }),
                 children: [],
-                depth: 2,
               },
               {
                 ...createMockChain({ id: 'unit2', currentStreak: 0 }),
                 children: [],
-                depth: 2,
               },
             ],
-            depth: 1,
           },
           {
             ...createMockChain({ id: 'unit3', currentStreak: 1 }),
             children: [],
-            depth: 1,
           },
         ],
-        depth: 0,
       };
 
       const result = getGroupUnitProgress(group);

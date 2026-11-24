@@ -9,7 +9,6 @@ import type { ChainRecord, ChainTreeNode } from '../../../types';
 const makeChain = (overrides?: Partial<ChainTreeNode>): ChainTreeNode => {
   const fields: Partial<ChainRecord> & {
     children?: ChainTreeNode[];
-    depth?: number;
   } = {
     id: 'chain-1',
     parentId: undefined,
@@ -33,13 +32,11 @@ const makeChain = (overrides?: Partial<ChainTreeNode>): ChainTreeNode => {
     createdAt: new Date(),
     deletedAt: null,
     children: [],
-    depth: 0,
     ...overrides,
   };
   return {
     ...createFixtureChain(fields.type === 'group' ? 'group' : 'unit', fields),
     children: fields.children ?? [],
-    depth: fields.depth ?? 0,
   };
 };
 

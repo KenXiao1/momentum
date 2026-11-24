@@ -5,11 +5,11 @@ import type { MomentumStorage } from '../../../storage/MomentumStorage';
 import { hasStorageCapability } from '../../../storage/ports';
 import type { SafelySaveChains } from '../useChainsDomain';
 import { resolveAppStateReader } from '../appStateAccess';
-import { resetGroupCompletionCount } from '../../../utils/chainTree';
-import { forwardTimerManager } from '../../../utils/forwardTimer';
+import { resetGroupCompletionCount } from '../../../utils/chain-tree';
+import { forwardTimerManager } from '../../../utils/forward-timer';
 import { logger } from '../../../utils/logger';
 import { emitPointsChanged } from '../../../utils/pointsEvents';
-import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
+import { toError } from '../../../utils/errorMessage';
 import type { TaskLifecycleEvent } from '../../../types';
 import { notifyTaskCompleted } from './sessionNotifications';
 import { toast } from '../../../utils/toast';
@@ -106,7 +106,7 @@ export function createCompletionHandlers({
                 'SESSIONS',
                 'Post-commit notification failed',
                 undefined,
-                normalizeUnknownError(error),
+                toError(error),
               );
             }
           }
@@ -117,7 +117,7 @@ export function createCompletionHandlers({
             'SESSIONS',
             'Session commit failed; the task remains available for retry',
             { operationId: input.operationId },
-            normalizeUnknownError(error),
+            toError(error),
           );
           toast.error(
             t('sessions.completion.saveIsNotConfirmedYourTaskIsRetainedRetry'),
@@ -208,7 +208,7 @@ export function createCompletionHandlers({
                 'SESSIONS',
                 'Failed to update task time stats after completion',
                 { chainId: chain.id },
-                normalizeUnknownError(error),
+                toError(error),
               );
             });
         }

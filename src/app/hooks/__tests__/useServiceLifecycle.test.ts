@@ -1,9 +1,9 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useServiceLifecycle } from '../useServiceLifecycle';
-import { forwardTimerManager } from '../../../utils/forwardTimer';
-import { performanceMonitor } from '../../../utils/performanceMonitor';
-import { exceptionRuleManager } from '../../../services/ExceptionRuleManager';
+import { forwardTimerManager } from '../../../utils/forward-timer';
+import { performanceMonitor } from '../../../utils/performance-monitor/PerformanceMonitor';
+import { exceptionRuleManager } from '../../../services/exception-rule-manager/ExceptionRuleManager';
 import { checkForUpdates } from '../../../utils/platform-adapters/updater';
 
 vi.mock('../../../utils/env', async (importOriginal) => ({
@@ -11,20 +11,23 @@ vi.mock('../../../utils/env', async (importOriginal) => ({
   isDev: false,
 }));
 
-vi.mock('../../../utils/forwardTimer', () => ({
+vi.mock('../../../utils/forward-timer', () => ({
   forwardTimerManager: {
     start: vi.fn(),
     stop: vi.fn(),
   },
 }));
 
-vi.mock('../../../utils/performanceMonitor', () => ({
+vi.mock('../../../utils/performance-monitor/PerformanceMonitor', () => ({
   performanceMonitor: { start: vi.fn(), stop: vi.fn() },
 }));
 
-vi.mock('../../../services/ExceptionRuleManager', () => ({
-  exceptionRuleManager: { initialize: vi.fn(async () => undefined) },
-}));
+vi.mock(
+  '../../../services/exception-rule-manager/ExceptionRuleManager',
+  () => ({
+    exceptionRuleManager: { initialize: vi.fn(async () => undefined) },
+  }),
+);
 
 vi.mock('../../../services/migration', () => ({
   migrationCoordinator: {

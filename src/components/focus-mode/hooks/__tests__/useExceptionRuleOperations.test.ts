@@ -3,11 +3,12 @@ import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ExceptionRuleError,
+  ExceptionRuleException,
   ExceptionRuleType,
-  EnhancedExceptionRuleException,
   type ExceptionRule,
   type SessionContext,
 } from '../../../../types';
+import { toast } from '../../../../utils/toast';
 import { useExceptionRuleOperations } from '../useExceptionRuleOperations';
 
 const exceptionRuleManagerMock = vi.hoisted(() => ({
@@ -15,23 +16,12 @@ const exceptionRuleManagerMock = vi.hoisted(() => ({
   createRule: vi.fn(),
 }));
 
-const userFeedbackHandlerMock = vi.hoisted(() => ({
-  showErrorMessage: vi.fn(),
-  showProgress: vi.fn(),
-  updateProgress: vi.fn(),
-  hideProgress: vi.fn(),
-  showSuccess: vi.fn(),
-  showWarning: vi.fn(),
-  removeMessage: vi.fn(),
-}));
-
-vi.mock('../../../../services/ExceptionRuleManager', () => ({
-  exceptionRuleManager: exceptionRuleManagerMock,
-}));
-
-vi.mock('../../../../services/UserFeedbackHandler', () => ({
-  userFeedbackHandler: userFeedbackHandlerMock,
-}));
+vi.mock(
+  '../../../../services/exception-rule-manager/ExceptionRuleManager',
+  () => ({
+    exceptionRuleManager: exceptionRuleManagerMock,
+  }),
+);
 
 const sessionContext: SessionContext = {
   sessionId: 'session-1',
@@ -79,7 +69,9 @@ describe('useExceptionRuleOperations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     exceptionRuleManagerMock.useRule.mockResolvedValue({ success: true });
-    userFeedbackHandlerMock.showErrorMessage.mockReturnValue('error-message-1');
+    vi.spyOn(toast, 'error');
+    vi.spyOn(toast, 'success');
+    vi.spyOn(toast, 'warning');
   });
 
   it('does nothing when a rule arrives after the action flow has closed', async () => {
@@ -91,12 +83,13 @@ describe('useExceptionRuleOperations', () => {
     });
 
     expect(exceptionRuleManagerMock.useRule).not.toHaveBeenCalled();
-    expect(userFeedbackHandlerMock.showProgress).not.toHaveBeenCalled();
+    expect(toast.success).not.toHaveBeenCalled();
+    expect(toast.error).not.toHaveBeenCalled();
     expect(params.onPause).not.toHaveBeenCalled();
     expect(params.finishFlow).not.toHaveBeenCalled();
   });
 
-  it('rejects a rule without an id before any progress or persistence work', async () => {
+  it('rejects a rule without an id before any persistence work', async () => {
     const params = createParams();
     const { result } = renderHook(() => useExceptionRuleOperations(params));
 
@@ -104,13 +97,11 @@ describe('useExceptionRuleOperations', () => {
       await result.current.handleRuleSelected(createRule({ id: '' }));
     });
 
-    const displayedError = userFeedbackHandlerMock.showErrorMessage.mock
-      .calls[0]?.[0] as EnhancedExceptionRuleException;
-    expect(displayedError).toBeInstanceOf(EnhancedExceptionRuleException);
-    expect(displayedError.type).toBe(ExceptionRuleError.RULE_NOT_FOUND);
-    expect(displayedError.message).toBe('Invalid rule');
+    expect(toast.error).toHaveBeenCalledWith(
+      'The rule does not exist or has been deleted. Please choose another rule or create a new one.',
+      { title: 'Rule not found' },
+    );
     expect(exceptionRuleManagerMock.useRule).not.toHaveBeenCalled();
-    expect(userFeedbackHandlerMock.showProgress).not.toHaveBeenCalled();
   });
 
   it('applies a timed pause and converts auto-resume seconds to whole minutes', async () => {
@@ -135,10 +126,9 @@ describe('useExceptionRuleOperations', () => {
     expect(params.clearAutoResumeSchedule).not.toHaveBeenCalled();
     expect(params.onRequestCompletionDialog).not.toHaveBeenCalled();
     expect(params.finishFlow).toHaveBeenCalledTimes(1);
-    expect(userFeedbackHandlerMock.hideProgress).toHaveBeenCalledTimes(1);
-    expect(userFeedbackHandlerMock.showSuccess).toHaveBeenCalledWith(
-      'Success',
+    expect(toast.success).toHaveBeenCalledWith(
       'Applied rule "Take a break" to pause the task',
+      { title: 'Success' },
     );
   });
 
@@ -179,15 +169,14 @@ describe('useExceptionRuleOperations', () => {
     expect(params.finishFlow).not.toHaveBeenCalled();
     expect(params.onRuleUsed).not.toHaveBeenCalled();
     expect(params.scheduleAutoResume).not.toHaveBeenCalled();
-    expect(userFeedbackHandlerMock.showSuccess).not.toHaveBeenCalled();
-    expect(userFeedbackHandlerMock.hideProgress).toHaveBeenCalledTimes(1);
+    expect(toast.success).not.toHaveBeenCalled();
     await act(async () => {
       await result.current.handleRuleSelected(rule, pauseOptions);
     });
     expect(params.finishFlow).toHaveBeenCalledTimes(1);
     expect(params.onRuleUsed).toHaveBeenCalledTimes(1);
     expect(params.scheduleAutoResume).toHaveBeenCalledWith(2);
-    expect(userFeedbackHandlerMock.showSuccess).toHaveBeenCalledTimes(1);
+    expect(toast.success).toHaveBeenCalledTimes(1);
   });
 
   it('keeps the flow open and surfaces a storage error when rule use rejects', async () => {
@@ -201,21 +190,19 @@ describe('useExceptionRuleOperations', () => {
       await result.current.handleRuleSelected(createRule());
     });
 
-    const displayedError = userFeedbackHandlerMock.showErrorMessage.mock
-      .calls[0]?.[0] as EnhancedExceptionRuleException;
-    expect(displayedError).toBeInstanceOf(EnhancedExceptionRuleException);
-    expect(displayedError.type).toBe(ExceptionRuleError.STORAGE_ERROR);
-    expect(displayedError.message).toBe('storage unavailable');
+    expect(toast.error).toHaveBeenCalledWith(
+      'Failed to save data. Please check your connection or try again.',
+      { title: 'Save failed' },
+    );
     expect(params.onRuleUsed).not.toHaveBeenCalled();
     expect(params.onPause).not.toHaveBeenCalled();
     expect(params.finishFlow).not.toHaveBeenCalled();
-    expect(userFeedbackHandlerMock.hideProgress).toHaveBeenCalledTimes(1);
   });
 
-  it('surfaces an enhanced error unchanged and keeps the flow open', async () => {
-    const error = new EnhancedExceptionRuleException(
-      ExceptionRuleError.NETWORK_ERROR,
-      'offline',
+  it('describes a rule error by its type and keeps the flow open', async () => {
+    const error = new ExceptionRuleException(
+      ExceptionRuleError.RULE_TYPE_MISMATCH,
+      'wrong type',
     );
     exceptionRuleManagerMock.useRule.mockRejectedValue(error);
     const params = createParams('pause');
@@ -226,11 +213,11 @@ describe('useExceptionRuleOperations', () => {
       await result.current.handleRuleSelected(rule);
     });
 
-    expect(userFeedbackHandlerMock.showErrorMessage).toHaveBeenCalledWith(
-      error,
-      { rule, actionType: 'pause' },
+    expect(toast.error).toHaveBeenCalledWith(
+      'This rule type does not match the current action. Please choose a compatible rule type.',
+      { title: 'Rule type mismatch' },
     );
-    expect(userFeedbackHandlerMock.showSuccess).not.toHaveBeenCalled();
+    expect(toast.success).not.toHaveBeenCalled();
     expect(params.finishFlow).not.toHaveBeenCalled();
   });
 
@@ -245,10 +232,10 @@ describe('useExceptionRuleOperations', () => {
       );
     });
 
-    const displayedError = userFeedbackHandlerMock.showErrorMessage.mock
-      .calls[0]?.[0] as EnhancedExceptionRuleException;
-    expect(displayedError.type).toBe(ExceptionRuleError.VALIDATION_ERROR);
-    expect(displayedError.message).toBe('Rule name cannot be empty');
+    expect(toast.error).toHaveBeenCalledWith(
+      'Validation failed: Rule name cannot be empty',
+      { title: 'Validation failed' },
+    );
     expect(exceptionRuleManagerMock.createRule).not.toHaveBeenCalled();
     expect(exceptionRuleManagerMock.useRule).not.toHaveBeenCalled();
   });
@@ -279,10 +266,9 @@ describe('useExceptionRuleOperations', () => {
       undefined,
       { reuseExisting: true },
     );
-    expect(userFeedbackHandlerMock.showWarning).toHaveBeenCalledWith(
-      'Notes',
-      'Similar rule exists',
-    );
+    expect(toast.warning).toHaveBeenCalledWith('Similar rule exists', {
+      title: 'Notes',
+    });
     expect(exceptionRuleManagerMock.useRule).toHaveBeenCalledWith(
       createdRule.id,
       sessionContext,
@@ -295,7 +281,7 @@ describe('useExceptionRuleOperations', () => {
   });
 
   it('surfaces a creation error without applying any rule', async () => {
-    const error = new EnhancedExceptionRuleException(
+    const error = new ExceptionRuleException(
       ExceptionRuleError.DUPLICATE_RULE_NAME,
       'duplicate',
     );
@@ -310,11 +296,10 @@ describe('useExceptionRuleOperations', () => {
       );
     });
 
-    expect(userFeedbackHandlerMock.showErrorMessage).toHaveBeenCalledWith(
-      error,
-      { name: 'Take a break', type: ExceptionRuleType.PAUSE_ONLY },
+    expect(toast.error).toHaveBeenCalledWith(
+      'This rule name already exists. Please choose a different name or use the existing rule.',
+      { title: 'Duplicate rule name' },
     );
-    expect(userFeedbackHandlerMock.hideProgress).toHaveBeenCalledTimes(1);
     expect(exceptionRuleManagerMock.useRule).not.toHaveBeenCalled();
     expect(params.finishFlow).not.toHaveBeenCalled();
   });

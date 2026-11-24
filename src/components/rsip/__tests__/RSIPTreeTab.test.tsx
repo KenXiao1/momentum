@@ -52,8 +52,8 @@ vi.mock('../RSIPSplitModeSection', () => ({
   ),
 }));
 
-vi.mock('../RSIPCanvas', () => ({
-  RSIPCanvas: ({
+vi.mock('../RSIPCanvasContainer', () => ({
+  RSIPCanvasContainer: ({
     onMarkFailedNode,
   }: {
     onMarkFailedNode: (nodeId: string) => void;

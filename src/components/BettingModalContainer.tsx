@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { BettingModalView } from './BettingModalView';
+import { BettingModalView } from './betting-modal';
 import { useBettingModal } from './useBettingModal';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import type { BetPlacementResult } from '../domain/betting';

@@ -2,7 +2,7 @@
  * ForwardTimerManager 单元测试
  */
 
-import { ForwardTimerManager } from '../forwardTimer';
+import { ForwardTimerManager } from '../forward-timer';
 
 // Mock performance.now()
 const mockPerformanceNow = vi.fn();

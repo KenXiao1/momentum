@@ -4,7 +4,7 @@ import {
   getChainTypeConfig,
   getGroupProgress,
   getNextUnitInGroup,
-} from '../../utils/chainTree';
+} from '../../utils/chain-tree';
 import { useI18n } from '../../i18n';
 import { GroupDeleteConfirmDialog } from './components/GroupDeleteConfirmDialog';
 import { useGroupCardScheduleCountdown } from './hooks/useGroupCardScheduleCountdown';

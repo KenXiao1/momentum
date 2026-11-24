@@ -4,11 +4,11 @@ import type { MomentumStorage } from '../../storage/MomentumStorage';
 import { hasStorageCapability } from '../../storage/ports';
 import { useStorage } from '../../storage/useStorage';
 import { useStorageMode } from '../../storage/useStorageMode';
-import { getTopLevelChains } from '../../utils/chainTree';
+import { getTopLevelChains } from '../../utils/chain-tree';
 import { isDev } from '../../utils/env';
 import { toError } from '../../utils/errorMessage';
 import { logger } from '../../utils/logger';
-import { buildChainTree } from '../../utils/chainTree';
+import { buildChainTree } from '../../utils/chain-tree';
 import type { DashboardProps } from './types';
 
 /** Counts recycle-bin chains, or returns null when they cannot be read. */

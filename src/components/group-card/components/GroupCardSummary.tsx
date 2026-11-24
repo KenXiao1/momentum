@@ -5,7 +5,7 @@ import type { ChainTreeNode } from '../../../types';
 import type {
   getChainTypeConfig,
   getGroupProgress,
-} from '../../../utils/chainTree';
+} from '../../../utils/chain-tree';
 import { Icon } from '../../../utils/iconMap';
 
 export function GroupCardSummary(props: {

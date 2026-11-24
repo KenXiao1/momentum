@@ -1,5 +1,5 @@
 import { useStorage } from '../storage/useStorage';
-import { AppShellView } from './AppShellView';
+import { AppShellView } from './app-shell/AppShellView';
 import { useAppShellBootstrap } from './app-shell/useAppShellBootstrap';
 import { useAppShellDomains } from './app-shell/useAppShellDomains';
 import { useAppShellState } from './app-shell/useAppShellState';

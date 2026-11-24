@@ -1,5 +1,5 @@
 import { createChain as createFixtureChain } from '../../test/factories/chainFactory';
-import { SupabaseStorage } from '../supabaseStorage';
+import { SupabaseStorage } from '../../infra/storage/supabase';
 import { ChainRecord, Chain } from '../../types';
 import {
   getCurrentUser,

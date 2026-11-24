@@ -4,8 +4,8 @@ import type {
   PauseOptions,
   SessionContext,
 } from '../../../types';
-import { userFeedbackHandler } from '../../../services/UserFeedbackHandler';
 import { useI18n } from '../../../i18n';
+import { toast } from '../../../utils/toast';
 import {
   useExceptionRuleOperations,
   type PendingActionType,
@@ -50,13 +50,12 @@ export function useExceptionRuleFlow(params: UseExceptionRuleFlowParams) {
     setShowRuleSelection(true);
   };
   const handleRuleSelectionCancel = () => {
-    userFeedbackHandler.hideProgress();
     finishFlow();
-    userFeedbackHandler.showInfo(
-      t('focusMode.useExceptionRuleFlow.cancelled'),
+    toast.info(
       t(
         'focusMode.useExceptionRuleFlow.youCanContinueTheTaskOrChooseAnotherAction',
       ),
+      { title: t('focusMode.useExceptionRuleFlow.cancelled') },
     );
   };
 

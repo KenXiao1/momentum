@@ -35,24 +35,24 @@ vi.mock('../../../components/RSIPView', () => ({
   ),
 }));
 
-vi.mock('../../../components/ChainEditor', () => ({
+vi.mock('../../../components/chain-editor/ChainEditorContainer', () => ({
   ChainEditor: () => <div data-testid="chain-editor">editor</div>,
 }));
 
-vi.mock('../../../components/FocusMode', () => ({
+vi.mock('../../../components/focus-mode/FocusModeContainer', () => ({
   FocusMode: () => <div data-testid="focus-mode">focus</div>,
 }));
 
-vi.mock('../../../components/ChainDetail', () => ({
-  ChainDetail: () => <div data-testid="chain-detail">detail</div>,
+vi.mock('../../../components/ChainDetailContainer', () => ({
+  ChainDetailContainer: () => <div data-testid="chain-detail">detail</div>,
 }));
 
-vi.mock('../../../components/GroupView', () => ({
+vi.mock('../../../components/group-view/GroupViewContainer', () => ({
   GroupView: () => <div data-testid="group-view">group</div>,
 }));
 
-vi.mock('../../../components/TaskGroupEditor', () => ({
-  TaskGroupEditor: () => (
+vi.mock('../../../components/TaskGroupEditorContainer', () => ({
+  TaskGroupEditorContainer: () => (
     <div data-testid="taskgroup-editor">taskgroup-editor</div>
   ),
 }));
@@ -66,8 +66,8 @@ vi.mock('../../../components/AuxiliaryJudgment', () => ({
   ),
 }));
 
-vi.mock('../../../components/BettingModal', () => ({
-  BettingModal: ({
+vi.mock('../../../components/BettingModalContainer', () => ({
+  BettingModalContainer: ({
     chainName,
     taskDuration,
   }: {
@@ -80,7 +80,7 @@ vi.mock('../../../components/BettingModal', () => ({
   ),
 }));
 
-vi.mock('../../../components/pet/PetWidget', () => ({
+vi.mock('../../../components/pet/widget/PetWidget', () => ({
   PetWidget: ({ pet }: { pet: { name: string } | null }) => (
     <div data-testid="pet-widget">{pet?.name ?? 'no-pet'}</div>
   ),
@@ -346,7 +346,6 @@ describe('AppShellView', () => {
     const groupNode = {
       ...groupChain,
       children: [],
-      depth: 0,
     };
 
     const { rerender } = render(

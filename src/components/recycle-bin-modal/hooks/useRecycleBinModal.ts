@@ -4,8 +4,10 @@ import { useStorage } from '../../../storage/useStorage';
 import { useI18n } from '../../../i18n';
 import { logger } from '../../../utils/logger';
 import { toast } from '../../../utils/toast';
-import { getSafeErrorDetailFromUnknown } from '../../../utils/errorMessage';
-import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
+import {
+  getSafeErrorDetailFromUnknown,
+  toError,
+} from '../../../utils/errorMessage';
 import type { AsyncOrSyncVoid, ConfirmDialogState } from '../types';
 import { performRecycleBinOperation } from './operations';
 import { formatDeletedTime } from './timeFormat';
@@ -57,7 +59,7 @@ export function useRecycleBinModal({
         'RECYCLE_BIN',
         '加载已删除链条失败',
         undefined,
-        normalizeUnknownError(error),
+        toError(error),
       );
       toast.error(
         t(
@@ -213,7 +215,7 @@ export function useRecycleBinModal({
         'RECYCLE_BIN',
         'Operation failed with unexpected error',
         { type: showConfirmDialog?.type },
-        normalizeUnknownError(error),
+        toError(error),
       );
       const safeDetail = getSafeErrorDetailFromUnknown(error, language);
       toast.error(

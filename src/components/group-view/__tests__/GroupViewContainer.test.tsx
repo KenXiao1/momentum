@@ -11,7 +11,7 @@ const getNextUnitInGroupMock = vi.hoisted(() => vi.fn());
 const getChainTypeConfigMock = vi.hoisted(() => vi.fn());
 const getGroupTimeStatusMock = vi.hoisted(() => vi.fn());
 
-vi.mock('../../../utils/chainTree', () => ({
+vi.mock('../../../utils/chain-tree', () => ({
   getGroupProgress: getGroupProgressMock,
   getGroupUnitProgress: getGroupUnitProgressMock,
   getNextUnitInGroup: getNextUnitInGroupMock,
@@ -86,7 +86,6 @@ function createGroupNode(): ChainTreeNode {
         taskRepeatCount: 2,
       } as ChainTreeNode,
     ],
-    depth: 0,
   };
 }
 

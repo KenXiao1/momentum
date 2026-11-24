@@ -786,13 +786,7 @@ const enTranslations = {
   'focusMode.useExceptionRuleFlow.youCanContinueTheTaskOrChooseAnotherAction':
     'You can continue the task or choose another action.',
   'focusMode.useExceptionRuleOperations.unknownError': 'Unknown error',
-  'focusMode.useExceptionRuleOperations.retry': 'Retry',
-  'focusMode.useExceptionRuleOperations.refresh': 'Refresh',
-  'focusMode.useExceptionRuleOperations.operationFailedPleaseTryAgain':
-    'Operation failed. Please try again.',
   'focusMode.useExceptionRuleOperations.invalidRule': 'Invalid rule',
-  'focusMode.useExceptionRuleOperations.pausingTask': 'Pausing task...',
-  'focusMode.useExceptionRuleOperations.completingTask': 'Completing task...',
   'focusMode.useExceptionRuleOperations.appliedRuleRuleNameToPauseTheTask':
     'Applied rule "{ruleName}" to pause the task',
   'focusMode.useExceptionRuleOperations.appliedRuleRuleNameToCompleteTheTask':
@@ -800,9 +794,6 @@ const enTranslations = {
   'focusMode.useExceptionRuleOperations.success': 'Success',
   'focusMode.useExceptionRuleOperations.ruleNameCannotBeEmpty':
     'Rule name cannot be empty',
-  'focusMode.useExceptionRuleOperations.creatingRule': 'Creating rule...',
-  'focusMode.useExceptionRuleOperations.validating': 'Validating...',
-  'focusMode.useExceptionRuleOperations.saving': 'Saving...',
   'focusMode.useExceptionRuleOperations.ruleCreated': 'Rule created',
   'focusMode.useExceptionRuleOperations.ruleResultRuleNameHasBeenCreatedAndApplied':
     'Rule "{resultRuleName}" has been created and applied',
@@ -1376,20 +1367,15 @@ const enTranslations = {
   'feedback.errorMessageFormatter.validationFailed': 'Validation failed',
   'feedback.errorMessageFormatter.failedToSaveDataPleaseCheckYourConnectionOr':
     'Failed to save data. Please check your connection or try again.',
-  'feedback.errorMessageFormatter.anUnknownErrorOccurred':
-    'An unknown error occurred.',
   'feedback.errorMessageFormatter.ruleNotFound': 'Rule not found',
   'feedback.errorMessageFormatter.duplicateRuleName': 'Duplicate rule name',
   'feedback.errorMessageFormatter.ruleTypeMismatch': 'Rule type mismatch',
   'feedback.errorMessageFormatter.invalidRuleType': 'Invalid rule type',
   'feedback.errorMessageFormatter.saveFailed': 'Save failed',
-  'feedback.errorMessageFormatter.operationFailed': 'Operation failed',
   'feedback.errorMessageFormatter.theSelectedRuleNoLongerExistsItMayHave':
     'The selected rule no longer exists. It may have been deleted. Please choose another rule or create a new one.',
   'feedback.errorMessageFormatter.theRuleDoesNotExistOrHasBeenDeleted':
     'The rule does not exist or has been deleted. Please choose another rule or create a new one.',
-  'feedback.errorMessageFormatter.thisRuleNameAlreadyExistsYouCanUseThe':
-    'This rule name already exists. You can use the existing rule or choose a different name.',
   'feedback.errorMessageFormatter.thisRuleNameAlreadyExistsPleaseChooseADifferent':
     'This rule name already exists. Please choose a different name or use the existing rule.',
   'feedback.errorMessageFormatter.thisRuleTypeDoesNotMatchTheCurrentAction':
@@ -1413,9 +1399,6 @@ const enTranslations = {
   'storage.storageContext.failedToLoadCloudStorageSwitchedBackToLocal':
     'Failed to load cloud storage. Switched back to local mode.',
   'storage.storageContext.initializingStorage': 'Initializing storage…',
-  'types.exceptionRuleErrors.contactSupport': 'Contact support',
-  'types.exceptionRuleErrors.aCriticalErrorOccurredPleaseContactSupport':
-    'A critical error occurred. Please contact support.',
   'platformAdapters.updater.newVersionFoundUpdatingAndRestarting':
     'New version found. Updating and restarting…',
   'importUnitsModal.controllerSelectedUnitsSizeSelectedModeLabel':
@@ -2214,13 +2197,7 @@ const zhTranslations = {
   'focusMode.useExceptionRuleFlow.youCanContinueTheTaskOrChooseAnotherAction':
     '您可以继续任务或重新选择操作',
   'focusMode.useExceptionRuleOperations.unknownError': '未知错误',
-  'focusMode.useExceptionRuleOperations.retry': '重试操作',
-  'focusMode.useExceptionRuleOperations.refresh': '刷新页面',
-  'focusMode.useExceptionRuleOperations.operationFailedPleaseTryAgain':
-    '操作失败，请重试',
   'focusMode.useExceptionRuleOperations.invalidRule': '规则对象无效',
-  'focusMode.useExceptionRuleOperations.pausingTask': '正在暂停任务...',
-  'focusMode.useExceptionRuleOperations.completingTask': '正在完成任务...',
   'focusMode.useExceptionRuleOperations.appliedRuleRuleNameToPauseTheTask':
     '已使用规则 "{ruleName}" 暂停任务',
   'focusMode.useExceptionRuleOperations.appliedRuleRuleNameToCompleteTheTask':
@@ -2228,9 +2205,6 @@ const zhTranslations = {
   'focusMode.useExceptionRuleOperations.success': '操作成功',
   'focusMode.useExceptionRuleOperations.ruleNameCannotBeEmpty':
     '规则名称不能为空',
-  'focusMode.useExceptionRuleOperations.creatingRule': '正在创建规则...',
-  'focusMode.useExceptionRuleOperations.validating': '验证规则信息...',
-  'focusMode.useExceptionRuleOperations.saving': '保存规则...',
   'focusMode.useExceptionRuleOperations.ruleCreated': '规则创建成功',
   'focusMode.useExceptionRuleOperations.ruleResultRuleNameHasBeenCreatedAndApplied':
     '规则 "{resultRuleName}" 已创建并应用',
@@ -2775,19 +2749,15 @@ const zhTranslations = {
   'feedback.errorMessageFormatter.validationFailed': '输入验证失败',
   'feedback.errorMessageFormatter.failedToSaveDataPleaseCheckYourConnectionOr':
     '数据保存失败，请检查网络连接或重试',
-  'feedback.errorMessageFormatter.anUnknownErrorOccurred': '发生了未知错误',
   'feedback.errorMessageFormatter.ruleNotFound': '规则不存在',
   'feedback.errorMessageFormatter.duplicateRuleName': '规则名称重复',
   'feedback.errorMessageFormatter.ruleTypeMismatch': '规则类型不匹配',
   'feedback.errorMessageFormatter.invalidRuleType': '规则类型无效',
   'feedback.errorMessageFormatter.saveFailed': '数据保存失败',
-  'feedback.errorMessageFormatter.operationFailed': '操作失败',
   'feedback.errorMessageFormatter.theSelectedRuleNoLongerExistsItMayHave':
     '所选的规则不存在，可能已被删除。请选择其他规则或创建新规则。',
   'feedback.errorMessageFormatter.theRuleDoesNotExistOrHasBeenDeleted':
     '规则不存在或已被删除，请选择其他规则或创建新规则。',
-  'feedback.errorMessageFormatter.thisRuleNameAlreadyExistsYouCanUseThe':
-    '规则名称已存在。您可以使用现有规则或为新规则选择不同的名称。',
   'feedback.errorMessageFormatter.thisRuleNameAlreadyExistsPleaseChooseADifferent':
     '规则名称已存在，请选择不同的名称或使用现有规则。',
   'feedback.errorMessageFormatter.thisRuleTypeDoesNotMatchTheCurrentAction':
@@ -2811,9 +2781,6 @@ const zhTranslations = {
   'storage.storageContext.failedToLoadCloudStorageSwitchedBackToLocal':
     '加载云端存储失败，已自动切回本地模式。',
   'storage.storageContext.initializingStorage': '初始化存储…',
-  'types.exceptionRuleErrors.contactSupport': '联系技术支持',
-  'types.exceptionRuleErrors.aCriticalErrorOccurredPleaseContactSupport':
-    '系统遇到严重错误，请联系技术支持',
   'platformAdapters.updater.newVersionFoundUpdatingAndRestarting':
     '检测到新版本，正在自动更新并重启…',
   'importUnitsModal.controllerSelectedUnitsSizeSelectedModeLabel':

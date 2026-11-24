@@ -65,6 +65,8 @@ let pendingFailure:
       method: string;
       table: TableName;
       remaining: number;
+      /** REST API error to answer with; a transport failure when absent. */
+      response?: { status: number; body: JsonRow };
     }
   | undefined;
 
@@ -91,6 +93,29 @@ export function failSupabaseTransportRequests(
   };
 }
 
+/** Answers the next matching requests with a Supabase REST API error. */
+export function rejectSupabaseRequests(
+  method: string,
+  table: TableName,
+  error: { status: number; code: string; message: string },
+  count = 1,
+): void {
+  pendingFailure = {
+    method: method.toUpperCase(),
+    table,
+    remaining: count,
+    response: {
+      status: error.status,
+      body: {
+        code: error.code,
+        message: error.message,
+        details: null,
+        hint: null,
+      },
+    },
+  };
+}
+
 function takeFailure(method: string, table: TableName): Response | undefined {
   if (
     !pendingFailure ||
@@ -100,9 +125,12 @@ function takeFailure(method: string, table: TableName): Response | undefined {
   ) {
     return undefined;
   }
+  const { response } = pendingFailure;
   pendingFailure.remaining -= 1;
   if (pendingFailure.remaining === 0) pendingFailure = undefined;
-  return HttpResponse.error();
+  return response
+    ? HttpResponse.json(response.body, { status: response.status })
+    : HttpResponse.error();
 }
 
 function asRows(body: unknown): JsonRow[] {

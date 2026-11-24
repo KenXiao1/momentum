@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTranslator } from '../../../../i18n/translate';
-import { exceptionRuleManager } from '../../../../services/ExceptionRuleManager';
+import { exceptionRuleManager } from '../../../../services/exception-rule-manager/ExceptionRuleManager';
 import { ExceptionRuleType, type ExceptionRule } from '../../../../types';
 import { LOCAL_STORAGE_KEYS } from '../../../../utils/local-preferences/keys';
 import { localPreferences } from '../../../../utils/localPreferences';

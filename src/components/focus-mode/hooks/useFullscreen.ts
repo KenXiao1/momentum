@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { logger } from '../../../utils/logger';
 import { getPlatformCapabilityCenter } from '../../../utils/platform-capabilities/center';
-import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
+import { toError } from '../../../utils/errorMessage';
 
 export function useFullscreen() {
   const capabilityCenter = getPlatformCapabilityCenter();
@@ -24,7 +24,7 @@ export function useFullscreen() {
           'FOCUS_MODE',
           'Failed to load fullscreen capabilities',
           undefined,
-          normalizeUnknownError(error),
+          toError(error),
         );
       }
     };

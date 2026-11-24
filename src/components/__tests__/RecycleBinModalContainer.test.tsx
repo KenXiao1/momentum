@@ -16,11 +16,11 @@ const modalHandlers = vi.hoisted(() => ({
 
 const useRecycleBinModalMock = vi.hoisted(() => vi.fn());
 
-vi.mock('../useRecycleBinModal', () => ({
+vi.mock('../recycle-bin-modal/hooks/useRecycleBinModal', () => ({
   useRecycleBinModal: useRecycleBinModalMock,
 }));
 
-vi.mock('../RecycleBinModalView', () => ({
+vi.mock('../recycle-bin-modal/RecycleBinModalView', () => ({
   RecycleBinModalView: (props: {
     deletedChains: Array<{ id: string }>;
     onSelectChain: (id: string) => void;

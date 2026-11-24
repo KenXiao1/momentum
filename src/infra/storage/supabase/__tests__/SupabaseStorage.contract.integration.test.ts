@@ -1,9 +1,18 @@
 import { supabase } from '../../../../lib/supabase';
 import { describeStorageContract } from '../../../../test/contracts/storageContract';
-import { resetSupabaseMockState } from '../../../../test/mocks/supabaseMocks';
+import {
+  failSupabaseTransportRequests,
+  resetSupabaseMockState,
+} from '../../../../test/mocks/supabaseMocks';
 import { SupabaseStorage } from '../SupabaseStorage';
 
 const storage = new SupabaseStorage();
+
+const TABLES = {
+  scheduledSessions: 'scheduled_sessions',
+  activeSession: 'active_sessions',
+  rsipMeta: 'rsip_meta',
+} as const;
 
 describeStorageContract('SupabaseStorage over HTTP', {
   async reset() {
@@ -18,5 +27,8 @@ describeStorageContract('SupabaseStorage over HTTP', {
     });
     if (error) throw error;
     return storage;
+  },
+  breakRead(target) {
+    failSupabaseTransportRequests('GET', TABLES[target]);
   },
 });

@@ -12,7 +12,7 @@ export function AuxiliaryRuleChoice(props: {
   onReasonChange: (reason: string) => void;
   t: Translator;
 }) {
-  const exceptions = props.chain.auxiliaryExceptions ?? [];
+  const exceptions = props.chain.auxiliaryExceptions;
   const hasExceptions = exceptions.length > 0;
   return (
     <div className="mb-8 space-y-6">

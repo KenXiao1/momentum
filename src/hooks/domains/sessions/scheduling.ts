@@ -6,8 +6,8 @@ import type { SafelySaveChains } from '../useChainsDomain';
 import { resolveAppStateReader } from '../appStateAccess';
 import { logger } from '../../../utils/logger';
 import { toast } from '../../../utils/toast';
-import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
-import { isSessionExpired } from '../../../utils/time';
+import { toError } from '../../../utils/errorMessage';
+import { isSessionExpired } from '../../../domain/scheduling';
 import { notifyTaskCompleted } from './sessionNotifications';
 
 interface CreateSchedulingHandlersParams {
@@ -67,7 +67,7 @@ export function createSchedulingHandlers({
           'SESSIONS',
           'Failed to schedule chain',
           { chainId },
-          normalizeUnknownError(error),
+          toError(error),
         );
         toast.error(t('sessions.scheduling.failedToSchedulePleaseTryAgain'));
       } finally {
@@ -122,7 +122,7 @@ export function createSchedulingHandlers({
         'SESSIONS',
         'Failed to complete booking',
         { chainId },
-        normalizeUnknownError(error),
+        toError(error),
       );
       toast.error(
         t('sessions.scheduling.failedToCompleteBookingPleaseTryAgain'),

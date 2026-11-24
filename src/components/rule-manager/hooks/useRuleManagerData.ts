@@ -1,7 +1,7 @@
 import { type Translator } from '../../../i18n';
 import { useCallback, useEffect, useState } from 'react';
 import type { ExceptionRule } from '../../../types';
-import { exceptionRuleManager } from '../../../services/ExceptionRuleManager';
+import { exceptionRuleManager } from '../../../services/exception-rule-manager/ExceptionRuleManager';
 import { getSafeErrorDetailFromUnknown } from '../../../utils/errorMessage';
 import type { Language } from '../../../i18n/translations';
 

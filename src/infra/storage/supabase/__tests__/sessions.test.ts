@@ -63,25 +63,35 @@ describe('sessions.ts', () => {
       expect(result).toEqual([]);
     });
 
-    it('should return empty array on error', async () => {
+    it('rejects on a query error instead of reporting no scheduled sessions', async () => {
       const queryBuilder = createMockQueryBuilder({
         data: null,
-        error: createSupabaseError('UNKNOWN', 'Database error'),
+        error: createSupabaseError('PGRST301', 'JWT expired'),
+      });
+      const ctx = createMockContext({ queryBuilder });
+
+      await expect(getScheduledSessions(ctx)).rejects.toThrow(
+        'Failed to fetch scheduled sessions: JWT expired',
+      );
+    });
+
+    it('maps the scheduled session rows it reads', async () => {
+      const queryBuilder = createMockQueryBuilder({
+        data: [createMockScheduledSessionRow()],
+        error: null,
       });
       const ctx = createMockContext({ queryBuilder });
 
       const result = await getScheduledSessions(ctx);
 
-      expect(result).toEqual([]);
-    });
-
-    it('should return empty array when data is null', async () => {
-      const queryBuilder = createMockQueryBuilder({ data: null, error: null });
-      const ctx = createMockContext({ queryBuilder });
-
-      const result = await getScheduledSessions(ctx);
-
-      expect(result).toEqual([]);
+      expect(result).toEqual([
+        {
+          chainId: 'chain-1',
+          scheduledAt: new Date('2024-01-15T10:00:00Z'),
+          expiresAt: new Date('2024-01-15T11:00:00Z'),
+          auxiliarySignal: 'Set alarm',
+        },
+      ]);
     });
   });
 
@@ -187,16 +197,61 @@ describe('sessions.ts', () => {
       expect(result).toBeNull();
     });
 
-    it('should return null on error', async () => {
+    it('rejects on a query error instead of reporting no active session', async () => {
       const queryBuilder = createMockQueryBuilder({
         data: null,
-        error: createSupabaseError('UNKNOWN', 'Database error'),
+        error: createSupabaseError('PGRST301', 'JWT expired'),
       });
       const ctx = createMockContext({ queryBuilder });
 
-      const result = await getActiveSession(ctx);
+      await expect(getActiveSession(ctx)).rejects.toThrow(
+        'Failed to fetch active session: JWT expired',
+      );
+      expect(ctx.mockClient.from).toHaveBeenCalledTimes(1);
+      expect(ctx.markSchemaCapabilityMissing).not.toHaveBeenCalled();
+    });
 
-      expect(result).toBeNull();
+    it('rejects other schema errors instead of treating them as missing forward-timer columns', async () => {
+      const queryBuilder = createMockQueryBuilder({
+        data: null,
+        error: createSupabaseError(
+          '42P01',
+          'relation "active_sessions" does not exist',
+        ),
+      });
+      const ctx = createMockContext({ queryBuilder });
+
+      await expect(getActiveSession(ctx)).rejects.toThrow(
+        'Failed to fetch active session',
+      );
+      expect(ctx.mockClient.from).toHaveBeenCalledTimes(1);
+      expect(ctx.markSchemaCapabilityMissing).not.toHaveBeenCalled();
+    });
+
+    it('rejects when the basic select fails after the forward-timer fallback', async () => {
+      const ctx = createMockContext();
+      ctx.mockClient.from = vi
+        .fn()
+        .mockReturnValueOnce(
+          createMockQueryBuilder({
+            data: null,
+            error: createSupabaseError(
+              'PGRST204',
+              'is_forward_timer does not exist',
+            ),
+          }),
+        )
+        .mockReturnValueOnce(
+          createMockQueryBuilder({
+            data: null,
+            error: createSupabaseError('', 'TypeError: fetch failed'),
+          }),
+        );
+
+      await expect(getActiveSession(ctx)).rejects.toThrow(
+        'Failed to fetch active session: TypeError: fetch failed',
+      );
+      expect(ctx.mockClient.from).toHaveBeenCalledTimes(2);
     });
 
     it('should return null when no active session exists', async () => {

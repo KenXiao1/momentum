@@ -301,17 +301,36 @@ describe('rsip.ts', () => {
       expect(result).toEqual({});
     });
 
-    it('should return empty object on error', async () => {
+    it('rejects on a query error instead of reporting default metadata', async () => {
       const queryBuilder = createMockQueryBuilder({
         data: null,
-        error: createSupabaseError('UNKNOWN', 'Database error'),
+        error: createSupabaseError('PGRST301', 'JWT expired'),
       });
       const ctx = createMockContext({ queryBuilder });
 
-      const result = await getRSIPMeta(ctx);
-
-      expect(result).toEqual({});
+      await expect(getRSIPMeta(ctx)).rejects.toThrow(
+        'Failed to fetch RSIP meta: JWT expired',
+      );
     });
+
+    it.each([
+      ['42P01', 'relation "public.rsip_meta" does not exist'],
+      [
+        'PGRST205',
+        "Could not find the table 'public.rsip_meta' in the schema cache",
+      ],
+    ])(
+      'returns default metadata when the rsip_meta table is not migrated yet (%s)',
+      async (code, message) => {
+        const queryBuilder = createMockQueryBuilder({
+          data: null,
+          error: createSupabaseError(code, message),
+        });
+        const ctx = createMockContext({ queryBuilder });
+
+        await expect(getRSIPMeta(ctx)).resolves.toEqual({});
+      },
+    );
 
     it('should return empty object when no data exists', async () => {
       const queryBuilder = createMockQueryBuilder({ data: [], error: null });

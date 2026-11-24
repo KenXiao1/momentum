@@ -20,7 +20,7 @@ import { hasStorageCapability } from '../../storage/ports';
 import type { SafelySaveChains } from './useChainsDomain';
 import { useI18n } from '../../i18n';
 import { logger } from '../../utils/logger';
-import { normalizeUnknownError } from '../../utils/errors/normalizeError';
+import { toError } from '../../utils/errorMessage';
 import {
   reloadImportedState,
   type ImportChainsOptions,
@@ -137,7 +137,7 @@ export function useImportExportDomain({
           'IMPORT',
           'Reload after import failure also failed',
           undefined,
-          normalizeUnknownError(reloadError),
+          toError(reloadError),
         );
       }
 

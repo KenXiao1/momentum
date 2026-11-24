@@ -2,7 +2,7 @@ import { createTranslator } from '../../i18n/translate';
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { BettingModalView } from '../BettingModalView';
+import { BettingModalView } from '../betting-modal';
 
 const t = createTranslator('en');
 

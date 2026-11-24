@@ -18,7 +18,6 @@ interface RuleSelectionDialogViewProps {
   language: string;
   t: Translator;
 
-  containerRef: React.MutableRefObject<HTMLDivElement | null>;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
 
   searchQuery: string;
@@ -47,7 +46,6 @@ export const RuleSelectionDialogView: React.FC<
   sessionContext,
   language,
   t,
-  containerRef,
   searchInputRef,
   searchQuery,
   onSearchQueryChange,
@@ -66,7 +64,6 @@ export const RuleSelectionDialogView: React.FC<
   <DialogShell
     titleId="rule-selection-dialog-title"
     onClose={onCancel}
-    dialogRef={containerRef}
     initialFocusRef={searchInputRef}
     initialFocusDelayMs={100}
     className="flex w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-gray-800"

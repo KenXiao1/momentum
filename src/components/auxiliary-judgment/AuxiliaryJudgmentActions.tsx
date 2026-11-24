@@ -14,7 +14,7 @@ export function AuxiliaryJudgmentActions(props: {
   onCancel: () => void;
   t: Translator;
 }) {
-  const exceptions = props.chain.auxiliaryExceptions ?? [];
+  const exceptions = props.chain.auxiliaryExceptions;
   return (
     <>
       <div className="space-y-3">

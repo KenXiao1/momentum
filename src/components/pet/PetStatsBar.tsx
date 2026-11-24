@@ -3,7 +3,7 @@ import {
   getLevelProgress,
   getXpForLevel,
   getStageName,
-} from '../../utils/petLogic';
+} from '../../domain/pet';
 import { useI18n } from '../../i18n';
 
 interface PetStatsBarProps {

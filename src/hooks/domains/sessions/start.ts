@@ -11,9 +11,9 @@ import type { SafelySaveChains } from '../useChainsDomain';
 import { resolveAppStateReader } from '../appStateAccess';
 import { logger } from '../../../utils/logger';
 import { toast } from '../../../utils/toast';
-import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
+import { toError } from '../../../utils/errorMessage';
 import { notifyTaskCompleted } from './sessionNotifications';
-import { isSessionExpired } from '../../../utils/time';
+import { isSessionExpired } from '../../../domain/scheduling';
 import { createGroupStartFlow } from './groupStartFlow';
 
 type Chain = AppState['chains'][number];
@@ -87,7 +87,7 @@ export function createStartChainHandler({
         'SESSIONS',
         'Failed to persist scheduled sessions',
         { chainId },
-        normalizeUnknownError(error),
+        toError(error),
       );
     });
   }
@@ -98,7 +98,7 @@ export function createStartChainHandler({
         'SESSIONS',
         'Failed to persist active session',
         { chainId },
-        normalizeUnknownError(error),
+        toError(error),
       );
       toast.error(
         t('sessions.start.failedToPersistSessionDatabaseMayBeReadOnlyOr'),
@@ -112,7 +112,7 @@ export function createStartChainHandler({
         'SESSIONS',
         '开始任务时保存链条数据失败',
         { chainId },
-        normalizeUnknownError(error),
+        toError(error),
       );
     });
   }
@@ -153,7 +153,7 @@ export function createStartChainHandler({
         'SESSIONS',
         'Failed to check gambling mode',
         undefined,
-        normalizeUnknownError(error),
+        toError(error),
       );
       return false;
     }

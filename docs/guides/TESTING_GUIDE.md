@@ -34,7 +34,10 @@ These tests do not execute database SQL or validate deployed RLS policies.
 `MomentumStorage` adapter must share. The local adapter runs it in the unit
 suite (`src/storage/__tests__/MomentumStorage.contract.test.ts`);
 `SupabaseStorage` runs it in the integration suite through the real SDK and the
-HTTP fake (`SupabaseStorage.contract.integration.test.ts`). Add a case there
+HTTP fake (`SupabaseStorage.contract.integration.test.ts`). Each runner also
+supplies `breakRead`, which makes a read fail the way its backing store can
+(corrupt local JSON, a failed request), so the contract can check that a failed
+read rejects instead of looking like empty data. Add a case there
 when you add or change a storage method, and state in `src/storage/ports.ts`
 any ordering the callers rely on. SQL, RLS and RPC behavior is checked on real
 PostgreSQL by `npm run test:database`, not by this contract.

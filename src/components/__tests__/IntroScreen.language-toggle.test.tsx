@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { I18nProvider } from '../../i18n';
-import { IntroScreen } from '../IntroScreen';
+import { IntroScreen } from '../intro/IntroScreen';
 
 const renderIntro = () => {
   return render(

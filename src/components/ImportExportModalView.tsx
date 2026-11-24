@@ -2,16 +2,18 @@ import { type Translator } from '../i18n';
 import React from 'react';
 import { Download, Upload, X, FileText } from 'lucide-react';
 import type { ImportExportImportOptions } from '../services/ImportExportService';
+import { ExportTab } from './import-export-modal/ExportTab';
 import {
-  type ImportStatus,
-  ImportInfoBox,
   FileUploadSection,
-  ManualInputSection,
+  ImportInfoBox,
   ImportOptionsSection,
-  ImportStatusDisplay,
+  ManualInputSection,
+} from './import-export-modal/ImportFields';
+import {
   ImportButton,
-  ExportTab,
-} from './ImportExportModalParts';
+  ImportStatusDisplay,
+} from './import-export-modal/ImportStatusControls';
+import type { ImportStatus } from './import-export-modal/types';
 import { DialogShell } from './shared/DialogShell';
 
 interface ImportExportModalViewProps {

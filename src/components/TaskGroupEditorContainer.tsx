@@ -4,7 +4,7 @@
 
 import React from 'react';
 import type { Chain, ChainDraft, RSIPNode, RSIPTaskLink } from '../types';
-import { TaskGroupEditorView } from './TaskGroupEditorView';
+import { TaskGroupEditorView } from './task-group-editor/TaskGroupEditorView';
 import { useTaskGroupEditor } from './useTaskGroupEditor';
 
 interface TaskGroupEditorContainerProps {

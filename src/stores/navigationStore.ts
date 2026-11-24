@@ -102,11 +102,3 @@ export const selectEditingChainId = (state: NavigationStore): string | null =>
   state.editingChainId;
 export const selectViewingChainId = (state: NavigationStore): string | null =>
   state.viewingChainId;
-
-export function selectBettingModal(state: NavigationStore) {
-  return {
-    isOpen: state.showBettingModal,
-    pendingChainId: state.pendingChainId,
-    currentSessionId: state.currentSessionId,
-  };
-}

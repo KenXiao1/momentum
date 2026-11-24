@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ActiveSession, Chain } from '../../../types';
 import type { MomentumStorage } from '../../../storage/MomentumStorage';
 import { systemNotificationService } from '../../../services/platform/SystemNotificationService';
-import { forwardTimerManager } from '../../../utils/forwardTimer';
+import { forwardTimerManager } from '../../../utils/forward-timer';
 import { soundManager } from '../../../utils/soundManager';
 import { useI18n } from '../../../i18n';
 import { fireAndForget } from '../../../utils/fireAndForget';

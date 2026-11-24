@@ -1,6 +1,6 @@
 import { translate } from '../i18n/translate';
 import { Chain } from '../types';
-import type { TimeLanguage } from './time';
+import type { TimeLanguage } from '../domain/scheduling';
 
 /**
  * 检查任务群是否已过期

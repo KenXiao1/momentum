@@ -45,7 +45,7 @@ vi.mock('../localStorageAdapter', () => ({
   localStorageAdapter: localAdapterMock,
 }));
 
-vi.mock('../../utils/supabaseStorage', () => ({
+vi.mock('../../infra/storage/supabase', () => ({
   supabaseStorage: supabaseAdapterMock,
 }));
 

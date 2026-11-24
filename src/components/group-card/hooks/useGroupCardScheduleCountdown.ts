@@ -1,7 +1,7 @@
 import { type Translator } from '../../../i18n';
 import { useEffect, useRef, useState } from 'react';
 import type { ChainTreeNode, ScheduledSession } from '../../../types';
-import { getTimeRemaining } from '../../../utils/time';
+import { getTimeRemaining } from '../../../domain/scheduling';
 import { systemNotificationService } from '../../../services/platform/SystemNotificationService';
 import { fireAndForget } from '../../../utils/fireAndForget';
 

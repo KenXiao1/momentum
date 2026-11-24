@@ -31,6 +31,6 @@ export const tauriFileAdapter: PlatformFileAdapter = {
     });
 
     if (!path) return null;
-    return readTextFile(path as string);
+    return readTextFile(path);
   },
 };

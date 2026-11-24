@@ -10,7 +10,6 @@ import {
 import { formatSupabaseError } from './supabaseError';
 import { mapActiveSessionRow } from './sessionMapper';
 
-type ActiveSessionRow = Database['public']['Tables']['active_sessions']['Row'];
 type ActiveSessionInsert =
   Database['public']['Tables']['active_sessions']['Insert'];
 const TABLE = 'active_sessions';
@@ -71,6 +70,9 @@ export async function getActiveSession(
   const basicSelect =
     'id, chain_id, started_at, duration, is_paused, paused_at, total_paused_time';
 
+  // A failed read must not look like "no active session": the load would
+  // drop the running session from app state. Only missing forward-timer
+  // columns (pending migration) fall back to the basic select.
   if (!hasMissingForwardTimerFields(ctx)) {
     const { data, error } = await client
       .from(TABLE)
@@ -78,11 +80,13 @@ export async function getActiveSession(
       .eq('user_id', user.id)
       .order('started_at', { ascending: false })
       .limit(1);
-    if (!error && data?.length) {
+    if (!error) {
       markCapabilitiesAvailable(ctx, TABLE, FORWARD_TIMER_CAPABILITIES);
-      return mapActiveSessionRow(data[0] as ActiveSessionRow);
+      return data.length > 0 ? mapActiveSessionRow(data[0]) : null;
     }
-    if (!error || !isMissingForwardTimerFieldError(error)) return null;
+    if (!isMissingForwardTimerFieldError(error)) {
+      throw new Error(`Failed to fetch active session: ${error.message}`);
+    }
     markCapabilitiesMissing(ctx, TABLE, FORWARD_TIMER_CAPABILITIES);
   }
 
@@ -92,9 +96,10 @@ export async function getActiveSession(
     .eq('user_id', user.id)
     .order('started_at', { ascending: false })
     .limit(1);
-  return error || !data?.length
-    ? null
-    : mapActiveSessionRow(data[0] as ActiveSessionRow);
+  if (error) {
+    throw new Error(`Failed to fetch active session: ${error.message}`);
+  }
+  return data.length > 0 ? mapActiveSessionRow(data[0]) : null;
 }
 
 export async function saveActiveSession(

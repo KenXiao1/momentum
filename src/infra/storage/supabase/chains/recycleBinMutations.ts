@@ -74,10 +74,10 @@ export async function restoreChain(
         }
         throw new Error(`Restore chain failed: ${error.message}`);
       }
-      if ((data?.length ?? 0) !== chains.length) {
+      if (data.length !== chains.length) {
         logger.warn('SUPABASE_STORAGE', 'Partial restore', {
           expected: chains.length,
-          restored: data?.length ?? 0,
+          restored: data.length,
           chainId,
         });
       }

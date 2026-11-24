@@ -1,9 +1,7 @@
 import type { RSIPMeta } from '../../../types';
-import type { Database } from '../../../lib/database.types';
 import { mapRSIPMetaRow } from './rsipMapper';
+import { isSchemaMissing } from './rsipNodeCapabilities';
 import type { SupabaseStorageContext } from './types';
-
-type RSIPMetaRow = Database['public']['Tables']['rsip_meta']['Row'];
 
 export async function getRSIPMeta(
   ctx: SupabaseStorageContext,
@@ -17,8 +15,15 @@ export async function getRSIPMeta(
     .select('*')
     .eq('user_id', user.id)
     .limit(1);
-  if (error || !data || data.length === 0) return {};
-  return mapRSIPMetaRow(data[0] as RSIPMetaRow);
+  if (error) {
+    // Like the other RSIP reads, a database without the RSIP migration has no
+    // metadata yet. Any other failure must not look like default metadata:
+    // the next meta save would overwrite the real row with it.
+    if (isSchemaMissing(error)) return {};
+    throw new Error(`Failed to fetch RSIP meta: ${error.message}`);
+  }
+  if (data.length === 0) return {};
+  return mapRSIPMetaRow(data[0]);
 }
 
 export async function saveRSIPMeta(

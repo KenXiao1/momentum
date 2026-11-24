@@ -60,7 +60,7 @@ export function getAllTimerKeys(): string[] {
         }
       }
     } else if (storage && typeof storage === 'object') {
-      const allKeys = Object.keys(storage as Record<string, unknown>);
+      const allKeys = Object.keys(storage);
       keys.push(
         ...allKeys.filter((key) =>
           key.startsWith(LOCAL_STORAGE_KEYS.TIMER_PREFIX),

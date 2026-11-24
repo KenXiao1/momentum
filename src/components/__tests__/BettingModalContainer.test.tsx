@@ -21,7 +21,7 @@ vi.mock('../hooks/useFocusTrap', () => ({
   useFocusTrap: useFocusTrapMock,
 }));
 
-vi.mock('../BettingModalView', () => ({
+vi.mock('../betting-modal', () => ({
   BettingModalView: (props: {
     chainName: string;
     taskDuration: number;

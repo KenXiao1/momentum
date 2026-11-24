@@ -11,12 +11,12 @@ import type {
   RSIPTaskLink,
 } from '../../types';
 import type { PetState } from '../../types/pet';
-import { exceptionRuleManager } from '../../services/ExceptionRuleManager';
+import { exceptionRuleManager } from '../../services/exception-rule-manager/ExceptionRuleManager';
 import {
   importExportService,
   type MomentumExportDataV3,
 } from '../../services/ImportExportService';
-import { normalizeUnknownError } from '../../utils/errors/normalizeError';
+import { toError } from '../../utils/errorMessage';
 import { logger } from '../../utils/logger';
 import { getPlatformCapabilityCenter } from '../../utils/platform-capabilities/center';
 
@@ -50,12 +50,7 @@ export function useExportWorkflow(data: {
       if (!saved)
         logger.warn('IMPORT_EXPORT', 'Export canceled or unsupported');
     } catch (error) {
-      logger.error(
-        'IMPORT_EXPORT',
-        'Export failed',
-        undefined,
-        normalizeUnknownError(error),
-      );
+      logger.error('IMPORT_EXPORT', 'Export failed', undefined, toError(error));
       setExportFailed(true);
     }
   }, [data, file]);

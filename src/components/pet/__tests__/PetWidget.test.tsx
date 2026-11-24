@@ -5,7 +5,7 @@ import type { ComponentProps } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '../../../i18n';
 import type { PetMood, PetState } from '../../../types/pet';
-import { PetWidget } from '../PetWidget';
+import { PetWidget } from '../widget/PetWidget';
 import { usePetWidgetController } from '../widget/hooks/usePetWidgetController';
 
 vi.mock('../widget/hooks/usePetWidgetController', () => ({

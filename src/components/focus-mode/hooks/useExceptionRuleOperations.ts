@@ -2,7 +2,6 @@ import { type Translator } from '../../../i18n';
 import {
   ExceptionRuleError,
   ExceptionRuleType,
-  EnhancedExceptionRuleException,
   ExceptionRuleException,
 } from '../../../types';
 import type {
@@ -10,11 +9,12 @@ import type {
   PauseOptions,
   SessionContext,
 } from '../../../types';
-import { exceptionRuleManager } from '../../../services/ExceptionRuleManager';
-import { userFeedbackHandler } from '../../../services/UserFeedbackHandler';
+import { exceptionRuleManager } from '../../../services/exception-rule-manager/ExceptionRuleManager';
 import { isDev } from '../../../utils/env';
-import { toError } from '../../../utils/errorHandling';
+import { toError } from '../../../utils/errorMessage';
 import { logger } from '../../../utils/logger';
+import { toast } from '../../../utils/toast';
+import { describeRuleError } from './ruleErrorMessage';
 
 export type PendingActionType = 'pause' | 'early_completion';
 
@@ -35,28 +35,9 @@ export function useExceptionRuleOperations(params: {
 }) {
   const { pendingActionType, sessionContext, t } = params;
 
-  function showRuleError(error: unknown, context: unknown): void {
-    if (error instanceof ExceptionRuleException) {
-      userFeedbackHandler.showErrorMessage(error, context);
-      return;
-    }
-    userFeedbackHandler.showErrorMessage(
-      new EnhancedExceptionRuleException(
-        ExceptionRuleError.STORAGE_ERROR,
-        error instanceof Error
-          ? error.message
-          : t('focusMode.useExceptionRuleOperations.unknownError'),
-        context,
-        true,
-        [
-          t('focusMode.useExceptionRuleOperations.retry'),
-          t('focusMode.useExceptionRuleOperations.refresh'),
-        ],
-        'medium',
-        t('focusMode.useExceptionRuleOperations.operationFailedPleaseTryAgain'),
-      ),
-      context,
-    );
+  function showRuleError(error: unknown): void {
+    const { title, message } = describeRuleError(error, t);
+    toast.error(message, { title });
   }
 
   async function handleRuleSelected(
@@ -67,26 +48,20 @@ export function useExceptionRuleOperations(params: {
     if (isDev) {
       logger.debug('FOCUS_MODE', 'handleRuleSelected called', {
         pendingActionType,
-        ruleId: rule?.id,
-        rule,
+        ruleId: rule.id,
       });
     }
     try {
-      if (!rule?.id) {
-        userFeedbackHandler.showErrorMessage(
-          new EnhancedExceptionRuleException(
+      // Stored rules are not id-validated when read back.
+      if (!rule.id) {
+        showRuleError(
+          new ExceptionRuleException(
             ExceptionRuleError.RULE_NOT_FOUND,
             t('focusMode.useExceptionRuleOperations.invalidRule'),
-            { rule, pendingActionType },
           ),
         );
         return;
       }
-      userFeedbackHandler.showProgress(
-        pendingActionType === 'pause'
-          ? t('focusMode.useExceptionRuleOperations.pausingTask')
-          : t('focusMode.useExceptionRuleOperations.completingTask'),
-      );
       await exceptionRuleManager.useRule(
         rule.id,
         sessionContext,
@@ -97,11 +72,9 @@ export function useExceptionRuleOperations(params: {
         pendingActionType === 'pause' &&
         (await params.onPause(pauseOptions?.duration)) === false
       ) {
-        userFeedbackHandler.hideProgress();
         return;
       }
-      userFeedbackHandler.hideProgress();
-      const successMessage =
+      toast.success(
         pendingActionType === 'pause'
           ? t(
               'focusMode.useExceptionRuleOperations.appliedRuleRuleNameToPauseTheTask',
@@ -110,10 +83,8 @@ export function useExceptionRuleOperations(params: {
           : t(
               'focusMode.useExceptionRuleOperations.appliedRuleRuleNameToCompleteTheTask',
               { ruleName: rule.name },
-            );
-      userFeedbackHandler.showSuccess(
-        t('focusMode.useExceptionRuleOperations.success'),
-        successMessage,
+            ),
+        { title: t('focusMode.useExceptionRuleOperations.success') },
       );
       params.onRuleUsed?.(rule, pendingActionType, pauseOptions);
 
@@ -129,14 +100,13 @@ export function useExceptionRuleOperations(params: {
       }
       params.finishFlow();
     } catch (error) {
-      userFeedbackHandler.hideProgress();
       logger.error(
         'FOCUS_MODE',
         'Failed to use rule',
         { ruleId: rule.id, actionType: pendingActionType },
         toError(error),
       );
-      showRuleError(error, { rule, actionType: pendingActionType });
+      showRuleError(error);
     }
   }
 
@@ -146,11 +116,10 @@ export function useExceptionRuleOperations(params: {
   ): Promise<void> {
     try {
       if (!name.trim()) {
-        userFeedbackHandler.showErrorMessage(
-          new EnhancedExceptionRuleException(
+        showRuleError(
+          new ExceptionRuleException(
             ExceptionRuleError.VALIDATION_ERROR,
             t('focusMode.useExceptionRuleOperations.ruleNameCannotBeEmpty'),
-            { name, type },
           ),
         );
         return;
@@ -162,48 +131,33 @@ export function useExceptionRuleOperations(params: {
             ? ExceptionRuleType.PAUSE_ONLY
             : ExceptionRuleType.EARLY_COMPLETION_ONLY;
       }
-      userFeedbackHandler.showProgress(
-        t('focusMode.useExceptionRuleOperations.creatingRule'),
-        0,
-      );
-      userFeedbackHandler.updateProgress(
-        30,
-        t('focusMode.useExceptionRuleOperations.validating'),
-      );
-      userFeedbackHandler.updateProgress(
-        70,
-        t('focusMode.useExceptionRuleOperations.saving'),
-      );
       const result = await exceptionRuleManager.createRule(
         name,
         validType,
         undefined,
         { reuseExisting: true },
       );
-      userFeedbackHandler.hideProgress();
-      userFeedbackHandler.showSuccess(
-        t('focusMode.useExceptionRuleOperations.ruleCreated'),
+      toast.success(
         t(
           'focusMode.useExceptionRuleOperations.ruleResultRuleNameHasBeenCreatedAndApplied',
           { resultRuleName: result.rule.name },
         ),
+        { title: t('focusMode.useExceptionRuleOperations.ruleCreated') },
       );
-      if (result.warnings?.length) {
-        userFeedbackHandler.showWarning(
-          t('focusMode.useExceptionRuleOperations.notes'),
-          result.warnings.join('\n'),
-        );
+      if (result.warnings.length > 0) {
+        toast.warning(result.warnings.join('\n'), {
+          title: t('focusMode.useExceptionRuleOperations.notes'),
+        });
       }
       await handleRuleSelected(result.rule);
     } catch (error) {
-      userFeedbackHandler.hideProgress();
       logger.error(
         'FOCUS_MODE',
         '创建规则失败',
         { name, type },
         toError(error),
       );
-      showRuleError(error, { name, type });
+      showRuleError(error);
     }
   }
 

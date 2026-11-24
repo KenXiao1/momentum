@@ -4,8 +4,8 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import type { Chain, ScheduledSession, ChainTreeNode } from '../../types';
-import { getTimeRemaining } from '../../utils/time';
-import { getChainTypeConfig } from '../../utils/chainTree';
+import { getTimeRemaining } from '../../domain/scheduling';
+import { getChainTypeConfig } from '../../utils/chain-tree';
 import { systemNotificationService } from '../../services/platform/SystemNotificationService';
 import { useStorage } from '../../storage/useStorage';
 import { soundManager } from '../../utils/soundManager';

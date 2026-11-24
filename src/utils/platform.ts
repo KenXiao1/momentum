@@ -5,7 +5,7 @@ function hasTauriRuntime(): boolean {
   if ('__TAURI_INTERNALS__' in window) return true;
   if ('__TAURI__' in window) return true;
   if (window.location.protocol === 'tauri:') return true;
-  return /\bTauri\b/i.test(navigator.userAgent ?? '');
+  return /\bTauri\b/i.test(navigator.userAgent);
 }
 
 function detectPlatform(): Platform {

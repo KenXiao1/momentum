@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ChainEditor } from '../components/ChainEditor';
+import { ChainEditor } from '../components/chain-editor/ChainEditorContainer';
 import { I18nProvider } from '../i18n';
 import { Chain, ChainType } from '../types';
 

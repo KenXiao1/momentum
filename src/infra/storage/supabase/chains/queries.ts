@@ -34,10 +34,10 @@ export async function getChains(ctx: SupabaseStorageContext): Promise<Chain[]> {
       throw new Error(`Failed to fetch chains: ${error.message}`);
     }
 
-    const chainCount = data?.length || 0;
+    const chainCount = data.length;
     logger.dbOperation('getChains', true, { chainCount, userId: user.id });
 
-    return (data || []).map(mapChainRowToChain);
+    return data.map(mapChainRowToChain);
   };
 
   // A failed read must never look like an empty account: callers would
@@ -70,7 +70,7 @@ export async function getActiveChains(
       throw new Error(`Failed to fetch active chains: ${error.message}`);
     }
 
-    return (data || []).map(mapChainRowToChain);
+    return data.map(mapChainRowToChain);
   };
 
   return ctx.retryOperation(fetchActiveChains, 2, 100);
@@ -105,7 +105,7 @@ export async function getDeletedChains(
       throw new Error(`Failed to fetch deleted chains: ${error.message}`);
     }
 
-    const chains = (data || []).map(mapChainRowToChain);
+    const chains = data.map(mapChainRowToChain);
     return chains
       .filter((chain) => chain.deletedAt != null)
       .map((chain) => ({

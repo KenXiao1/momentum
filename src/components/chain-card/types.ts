@@ -4,7 +4,7 @@ import { type Translator } from '../../i18n';
  */
 
 import type { Chain, ScheduledSession, ChainTreeNode } from '../../types';
-import type { getChainTypeConfig } from '../../utils/chainTree';
+import type { getChainTypeConfig } from '../../utils/chain-tree';
 
 type ChainTypeConfig = ReturnType<typeof getChainTypeConfig>;
 

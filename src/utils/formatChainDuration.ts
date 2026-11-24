@@ -1,6 +1,6 @@
 import { translate } from '../i18n/translate';
 import type { Chain } from '../types';
-import { formatTime } from './time';
+import { formatTime } from '../domain/scheduling';
 
 export function formatChainDuration(
   chain: Chain,

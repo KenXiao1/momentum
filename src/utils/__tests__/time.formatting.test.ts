@@ -4,11 +4,10 @@
 
 import {
   formatElapsedTime,
-  formatTimeDescription,
   formatTimeDescriptionByLanguage,
   formatActualDuration,
   formatLastCompletionReference,
-} from '../time';
+} from '../../domain/scheduling';
 
 describe('Time Formatting Functions', () => {
   describe('formatElapsedTime', () => {
@@ -38,36 +37,36 @@ describe('Time Formatting Functions', () => {
     });
   });
 
-  describe('formatTimeDescription', () => {
+  describe('formatTimeDescriptionByLanguage default (en)', () => {
     test('应该处理小于1分钟的时间', () => {
-      expect(formatTimeDescription(0)).toBe('less than 1 minute');
-      expect(formatTimeDescription(0.5)).toBe('less than 1 minute');
-      expect(formatTimeDescription(0.9)).toBe('less than 1 minute');
+      expect(formatTimeDescriptionByLanguage(0)).toBe('less than 1 minute');
+      expect(formatTimeDescriptionByLanguage(0.5)).toBe('less than 1 minute');
+      expect(formatTimeDescriptionByLanguage(0.9)).toBe('less than 1 minute');
     });
 
     test('应该格式化分钟数', () => {
-      expect(formatTimeDescription(1)).toBe('1m');
-      expect(formatTimeDescription(5)).toBe('5m');
-      expect(formatTimeDescription(30)).toBe('30m');
-      expect(formatTimeDescription(59)).toBe('59m');
+      expect(formatTimeDescriptionByLanguage(1)).toBe('1m');
+      expect(formatTimeDescriptionByLanguage(5)).toBe('5m');
+      expect(formatTimeDescriptionByLanguage(30)).toBe('30m');
+      expect(formatTimeDescriptionByLanguage(59)).toBe('59m');
     });
 
     test('应该格式化小时数', () => {
-      expect(formatTimeDescription(60)).toBe('1h');
-      expect(formatTimeDescription(120)).toBe('2h');
-      expect(formatTimeDescription(180)).toBe('3h');
+      expect(formatTimeDescriptionByLanguage(60)).toBe('1h');
+      expect(formatTimeDescriptionByLanguage(120)).toBe('2h');
+      expect(formatTimeDescriptionByLanguage(180)).toBe('3h');
     });
 
     test('应该格式化小时和分钟组合', () => {
-      expect(formatTimeDescription(61)).toBe('1h 1m');
-      expect(formatTimeDescription(90)).toBe('1h 30m');
-      expect(formatTimeDescription(125)).toBe('2h 5m');
-      expect(formatTimeDescription(195)).toBe('3h 15m');
+      expect(formatTimeDescriptionByLanguage(61)).toBe('1h 1m');
+      expect(formatTimeDescriptionByLanguage(90)).toBe('1h 30m');
+      expect(formatTimeDescriptionByLanguage(125)).toBe('2h 5m');
+      expect(formatTimeDescriptionByLanguage(195)).toBe('3h 15m');
     });
 
     test('应该处理大数值', () => {
-      expect(formatTimeDescription(600)).toBe('10h');
-      expect(formatTimeDescription(665)).toBe('11h 5m');
+      expect(formatTimeDescriptionByLanguage(600)).toBe('10h');
+      expect(formatTimeDescriptionByLanguage(665)).toBe('11h 5m');
     });
   });
 
@@ -149,7 +148,7 @@ describe('Time Formatting Functions', () => {
     test('所有格式化函数应该保持一致的英文输出（默认）', () => {
       const minutes = 90;
 
-      const description = formatTimeDescription(minutes);
+      const description = formatTimeDescriptionByLanguage(minutes);
       const reference = formatLastCompletionReference(minutes);
       const actualDuration = formatActualDuration(minutes, true);
 
@@ -161,7 +160,7 @@ describe('Time Formatting Functions', () => {
 
     test('应该正确处理零值', () => {
       expect(formatElapsedTime(0)).toBe('00:00');
-      expect(formatTimeDescription(0)).toBe('less than 1 minute');
+      expect(formatTimeDescriptionByLanguage(0)).toBe('less than 1 minute');
       expect(formatActualDuration(0, true)).toBe(
         'Time spent: less than 1 minute',
       );
@@ -174,7 +173,7 @@ describe('Time Formatting Functions', () => {
       const typicalTime = 25; // 25分钟
 
       expect(formatElapsedTime(typicalTime * 60)).toBe('25:00');
-      expect(formatTimeDescription(typicalTime)).toBe('25m');
+      expect(formatTimeDescriptionByLanguage(typicalTime)).toBe('25m');
       expect(formatActualDuration(typicalTime, true)).toBe('Time spent: 25m');
       expect(formatLastCompletionReference(typicalTime)).toBe('Last time: 25m');
     });

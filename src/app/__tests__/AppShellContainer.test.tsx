@@ -139,7 +139,7 @@ vi.mock('../hooks/usePeriodicCleanup', () => ({
   usePeriodicCleanup: usePeriodicCleanupMock,
 }));
 
-vi.mock('../AppShellView', () => ({
+vi.mock('../app-shell/AppShellView', () => ({
   AppShellView: (props: AppShellViewProps) => (
     <div>
       <div data-testid="initialized">{String(props.app.isInitialized)}</div>

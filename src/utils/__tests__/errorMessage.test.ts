@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  getErrorMessage,
   getSafeErrorDetail,
   getSafeErrorDetailFromUnknown,
   toError,
@@ -77,7 +76,7 @@ describe('errorMessage', () => {
     });
   });
 
-  describe('toError and getErrorMessage', () => {
+  describe('toError', () => {
     it('returns the same Error instance when input is already Error', () => {
       const source = new Error('already error');
       const mapped = toError(source);
@@ -92,8 +91,9 @@ describe('errorMessage', () => {
       expect(toError(404).message).toBe('404');
     });
 
-    it('extracts message via getErrorMessage', () => {
-      expect(getErrorMessage({ message: 'boom' })).toBe('boom');
+    it('uses a fallback message for empty payloads', () => {
+      expect(toError('').message).toBe('Unknown error');
+      expect(toError({ message: '  ' }).message).toBe('Unknown error');
     });
   });
 });

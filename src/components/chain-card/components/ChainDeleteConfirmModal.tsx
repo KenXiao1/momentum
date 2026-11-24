@@ -89,7 +89,7 @@ export function ChainDeleteConfirmModal({
                 </div>
                 <div>
                   {t('chainCard.chainDeleteConfirmModal.exceptions')}
-                  {chain.auxiliaryExceptions?.length || 0}
+                  {chain.auxiliaryExceptions.length}
                 </div>
               </div>
             </div>
@@ -127,7 +127,7 @@ export function ChainDeleteConfirmModal({
                 </div>
                 <div>
                   {t('chainCard.chainDeleteConfirmModal.bookingExceptions')}
-                  {chain.auxiliaryExceptions?.length || 0}
+                  {chain.auxiliaryExceptions.length}
                 </div>
                 <div>{t('chainCard.chainDeleteConfirmModal.allSettings')}</div>
               </div>

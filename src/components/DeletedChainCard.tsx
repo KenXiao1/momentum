@@ -1,6 +1,6 @@
 import React from 'react';
 import { DeletedChain } from '../types';
-import { getChainTypeConfig } from '../utils/chainTree';
+import { getChainTypeConfig } from '../utils/chain-tree';
 import { Icon } from '../utils/iconMap';
 import { RotateCcw, Trash2, CheckSquare, Square } from 'lucide-react';
 import { useI18n } from '../i18n';

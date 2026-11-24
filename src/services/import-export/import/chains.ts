@@ -186,7 +186,7 @@ export function buildImportChains(params: {
       ),
       createdAt,
       lastCompletedAt,
-      deletedAt: null as null,
+      deletedAt: null,
     };
 
     if (type === 'group') {
@@ -204,12 +204,12 @@ export function buildImportChains(params: {
         ),
         groupStartedAt: undefined,
         groupExpiresAt: undefined,
-      } as Chain;
+      };
     }
 
     return {
       ...common,
       type: type as Chain['type'],
-    } as Chain;
+    };
   });
 }

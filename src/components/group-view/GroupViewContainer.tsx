@@ -5,7 +5,7 @@ import {
   getGroupProgress,
   getGroupUnitProgress,
   getNextUnitInGroup,
-} from '../../utils/chainTree';
+} from '../../utils/chain-tree';
 import { getGroupTimeStatus } from '../../utils/timeLimit';
 import { useI18n } from '../../i18n';
 import { GroupViewView } from './GroupViewView';

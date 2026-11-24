@@ -4,7 +4,6 @@ import {
   navigationStore,
   createInitialNavigationState,
   createNavigationStore,
-  selectBettingModal,
 } from '../navigationStore';
 
 describe('navigationStore', () => {
@@ -61,16 +60,16 @@ describe('navigationStore', () => {
 
     store.getState().openBettingFlow('chain-2', 'session-2');
 
-    expect(selectBettingModal(store.getState())).toEqual({
-      isOpen: true,
+    expect(store.getState()).toMatchObject({
+      showBettingModal: true,
       pendingChainId: 'chain-2',
       currentSessionId: 'session-2',
     });
 
     store.getState().closeBettingFlow();
 
-    expect(selectBettingModal(store.getState())).toEqual({
-      isOpen: false,
+    expect(store.getState()).toMatchObject({
+      showBettingModal: false,
       pendingChainId: null,
       currentSessionId: null,
     });

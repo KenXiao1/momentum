@@ -23,8 +23,10 @@ import { logger } from '../../utils/logger';
 import { toast } from '../../utils/toast';
 import { useI18n } from '../../i18n';
 import { resolveAppStateReader } from './appStateAccess';
-import { getSafeErrorDetailFromUnknown } from '../../utils/errorMessage';
-import { normalizeUnknownError } from '../../utils/errors/normalizeError';
+import {
+  getSafeErrorDetailFromUnknown,
+  toError,
+} from '../../utils/errorMessage';
 
 function normalizeOptionalParentId(parentId: unknown): string | undefined {
   return typeof parentId === 'string' ? parentId : undefined;
@@ -213,12 +215,7 @@ export function useChainsDomain({
       }));
       onNavigateToDashboard();
     } catch (error) {
-      logger.error(
-        'CHAINS',
-        'Failed to save chain',
-        undefined,
-        normalizeUnknownError(error),
-      );
+      logger.error('CHAINS', 'Failed to save chain', undefined, toError(error));
 
       const safeDetail = getSafeErrorDetailFromUnknown(error, language);
       toast.error(
@@ -240,7 +237,7 @@ export function useChainsDomain({
           'CHAINS',
           '重新加载数据也失败了',
           undefined,
-          normalizeUnknownError(reloadError),
+          toError(reloadError),
         );
       }
     }

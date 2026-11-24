@@ -127,9 +127,14 @@ function makeExecutionRecord(id: string, nodeId: string): RSIPExecutionRecord {
   };
 }
 
+/** Reads whose failure must reject: an empty result would mean "no data". */
+type ContractReadTarget = 'scheduledSessions' | 'activeSession' | 'rsipMeta';
+
 interface StorageContractSetup {
   /** Returns a storage instance with empty persisted state. */
   reset(): Promise<MomentumStorage>;
+  /** Makes reads of `target` fail the way this adapter's backing store can. */
+  breakRead(target: ContractReadTarget): void;
 }
 
 /**
@@ -544,6 +549,23 @@ export function describeStorageContract(
         ).toBe(true);
         expect(loaded[1].notes).toBe('note-second');
       });
+    });
+
+    describe('read failures', () => {
+      const reads: Record<ContractReadTarget, () => Promise<unknown>> = {
+        scheduledSessions: () => storage.getScheduledSessions(),
+        activeSession: () => storage.getActiveSession(),
+        rsipMeta: () => storage.getRSIPMeta(),
+      };
+
+      it.each(Object.keys(reads) as ContractReadTarget[])(
+        'rejects a failed %s read instead of reporting empty state',
+        async (target) => {
+          setup.breakRead(target);
+
+          await expect(reads[target]()).rejects.toThrow();
+        },
+      );
     });
   });
 }

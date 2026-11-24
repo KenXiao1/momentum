@@ -1,6 +1,6 @@
 import { isTauriDesktop } from '../platform';
 import { logger } from '../logger';
-import { normalizeUnknownError } from '../errors/normalizeError';
+import { toError } from '../errorMessage';
 import { getCurrentLanguage, t } from '../runtimeI18n';
 import { toast } from '../toast';
 
@@ -28,7 +28,7 @@ async function checkDesktopUpdates(): Promise<void> {
       'UPDATER',
       'Failed to check desktop updates',
       undefined,
-      normalizeUnknownError(error),
+      toError(error),
     );
   }
 }

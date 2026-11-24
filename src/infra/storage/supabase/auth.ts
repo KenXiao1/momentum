@@ -22,12 +22,9 @@ function toAuthUser(user: User): AuthUser {
   return {
     id: user.id,
     email: user.email ?? null,
-    createdAt: user.created_at ?? undefined,
+    createdAt: user.created_at,
     lastSignInAt: user.last_sign_in_at ?? null,
-    userMetadata: (user.user_metadata ?? null) as Record<
-      string,
-      unknown
-    > | null,
+    userMetadata: user.user_metadata,
   };
 }
 
@@ -76,8 +73,7 @@ export async function signUp(
   password: string,
 ): Promise<Result<void, AppError>> {
   const { error } = await supabaseSignUp(email, password);
-  if (error)
-    return err(messageToAppError(error.message ?? 'Sign up failed', error));
+  if (error) return err(messageToAppError(error.message, error));
   return ok(undefined);
 }
 
@@ -86,15 +82,13 @@ export async function signIn(
   password: string,
 ): Promise<Result<void, AppError>> {
   const { error } = await supabaseSignIn(email, password);
-  if (error)
-    return err(messageToAppError(error.message ?? 'Sign in failed', error));
+  if (error) return err(messageToAppError(error.message, error));
   return ok(undefined);
 }
 
 export async function signOut(): Promise<Result<void, AppError>> {
   const { error } = await supabaseSignOut();
-  if (error)
-    return err(messageToAppError(error.message ?? 'Sign out failed', error));
+  if (error) return err(messageToAppError(error.message, error));
   return ok(undefined);
 }
 

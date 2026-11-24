@@ -54,6 +54,7 @@ export interface ChainStore {
   cleanupExpiredDeletedChains(olderThanDays?: number): Promise<number>;
 }
 
+/** Reads reject when they fail; an empty result means nothing is stored. */
 export interface SessionStore {
   getScheduledSessions(): Promise<ScheduledSession[]>;
   saveScheduledSessions(sessions: ScheduledSession[]): Promise<void>;
@@ -80,6 +81,7 @@ export interface RsipStore {
   ): Promise<{ nodes: RSIPNode[]; meta: RSIPMeta }>;
   upsertRSIPNode(node: RSIPNode): Promise<void>;
   removeRSIPNodes(nodeIds: string[]): Promise<void>;
+  /** `{}` when nothing is stored; rejects when the read fails. */
   getRSIPMeta(): Promise<RSIPMeta>;
   saveRSIPMeta(meta: RSIPMeta): Promise<void>;
   getRSIPGroups(): Promise<RSIPNodeGroup[]>;

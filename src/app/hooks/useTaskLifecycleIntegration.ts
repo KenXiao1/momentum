@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react';
 import type { RSIPTaskEventPayload, TaskLifecycleEvent } from '../../types';
-import { normalizeUnknownError } from '../../utils/errors/normalizeError';
+import { toError } from '../../utils/errorMessage';
 import { fireAndForget } from '../../utils/fireAndForget';
 import { logger } from '../../utils/logger';
 
-type TaskEventIntegrationHandler = (
-  payload: RSIPTaskEventPayload,
-) => unknown | Promise<unknown>;
+type TaskEventIntegrationHandler = (payload: RSIPTaskEventPayload) => unknown;
 
 export function useTaskLifecycleIntegration(
   handleTaskEventIntegration: TaskEventIntegrationHandler,
@@ -39,7 +37,7 @@ export function useTaskLifecycleIntegration(
             'TASK_LIFECYCLE',
             'Task lifecycle integration failed',
             { ...event },
-            normalizeUnknownError(error),
+            toError(error),
           );
         }),
       { label: 'task-lifecycle-integration' },

@@ -33,7 +33,7 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
   const [reason, setReason] = useState('');
   // Callers key this component by chain id, so a new chain starts fresh.
   const [selectedExistingRule, setSelectedExistingRule] = useState(
-    () => chain.auxiliaryExceptions?.[0] ?? '',
+    () => chain.auxiliaryExceptions[0] ?? '',
   );
   const [useExistingRule, setUseExistingRule] = useState(false);
 
@@ -41,7 +41,7 @@ export const AuxiliaryJudgment: React.FC<AuxiliaryJudgmentProps> = ({
     setUseExistingRule(useExisting);
     if (useExisting) {
       setReason('');
-      setSelectedExistingRule(chain.auxiliaryExceptions?.[0] ?? '');
+      setSelectedExistingRule(chain.auxiliaryExceptions[0] ?? '');
     } else {
       setSelectedExistingRule('');
     }

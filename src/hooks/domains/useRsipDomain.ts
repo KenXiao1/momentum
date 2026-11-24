@@ -1,6 +1,6 @@
 import type { AppState, RSIPNode } from '../../types';
 import { logger } from '../../utils/logger';
-import { toError } from '../../utils/errorHandling';
+import { toError } from '../../utils/errorMessage';
 import { rsipTaskIntegrationService } from '../../services/rsip-integration/RSIPTaskIntegrationService';
 import { ensureDate } from './rsip/helpers';
 import { canCreateRSIPNodes } from '../../domain/rsip';

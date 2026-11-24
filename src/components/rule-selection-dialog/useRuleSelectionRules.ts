@@ -2,9 +2,11 @@ import { type Translator } from '../../i18n';
 import { useCallback, useState } from 'react';
 import type { ExceptionRule } from '../../types';
 import { ExceptionRuleType } from '../../types';
-import { exceptionRuleManager } from '../../services/ExceptionRuleManager';
-import { getSafeErrorDetailFromUnknown } from '../../utils/errorMessage';
-import { normalizeUnknownError } from '../../utils/errors/normalizeError';
+import { exceptionRuleManager } from '../../services/exception-rule-manager/ExceptionRuleManager';
+import {
+  getSafeErrorDetailFromUnknown,
+  toError,
+} from '../../utils/errorMessage';
 import { logger } from '../../utils/logger';
 import type { Language } from '../../i18n';
 
@@ -27,9 +29,7 @@ export function useRuleSelectionRules(params: {
       : ExceptionRuleType.EARLY_COMPLETION_ONLY;
   const isAvailableToChain = useCallback(
     (rule: ExceptionRule) =>
-      rule.isActive &&
-      (rule.scope === 'global' ||
-        (rule.scope === 'chain' && rule.chainId === chainId)),
+      rule.isActive && (rule.scope === 'global' || rule.chainId === chainId),
     [chainId],
   );
 
@@ -63,7 +63,7 @@ export function useRuleSelectionRules(params: {
           'RULE_SELECTION',
           `Failed to create default rule "${name}"`,
           { chainId, actionType },
-          normalizeUnknownError(error),
+          toError(error),
         );
       }
     }
@@ -82,7 +82,7 @@ export function useRuleSelectionRules(params: {
         'RULE_SELECTION',
         '获取规则失败',
         { chainId, actionType },
-        normalizeUnknownError(error),
+        toError(error),
       );
       return createDefaultRules();
     }

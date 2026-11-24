@@ -93,19 +93,6 @@ export default tseslint.config(
     },
   },
   {
-    files: [
-      'src/components/BettingModal.tsx',
-      'src/components/ChainCard.tsx',
-      'src/components/ChainDetail.tsx',
-      'src/components/MigrationDialog.tsx',
-      'src/components/RecycleBinModal.tsx',
-      'src/components/TaskGroupEditor.tsx',
-    ],
-    rules: {
-      'react-refresh/only-export-components': 'off',
-    },
-  },
-  {
     files: ['src/utils/logger.ts'],
     rules: {
       'no-console': 'off',

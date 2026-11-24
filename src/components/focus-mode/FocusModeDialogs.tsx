@@ -5,8 +5,7 @@ import type {
   SessionContext,
 } from '../../types';
 import { RuleSelectionDialog } from '../RuleSelectionDialog';
-import { TaskCompletionDialog } from '../TaskCompletionDialog';
-import { UserFeedbackDisplay } from '../UserFeedbackDisplay';
+import { TaskCompletionDialog } from '../task-completion-dialog/TaskCompletionDialog';
 import { InterruptConfirmDialog } from './InterruptConfirmDialog';
 
 interface FocusModeDialogsProps {
@@ -74,7 +73,6 @@ export function FocusModeDialogs({
         onCancel={onCancelInterrupt}
         onConfirm={onConfirmInterrupt}
       />
-      <UserFeedbackDisplay />
     </>
   );
 }

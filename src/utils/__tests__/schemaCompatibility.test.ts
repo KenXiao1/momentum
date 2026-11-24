@@ -1,4 +1,4 @@
-import { SupabaseStorage } from '../supabaseStorage';
+import { SupabaseStorage } from '../../infra/storage/supabase';
 import { Chain } from '../../types';
 import { supabase } from '../../lib/supabase';
 

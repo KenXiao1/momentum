@@ -12,7 +12,7 @@ import {
   HistoryRecordProps,
   TranslationFn,
 } from './types';
-import { formatTime, formatActualDuration } from '../../utils/time';
+import { formatTime, formatActualDuration } from '../../domain/scheduling';
 
 const EmptyHistory: React.FC<{ t: TranslationFn }> = ({ t }) => (
   <div className="py-16 text-center text-gray-500 dark:text-slate-400">

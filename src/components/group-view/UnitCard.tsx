@@ -12,8 +12,8 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { getChainTypeConfig } from '../../utils/chainTree';
-import { getTimeRemaining } from '../../utils/time';
+import { getChainTypeConfig } from '../../utils/chain-tree';
+import { getTimeRemaining } from '../../domain/scheduling';
 import { formatChainDuration } from '../../utils/formatChainDuration';
 import { soundManager } from '../../utils/soundManager';
 

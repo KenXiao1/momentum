@@ -8,7 +8,7 @@ import {
 } from '../../../test/factories';
 import { usePeriodicCleanup } from '../usePeriodicCleanup';
 import { isGroupExpired, resetGroupProgress } from '../../../utils/timeLimit';
-import { isSessionExpired } from '../../../utils/time';
+import { isSessionExpired } from '../../../domain/scheduling';
 import { systemNotificationService } from '../../../services/platform/SystemNotificationService';
 import { soundManager } from '../../../utils/soundManager';
 import {
@@ -27,7 +27,7 @@ vi.mock('../../../utils/timeLimit', () => ({
   resetGroupProgress: vi.fn((group) => group),
 }));
 
-vi.mock('../../../utils/time', () => ({
+vi.mock('../../../domain/scheduling', () => ({
   isSessionExpired: vi.fn(() => false),
 }));
 

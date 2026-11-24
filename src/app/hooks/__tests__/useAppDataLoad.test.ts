@@ -10,7 +10,7 @@ import {
 } from '../../../test/factories';
 import { migrateCompletionHistoryForTiming } from '../../../utils/completionHistoryTimingMigration';
 import { fireAndForget } from '../../../utils/fireAndForget';
-import { isSessionExpired } from '../../../utils/time';
+import { isSessionExpired } from '../../../domain/scheduling';
 import { runWhenIdle } from '../../../utils/runWhenIdle';
 import { useAppDataLoad } from '../useAppDataLoad';
 import {
@@ -48,7 +48,7 @@ vi.mock('../../../utils/completionHistoryTimingMigration', () => ({
   })),
 }));
 
-vi.mock('../../../utils/time', () => ({
+vi.mock('../../../domain/scheduling', () => ({
   isSessionExpired: vi.fn(() => false),
 }));
 

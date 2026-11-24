@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import type { ExceptionRule } from '../../../types';
 import { ExceptionRuleError, ExceptionRuleException } from '../../../types';
-import { exceptionRuleManager } from '../../../services/ExceptionRuleManager';
+import { exceptionRuleManager } from '../../../services/exception-rule-manager/ExceptionRuleManager';
 import {
   getSafeErrorDetail,
   getSafeErrorDetailFromUnknown,

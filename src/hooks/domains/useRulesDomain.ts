@@ -100,10 +100,7 @@ export function useRulesDomain({
       chain.id === chainId
         ? {
             ...chain,
-            auxiliaryExceptions: [
-              ...(chain.auxiliaryExceptions || []),
-              exceptionRule,
-            ],
+            auxiliaryExceptions: [...chain.auxiliaryExceptions, exceptionRule],
           }
         : chain,
     );

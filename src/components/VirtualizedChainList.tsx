@@ -6,9 +6,9 @@ import React, {
   useTransition,
 } from 'react';
 import { ChainTreeNode, ScheduledSession } from '../types';
-import { ChainCard } from './ChainCard';
-import { GroupCard } from './GroupCard';
-import { getNextUnitInGroup } from '../utils/chainTree';
+import { ChainCard } from './chain-card/ChainCardContainer';
+import { GroupCard } from './group-card/GroupCard';
+import { getNextUnitInGroup } from '../utils/chain-tree';
 import { isDev } from '../utils/env';
 import { useI18n } from '../i18n';
 

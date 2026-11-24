@@ -23,14 +23,14 @@ export async function cleanupExpiredDeletedChains(
     if (selectError) {
       if (
         selectError.code === '42703' ||
-        selectError.message?.includes('deleted_at does not exist')
+        selectError.message.includes('deleted_at does not exist')
       ) {
         return 0;
       }
       throw new Error(`Failed to find expired chains: ${selectError.message}`);
     }
 
-    if (!expiredChains || expiredChains.length === 0) return 0;
+    if (expiredChains.length === 0) return 0;
 
     const { error: deleteError } = await client
       .from('chains')

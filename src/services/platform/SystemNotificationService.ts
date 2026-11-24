@@ -8,7 +8,7 @@ import { localPreferences } from '../../utils/localPreferences';
 import { randomId } from '../../utils/random';
 import { getCurrentLanguage } from '../../utils/runtimeI18n';
 import { logger } from '../../utils/logger';
-import { normalizeUnknownError } from '../../utils/errors/normalizeError';
+import { toError } from '../../utils/errorMessage';
 
 const DEFAULT_NOTIFICATION_ICON = '/icons/icon-192.png';
 
@@ -126,7 +126,7 @@ class SystemNotificationService {
         'SYSTEM_NOTIFICATIONS',
         'Failed to request notification permission',
         { source },
-        normalizeUnknownError(error),
+        toError(error),
       );
       return false;
     }
@@ -278,7 +278,7 @@ class SystemNotificationService {
         'SYSTEM_NOTIFICATIONS',
         'Failed to show notification',
         { tag: options.tag },
-        normalizeUnknownError(error),
+        toError(error),
       );
     }
   }

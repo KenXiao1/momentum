@@ -10,7 +10,7 @@ import { isSupabaseConfigured } from '../utils/supabaseConfig';
 import { realTimeSyncService } from '../services/RealTimeSyncService';
 import { logger } from '../utils/logger';
 import { useI18n } from '../i18n';
-import { normalizeUnknownError } from '../utils/errors/normalizeError';
+import { toError } from '../utils/errorMessage';
 import { localPreferences } from '../utils/localPreferences';
 import { isTauri } from '../utils/platform';
 import { toast } from '../utils/toast';
@@ -93,13 +93,13 @@ export function StorageProvider({ storage, children }: StorageProviderProps) {
 
     const loadSupabase = async () => {
       try {
-        const { supabaseStorage } = await import('../utils/supabaseStorage');
+        const { supabaseStorage } = await import('../infra/storage/supabase');
         if (cancelled) return;
 
         logger.debug('STORAGE', 'Supabase storage loaded dynamically');
         setLoadedSupabaseStorage(supabaseStorage);
       } catch (error) {
-        const normalizedError = normalizeUnknownError(error);
+        const normalizedError = toError(error);
         logger.error(
           'STORAGE',
           'Failed to load Supabase storage, falling back to localStorage',

@@ -1,7 +1,7 @@
 import { type Translator } from '../../i18n';
 import { CheckCircle, Clock, Flame } from 'lucide-react';
 import type { Chain } from '../../types';
-import { getChainTypeConfig } from '../../utils/chainTree';
+import { getChainTypeConfig } from '../../utils/chain-tree';
 import { Icon } from '../../utils/iconMap';
 import { formatChainDuration } from '../../utils/formatChainDuration';
 

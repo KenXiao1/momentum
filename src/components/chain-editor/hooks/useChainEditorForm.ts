@@ -90,7 +90,7 @@ export function useChainEditorForm({
     isCustomTriggerValue ? CUSTOM_TRIGGER_VALUE : chain?.trigger || '',
   );
   const [customTrigger, setCustomTrigger] = useState(
-    isCustomTriggerValue ? chain!.trigger : '',
+    isCustomTriggerValue ? chain.trigger : '',
   );
 
   const [duration, setDuration] = useState(chain?.duration || 45);
@@ -120,7 +120,7 @@ export function useChainEditorForm({
       : chain?.auxiliarySignal || '',
   );
   const [customAuxiliarySignal, setCustomAuxiliarySignal] = useState(
-    isCustomAuxiliarySignalValue ? chain!.auxiliarySignal : '',
+    isCustomAuxiliarySignalValue ? chain.auxiliarySignal : '',
   );
 
   const [auxiliaryDuration, setAuxiliaryDuration] = useState(

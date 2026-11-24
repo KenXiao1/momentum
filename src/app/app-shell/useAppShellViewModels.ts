@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { buildChainTree } from '../../utils/chainTree';
+import { buildChainTree } from '../../utils/chain-tree';
 import type { Chain, ViewState } from '../../types';
 import { navigationStore } from '../../stores/navigationStore';
 import type { AppShellViewProps } from './types';

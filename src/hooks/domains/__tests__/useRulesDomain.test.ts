@@ -110,10 +110,7 @@ describe('useRulesDomain', () => {
   });
 
   it('should allow auxiliary exception rule and persist updates', () => {
-    const chain = { ...createUnitChain({ id: 'chain-2' }) } as ReturnType<
-      typeof createUnitChain
-    >;
-    delete (chain as { auxiliaryExceptions?: string[] }).auxiliaryExceptions;
+    const chain = createUnitChain({ id: 'chain-2', auxiliaryExceptions: [] });
     const untouched = createUnitChain({
       id: 'chain-8',
       auxiliaryExceptions: ['untouched'],

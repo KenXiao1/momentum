@@ -47,7 +47,6 @@ export const ImportStatusDisplay: React.FC<{
       spinner: false,
     },
   }[importStatus];
-  if (!statusConfig) return null;
   if (importStatus === 'error') {
     return (
       <div className={`${statusConfig.bg} rounded-2xl border p-4`}>

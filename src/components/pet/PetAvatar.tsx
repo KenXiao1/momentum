@@ -1,5 +1,5 @@
 import type { PetMood, PetStage } from '../../types/pet';
-import { getStageEmoji, getMoodEmoji } from '../../utils/petLogic';
+import { getStageEmoji, getMoodEmoji } from '../../domain/pet';
 
 interface PetAvatarProps {
   stage: PetStage;

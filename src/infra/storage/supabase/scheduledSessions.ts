@@ -41,7 +41,12 @@ export async function getScheduledSessions(
     .select('chain_id, scheduled_at, expires_at, auxiliary_signal')
     .eq('user_id', user.id)
     .order('scheduled_at', { ascending: false });
-  return error || !data ? [] : data.map(mapScheduledSessionRow);
+  // A failed read must not look like "nothing scheduled": app state would
+  // silently lose the pending schedules and their expiry checks.
+  if (error) {
+    throw new Error(`Failed to fetch scheduled sessions: ${error.message}`);
+  }
+  return data.map(mapScheduledSessionRow);
 }
 
 export async function saveScheduledSessions(

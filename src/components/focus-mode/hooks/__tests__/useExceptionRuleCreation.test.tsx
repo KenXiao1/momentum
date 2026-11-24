@@ -9,21 +9,8 @@ import {
 } from '../../../../types';
 import { localPreferences } from '../../../../utils/localPreferences';
 import { LOCAL_STORAGE_KEYS } from '../../../../utils/local-preferences/keys';
+import { toast } from '../../../../utils/toast';
 import { useExceptionRuleOperations } from '../useExceptionRuleOperations';
-
-const feedback = vi.hoisted(() => ({
-  showErrorMessage: vi.fn(),
-  showProgress: vi.fn(),
-  updateProgress: vi.fn(),
-  hideProgress: vi.fn(),
-  showSuccess: vi.fn(),
-  showWarning: vi.fn(),
-  removeMessage: vi.fn(),
-}));
-
-vi.mock('../../../../services/UserFeedbackHandler', () => ({
-  userFeedbackHandler: feedback,
-}));
 
 vi.mock('../../../../utils/logger', () => ({
   logger: {
@@ -106,7 +93,8 @@ describe('focus-mode rule creation with local persistence', () => {
     vi.clearAllMocks();
     localStorage.clear();
     localPreferences.setLanguage('en');
-    feedback.showErrorMessage.mockReturnValue('error-message');
+    vi.spyOn(toast, 'error');
+    vi.spyOn(toast, 'warning');
   });
 
   afterEach(() => {
@@ -133,8 +121,8 @@ describe('focus-mode rule creation with local persistence', () => {
       ]);
       expect(params.onPause).toHaveBeenCalledOnce();
       expect(params.finishFlow).toHaveBeenCalledOnce();
-      expect(feedback.showWarning).not.toHaveBeenCalled();
-      expect(feedback.showErrorMessage).not.toHaveBeenCalled();
+      expect(toast.warning).not.toHaveBeenCalled();
+      expect(toast.error).not.toHaveBeenCalled();
     },
   );
 
@@ -155,9 +143,9 @@ describe('focus-mode rule creation with local persistence', () => {
     expect(storedUsage()).toEqual([
       expect.objectContaining({ ruleId: rules[1].id, actionType: 'pause' }),
     ]);
-    expect(feedback.showWarning).toHaveBeenCalledWith(
-      'Notes',
+    expect(toast.warning).toHaveBeenCalledWith(
       expect.stringContaining(existing.name),
+      { title: 'Notes' },
     );
     expect(params.onPause).toHaveBeenCalledOnce();
     expect(params.finishFlow).toHaveBeenCalledOnce();
@@ -192,8 +180,8 @@ describe('focus-mode rule creation with local persistence', () => {
     );
     expect(params.onPause).toHaveBeenCalledOnce();
     expect(params.finishFlow).toHaveBeenCalledOnce();
-    expect(feedback.showWarning).not.toHaveBeenCalled();
-    expect(feedback.showErrorMessage).not.toHaveBeenCalled();
+    expect(toast.warning).not.toHaveBeenCalled();
+    expect(toast.error).not.toHaveBeenCalled();
   });
 
   it.each(['   ', 'x'.repeat(101)])(
@@ -205,8 +193,9 @@ describe('focus-mode rule creation with local persistence', () => {
 
       expect(storedRules()).toEqual([]);
       expect(storedUsage()).toEqual([]);
-      expect(feedback.showErrorMessage.mock.calls[0]?.[0]).toBeInstanceOf(
-        Error,
+      expect(toast.error).toHaveBeenCalledWith(
+        expect.stringMatching(/^Validation failed/),
+        { title: 'Validation failed' },
       );
       expect(params.onPause).not.toHaveBeenCalled();
       expect(params.finishFlow).not.toHaveBeenCalled();
@@ -230,7 +219,7 @@ describe('focus-mode rule creation with local persistence', () => {
         expect.objectContaining({ actionType: action }),
       ]);
       expect(params.finishFlow).toHaveBeenCalledOnce();
-      expect(feedback.showErrorMessage).not.toHaveBeenCalled();
+      expect(toast.error).not.toHaveBeenCalled();
     },
   );
 
@@ -244,8 +233,8 @@ describe('focus-mode rule creation with local persistence', () => {
       expect.objectContaining({ id: existing.id, type: existing.type }),
     ]);
     expect(storedUsage()).toEqual([]);
-    expect(feedback.showWarning).toHaveBeenCalled();
-    expect(feedback.showErrorMessage).toHaveBeenCalled();
+    expect(toast.warning).toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalled();
     expect(params.onPause).not.toHaveBeenCalled();
     expect(params.onRuleUsed).not.toHaveBeenCalled();
     expect(params.finishFlow).not.toHaveBeenCalled();
@@ -261,7 +250,7 @@ describe('focus-mode rule creation with local persistence', () => {
       '{invalid-json',
     );
     expect(storedUsage()).toEqual([]);
-    expect(feedback.showErrorMessage).toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalled();
     expect(params.onPause).not.toHaveBeenCalled();
     expect(params.finishFlow).not.toHaveBeenCalled();
   });
@@ -284,7 +273,7 @@ describe('focus-mode rule creation with local persistence', () => {
 
     expect(storedRules()).toEqual([]);
     expect(storedUsage()).toEqual([]);
-    expect(feedback.showErrorMessage).toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalled();
     expect(params.onPause).not.toHaveBeenCalled();
     expect(params.onRuleUsed).not.toHaveBeenCalled();
     expect(params.finishFlow).not.toHaveBeenCalled();

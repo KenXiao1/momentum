@@ -2,7 +2,7 @@ import { Calendar, Clock, Flame, Sparkles } from 'lucide-react';
 import {
   formatTime,
   formatTimeDescriptionByLanguage,
-} from '../../../utils/time';
+} from '../../../domain/scheduling';
 import type { ChainCardViewProps } from '../types';
 
 const STREAK_MILESTONES = [7, 30, 100, 365];

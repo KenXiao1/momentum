@@ -9,7 +9,7 @@ import {
   getMoodEmoji,
   getStageEmoji,
   getStageName,
-} from '../petLogic';
+} from '../../domain/pet';
 
 describe('petLogic', () => {
   beforeEach(() => {

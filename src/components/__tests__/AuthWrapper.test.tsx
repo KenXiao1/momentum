@@ -24,7 +24,7 @@ vi.mock('../../storage/useStorageMode', () => ({
   useStorageMode: () => storageModeMock,
 }));
 
-vi.mock('../IntroScreen', () => ({
+vi.mock('../intro/IntroScreen', () => ({
   IntroScreen: ({
     onSignIn,
     onSignUp,

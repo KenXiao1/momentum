@@ -130,7 +130,7 @@ export class RuleSearchIndex {
     let intersection = new Set<number>(sorted[0]);
 
     for (let i = 1; i < sorted.length; i++) {
-      const bucket = sorted[i]!;
+      const bucket = sorted[i];
       const next = new Set<number>();
       for (const idx of intersection) {
         if (bucket.has(idx)) next.add(idx);
@@ -166,7 +166,7 @@ export class RuleSearchIndex {
     ruleIndex: number,
     normalizedQuery: string,
   ): SearchResult {
-    const rule = this.indexedRules[ruleIndex]!;
+    const rule = this.indexedRules[ruleIndex];
 
     const base = scoreRule(rule, normalizedQuery);
     if (base.score > 0) return base;

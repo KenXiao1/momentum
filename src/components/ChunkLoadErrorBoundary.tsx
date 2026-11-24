@@ -1,5 +1,5 @@
 import React from 'react';
-import { normalizeUnknownError } from '../utils/errors/normalizeError';
+import { toError } from '../utils/errorMessage';
 import {
   attemptChunkLoadRecovery,
   isChunkLoadError,
@@ -41,7 +41,7 @@ export class ChunkLoadErrorBoundary extends React.Component<
         recovered,
         chunkError: isChunkLoadError(error),
       },
-      normalizeUnknownError(error),
+      toError(error),
     );
   }
 

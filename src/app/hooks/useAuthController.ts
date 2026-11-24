@@ -4,7 +4,7 @@ import type { AppState } from '../../types';
 import type { MomentumStorage } from '../../storage/MomentumStorage';
 import { hasStorageCapability } from '../../storage/ports';
 import { logger } from '../../utils/logger';
-import { toError } from '../../utils/errorHandling';
+import { toError } from '../../utils/errorMessage';
 
 interface UseAuthControllerParams {
   storage: MomentumStorage;

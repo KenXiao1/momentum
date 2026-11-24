@@ -28,7 +28,7 @@ import type {
 import type { MomentumStorage } from '../../storage/MomentumStorage';
 import { useStorage } from '../../storage/useStorage';
 import { logger } from '../../utils/logger';
-import { normalizeUnknownError } from '../../utils/errors/normalizeError';
+import { toError } from '../../utils/errorMessage';
 import { isTauriMobile } from '../../utils/platform';
 import {
   DEFAULT_PET_CONFIG,
@@ -37,7 +37,7 @@ import {
   calculateMood,
   createNewPet,
   getXpForLevel,
-} from '../../utils/petLogic';
+} from '../../domain/pet';
 
 export interface UsePetDomainReturn {
   pet: PetState | null;
@@ -81,12 +81,7 @@ async function loadDecayedPet(
     onLoaded(updatedPet);
     await storage.savePetState(updatedPet);
   } catch (error) {
-    logger.error(
-      'PET',
-      'Failed to load pet state',
-      undefined,
-      normalizeUnknownError(error),
-    );
+    logger.error('PET', 'Failed to load pet state', undefined, toError(error));
   }
 }
 

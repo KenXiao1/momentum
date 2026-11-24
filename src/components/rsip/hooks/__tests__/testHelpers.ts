@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { createTranslator } from '../../../../i18n';
+import { createTranslator } from '../../../../i18n/translate';
 import type {
   Chain,
   RSIPNode,

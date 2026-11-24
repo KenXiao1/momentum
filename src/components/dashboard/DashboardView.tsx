@@ -13,8 +13,8 @@ import type { DashboardController } from './useDashboardController';
 const ImportExportModal = lazy(
   lazyWithChunkRecovery(
     () =>
-      import('../ImportExportModal').then((module) => ({
-        default: module.ImportExportModal,
+      import('../ImportExportModalContainer').then((module) => ({
+        default: module.ImportExportModalContainer,
       })),
     'ImportExportModal',
   ),
@@ -22,8 +22,8 @@ const ImportExportModal = lazy(
 const RecycleBinModal = lazy(
   lazyWithChunkRecovery(
     () =>
-      import('../RecycleBinModal').then((module) => ({
-        default: module.RecycleBinModal,
+      import('../RecycleBinModalContainer').then((module) => ({
+        default: module.RecycleBinModalContainer,
       })),
     'RecycleBinModal',
   ),
@@ -40,7 +40,7 @@ const AccountModal = lazy(
 const RuleManagerView = lazy(
   lazyWithChunkRecovery(
     () =>
-      import('../RuleManagerView').then((module) => ({
+      import('../rule-manager/RuleManagerViewContainer').then((module) => ({
         default: module.RuleManagerView,
       })),
     'RuleManagerView',

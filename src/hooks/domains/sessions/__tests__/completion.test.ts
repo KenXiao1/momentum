@@ -11,7 +11,7 @@ import {
   createUnitChain,
 } from '../../../../test/factories';
 import { createCompletionHandlers } from '../completion';
-import { forwardTimerManager } from '../../../../utils/forwardTimer';
+import { forwardTimerManager } from '../../../../utils/forward-timer';
 import { systemNotificationService } from '../../../../services/platform/SystemNotificationService';
 import { emitPointsChanged } from '../../../../utils/pointsEvents';
 import { logger } from '../../../../utils/logger';
@@ -25,7 +25,7 @@ vi.mock('../../../../utils/logger', () => ({
   },
 }));
 
-vi.mock('../../../../utils/forwardTimer', () => ({
+vi.mock('../../../../utils/forward-timer', () => ({
   forwardTimerManager: {
     getCurrentElapsed: vi.fn(() => 0),
     clearTimer: vi.fn(),

@@ -112,7 +112,7 @@ export function useAutoResume({ session, onResume }: UseAutoResumeParams) {
       : null;
   const countsElapsed = pausedAt !== null && !schedule;
   useEffect(() => {
-    if (!countsElapsed || pausedAt === null) return;
+    if (!countsElapsed) return;
     const interval = window.setInterval(() => {
       setElapsed({
         pausedAt,

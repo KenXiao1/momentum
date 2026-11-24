@@ -80,7 +80,7 @@ const DeleteDataSummary: React.FC<DeleteDataSummaryProps> = ({
           {
             label: t('chainDetail.deleteConfirmModal.exceptions'),
             value: t('counts.entries', {
-              count: chain.auxiliaryExceptions?.length || 0,
+              count: chain.auxiliaryExceptions.length,
             }),
           },
         ]}
@@ -117,7 +117,7 @@ const DeleteDataSummary: React.FC<DeleteDataSummaryProps> = ({
           {
             label: t('chainDetail.deleteConfirmModal.bookingExceptions'),
             value: t('counts.entries', {
-              count: chain.auxiliaryExceptions?.length || 0,
+              count: chain.auxiliaryExceptions.length,
             }),
           },
           {

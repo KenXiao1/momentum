@@ -3,7 +3,7 @@ import type { AppState } from '../../../types';
 import type { MomentumStorage } from '../../../storage/MomentumStorage';
 import { resolveAppStateReader } from '../appStateAccess';
 import { logger } from '../../../utils/logger';
-import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
+import { toError } from '../../../utils/errorMessage';
 import { toast } from '../../../utils/toast';
 
 type PendingTransition = { paused: boolean; promise: Promise<boolean> };
@@ -59,7 +59,7 @@ export function createPauseResumeHandlers({
           'SESSIONS',
           'Failed to persist session pause state',
           undefined,
-          normalizeUnknownError(error),
+          toError(error),
         );
         toast.error(saveErrorMessage);
         return false;

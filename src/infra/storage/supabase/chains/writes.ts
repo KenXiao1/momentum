@@ -39,7 +39,7 @@ async function upsertWithFallback(
         .upsert(rows, { onConflict: 'id' })
         .select('id');
       if (error) throw error;
-      return (data ?? []) as Array<{ id: string }>;
+      return data;
     });
 
   if (hasKnownMissingCapabilities(ctx, TABLE, STRICT_CAPABILITIES)) {
@@ -96,7 +96,7 @@ export async function saveChains(
     chains.map((chain) => buildChainRow(chain, user.id, false)),
   );
   const expectedIds = new Set(chains.map((chain) => chain.id));
-  const idsToDelete = (existingRows ?? [])
+  const idsToDelete = existingRows
     .map((row) => row.id)
     .filter((id) => !expectedIds.has(id));
   if (idsToDelete.length) {

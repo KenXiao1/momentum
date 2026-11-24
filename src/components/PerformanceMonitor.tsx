@@ -95,16 +95,16 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
               Status:{' '}
               <span
                 className={
-                  stats?.sync?.isEnabled ? 'text-green-600' : 'text-red-600'
+                  stats?.sync.isEnabled ? 'text-green-600' : 'text-red-600'
                 }
               >
-                {stats?.sync?.isEnabled ? 'Enabled' : 'Disabled'}
+                {stats?.sync.isEnabled ? 'Enabled' : 'Disabled'}
               </span>
             </div>
             <div>
               Subscribers:{' '}
               <span className="font-mono">
-                {stats?.sync?.subscriberCount ?? 0}
+                {stats?.sync.subscriberCount ?? 0}
               </span>
             </div>
           </div>
@@ -119,13 +119,13 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
               <div>
                 Renders:{' '}
                 <span className="font-mono text-green-600">
-                  {stats.react.totalRenders ?? 0}
+                  {stats.react.totalRenders}
                 </span>
               </div>
               <div>
                 Average render:{' '}
                 <span className="font-mono text-red-600">
-                  {stats.react.avgRenderTime ?? 0}ms
+                  {stats.react.avgRenderTime}ms
                 </span>
               </div>
             </div>

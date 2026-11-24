@@ -43,7 +43,7 @@ vi.mock('../../utils/errorMessage', () => ({
   ),
 }));
 
-vi.mock('../../services/ExceptionRuleManager', () => ({
+vi.mock('../../services/exception-rule-manager/ExceptionRuleManager', () => ({
   exceptionRuleManager: {
     exportRules: exportRulesMock,
     importRules: importRulesMock,

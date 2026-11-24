@@ -1,9 +1,9 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { isDev } from '../../utils/env';
 import { fireAndForget } from '../../utils/fireAndForget';
-import { forwardTimerManager } from '../../utils/forwardTimer';
-import { exceptionRuleManager } from '../../services/ExceptionRuleManager';
-import { performanceMonitor } from '../../utils/performanceMonitor';
+import { forwardTimerManager } from '../../utils/forward-timer';
+import { exceptionRuleManager } from '../../services/exception-rule-manager/ExceptionRuleManager';
+import { performanceMonitor } from '../../utils/performance-monitor/PerformanceMonitor';
 import { checkForUpdates } from '../../utils/platform-adapters/updater';
 
 interface ServiceLifecycleResult {

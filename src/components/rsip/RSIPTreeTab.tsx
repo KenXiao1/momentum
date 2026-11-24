@@ -1,4 +1,4 @@
-import { RSIPCanvas } from './RSIPCanvas';
+import { RSIPCanvasContainer } from './RSIPCanvasContainer';
 import { RSIPDailyReminder } from './RSIPDailyReminder';
 import { RSIPForm } from './RSIPForm';
 import { RSIPModeSwitch } from './RSIPModeSwitch';
@@ -93,7 +93,7 @@ export function RSIPTreeTab({ model }: RSIPTreeTabProps) {
         t={model.t}
       />
 
-      <RSIPCanvas
+      <RSIPCanvasContainer
         nodes={model.nodes}
         tree={model.tree}
         onSaveNodes={model.onSaveNodes}

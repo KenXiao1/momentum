@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '../../../i18n';
 import { createLocalStorageMock } from '../../../test/factories/storageMock';
 import type { ActiveSession, Chain } from '../../../types';
-import { forwardTimerManager } from '../../../utils/forwardTimer';
+import { forwardTimerManager } from '../../../utils/forward-timer';
 import { useFocusTimers } from './useFocusTimers';
 
 const notificationBoundary = vi.hoisted(() => ({

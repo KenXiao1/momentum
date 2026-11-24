@@ -1,5 +1,5 @@
 import { AlertTriangle, Bell, Check, Clock, Play } from 'lucide-react';
-import { formatDuration } from '../../utils/time';
+import { formatDuration } from '../../domain/scheduling';
 
 interface ScheduledActionState {
   signal: string;

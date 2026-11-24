@@ -6,13 +6,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { ExceptionRule, PauseOptions, SessionContext } from '../types';
 import { ExceptionRuleType } from '../types';
-import { exceptionRuleManager } from '../services/ExceptionRuleManager';
+import { exceptionRuleManager } from '../services/exception-rule-manager/ExceptionRuleManager';
 import { useI18n } from '../i18n';
 import { isDev } from '../utils/env';
 import { getSafeErrorDetailFromUnknown } from '../utils/errorMessage';
-import { useLayoutStability } from '../utils/LayoutStabilityMonitor';
 import { logger } from '../utils/logger';
-import { RuleSelectionDialogView } from './RuleSelectionDialogView';
+import { RuleSelectionDialogView } from './rule-selection-dialog/RuleSelectionDialogView';
 import {
   useRuleSelectionRules,
   type RuleActionType,
@@ -62,10 +61,8 @@ const RuleSelectionDialogContent: React.FC<RuleSelectionDialogContentProps> = ({
   const [duration, setDuration] = useState<number | undefined>(15);
   const [isIndefinite, setIsIndefinite] = useState(false);
 
-  const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const { startMonitoring, stopMonitoring } = useLayoutStability(containerRef);
   const ruleState = useRuleSelectionRules({
     chainId: sessionContext.chainId,
     actionType,
@@ -83,13 +80,8 @@ const RuleSelectionDialogContent: React.FC<RuleSelectionDialogContentProps> = ({
   const { detectDuplicates, results: searchResults } = search;
 
   useEffect(() => {
-    startMonitoring();
     void loadRules();
-
-    return () => {
-      stopMonitoring();
-    };
-  }, [loadRules, startMonitoring, stopMonitoring]);
+  }, [loadRules]);
 
   const handleRuleSelect = useCallback(
     async (rule: ExceptionRule) => {
@@ -187,7 +179,6 @@ const RuleSelectionDialogContent: React.FC<RuleSelectionDialogContentProps> = ({
       sessionContext={sessionContext}
       language={language}
       t={t}
-      containerRef={containerRef}
       searchInputRef={searchInputRef}
       searchQuery={searchQuery}
       onSearchQueryChange={setSearchQuery}

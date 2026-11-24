@@ -6,7 +6,7 @@ import {
   formatElapsedTime,
   formatLastCompletionReference,
   formatTimeDescriptionByLanguage,
-} from '../../utils/time';
+} from '../../domain/scheduling';
 import { TimerRing } from './TimerRing';
 
 interface FocusTimerPanelProps {

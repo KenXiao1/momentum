@@ -10,7 +10,7 @@ import {
   calculateTaskReward,
   createNewPet,
   getXpForLevel,
-} from '../../../utils/petLogic';
+} from '../../../domain/pet';
 import { usePetDomain } from '../usePetDomain';
 
 vi.mock('../../../storage/useStorage', () => ({
@@ -25,7 +25,7 @@ vi.mock('../../../utils/logger', () => ({
   },
 }));
 
-vi.mock('../../../utils/petLogic', () => ({
+vi.mock('../../../domain/pet', () => ({
   DEFAULT_PET_CONFIG: {
     feedingHungerReduction: 30,
   },

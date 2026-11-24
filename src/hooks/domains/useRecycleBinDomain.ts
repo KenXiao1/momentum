@@ -18,8 +18,10 @@ import { realTimeSyncService } from '../../services/RealTimeSyncService';
 import { logger } from '../../utils/logger';
 import { toast } from '../../utils/toast';
 import { useI18n } from '../../i18n';
-import { getSafeErrorDetailFromUnknown } from '../../utils/errorMessage';
-import { normalizeUnknownError } from '../../utils/errors/normalizeError';
+import {
+  getSafeErrorDetailFromUnknown,
+  toError,
+} from '../../utils/errorMessage';
 
 interface UseRecycleBinDomainParams {
   state?: AppState;
@@ -59,7 +61,7 @@ export function useRecycleBinDomain({
           'RECYCLE_BIN',
           'Failed to persist scheduled sessions after delete',
           { chainId },
-          normalizeUnknownError(error),
+          toError(error),
         );
       });
       if (!updatedActiveSession) {
@@ -68,7 +70,7 @@ export function useRecycleBinDomain({
             'RECYCLE_BIN',
             'Failed to clear active session after delete',
             { chainId },
-            normalizeUnknownError(error),
+            toError(error),
           );
         });
       }
@@ -82,12 +84,7 @@ export function useRecycleBinDomain({
       onChainDeleted?.(chainId, Boolean(updatedActiveSession));
     } catch (error) {
       const safeDetail = getSafeErrorDetailFromUnknown(error, language);
-      logger.error(
-        'RECYCLE_BIN',
-        'Delete failed',
-        { chainId },
-        normalizeUnknownError(error),
-      );
+      logger.error('RECYCLE_BIN', 'Delete failed', { chainId }, toError(error));
       toast.error(
         safeDetail
           ? t('useRecycleBinDomain.deleteFailedSafeDetail', {
@@ -131,7 +128,7 @@ export function useRecycleBinDomain({
         'RECYCLE_BIN',
         'Restore failed',
         { chainIds },
-        normalizeUnknownError(error),
+        toError(error),
       );
       if (
         rawMessage.includes('Partial restore failure') ||
@@ -148,7 +145,7 @@ export function useRecycleBinDomain({
             'RECYCLE_BIN',
             'Failed to reload chains after restore failure',
             { chainIds },
-            normalizeUnknownError(recoveryError),
+            toError(recoveryError),
           );
         }
         throw error;

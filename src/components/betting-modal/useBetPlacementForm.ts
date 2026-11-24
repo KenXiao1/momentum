@@ -11,8 +11,8 @@ import type { MomentumStorage } from '../../storage/MomentumStorage';
 import {
   getSafeErrorDetail,
   getSafeErrorDetailFromUnknown,
+  toError,
 } from '../../utils/errorMessage';
-import { normalizeUnknownError } from '../../utils/errors/normalizeError';
 import { logger } from '../../utils/logger';
 import { getBetPlacementValidationError } from './betPlacementRules';
 
@@ -128,7 +128,7 @@ export function useBetPlacementForm(params: {
         'BETTING',
         'Failed to place bet',
         { sessionId },
-        normalizeUnknownError(error),
+        toError(error),
       );
       setError(
         getSafeErrorDetailFromUnknown(error, language) ??

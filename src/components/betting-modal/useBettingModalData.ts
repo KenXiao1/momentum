@@ -6,8 +6,8 @@ import type { MomentumStorage } from '../../storage/MomentumStorage';
 import {
   getSafeErrorDetail,
   getSafeErrorDetailFromUnknown,
+  toError,
 } from '../../utils/errorMessage';
-import { normalizeUnknownError } from '../../utils/errors/normalizeError';
 import { logger } from '../../utils/logger';
 
 type BettingDataStorage = Pick<
@@ -62,7 +62,7 @@ async function readBettingData(
       'BETTING',
       'Failed to load betting data',
       undefined,
-      normalizeUnknownError(error),
+      toError(error),
     );
     return {
       ok: false,

@@ -22,7 +22,7 @@ export function mapChainRowToChain(row: ChainRow): Chain {
   const parseResult = chainRowSchema.safeParse(row);
   if (!parseResult.success) {
     logger.warn('CHAIN_MAPPER', 'Chain row failed schema validation', {
-      chainId: typeof row?.id === 'string' ? row.id : undefined,
+      chainId: typeof row.id === 'string' ? row.id : undefined,
       issues: parseResult.error.issues.map(
         (i) => `${i.path.join('.')}: ${i.message}`,
       ),

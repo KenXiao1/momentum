@@ -25,13 +25,9 @@ vi.mock('../../RuleSelectionDialog', () => ({
     isOpen ? <div>mock-rule-selection</div> : null,
 }));
 
-vi.mock('../../TaskCompletionDialog', () => ({
+vi.mock('../../task-completion-dialog/TaskCompletionDialog', () => ({
   TaskCompletionDialog: ({ isOpen }: { isOpen: boolean }) =>
     isOpen ? <div>mock-completion-dialog</div> : null,
-}));
-
-vi.mock('../../UserFeedbackDisplay', () => ({
-  UserFeedbackDisplay: () => <div>mock-feedback</div>,
 }));
 
 function createSession(overrides: Partial<ActiveSession> = {}): ActiveSession {
@@ -145,7 +141,6 @@ describe('FocusModeView', () => {
     expect(screen.getByText('mock-rule-selection')).toBeInTheDocument();
     expect(screen.getByText('mock-completion-dialog')).toBeInTheDocument();
     expect(screen.getByText('mock-interrupt-dialog')).toBeInTheDocument();
-    expect(screen.getByText('mock-feedback')).toBeInTheDocument();
   });
 
   it('renders timed and durationless minimum-duration branches', () => {

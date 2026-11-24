@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { CompletionHistory, ScheduledSession } from '../../../../types';
+import type {
+  ActiveSession,
+  CompletionHistory,
+  ScheduledSession,
+} from '../../../../types';
 import { createUnitChain } from '../../../../test/factories/chainFactory';
 import { supabase } from '../../../../lib/supabase';
 import {
   failSupabaseTransportRequests,
   failNextRSIPCreationResponse,
   failNextStorageOperationResponse,
+  rejectSupabaseRequests,
   resetSupabaseMockState,
 } from '../../../../test/mocks/supabaseMocks';
 import { SupabaseStorage } from '../SupabaseStorage';
@@ -30,6 +35,16 @@ function scheduledSession(
     scheduledAt: new Date('2026-04-01T08:00:00.000Z'),
     expiresAt: new Date('2026-04-01T09:00:00.000Z'),
     auxiliarySignal: signal,
+  };
+}
+
+function activeSession(chainId: string): ActiveSession {
+  return {
+    chainId,
+    startedAt: new Date('2026-04-01T09:00:00.000Z'),
+    duration: 25,
+    isPaused: false,
+    totalPausedTime: 0,
   };
 }
 
@@ -194,6 +209,70 @@ describe('SupabaseStorage HTTP boundary', () => {
     loaded = await storage.getScheduledSessions();
     expect(loaded.map((session) => session.chainId)).toEqual(['replacement']);
     expect(loaded[0].expiresAt).toEqual(new Date('2026-04-01T09:00:00.000Z'));
+  });
+
+  it('rejects failed session and RSIP meta reads instead of reporting empty state', async () => {
+    await authenticate();
+    await storage.setScheduledSession(scheduledSession('scheduled'));
+    await storage.saveActiveSession(activeSession('running'));
+    await storage.saveRSIPMeta({ allowMultiplePerDay: true });
+    const expiredToken = {
+      status: 401,
+      code: 'PGRST301',
+      message: 'JWT expired',
+    };
+
+    rejectSupabaseRequests('GET', 'scheduled_sessions', expiredToken);
+    await expect(storage.getScheduledSessions()).rejects.toThrow(
+      'Failed to fetch scheduled sessions: JWT expired',
+    );
+    rejectSupabaseRequests('GET', 'active_sessions', expiredToken);
+    await expect(storage.getActiveSession()).rejects.toThrow(
+      'Failed to fetch active session: JWT expired',
+    );
+    rejectSupabaseRequests('GET', 'rsip_meta', expiredToken);
+    await expect(storage.getRSIPMeta()).rejects.toThrow(
+      'Failed to fetch RSIP meta: JWT expired',
+    );
+
+    // The stored rows were never replaced and load once reads succeed again.
+    expect(
+      (await storage.getScheduledSessions()).map((session) => session.chainId),
+    ).toEqual(['scheduled']);
+    await expect(storage.getActiveSession()).resolves.toMatchObject({
+      chainId: 'running',
+    });
+    await expect(storage.getRSIPMeta()).resolves.toMatchObject({
+      allowMultiplePerDay: true,
+    });
+  });
+
+  it('falls back to the basic active-session select while forward-timer columns are missing', async () => {
+    await authenticate();
+    await storage.saveActiveSession(activeSession('running'));
+    rejectSupabaseRequests('GET', 'active_sessions', {
+      status: 400,
+      code: '42703',
+      message: 'column active_sessions.is_forward_timer does not exist',
+    });
+
+    await expect(storage.getActiveSession()).resolves.toMatchObject({
+      chainId: 'running',
+      isForwardTimer: false,
+      forwardElapsedTime: 0,
+    });
+  });
+
+  it('reads default RSIP meta while the rsip_meta table is not migrated', async () => {
+    await authenticate();
+    rejectSupabaseRequests('GET', 'rsip_meta', {
+      status: 404,
+      code: 'PGRST205',
+      message:
+        "Could not find the table 'public.rsip_meta' in the schema cache",
+    });
+
+    await expect(storage.getRSIPMeta()).resolves.toEqual({});
   });
 
   it('returns history oldest first and saveCompletionHistory replaces it', async () => {

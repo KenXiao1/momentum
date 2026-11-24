@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 
 import { I18nProvider } from '../../../i18n';
-import { TaskGroupEditorView } from '../../TaskGroupEditorView';
+import { TaskGroupEditorView } from '../TaskGroupEditorView';
 
 const renderWithI18n = (ui: React.ReactElement) =>
   render(ui, { wrapper: I18nProvider });

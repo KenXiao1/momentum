@@ -10,8 +10,8 @@ import { useStorageMode } from '../../storage/useStorageMode';
 import {
   getSafeErrorDetail,
   getSafeErrorDetailFromUnknown,
+  toError,
 } from '../../utils/errorMessage';
-import { normalizeUnknownError } from '../../utils/errors/normalizeError';
 import { logger } from '../../utils/logger';
 
 const DEFAULT_GAMBLING_SETTINGS: GamblingSettings = {
@@ -47,7 +47,7 @@ async function readCurrentUser(
       'ACCOUNT',
       'Failed to get user info',
       undefined,
-      normalizeUnknownError(error),
+      toError(error),
     );
     return {
       user: undefined,
@@ -76,7 +76,7 @@ async function readGamblingSettings(
       'ACCOUNT',
       'Failed to load gambling settings',
       undefined,
-      normalizeUnknownError(error),
+      toError(error),
     );
     return {
       error: t('accountModal.useAccountModalController.failedToLoadSettings'),
@@ -197,7 +197,7 @@ export function useAccountModalController(params: {
         'ACCOUNT',
         'Failed to toggle gambling mode',
         undefined,
-        normalizeUnknownError(error),
+        toError(error),
       );
       setGamblingError(
         getSafeErrorDetailFromUnknown(error, language) ??
@@ -227,12 +227,7 @@ export function useAccountModalController(params: {
       }
       params.onClose();
     } catch (error) {
-      logger.error(
-        'ACCOUNT',
-        'Sign out failed',
-        undefined,
-        normalizeUnknownError(error),
-      );
+      logger.error('ACCOUNT', 'Sign out failed', undefined, toError(error));
       setError(
         t('accountModal.useAccountModalController.signOutFailedPleaseTryAgain'),
       );

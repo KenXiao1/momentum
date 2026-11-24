@@ -1,4 +1,4 @@
-import { normalizeUnknownError } from './errors/normalizeError';
+import { toError } from './errorMessage';
 import { attemptChunkLoadRecovery } from './chunkLoadRecovery';
 import { logger } from './logger';
 
@@ -15,7 +15,7 @@ export function lazyWithChunkRecovery<TModule extends { default: unknown }>(
         'LAZY_IMPORT',
         `Failed to load lazy chunk: ${chunkName}`,
         { recovered },
-        normalizeUnknownError(error),
+        toError(error),
       );
       throw error;
     });

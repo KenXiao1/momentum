@@ -139,7 +139,7 @@ service-worker conflicts with the native WebView.
 ## Shared utilities and verification
 
 `src/utils/env.ts` centralizes environment checks; `logger.ts`, `toast.ts`, and
-`errors/normalizeError.ts` provide logging, user feedback, and unknown-error
+`toError` in `errorMessage.ts` provide logging, user feedback, and unknown-error
 normalization. Existing callers show their APIs.
 
 Formatting and code rules live in Prettier/ESLint configuration, import rules in

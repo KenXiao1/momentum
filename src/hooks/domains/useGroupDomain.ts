@@ -19,11 +19,13 @@ import type { MomentumStorage } from '../../storage/MomentumStorage';
 import type { SafelySaveChains } from './useChainsDomain';
 import { logger } from '../../utils/logger';
 import { toast } from '../../utils/toast';
-import { buildChainTree } from '../../utils/chainTree';
+import { buildChainTree } from '../../utils/chain-tree';
 import { useI18n } from '../../i18n';
 import { resolveAppStateReader } from './appStateAccess';
-import { getSafeErrorDetailFromUnknown } from '../../utils/errorMessage';
-import { normalizeUnknownError } from '../../utils/errors/normalizeError';
+import {
+  getSafeErrorDetailFromUnknown,
+  toError,
+} from '../../utils/errorMessage';
 
 interface UseGroupDomainParams {
   state?: AppState;
@@ -55,12 +57,7 @@ export function useGroupDomain({
       toastFallback: string;
     },
   ) => {
-    logger.error(
-      'APP_SHELL',
-      logMessage,
-      undefined,
-      normalizeUnknownError(error),
-    );
+    logger.error('APP_SHELL', logMessage, undefined, toError(error));
     const safeDetail = getSafeErrorDetailFromUnknown(error, language);
     toast.error(
       safeDetail
@@ -82,7 +79,7 @@ export function useGroupDomain({
         'APP_SHELL',
         '重新加载数据也失败了',
         undefined,
-        normalizeUnknownError(reloadError),
+        toError(reloadError),
       );
     }
   };

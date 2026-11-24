@@ -4,8 +4,8 @@
  */
 
 import React from 'react';
-import { RecycleBinModalView } from './RecycleBinModalView';
-import { useRecycleBinModal } from './useRecycleBinModal';
+import { RecycleBinModalView } from './recycle-bin-modal/RecycleBinModalView';
+import { useRecycleBinModal } from './recycle-bin-modal/hooks/useRecycleBinModal';
 import type { AsyncOrSyncVoid } from './recycle-bin-modal/types';
 
 interface RecycleBinModalProps {

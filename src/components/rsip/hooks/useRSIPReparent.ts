@@ -1,7 +1,7 @@
 import { type Translator } from '../../../i18n';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { RSIPNode, RSIPTreeNode } from '../../../types';
-import { normalizeUnknownError } from '../../../utils/errors/normalizeError';
+import { toError } from '../../../utils/errorMessage';
 import { logger } from '../../../utils/logger';
 
 interface UseRSIPReparentParams {
@@ -176,7 +176,7 @@ export function useRSIPReparent({
           'RSIP',
           'Failed to reparent RSIP node',
           { childId, parentId },
-          normalizeUnknownError(error),
+          toError(error),
         );
         if (saveAttemptId !== saveAttemptIdRef.current) return;
         setRelationError(

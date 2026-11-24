@@ -53,7 +53,7 @@ export async function getUserCheckinStats(
         message: error.message || 'Failed to get stats',
         cause: error,
       });
-    return ok(data as CheckinStats);
+    return ok(data);
   } catch (e) {
     return err(toAppError(e, 'Failed to get check-in stats'));
   }

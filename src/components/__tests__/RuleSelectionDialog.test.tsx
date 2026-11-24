@@ -4,31 +4,15 @@ import userEvent from '@testing-library/user-event';
 import { RuleSelectionDialog } from '../RuleSelectionDialog';
 import { ExceptionRule, ExceptionRuleType, SessionContext } from '../../types';
 import { I18nProvider } from '../../i18n';
-import { exceptionRuleManager } from '../../services/ExceptionRuleManager';
+import { exceptionRuleManager } from '../../services/exception-rule-manager/ExceptionRuleManager';
 import type { Mocked } from 'vitest';
 
-vi.mock('../../services/ExceptionRuleManager', () => ({
+vi.mock('../../services/exception-rule-manager/ExceptionRuleManager', () => ({
   exceptionRuleManager: {
     getAllRules: vi.fn(),
     createChainRule: vi.fn(),
   },
 }));
-
-// Mock the utility modules
-
-vi.mock('../../utils/LayoutStabilityMonitor', () => {
-  const startMonitoring = vi.fn();
-  const stopMonitoring = vi.fn();
-  const checkNow = vi.fn();
-
-  return {
-    useLayoutStability: vi.fn(() => ({
-      startMonitoring,
-      stopMonitoring,
-      checkNow,
-    })),
-  };
-});
 
 const renderWithI18n = (ui: React.ReactElement) => {
   return render(ui, { wrapper: I18nProvider });

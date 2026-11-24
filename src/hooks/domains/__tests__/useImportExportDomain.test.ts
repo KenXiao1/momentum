@@ -10,7 +10,7 @@ import {
 } from '../../../test/factories';
 import { ok, err } from '../../../domain/result';
 import type { AppState } from '../../../types';
-import { createNewPet } from '../../../utils/petLogic';
+import { createNewPet } from '../../../domain/pet';
 
 vi.mock('../../../i18n', () => ({
   useI18n: () => ({ t: createTranslator('en') }),

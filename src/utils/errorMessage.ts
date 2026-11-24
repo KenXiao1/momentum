@@ -172,38 +172,16 @@ export function getSafeErrorDetailFromUnknown(
   return null;
 }
 
-/**
- * 将 unknown 类型的错误转换为 Error 对象
- * 消除重复的 `error instanceof Error ? error : new Error(String(error))` 模式
- *
- * @param error - 任意类型的错误
- * @returns Error 对象
- */
+/** Converts any thrown value to an Error; Error instances are returned as-is. */
 export function toError(error: unknown): Error {
-  if (error instanceof Error) {
-    return error;
-  }
+  if (error instanceof Error) return error;
 
+  let message = String(error);
   if (typeof error === 'string') {
-    return new Error(error);
+    message = error;
+  } else if (error && typeof error === 'object' && 'message' in error) {
+    const candidate = (error as { message?: unknown }).message;
+    if (typeof candidate === 'string') message = candidate;
   }
-
-  if (error && typeof error === 'object' && 'message' in error) {
-    const msg = (error as { message?: unknown }).message;
-    if (typeof msg === 'string') {
-      return new Error(msg);
-    }
-  }
-
-  return new Error(String(error));
-}
-
-/**
- * 从 unknown 错误中提取错误消息
- *
- * @param error - 任意类型的错误
- * @returns 错误消息字符串
- */
-export function getErrorMessage(error: unknown): string {
-  return toError(error).message;
+  return new Error(message.trim() ? message : 'Unknown error');
 }

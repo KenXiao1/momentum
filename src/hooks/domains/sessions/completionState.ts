@@ -3,10 +3,10 @@ import type { AppState } from '../../../types';
 import {
   incrementGroupCompletionCount,
   isGroupFullyCompleted,
-} from '../../../utils/chainTree';
-import { forwardTimerManager } from '../../../utils/forwardTimer';
+} from '../../../utils/chain-tree';
+import { forwardTimerManager } from '../../../utils/forward-timer';
 import { logger } from '../../../utils/logger';
-import { buildChainTree } from '../../../utils/chainTree';
+import { buildChainTree } from '../../../utils/chain-tree';
 import { notifyTaskCompleted } from './sessionNotifications';
 
 type Chain = AppState['chains'][number];
