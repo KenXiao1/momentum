@@ -30,6 +30,15 @@ export const isSessionExpired = (expiresAt: Date): boolean => {
 };
 
 /**
+ * Seconds before a countdown ends at which the "ending soon" notification is
+ * sent: one minute for countdowns longer than three minutes. Shorter
+ * countdowns get no warning (`null`).
+ */
+export const getEndingSoonWarningSeconds = (
+  durationMinutes: number,
+): number | null => (durationMinutes > 3 ? 60 : null);
+
+/**
  * 格式化正向计时显示（MM:SS 或 HH:MM:SS）
  * @param seconds 总秒数
  * @returns 格式化的时间字符串

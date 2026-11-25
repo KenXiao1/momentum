@@ -13,52 +13,64 @@ export function getSplitTemplates(
 
   return {
     sleep: {
-      goal: translate(locale, 'rsip.splitTemplate.message1'),
+      goal: translate(locale, 'rsip.splitTemplate.sleep.goal'),
       items: [
         {
           id: 'sleep-1',
-          title: translate(locale, 'rsip.splitTemplate.message2'),
-          rule: translate(locale, 'rsip.splitTemplate.message3'),
+          title: translate(locale, 'rsip.splitTemplate.sleep.bedtime.title'),
+          rule: translate(locale, 'rsip.splitTemplate.sleep.bedtime.rule'),
           isPassive: false,
         },
         {
           id: 'sleep-2',
-          title: translate(locale, 'rsip.splitTemplate.message4'),
-          rule: translate(locale, 'rsip.splitTemplate.message5'),
+          title: translate(locale, 'rsip.splitTemplate.sleep.noScreen.title'),
+          rule: translate(locale, 'rsip.splitTemplate.sleep.noScreen.rule'),
           isPassive: true,
         },
       ],
     },
     exercise: {
-      goal: translate(locale, 'rsip.splitTemplate.message6'),
+      goal: translate(locale, 'rsip.splitTemplate.exercise.goal'),
       items: [
         {
           id: 'exercise-1',
-          title: translate(locale, 'rsip.splitTemplate.message7'),
-          rule: translate(locale, 'rsip.splitTemplate.message8'),
+          title: translate(
+            locale,
+            'rsip.splitTemplate.exercise.changeClothes.title',
+          ),
+          rule: translate(
+            locale,
+            'rsip.splitTemplate.exercise.changeClothes.rule',
+          ),
           isPassive: false,
         },
         {
           id: 'exercise-2',
-          title: translate(locale, 'rsip.splitTemplate.message9'),
-          rule: translate(locale, 'rsip.splitTemplate.message10'),
+          title: translate(
+            locale,
+            'rsip.splitTemplate.exercise.minimumDose.title',
+          ),
+          rule: translate(
+            locale,
+            'rsip.splitTemplate.exercise.minimumDose.rule',
+          ),
           isPassive: false,
         },
       ],
     },
     diet: {
-      goal: translate(locale, 'rsip.splitTemplate.message11'),
+      goal: translate(locale, 'rsip.splitTemplate.diet.goal'),
       items: [
         {
           id: 'diet-1',
-          title: translate(locale, 'rsip.splitTemplate.message12'),
-          rule: translate(locale, 'rsip.splitTemplate.message13'),
+          title: translate(locale, 'rsip.splitTemplate.diet.mealPrep.title'),
+          rule: translate(locale, 'rsip.splitTemplate.diet.mealPrep.rule'),
           isPassive: true,
         },
         {
           id: 'diet-2',
-          title: translate(locale, 'rsip.splitTemplate.message14'),
-          rule: translate(locale, 'rsip.splitTemplate.message15'),
+          title: translate(locale, 'rsip.splitTemplate.diet.snackCutoff.title'),
+          rule: translate(locale, 'rsip.splitTemplate.diet.snackCutoff.rule'),
           isPassive: false,
         },
       ],

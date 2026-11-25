@@ -12,6 +12,10 @@ queue otherwise. Completion and import first persist a recovery journal containi
 the complete before/after values, then apply its writes. Reads recover that journal
 before exposing application data. Recovery refuses to overwrite an unrelated
 newer value; storage/quota errors stay visible instead of exposing partial state.
+That refusal raises `InterruptedOperationConflictError`, and the app replaces its
+load error with a recovery screen: the user exports every `momentum*` key
+(including the journal) and then continues with the current values, which drops
+the unfinished operation.
 
 Completion receipts retain the original history record. A separate completed
 session marker prevents a stale pause or resume from recreating a consumed

@@ -7,7 +7,9 @@ import { AuthForm } from '../AuthForm';
 import { err, ok } from '../../domain/result';
 
 function renderAuthForm(
-  storageOverrides: Partial<Record<'signIn' | 'signUp', any>> = {},
+  storageOverrides: Partial<
+    Record<'signIn' | 'signUp' | 'requestPasswordReset', any>
+  > = {},
 ) {
   localStorage.setItem('language', 'en');
 
@@ -15,6 +17,7 @@ function renderAuthForm(
     kind: 'supabase',
     signIn: vi.fn().mockResolvedValue(ok({ user: { id: 'user-1' } })),
     signUp: vi.fn().mockResolvedValue(ok({ user: null })),
+    requestPasswordReset: vi.fn().mockResolvedValue(ok(undefined)),
     ...storageOverrides,
   };
 
@@ -172,5 +175,65 @@ describe('AuthForm', () => {
       screen.getByRole('button', { name: 'Switch to local mode' }),
     );
     expect(onUseLocalMode).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends a reset email from the forgot-password form without asking for a password', async () => {
+    const storage = renderAuthForm();
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Forgot password?' }),
+    );
+    expect(
+      screen.getByRole('heading', { name: 'Reset Password' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText('Enter your password'),
+    ).not.toBeInTheDocument();
+
+    await userEvent.type(
+      screen.getByPlaceholderText('Enter your email'),
+      'forgot@example.com',
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Send Reset Link' }),
+    );
+
+    expect(storage.requestPasswordReset).toHaveBeenCalledWith(
+      'forgot@example.com',
+    );
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'If an account exists for this email',
+    );
+    expect(storage.signIn).not.toHaveBeenCalled();
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Back to sign in' }),
+    );
+    expect(
+      screen.getByPlaceholderText('Enter your password'),
+    ).toBeInTheDocument();
+  });
+
+  it('shows why a reset email could not be sent', async () => {
+    renderAuthForm({
+      requestPasswordReset: vi
+        .fn()
+        .mockResolvedValue(err({ code: 'UNKNOWN', message: '' })),
+    });
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Forgot password?' }),
+    );
+    await userEvent.type(
+      screen.getByPlaceholderText('Enter your email'),
+      'forgot@example.com',
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Send Reset Link' }),
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not send the reset email',
+    );
   });
 });

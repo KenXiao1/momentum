@@ -19,6 +19,7 @@ import type {
   RSIPTaskLink,
   ScheduledSession,
 } from '../../types';
+import { ExceptionRuleType } from '../../types';
 import type { MomentumStorage } from '../../storage/MomentumStorage';
 import { createUnitChain } from '../factories/chainFactory';
 import { createPetState } from '../factories/petStateFactory';
@@ -397,6 +398,48 @@ export function describeStorageContract(
         expect(loaded).toMatchObject({ id: 'pet-1', name: 'After' });
         expect(loaded?.createdAt).toEqual(JAN_2);
         expect(loaded?.createdAt).toBeInstanceOf(Date);
+      });
+    });
+
+    describe('RuleStore', () => {
+      it('starts empty and replaces hydrated rules and usage records', async () => {
+        await expect(storage.getRules()).resolves.toEqual([]);
+        await expect(storage.getUsageRecords()).resolves.toEqual([]);
+
+        const rule = {
+          id: 'rule-1',
+          name: 'Phone call',
+          type: ExceptionRuleType.PAUSE_ONLY,
+          scope: 'global' as const,
+          createdAt: JAN_1,
+          lastUsedAt: JAN_2,
+          usageCount: 1,
+          isActive: true,
+        };
+        await storage.saveRules([rule]);
+        await storage.saveUsageRecords([
+          {
+            id: 'use-1',
+            ruleId: 'rule-1',
+            chainId: 'chain-1',
+            sessionId: 'session-1',
+            usedAt: JAN_2,
+            actionType: 'pause',
+            taskElapsedTime: 60,
+            ruleScope: 'global',
+          },
+        ]);
+        await storage.saveRules([{ ...rule, name: 'Doorbell', usageCount: 2 }]);
+
+        const rules = await storage.getRules();
+        expect(rules).toMatchObject([
+          { id: 'rule-1', name: 'Doorbell', usageCount: 2 },
+        ]);
+        expect(rules[0].createdAt).toEqual(JAN_1);
+        expect(rules[0].lastUsedAt).toEqual(JAN_2);
+        const records = await storage.getUsageRecords();
+        expect(records).toMatchObject([{ id: 'use-1', ruleId: 'rule-1' }]);
+        expect(records[0].usedAt).toEqual(JAN_2);
       });
     });
 

@@ -8,4 +8,5 @@ lighthouse-report.report.html
 lighthouse-report.report.json
 knip-report.json
 package-lock.json
-
+# Promo film sub-project with its own generated files and style
+video

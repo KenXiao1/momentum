@@ -1,34 +1,15 @@
-import type { ExceptionRule, RuleUsageRecord } from '../types';
+import {
+  decodeExceptionRule,
+  decodeRuleUsageRecord,
+  type SerializedExceptionRule,
+  type SerializedRuleUsageRecord,
+} from '../serialization';
 import { LOCAL_STORAGE_KEYS } from '../utils/local-preferences/keys';
 import type { RuleStore } from './ports';
-
-type StoredRule = Omit<ExceptionRule, 'createdAt' | 'lastUsedAt'> & {
-  createdAt: string;
-  lastUsedAt?: string | null;
-};
-type StoredUsageRecord = Omit<RuleUsageRecord, 'usedAt'> & { usedAt: string };
 
 function readJsonArray<T>(key: string): T[] {
   const raw = localStorage.getItem(key);
   return raw ? (JSON.parse(raw) as T[]) : [];
-}
-
-function hydrateRule(stored: StoredRule): ExceptionRule {
-  const chainId =
-    typeof stored.chainId === 'string' && stored.chainId.trim().length > 0
-      ? stored.chainId
-      : undefined;
-  let scope: ExceptionRule['scope'] = chainId ? 'chain' : 'global';
-  if (stored.scope === 'chain' || stored.scope === 'global') {
-    scope = stored.scope;
-  }
-  return {
-    ...stored,
-    scope,
-    chainId: scope === 'chain' ? chainId : undefined,
-    createdAt: new Date(stored.createdAt),
-    lastUsedAt: stored.lastUsedAt ? new Date(stored.lastUsedAt) : undefined,
-  };
 }
 
 /**
@@ -37,9 +18,9 @@ function hydrateRule(stored: StoredRule): ExceptionRule {
  */
 export const localRuleStore: RuleStore = {
   async getRules() {
-    return readJsonArray<StoredRule>(LOCAL_STORAGE_KEYS.EXCEPTION_RULES).map(
-      hydrateRule,
-    );
+    return readJsonArray<SerializedExceptionRule>(
+      LOCAL_STORAGE_KEYS.EXCEPTION_RULES,
+    ).map(decodeExceptionRule);
   },
   async saveRules(rules) {
     localStorage.setItem(
@@ -48,9 +29,9 @@ export const localRuleStore: RuleStore = {
     );
   },
   async getUsageRecords() {
-    return readJsonArray<StoredUsageRecord>(
+    return readJsonArray<SerializedRuleUsageRecord>(
       LOCAL_STORAGE_KEYS.EXCEPTION_RULES_USAGE,
-    ).map((record) => ({ ...record, usedAt: new Date(record.usedAt) }));
+    ).map(decodeRuleUsageRecord);
   },
   async saveUsageRecords(records) {
     localStorage.setItem(

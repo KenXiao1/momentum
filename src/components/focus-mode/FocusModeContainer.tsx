@@ -11,8 +11,9 @@ import { useAutoResume } from './hooks/useAutoResume';
 import { useExceptionRuleFlow } from './hooks/useExceptionRuleFlow';
 import { useFocusTimers } from './hooks/useFocusTimers';
 import { useFullscreen } from './hooks/useFullscreen';
+import { useSessionEndAlarm } from './hooks/useSessionEndAlarm';
 import { FocusModeView } from './FocusModeView';
-import { useI18n } from '../../i18n';
+import { USER_INTERRUPTED_REASON } from '../../domain/failureReason';
 
 interface FocusModeProps {
   session: ActiveSession;
@@ -40,7 +41,6 @@ export function FocusMode({
   onResume,
   onRuleUsed,
 }: FocusModeProps) {
-  const { t } = useI18n();
   const storage = useStorage();
   const isDurationless = !!chain.isDurationless || session.duration === 0;
 
@@ -71,6 +71,8 @@ export function FocusMode({
     storage,
     onTimeUp: () => setShowCompletionDialog(true),
   });
+
+  useSessionEndAlarm({ chain, session, isDurationless });
 
   const elapsedSeconds = isDurationless
     ? forwardElapsedSeconds
@@ -125,9 +127,7 @@ export function FocusMode({
   };
 
   const handleConfirmInterrupt = async () => {
-    const result = await onInterrupt(
-      t('focusMode.focusModeContainer.userInterrupted'),
-    );
+    const result = await onInterrupt(USER_INTERRUPTED_REASON);
     if (result !== false) setShowInterruptDialog(false);
   };
 

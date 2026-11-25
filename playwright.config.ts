@@ -13,7 +13,14 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     locale: 'en-US',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // The desktop apps render with WebKit on macOS and Linux. CI runs this
+    // project; locally it needs `npx playwright install webkit` first.
+    ...(process.env.E2E_WEBKIT === '1'
+      ? [{ name: 'webkit', use: { ...devices['Desktop Safari'] } }]
+      : []),
+  ],
   webServer: {
     command:
       'npm run build && npm run preview -- --host 127.0.0.1 --port 4173 --strictPort',

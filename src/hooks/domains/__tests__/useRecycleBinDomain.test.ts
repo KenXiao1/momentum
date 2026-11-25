@@ -8,7 +8,12 @@ import {
   createLocalStorageMock,
   createUnitChain,
 } from '../../../test/factories';
-import { realTimeSyncService } from '../../../services/RealTimeSyncService';
+import {
+  PartialRestoreError,
+  permanentlyDeleteChains,
+  restoreChains,
+  softDeleteChain,
+} from '../../../services/chainOperations';
 import { logger } from '../../../utils/logger';
 import { toast } from '../../../utils/toast';
 import { getSafeErrorDetailFromUnknown } from '../../../utils/errorMessage';
@@ -43,12 +48,13 @@ vi.mock('../../../utils/errorMessage', () => ({
   ),
 }));
 
-vi.mock('../../../services/RealTimeSyncService', () => ({
-  realTimeSyncService: {
-    deleteWithSync: vi.fn(),
-    restoreWithSync: vi.fn(),
-    permanentDeleteWithSync: vi.fn(),
-  },
+vi.mock('../../../services/chainOperations', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('../../../services/chainOperations')
+  >()),
+  softDeleteChain: vi.fn(),
+  restoreChains: vi.fn(),
+  permanentlyDeleteChains: vi.fn(),
 }));
 
 function createStateContainer(initial: AppState) {
@@ -108,9 +114,7 @@ describe('useRecycleBinDomain', () => {
       saveActiveSession: vi.fn(async () => undefined),
     });
     const onChainDeleted = vi.fn();
-    vi.mocked(realTimeSyncService.deleteWithSync).mockResolvedValue([
-      otherChain,
-    ]);
+    vi.mocked(softDeleteChain).mockResolvedValue([otherChain]);
 
     const { result } = renderHook(() =>
       useRecycleBinDomain({
@@ -125,10 +129,7 @@ describe('useRecycleBinDomain', () => {
       await result.current.handleDeleteChain(chain.id);
     });
 
-    expect(realTimeSyncService.deleteWithSync).toHaveBeenCalledWith(
-      storage,
-      chain.id,
-    );
+    expect(softDeleteChain).toHaveBeenCalledWith(storage, chain.id);
     expect(storage.removeScheduledSession).toHaveBeenCalledWith(chain.id);
     expect(storage.saveActiveSession).toHaveBeenCalledWith(null);
     expect(stateRef.getState().chains).toEqual([otherChain]);
@@ -168,9 +169,7 @@ describe('useRecycleBinDomain', () => {
       saveActiveSession: vi.fn(async () => undefined),
     });
     const onChainDeleted = vi.fn();
-    vi.mocked(realTimeSyncService.deleteWithSync).mockResolvedValue([
-      activeChain,
-    ]);
+    vi.mocked(softDeleteChain).mockResolvedValue([activeChain]);
 
     const { result } = renderHook(() =>
       useRecycleBinDomain({
@@ -203,9 +202,7 @@ describe('useRecycleBinDomain', () => {
       saveActiveSession: vi.fn(async () => undefined),
     });
     const onChainDeleted = vi.fn();
-    vi.mocked(realTimeSyncService.deleteWithSync).mockResolvedValue([
-      viewingChain,
-    ]);
+    vi.mocked(softDeleteChain).mockResolvedValue([viewingChain]);
 
     const { result } = renderHook(() =>
       useRecycleBinDomain({
@@ -234,7 +231,7 @@ describe('useRecycleBinDomain', () => {
         throw new Error('save active failed');
       }),
     });
-    vi.mocked(realTimeSyncService.deleteWithSync).mockResolvedValue([]);
+    vi.mocked(softDeleteChain).mockResolvedValue([]);
 
     const { result } = renderHook(() =>
       useRecycleBinDomain({
@@ -271,9 +268,7 @@ describe('useRecycleBinDomain', () => {
     const storage = createLocalStorageMock({
       getActiveChains: vi.fn(async () => fallback),
     });
-    vi.mocked(realTimeSyncService.deleteWithSync).mockRejectedValue(
-      new Error('delete failed'),
-    );
+    vi.mocked(softDeleteChain).mockRejectedValue(new Error('delete failed'));
     vi.mocked(getSafeErrorDetailFromUnknown).mockReturnValue('network down');
 
     const { result } = renderHook(() =>
@@ -311,9 +306,7 @@ describe('useRecycleBinDomain', () => {
         throw new Error('reload failed');
       }),
     });
-    vi.mocked(realTimeSyncService.deleteWithSync).mockRejectedValue(
-      new Error('delete failed'),
-    );
+    vi.mocked(softDeleteChain).mockRejectedValue(new Error('delete failed'));
 
     const { result } = renderHook(() =>
       useRecycleBinDomain({
@@ -335,16 +328,16 @@ describe('useRecycleBinDomain', () => {
     );
   });
 
-  it('should log, refresh, and propagate a partial restore failure', async () => {
+  it('shows the chains that were restored and propagates a partial restore failure', async () => {
     const chain = createUnitChain({ id: 'chain-restore' });
-    const fallback = [createUnitChain({ id: 'fresh-chain' })];
+    const restored = [createUnitChain({ id: 'fresh-chain' })];
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
-    const storage = createLocalStorageMock({
-      getActiveChains: vi.fn(async () => fallback),
-    });
-    vi.mocked(realTimeSyncService.restoreWithSync).mockRejectedValue(
-      new Error('Partial restore failure'),
+    const storage = createLocalStorageMock();
+    const failure = new PartialRestoreError(
+      [{ id: 'chain-missing', error: 'not found' }],
+      restored,
     );
+    vi.mocked(restoreChains).mockRejectedValue(failure);
 
     const { result } = renderHook(() =>
       useRecycleBinDomain({
@@ -356,33 +349,26 @@ describe('useRecycleBinDomain', () => {
 
     await act(async () => {
       await expect(
-        result.current.handleRestoreChains([chain.id]),
-      ).rejects.toThrow('Partial restore failure');
+        result.current.handleRestoreChains([chain.id, 'chain-missing']),
+      ).rejects.toBe(failure);
     });
 
-    expect(storage.getActiveChains).toHaveBeenCalledTimes(1);
-    expect(stateRef.getState().chains).toEqual(fallback);
-    expect(logger.error).toHaveBeenCalledWith(
-      'RECYCLE_BIN',
-      'Restore failed',
-      { chainIds: [chain.id] },
-      expect.any(Error),
-    );
+    expect(stateRef.getState().chains).toEqual(restored);
+    expect(storage.getActiveChains).not.toHaveBeenCalled();
     expect(toast.warning).not.toHaveBeenCalled();
   });
 
-  it('should log and propagate a non-partial restore failure', async () => {
+  it('propagates a complete restore failure without changing state', async () => {
     const chain = createUnitChain({ id: 'chain-restore-generic-error' });
-    const stateRef = createStateContainer(createAppState({ chains: [chain] }));
-    vi.mocked(realTimeSyncService.restoreWithSync).mockRejectedValue(
+    vi.mocked(restoreChains).mockRejectedValue(
       new Error('restore request exploded'),
     );
-    vi.mocked(getSafeErrorDetailFromUnknown).mockReturnValue('');
+    const setState = vi.fn();
 
     const { result } = renderHook(() =>
       useRecycleBinDomain({
-        state: stateRef.getState(),
-        setState: stateRef.setState,
+        state: createAppState({ chains: [chain] }),
+        setState,
         storage: createLocalStorageMock(),
       }),
     );
@@ -393,12 +379,7 @@ describe('useRecycleBinDomain', () => {
       ).rejects.toThrow('restore request exploded');
     });
 
-    expect(logger.error).toHaveBeenCalledWith(
-      'RECYCLE_BIN',
-      'Restore failed',
-      { chainIds: [chain.id] },
-      expect.any(Error),
-    );
+    expect(setState).not.toHaveBeenCalled();
     expect(toast.error).not.toHaveBeenCalled();
   });
 
@@ -406,7 +387,7 @@ describe('useRecycleBinDomain', () => {
     const chain = createUnitChain({ id: 'chain-restore-ok' });
     const restored = [createUnitChain({ id: 'restored-1' })];
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
-    vi.mocked(realTimeSyncService.restoreWithSync).mockResolvedValue(restored);
+    vi.mocked(restoreChains).mockResolvedValue(restored);
 
     const { result } = renderHook(() =>
       useRecycleBinDomain({
@@ -425,7 +406,7 @@ describe('useRecycleBinDomain', () => {
 
   it('should propagate a permanent delete failure without changing state', async () => {
     const chain = createUnitChain({ id: 'chain-permanent' });
-    vi.mocked(realTimeSyncService.permanentDeleteWithSync).mockRejectedValue(
+    vi.mocked(permanentlyDeleteChains).mockRejectedValue(
       new Error('hard delete failed'),
     );
     vi.mocked(getSafeErrorDetailFromUnknown).mockReturnValue(
@@ -455,9 +436,7 @@ describe('useRecycleBinDomain', () => {
     const chain = createUnitChain({ id: 'chain-permanent-ok' });
     const updatedChains = [createUnitChain({ id: 'remaining-1' })];
     const stateRef = createStateContainer(createAppState({ chains: [chain] }));
-    vi.mocked(realTimeSyncService.permanentDeleteWithSync).mockResolvedValue(
-      updatedChains,
-    );
+    vi.mocked(permanentlyDeleteChains).mockResolvedValue(updatedChains);
 
     const { result } = renderHook(() =>
       useRecycleBinDomain({

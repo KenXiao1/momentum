@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 import type { MomentumStorage } from './MomentumStorage';
 import { localStorageAdapter } from './localStorageAdapter';
 import { StorageContext } from './storageContextValue';
@@ -7,7 +13,7 @@ import {
   type StorageMode,
 } from './storageModeContextValue';
 import { isSupabaseConfigured } from '../utils/supabaseConfig';
-import { realTimeSyncService } from '../services/RealTimeSyncService';
+import { exceptionRuleManager } from '../services/exception-rule-manager/ExceptionRuleManager';
 import { logger } from '../utils/logger';
 import { useI18n } from '../i18n';
 import { toError } from '../utils/errorMessage';
@@ -142,13 +148,10 @@ export function StorageProvider({ storage, children }: StorageProviderProps) {
     [mode, isChoicePending, setMode, dismissFirstLaunchHint],
   );
 
-  useEffect(() => {
-    if (!resolvedStorage) return;
-
-    realTimeSyncService.setStorage(resolvedStorage);
-    return () => {
-      realTimeSyncService.setStorage(null);
-    };
+  // A layout effect runs before any child's passive effect, so no rule
+  // operation started by the app can reach the previous storage's rules.
+  useLayoutEffect(() => {
+    if (resolvedStorage) exceptionRuleManager.setStore(resolvedStorage);
   }, [resolvedStorage]);
 
   if (!resolvedStorage) {

@@ -1,30 +1,33 @@
 export type Language = 'en' | 'zh';
 
 const enTranslations = {
-  'rsip.splitTemplate.message1': 'Sleep early and wake early',
-  'rsip.splitTemplate.message2': 'Sleep before 23:00',
-  'rsip.splitTemplate.message3':
+  'rsip.splitTemplate.sleep.goal': 'Sleep early and wake early',
+  'rsip.splitTemplate.sleep.bedtime.title': 'Sleep before 23:00',
+  'rsip.splitTemplate.sleep.bedtime.rule':
     'Start wind-down at 22:45 and be in bed before 23:00.',
-  'rsip.splitTemplate.message4': 'No-screen before sleep',
-  'rsip.splitTemplate.message5': 'After 22:30, keep phone only for alarm use.',
-  'rsip.splitTemplate.message6': 'Stable exercise habit',
-  'rsip.splitTemplate.message7': 'Change into workout clothes',
-  'rsip.splitTemplate.message8':
+  'rsip.splitTemplate.sleep.noScreen.title': 'No-screen before sleep',
+  'rsip.splitTemplate.sleep.noScreen.rule':
+    'After 22:30, keep phone only for alarm use.',
+  'rsip.splitTemplate.exercise.goal': 'Stable exercise habit',
+  'rsip.splitTemplate.exercise.changeClothes.title':
+    'Change into workout clothes',
+  'rsip.splitTemplate.exercise.changeClothes.rule':
     'Change into workout clothes within 10 minutes after getting home.',
-  'rsip.splitTemplate.message9': 'Minimum exercise dose',
-  'rsip.splitTemplate.message10':
+  'rsip.splitTemplate.exercise.minimumDose.title': 'Minimum exercise dose',
+  'rsip.splitTemplate.exercise.minimumDose.rule':
     'Complete at least 10 minutes of walking or stretching daily.',
-  'rsip.splitTemplate.message11': 'Diet control',
-  'rsip.splitTemplate.message12': 'Prep meals in advance',
-  'rsip.splitTemplate.message13':
+  'rsip.splitTemplate.diet.goal': 'Diet control',
+  'rsip.splitTemplate.diet.mealPrep.title': 'Prep meals in advance',
+  'rsip.splitTemplate.diet.mealPrep.rule':
     'Prepare next-day lunch during weekday evenings.',
-  'rsip.splitTemplate.message14': 'Night snack cutoff',
-  'rsip.splitTemplate.message15': 'No high-sugar snacks after 21:00.',
-  'rsip.interaction.message1':
+  'rsip.splitTemplate.diet.snackCutoff.title': 'Night snack cutoff',
+  'rsip.splitTemplate.diet.snackCutoff.rule':
+    'No high-sugar snacks after 21:00.',
+  'rsip.interaction.confirmLinkedTask':
     'Policy executed. Trigger linked task "{targetChainName}"?',
-  'rsip.interaction.message2':
+  'rsip.interaction.toleranceRemaining':
     'Group "{groupTitle}" still has tolerance remaining. This violation will not collapse the whole group.',
-  'rsip.interaction.message3':
+  'rsip.interaction.toleranceExhausted':
     'Group "{groupTitle}" has exhausted tolerance. This violation will collapse the group.',
   'rsip.rsipPolicyLibrary.status':
     'Internalization {progress}% · Executed {days} days · Used {times} times',
@@ -355,6 +358,80 @@ const enTranslations = {
   'authForm.switchToSignUp': 'Switch to sign up',
   'authForm.signUp': 'Sign Up',
   'authForm.switchToLocalMode': 'Switch to local mode',
+  'authForm.forgotPassword': 'Forgot password?',
+  'authForm.resetPasswordTitle': 'Reset Password',
+  'authForm.resetPasswordDescription':
+    "Enter your account email and we'll send you a link to set a new password.",
+  'authForm.sendResetLink': 'Send Reset Link',
+  'authForm.resetLinkSent':
+    'If an account exists for this email, a reset link is on its way. Open it in this browser to set a new password.',
+  'authForm.resetLinkSentNative':
+    'If an account exists for this email, a reset link is on its way. It opens Momentum in your web browser; set a new password there, then sign in here.',
+  'authForm.resetRequestFailed':
+    'Could not send the reset email. Please try again later.',
+  'authForm.backToSignIn': 'Back to sign in',
+  'authForm.emailLinkInvalid':
+    'This email link is invalid or has expired. Please request a new one.',
+  'passwordRecovery.title': 'Set a New Password',
+  'passwordRecovery.description': 'Choose a new password for {email}.',
+  'passwordRecovery.newPassword': 'New password',
+  'passwordRecovery.confirmPassword': 'Confirm new password',
+  'passwordRecovery.tooShort': 'Use at least {count} characters.',
+  'passwordRecovery.mismatch': 'The two passwords do not match.',
+  'passwordRecovery.save': 'Save New Password',
+  'passwordRecovery.saved': 'Password updated.',
+  'passwordRecovery.failed': 'Could not update the password. Please try again.',
+  'passwordRecovery.skip': 'Skip for now',
+  'accountDeletion.title': 'Delete Account',
+  'accountDeletion.description':
+    'Permanently deletes your cloud account and everything synced to it: chains, history, RSIP policies, points, and bets. This cannot be undone. Data kept only on this device, such as your pet and exception rules, is not affected.',
+  'accountDeletion.exportHint':
+    'Export a backup first if you might want this data later.',
+  'accountDeletion.start': 'Delete account…',
+  'accountDeletion.confirmEmailLabel': 'Type your email to confirm',
+  'accountDeletion.passwordLabel': 'Current password',
+  'accountDeletion.confirm': 'Permanently Delete',
+  'accountDeletion.cancel': 'Cancel',
+  'accountDeletion.deleting': 'Deleting…',
+  'accountDeletion.wrongPassword':
+    'The password is incorrect. Nothing was deleted.',
+  'accountDeletion.unavailable':
+    'Account deletion is not available on this server yet. Nothing was deleted.',
+  'accountDeletion.failed': 'Account deletion failed. Please try again.',
+  'accountDeletion.deleted': 'Your account has been deleted.',
+  'settings.errorReporting.title': 'Send error reports',
+  'settings.errorReporting.description':
+    'Sends crash details (error message, stack trace, app version, device type) to the developer through Sentry. Your account, email and saved data are not attached, though an error message may name the action that failed. Off by default.',
+  'chainDetail.activity.title': 'Activity',
+  'chainDetail.activity.subtitle': 'Last {weeks} weeks',
+  'chainDetail.activity.summary':
+    '{completions} completions on {days} days · longest run {streak} days',
+  'chainDetail.activity.day':
+    '{date}: {completions} completed, {failures} failed',
+  'chainDetail.activity.less': 'Less',
+  'chainDetail.activity.more': 'More',
+  'focusMode.timerAnnouncement.remaining': '{minutes} minutes left',
+  'focusMode.timerAnnouncement.lastMinute': 'Less than a minute left',
+  'focusMode.timerAnnouncement.elapsed': '{minutes} minutes focused',
+  'focusMode.sessionEndAlarm.title': 'Focus session complete',
+  'focusMode.sessionEndAlarm.body':
+    '"{chainName}" reached its planned time. Come back to record it.',
+  'interruptedOperation.title': 'An unfinished save needs your decision',
+  'interruptedOperation.description':
+    "Momentum closed while saving, and this device's data changed afterwards, so that save cannot be finished safely. Export a backup of this device's data first, then continue with the current data. The unfinished change is dropped.",
+  'interruptedOperation.export': "Export this device's data",
+  'interruptedOperation.continue': 'Continue with current data',
+  'interruptedOperation.exported': 'Backup saved.',
+  'interruptedOperation.exportFailed': 'Could not save the backup. Try again.',
+  'interruptedOperation.continueFailed':
+    'Could not continue. Export a backup and contact support.',
+  'remoteChanges.message': 'Your data changed on another device.',
+  'remoteChanges.hint':
+    'Reload to see the latest version. Unsaved edits on this screen will be lost.',
+  'remoteChanges.reload': 'Reload',
+  'remoteChanges.dismiss': 'Later',
+  'tray.show': 'Show Momentum',
+  'tray.quit': 'Quit',
   'authWrapper.authenticating': 'Authenticating…',
   'authWrapper.authenticatingVariant2': 'AUTHENTICATING',
   'auxiliaryJudgment.bookingRuleAdjudication': 'Booking rule adjudication',
@@ -756,7 +833,6 @@ const enTranslations = {
     'Local mode is the default. You can also connect Supabase for sign-in and multi-device sync.',
   'dashboard.dashboardView.continueWithLocalMode': 'Continue with local mode',
   'dashboard.dashboardView.connectCloudSync': 'Connect cloud sync',
-  'focusMode.focusModeContainer.userInterrupted': 'User interrupted',
   'focusMode.focusModeControls.pause': 'Pause',
   'focusMode.focusModeControls.complete': 'Complete',
   'focusMode.focusModeControls.completeEarly': 'Complete early',
@@ -1446,26 +1522,28 @@ const enTranslations = {
 export type TranslationKey = keyof typeof enTranslations;
 
 const zhTranslations = {
-  'rsip.splitTemplate.message1': '早睡早起',
-  'rsip.splitTemplate.message2': '23:00 前入睡',
-  'rsip.splitTemplate.message3': '22:45 开始睡前流程，23:00 前上床。',
-  'rsip.splitTemplate.message4': '睡前断屏',
-  'rsip.splitTemplate.message5': '22:30 后手机仅保留闹钟功能。',
-  'rsip.splitTemplate.message6': '稳定运动',
-  'rsip.splitTemplate.message7': '回家立刻换运动服',
-  'rsip.splitTemplate.message8': '下班到家 10 分钟内换好运动服。',
-  'rsip.splitTemplate.message9': '最低运动量',
-  'rsip.splitTemplate.message10': '每天至少完成 10 分钟步行或拉伸。',
-  'rsip.splitTemplate.message11': '饮食控制',
-  'rsip.splitTemplate.message12': '提前备餐',
-  'rsip.splitTemplate.message13': '工作日晚间准备次日午餐。',
-  'rsip.splitTemplate.message14': '晚间零食拦截',
-  'rsip.splitTemplate.message15': '21:00 后不摄入高糖零食。',
-  'rsip.interaction.message1':
+  'rsip.splitTemplate.sleep.goal': '早睡早起',
+  'rsip.splitTemplate.sleep.bedtime.title': '23:00 前入睡',
+  'rsip.splitTemplate.sleep.bedtime.rule': '22:45 开始睡前流程，23:00 前上床。',
+  'rsip.splitTemplate.sleep.noScreen.title': '睡前断屏',
+  'rsip.splitTemplate.sleep.noScreen.rule': '22:30 后手机仅保留闹钟功能。',
+  'rsip.splitTemplate.exercise.goal': '稳定运动',
+  'rsip.splitTemplate.exercise.changeClothes.title': '回家立刻换运动服',
+  'rsip.splitTemplate.exercise.changeClothes.rule':
+    '下班到家 10 分钟内换好运动服。',
+  'rsip.splitTemplate.exercise.minimumDose.title': '最低运动量',
+  'rsip.splitTemplate.exercise.minimumDose.rule':
+    '每天至少完成 10 分钟步行或拉伸。',
+  'rsip.splitTemplate.diet.goal': '饮食控制',
+  'rsip.splitTemplate.diet.mealPrep.title': '提前备餐',
+  'rsip.splitTemplate.diet.mealPrep.rule': '工作日晚间准备次日午餐。',
+  'rsip.splitTemplate.diet.snackCutoff.title': '晚间零食拦截',
+  'rsip.splitTemplate.diet.snackCutoff.rule': '21:00 后不摄入高糖零食。',
+  'rsip.interaction.confirmLinkedTask':
     '国策已执行，是否联动任务「{targetChainName}」？',
-  'rsip.interaction.message2':
+  'rsip.interaction.toleranceRemaining':
     '国策组「{groupTitle}」仍有容错余量，本次违反不会导致整组崩溃。',
-  'rsip.interaction.message3':
+  'rsip.interaction.toleranceExhausted':
     '国策组「{groupTitle}」容错已耗尽，本次违反会触发整组崩溃。',
   'rsip.rsipPolicyLibrary.status':
     '内化进度 {progress}% · 累计执行 {days} 天 · 使用 {times} 次',
@@ -1782,6 +1860,73 @@ const zhTranslations = {
   'authForm.switchToSignUp': '切换到注册',
   'authForm.signUp': '注册',
   'authForm.switchToLocalMode': '切换到本地模式',
+  'authForm.forgotPassword': '忘记密码？',
+  'authForm.resetPasswordTitle': '重置密码',
+  'authForm.resetPasswordDescription':
+    '输入账号邮箱，我们会发送一封用于设置新密码的邮件。',
+  'authForm.sendResetLink': '发送重置邮件',
+  'authForm.resetLinkSent':
+    '如果该邮箱已注册，重置邮件已经发出。请在本浏览器中打开邮件里的链接来设置新密码。',
+  'authForm.resetLinkSentNative':
+    '如果该邮箱已注册，重置邮件已经发出。邮件链接会在浏览器中打开 Momentum 网页版，在那里设置新密码后，回到这里登录。',
+  'authForm.resetRequestFailed': '重置邮件发送失败，请稍后再试。',
+  'authForm.backToSignIn': '返回登录',
+  'authForm.emailLinkInvalid': '该邮件链接无效或已过期，请重新申请。',
+  'passwordRecovery.title': '设置新密码',
+  'passwordRecovery.description': '为 {email} 设置一个新密码。',
+  'passwordRecovery.newPassword': '新密码',
+  'passwordRecovery.confirmPassword': '确认新密码',
+  'passwordRecovery.tooShort': '密码至少需要 {count} 个字符。',
+  'passwordRecovery.mismatch': '两次输入的密码不一致。',
+  'passwordRecovery.save': '保存新密码',
+  'passwordRecovery.saved': '密码已更新。',
+  'passwordRecovery.failed': '密码更新失败，请重试。',
+  'passwordRecovery.skip': '暂不修改',
+  'accountDeletion.title': '删除账号',
+  'accountDeletion.description':
+    '将永久删除你的云端账号及其同步的全部数据：任务链、完成历史、RSIP 国策、积分和押注记录。此操作无法撤销。仅保存在本设备上的数据（例如宠物和例外规则）不受影响。',
+  'accountDeletion.exportHint': '如果以后可能还需要这些数据，请先导出备份。',
+  'accountDeletion.start': '删除账号…',
+  'accountDeletion.confirmEmailLabel': '输入你的邮箱以确认',
+  'accountDeletion.passwordLabel': '当前密码',
+  'accountDeletion.confirm': '永久删除',
+  'accountDeletion.cancel': '取消',
+  'accountDeletion.deleting': '正在删除…',
+  'accountDeletion.wrongPassword': '密码错误，未删除任何数据。',
+  'accountDeletion.unavailable': '服务器尚未启用删除账号功能，未删除任何数据。',
+  'accountDeletion.failed': '删除账号失败，请重试。',
+  'accountDeletion.deleted': '你的账号已删除。',
+  'settings.errorReporting.title': '发送错误报告',
+  'settings.errorReporting.description':
+    '通过 Sentry 向开发者发送崩溃信息（错误消息、调用栈、应用版本、设备类型）。不会附带你的账号、邮箱或保存的数据，但错误消息本身可能提到出错的操作。默认关闭。',
+  'chainDetail.activity.title': '打卡记录',
+  'chainDetail.activity.subtitle': '最近 {weeks} 周',
+  'chainDetail.activity.summary':
+    '{days} 天共完成 {completions} 次 · 最长连续 {streak} 天',
+  'chainDetail.activity.day':
+    '{date}：完成 {completions} 次，失败 {failures} 次',
+  'chainDetail.activity.less': '少',
+  'chainDetail.activity.more': '多',
+  'focusMode.timerAnnouncement.remaining': '剩余 {minutes} 分钟',
+  'focusMode.timerAnnouncement.lastMinute': '剩余不到 1 分钟',
+  'focusMode.timerAnnouncement.elapsed': '已专注 {minutes} 分钟',
+  'focusMode.sessionEndAlarm.title': '专注时间到',
+  'focusMode.sessionEndAlarm.body':
+    '「{chainName}」已到计划时长，回来记录完成吧。',
+  'interruptedOperation.title': '有一次未完成的保存需要你处理',
+  'interruptedOperation.description':
+    'Momentum 在保存过程中被关闭，之后本机数据又发生了变化，因此无法安全地完成那次保存。请先导出本机数据备份，再保留当前数据继续使用；那次未完成的更改会被放弃。',
+  'interruptedOperation.export': '导出本机数据',
+  'interruptedOperation.continue': '保留当前数据并继续',
+  'interruptedOperation.exported': '备份已保存。',
+  'interruptedOperation.exportFailed': '备份保存失败，请重试。',
+  'interruptedOperation.continueFailed': '无法继续，请导出备份后联系支持。',
+  'remoteChanges.message': '你的数据已在其他设备上更新。',
+  'remoteChanges.hint': '重新加载即可看到最新内容，本页未保存的编辑会丢失。',
+  'remoteChanges.reload': '重新加载',
+  'remoteChanges.dismiss': '稍后',
+  'tray.show': '显示 Momentum',
+  'tray.quit': '退出',
   'authWrapper.authenticating': '正在验证身份…',
   'authWrapper.authenticatingVariant2': '验证中',
   'auxiliaryJudgment.bookingRuleAdjudication': '辅助链规则判定',
@@ -2167,7 +2312,6 @@ const zhTranslations = {
     '默认是本地模式。你也可以连接 Supabase 开启登录与多端同步。',
   'dashboard.dashboardView.continueWithLocalMode': '继续本地模式',
   'dashboard.dashboardView.connectCloudSync': '连接云端同步',
-  'focusMode.focusModeContainer.userInterrupted': '用户主动中断',
   'focusMode.focusModeControls.pause': '暂停',
   'focusMode.focusModeControls.complete': '完成任务',
   'focusMode.focusModeControls.completeEarly': '提前完成',

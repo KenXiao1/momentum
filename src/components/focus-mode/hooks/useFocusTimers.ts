@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ActiveSession, Chain } from '../../../types';
 import type { MomentumStorage } from '../../../storage/MomentumStorage';
+import { getEndingSoonWarningSeconds } from '../../../domain/scheduling';
 import { systemNotificationService } from '../../../services/platform/SystemNotificationService';
 import { forwardTimerManager } from '../../../utils/forward-timer';
 import { soundManager } from '../../../utils/soundManager';
@@ -95,13 +96,7 @@ export function useFocusTimers({
   useEffect(() => {
     if (isDurationless) return;
 
-    const getNotificationThresholdSeconds = (durationMinutes: number) => {
-      if (durationMinutes <= 3) return null;
-      const thresholdMinutes = Math.floor(durationMinutes / 3);
-      return Math.min(thresholdMinutes, 1) * 60;
-    };
-
-    const notificationThresholdSeconds = getNotificationThresholdSeconds(
+    const notificationThresholdSeconds = getEndingSoonWarningSeconds(
       session.duration,
     );
 

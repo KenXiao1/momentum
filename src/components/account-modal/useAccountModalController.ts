@@ -13,6 +13,7 @@ import {
   toError,
 } from '../../utils/errorMessage';
 import { logger } from '../../utils/logger';
+import { toast } from '../../utils/toast';
 
 const DEFAULT_GAMBLING_SETTINGS: GamblingSettings = {
   gambling_mode_enabled: false,
@@ -101,6 +102,10 @@ export function useAccountModalController(params: {
   const user = canUseAuth ? loadedUser : null;
   const loading = canUseAuth && userLoading;
   const [signingOut, setSigningOut] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteAccountError, setDeleteAccountError] = useState<string | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [gamblingSettings, setGamblingSettings] = useState(
     DEFAULT_GAMBLING_SETTINGS,
@@ -236,6 +241,45 @@ export function useAccountModalController(params: {
     }
   };
 
+  const deleteAccount = async (currentPassword: string) => {
+    if (!canUseAuth) return;
+    setDeletingAccount(true);
+    setDeleteAccountError(null);
+    try {
+      const result = await storage.deleteAccount(currentPassword);
+      if (result.ok) {
+        toast.success(t('accountDeletion.deleted'));
+        params.onClose();
+        return;
+      }
+      if (result.error.code === 'INVALID_CREDENTIALS')
+        setDeleteAccountError(t('accountDeletion.wrongPassword'));
+      else if (result.error.code === 'NOT_SUPPORTED')
+        setDeleteAccountError(t('accountDeletion.unavailable'));
+      else
+        setDeleteAccountError(
+          getSafeErrorDetail(result.error.message || '', language) ??
+            t('accountDeletion.failed'),
+        );
+      logger.error(
+        'ACCOUNT',
+        'Account deletion failed',
+        { code: result.error.code },
+        new Error(result.error.message),
+      );
+    } catch (error) {
+      logger.error(
+        'ACCOUNT',
+        'Account deletion failed',
+        undefined,
+        toError(error),
+      );
+      setDeleteAccountError(t('accountDeletion.failed'));
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
+
   return {
     diagnostics,
     ...i18n,
@@ -253,6 +297,10 @@ export function useAccountModalController(params: {
     loadUser,
     toggleGambling,
     signOut,
+    deletingAccount,
+    deleteAccountError,
+    deleteAccount,
+    dismissDeleteAccountError: () => setDeleteAccountError(null),
     dismissGamblingError: () => setGamblingError(null),
   };
 }

@@ -5,17 +5,17 @@
 Choose a suite for the behavior being changed. Append a test path or `-t` filter
 for focused runs; the config files own exact discovery patterns.
 
-| Command                          | Scope                                                                | Configuration                  |
-| -------------------------------- | -------------------------------------------------------------------- | ------------------------------ |
-| `npm test` / `npm run test:all`  | Same unit suite; excludes integration and performance tests          | `vitest.config.ts`             |
-| `npm run test:integration`       | Storage/API integration                                              | `vitest.integration.config.ts` |
-| `npm run test:performance`       | Timing and performance scenarios                                     | `vitest.performance.config.ts` |
-| `npm run test:coverage`          | Unit + integration, all production TS/TSX                            | `vitest.coverage.config.ts`    |
-| `npm run test:mutation:critical` | Focused mutation checks                                              | `stryker.critical.config.mjs`  |
-| `npm run test:mutation`          | Broader mutation scope                                               | `stryker.config.mjs`           |
-| `npm run typecheck:tests`        | Strict types for tests, fixtures, mocks, E2E, and browser benchmarks | `tsconfig.tests.json`          |
-| `npm run test:e2e`               | Core browser journeys against a production build                     | `playwright.config.ts`         |
-| `npm run test:rust`              | Rust tests with the desktop feature                                  | `src-tauri/Cargo.toml`         |
+| Command                          | Scope                                                                                                  | Configuration                  |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------ |
+| `npm test` / `npm run test:all`  | Same unit suite; excludes integration and performance tests                                            | `vitest.config.ts`             |
+| `npm run test:integration`       | Storage/API integration                                                                                | `vitest.integration.config.ts` |
+| `npm run test:performance`       | Timing and performance scenarios                                                                       | `vitest.performance.config.ts` |
+| `npm run test:coverage`          | Unit + integration, all production TS/TSX                                                              | `vitest.coverage.config.ts`    |
+| `npm run test:mutation:critical` | Focused mutation checks                                                                                | `stryker.critical.config.mjs`  |
+| `npm run test:mutation`          | Broader mutation scope                                                                                 | `stryker.config.mjs`           |
+| `npm run typecheck:tests`        | Strict types for tests, fixtures, mocks, E2E, and browser benchmarks                                   | `tsconfig.tests.json`          |
+| `npm run test:e2e`               | Core browser journeys against a production build; Chromium, plus WebKit when `E2E_WEBKIT=1` (as in CI) | `playwright.config.ts`         |
+| `npm run test:rust`              | Rust tests with the desktop feature                                                                    | `src-tauri/Cargo.toml`         |
 
 Unit tests use `src/test/setup.ts` with independent native JSDOM local/session
 storage and suppressed console output. Tests live next to source or in

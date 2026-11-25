@@ -20,6 +20,7 @@ import {
   updateChainsForFailure,
   updateChainsForSuccess,
 } from './completionState';
+import { USER_INTERRUPTED_REASON } from '../../../domain/failureReason';
 
 const inFlight = new WeakMap<MomentumStorage, Map<string, Promise<boolean>>>();
 
@@ -251,7 +252,7 @@ export function createCompletionHandlers({
       completedAt: new Date(),
       duration: activeSession.duration,
       wasSuccessful: false,
-      reasonForFailure: reason || '用户主动中断',
+      reasonForFailure: reason || USER_INTERRUPTED_REASON,
       actualDuration: activeSession.duration,
       isForwardTimed: Boolean(chain.isDurationless),
     };

@@ -1,5 +1,5 @@
 import { createTranslator } from '../../../i18n/translate';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RSIPViewProps } from '../../../components/RSIPView.types';
 import type {
@@ -16,6 +16,7 @@ import {
   createPetState,
   createUnitChain,
 } from '../../../test/factories';
+import { InterruptedOperationConflictError } from '../../../domain/errors';
 
 vi.mock('../../../i18n', () => ({
   useI18n: () => ({
@@ -110,6 +111,11 @@ function createProps(overrides: AppShellViewOverrides = {}): AppShellViewProps {
     isLoadingData: false,
     loadError: null,
     onRetryDataLoad: vi.fn(),
+    onExportLocalData: vi.fn(async () => true),
+    onDiscardInterruptedOperation: vi.fn(async () => undefined),
+    hasRemoteChanges: false,
+    onReloadRemoteChanges: vi.fn(),
+    onDismissRemoteChanges: vi.fn(),
     currentView: 'dashboard',
     hasActiveSession: true,
     onNavigateToView: vi.fn(),
@@ -262,6 +268,71 @@ describe('AppShellView', () => {
     expect(screen.queryByTestId('pet-widget')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(onRetryDataLoad).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers a backup and a way forward when an interrupted save conflicts', async () => {
+    const onExportLocalData = vi.fn(async () => true);
+    const onDiscardInterruptedOperation = vi.fn(async () => undefined);
+    const onRetryDataLoad = vi.fn();
+    render(
+      <AppShellView
+        {...createProps({
+          app: {
+            loadError: new InterruptedOperationConflictError(),
+            onExportLocalData,
+            onDiscardInterruptedOperation,
+            onRetryDataLoad,
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'An unfinished save needs your decision',
+    );
+    expect(
+      screen.queryByRole('button', { name: 'Try again' }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: "Export this device's data" }),
+    );
+    expect(await screen.findByText('Backup saved.')).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Continue with current data' }),
+    );
+    await waitFor(() =>
+      expect(onDiscardInterruptedOperation).toHaveBeenCalledTimes(1),
+    );
+    expect(onExportLocalData).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers a reload when another device changed the data', () => {
+    const onReloadRemoteChanges = vi.fn();
+    const onDismissRemoteChanges = vi.fn();
+    const { rerender } = render(<AppShellView {...createProps()} />);
+    expect(
+      screen.queryByText('Your data changed on another device.'),
+    ).not.toBeInTheDocument();
+
+    rerender(
+      <AppShellView
+        {...createProps({
+          app: {
+            hasRemoteChanges: true,
+            onReloadRemoteChanges,
+            onDismissRemoteChanges,
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Your data changed on another device.',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Later' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reload' }));
+    expect(onDismissRemoteChanges).toHaveBeenCalledTimes(1);
+    expect(onReloadRemoteChanges).toHaveBeenCalledTimes(1);
   });
 
   it('renders dashboard and supports skip-to-content focus', async () => {

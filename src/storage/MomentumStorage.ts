@@ -8,8 +8,10 @@ import type {
   MaintenanceStore,
   PetStore,
   RsipStore,
+  RuleStore,
   SessionStore,
   StorageCapabilities,
+  SyncFingerprintGateway,
   TaskTimeStatsStore,
   UserSettingsGateway,
 } from './ports';
@@ -20,6 +22,7 @@ export interface MomentumStorage
     SessionStore,
     HistoryStore,
     RsipStore,
+    RuleStore,
     TaskTimeStatsStore,
     MaintenanceStore,
     AuthGateway,
@@ -27,6 +30,7 @@ export interface MomentumStorage
     BettingGateway,
     CheckinGateway,
     PetStore,
+    SyncFingerprintGateway,
     StorageOperationStore {
   readonly kind: 'local' | 'supabase';
   readonly capabilities?: StorageCapabilities;

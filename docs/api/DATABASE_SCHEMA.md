@@ -458,6 +458,22 @@ erDiagram
 - `idx_task_bets_user_status` (user_id, bet_status)
 - `idx_task_bets_settled_at` (settled_at DESC) WHERE settled_at IS NOT NULL
 
+### exception_rule_sets（例外规则）
+
+每个用户一行，保存例外规则和使用记录两个 JSON 数组。客户端整体替换列表，
+`revision` 是比较并交换的版本号：更新必须带上读取时的 revision 且只能加一，
+过期设备的写入会匹配不到行或被触发器拒绝。
+
+| 字段            | 类型        | 约束                                     | 说明           |
+| --------------- | ----------- | ---------------------------------------- | -------------- |
+| `user_id`       | uuid        | PK, FK auth.users ON DELETE CASCADE      | 所属用户       |
+| `rules`         | jsonb       | NOT NULL, DEFAULT '[]'，必须是数组       | 例外规则列表   |
+| `usage_records` | jsonb       | NOT NULL, DEFAULT '[]'，必须是数组       | 规则使用记录   |
+| `revision`      | bigint      | NOT NULL, 新行为 1，每次更新必须恰好加一 | 并发控制版本号 |
+| `updated_at`    | timestamptz | 由触发器写入                             | 最近更新时间   |
+
+RLS 只允许用户读取、插入和更新自己的行；客户端没有 DELETE 权限，删除账号时级联删除。
+
 ### audit_logs（审计日志）
 
 敏感操作审计。
@@ -512,6 +528,12 @@ CREATE POLICY "Users can manage their own [table]"
 | 赌注     | `place_task_bet`, `complete_task_with_betting`    | [betting.ts](../../src/infra/storage/supabase/betting.ts)       |
 | 写入会话 | `create_write_session`, `complete_write_session`  | [betting.ts](../../src/infra/storage/supabase/betting.ts)       |
 | 事务操作 | `commit_storage_operation`                        | [operations.ts](../../src/infra/storage/supabase/operations.ts) |
+| 账号     | `delete_my_account`                               | [auth.ts](../../src/infra/storage/supabase/auth.ts)             |
+
+`delete_my_account()` 删除调用者自己的 `auth.users` 行；所有用户表对
+`auth.users` 都是 `ON DELETE CASCADE`，因此同一事务内删除该用户的全部云端数据。
+客户端在调用前会用当前密码重新登录一次。`npm run test:database` 断言任何引用
+`auth.users` 的外键都必须级联删除。
 
 数据库还包含供触发器或其他操作使用的函数；完整定义见迁移文件。
 RLS 与 `SECURITY DEFINER` 的调用者校验要求见迁移指南。
@@ -562,6 +584,8 @@ RLS 与 `SECURITY DEFINER` 的调用者校验要求见迁移指南。
 | `20260211000000_schema_alignment_hotfix.sql`                   | 2026-02-11 | schema 对齐热修复                      |
 | `20260223000000_migrate_points_columns_to_bigint.sql`          | 2026-02-23 | 积分字段迁移到 bigint                  |
 | `20260225000000_fix_settle_task_bet_loss_noop_transaction.sql` | 2026-02-25 | 修复输掉赌注的 0 分事务问题            |
+| `20261124000000_add_delete_my_account.sql`                     | 2026-11-24 | 用户自助删除账号 RPC                   |
+| `20261124010000_add_exception_rule_sets.sql`                   | 2026-11-24 | 例外规则云端同步                       |
 
 ---
 

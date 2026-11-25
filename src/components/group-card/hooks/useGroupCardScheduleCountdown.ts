@@ -1,15 +1,12 @@
 import { type Translator } from '../../../i18n';
 import { useEffect, useRef, useState } from 'react';
 import type { ChainTreeNode, ScheduledSession } from '../../../types';
-import { getTimeRemaining } from '../../../domain/scheduling';
+import {
+  getEndingSoonWarningSeconds,
+  getTimeRemaining,
+} from '../../../domain/scheduling';
 import { systemNotificationService } from '../../../services/platform/SystemNotificationService';
 import { fireAndForget } from '../../../utils/fireAndForget';
-
-function getNotificationThreshold(durationMinutes: number) {
-  if (durationMinutes <= 3) return null;
-  const thresholdMinutes = Math.floor(durationMinutes / 3);
-  return Math.min(thresholdMinutes, 1) * 60;
-}
 
 export function useGroupCardScheduleCountdown(params: {
   scheduledSession?: ScheduledSession;
@@ -29,7 +26,8 @@ export function useGroupCardScheduleCountdown(params: {
     const durationForWarning = nextUnit
       ? nextUnit.auxiliaryDuration
       : group.auxiliaryDuration;
-    const notificationThreshold = getNotificationThreshold(durationForWarning);
+    const notificationThreshold =
+      getEndingSoonWarningSeconds(durationForWarning);
     const scheduleKey = `${scheduledSession.chainId}:${scheduledSession.scheduledAt.getTime()}`;
 
     const updateTimer = () => {

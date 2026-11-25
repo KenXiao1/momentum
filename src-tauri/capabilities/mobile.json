@@ -1,6 +1,7 @@
 {
   "identifier": "mobile",
   "description": "Mobile-specific permissions",
+  "windows": ["main"],
   "platforms": ["iOS", "android"],
   "permissions": [
     "core:default",
@@ -12,7 +13,6 @@
     "dialog:allow-open",
     "fs:default",
     "process:default",
-    "os:default",
     "haptics:default"
   ]
 }

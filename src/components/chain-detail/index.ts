@@ -5,3 +5,4 @@ export { ChainDetailDescription } from './ChainDetailDescription';
 export { ChainDetailHistory } from './ChainDetailHistory';
 export { DeleteConfirmModal } from './DeleteConfirmModal';
 export * from './types';
+export { ChainDetailActivity } from './ChainDetailActivity';

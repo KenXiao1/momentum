@@ -39,6 +39,8 @@ vitest-results*.json
 ui-fixes-results.json
 chaineditor-results.json
 rs.json
+devserver*.err
+knip-report.json
 
 # Coverage outputs
 coverage/

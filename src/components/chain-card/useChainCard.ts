@@ -4,7 +4,10 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import type { Chain, ScheduledSession, ChainTreeNode } from '../../types';
-import { getTimeRemaining } from '../../domain/scheduling';
+import {
+  getEndingSoonWarningSeconds,
+  getTimeRemaining,
+} from '../../domain/scheduling';
 import { getChainTypeConfig } from '../../utils/chain-tree';
 import { systemNotificationService } from '../../services/platform/SystemNotificationService';
 import { useStorage } from '../../storage/useStorage';
@@ -19,15 +22,6 @@ interface UseChainCardOptions {
   chain: Chain | ChainTreeNode;
   scheduledSession?: ScheduledSession;
   onDelete: (chainId: string) => void;
-}
-
-/**
- * 计算通知时机
- */
-function getNotificationThreshold(durationMinutes: number): number | null {
-  if (durationMinutes <= 3) return null; // 小于等于3分钟不通知
-  const thresholdMinutes = Math.floor(durationMinutes / 3);
-  return Math.min(thresholdMinutes, 1) * 60; // 转换为秒，最多1分钟
 }
 
 export function useChainCard({
@@ -111,7 +105,7 @@ export function useChainCard({
       return;
     }
 
-    const notificationThreshold = getNotificationThreshold(
+    const notificationThreshold = getEndingSoonWarningSeconds(
       chain.auxiliaryDuration,
     );
 

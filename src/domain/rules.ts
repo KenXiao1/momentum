@@ -256,3 +256,63 @@ export function repairRuleData(
 
   return { rules, usageRecords, repairCount };
 }
+
+export interface RuleData {
+  rules: ExceptionRule[];
+  usageRecords: RuleUsageRecord[];
+}
+
+function ruleIdentity(rule: ExceptionRule): string {
+  return [
+    rule.type,
+    rule.scope,
+    rule.scope === 'chain' ? (rule.chainId ?? '') : '',
+    typeof rule.name === 'string' ? normalizeName(rule.name) : '',
+  ].join('\u0000');
+}
+
+/**
+ * Adds `incoming` rules and records to `base` without duplicating either. A
+ * rule with the same id, or the same name, type and scope, is the same rule;
+ * records of a merged-away rule move to the rule that `base` already has.
+ */
+export function mergeRuleData(
+  base: RuleData,
+  incoming: RuleData,
+): RuleData & { changed: boolean } {
+  const rules = [...base.rules];
+  const ids = new Set(rules.map((rule) => rule.id));
+  const byIdentity = new Map(rules.map((rule) => [ruleIdentity(rule), rule]));
+  const renamed = new Map<string, string>();
+
+  for (const rule of incoming.rules) {
+    if (ids.has(rule.id)) continue;
+    const existing = byIdentity.get(ruleIdentity(rule));
+    if (existing) {
+      renamed.set(rule.id, existing.id);
+      continue;
+    }
+    rules.push(rule);
+    ids.add(rule.id);
+    byIdentity.set(ruleIdentity(rule), rule);
+  }
+
+  const usageRecords = [...base.usageRecords];
+  const recordIds = new Set(usageRecords.map((record) => record.id));
+  for (const record of incoming.usageRecords) {
+    if (recordIds.has(record.id)) continue;
+    usageRecords.push({
+      ...record,
+      ruleId: renamed.get(record.ruleId) ?? record.ruleId,
+    });
+    recordIds.add(record.id);
+  }
+
+  return {
+    rules,
+    usageRecords,
+    changed:
+      rules.length !== base.rules.length ||
+      usageRecords.length !== base.usageRecords.length,
+  };
+}

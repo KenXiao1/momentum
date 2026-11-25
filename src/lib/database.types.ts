@@ -9,6 +9,30 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      exception_rule_sets: {
+        Row: {
+          user_id: string;
+          rules: Json;
+          usage_records: Json;
+          revision: number;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          rules?: Json;
+          usage_records?: Json;
+          revision?: number;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          rules?: Json;
+          usage_records?: Json;
+          revision?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       chains: {
         Row: {
           id: string;
@@ -663,6 +687,14 @@ export interface Database {
       create_rsip_nodes_with_meta: {
         Args: { p_intent_key: string; p_nodes: Json; p_meta: Json };
         Returns: Json;
+      };
+      delete_my_account: {
+        Args: never;
+        Returns: undefined;
+      };
+      get_sync_fingerprint: {
+        Args: never;
+        Returns: string;
       };
       perform_daily_checkin: {
         Args: {

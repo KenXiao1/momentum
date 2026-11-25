@@ -8,6 +8,7 @@ import {
   formatTimeDescriptionByLanguage,
 } from '../../domain/scheduling';
 import { TimerRing } from './TimerRing';
+import { timerAnnouncement } from './timerAnnouncement';
 
 interface FocusTimerPanelProps {
   session: ActiveSession;
@@ -45,7 +46,15 @@ export function FocusTimerPanel({
     Boolean(chain.minimumDuration && chain.minimumDuration > 0);
 
   return (
-    <section className="mb-12 text-center sm:mb-16" aria-live="polite">
+    <section className="mb-12 text-center sm:mb-16">
+      <p className="sr-only" aria-live="polite">
+        {timerAnnouncement({
+          isDurationless,
+          timeRemaining,
+          elapsedSeconds,
+          t,
+        })}
+      </p>
       <div className="relative mb-8 flex items-center justify-center py-4">
         <div
           className="pointer-events-none absolute inset-0 flex items-center justify-center"

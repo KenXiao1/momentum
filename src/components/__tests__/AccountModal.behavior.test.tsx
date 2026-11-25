@@ -34,6 +34,13 @@ vi.mock('../../utils/platform', async (importOriginal) => {
   };
 });
 
+const sentrySdk = vi.hoisted(() => ({
+  init: vi.fn(),
+  captureException: vi.fn(),
+  close: vi.fn(async () => true),
+}));
+vi.mock('@sentry/browser', () => sentrySdk);
+
 vi.mock('../../storage/useStorageMode', () => ({
   useStorageMode: () => storageModeMock,
 }));
@@ -87,6 +94,7 @@ function createSupabaseStorage(overrides: Record<string, unknown> = {}) {
       .fn()
       .mockResolvedValue(ok({ success: true, message: 'ok' })),
     signOut: vi.fn().mockResolvedValue(ok(undefined)),
+    deleteAccount: vi.fn().mockResolvedValue(ok(undefined)),
     ...overrides,
   };
 }
@@ -339,6 +347,119 @@ describe('AccountModal behavior', () => {
     await waitFor(() => {
       expect(onClose).toHaveBeenCalledTimes(1);
     });
+  });
+
+  async function fillDeletionForm(
+    user: ReturnType<typeof userEvent.setup>,
+    email: string,
+    password: string,
+  ) {
+    await user.click(
+      await screen.findByRole('button', { name: 'Delete account…' }),
+    );
+    await user.type(screen.getByLabelText('Type your email to confirm'), email);
+    await user.type(screen.getByLabelText('Current password'), password);
+    return screen.getByRole('button', { name: 'Permanently Delete' });
+  }
+
+  it('keeps deletion disabled until the typed email matches the account', async () => {
+    const user = userEvent.setup();
+    const storage = createSupabaseStorage({
+      deleteAccount: vi.fn().mockResolvedValue(ok(undefined)),
+    });
+    renderAccountModal(storage);
+
+    const confirm = await fillDeletionForm(user, 'other@example.com', 'pw');
+
+    expect(confirm).toBeDisabled();
+    await user.click(confirm);
+    expect(storage.deleteAccount).not.toHaveBeenCalled();
+  });
+
+  it('reports a wrong password and keeps the account modal open', async () => {
+    const user = userEvent.setup();
+    const storage = createSupabaseStorage({
+      deleteAccount: vi
+        .fn()
+        .mockResolvedValue(
+          err({ code: 'INVALID_CREDENTIALS', message: 'Invalid login' }),
+        ),
+    });
+    const { onClose } = renderAccountModal(storage);
+
+    await user.click(await fillDeletionForm(user, 'TEST@example.com', 'bad'));
+
+    expect(storage.deleteAccount).toHaveBeenCalledWith('bad');
+    expect(
+      await screen.findByText(
+        'The password is incorrect. Nothing was deleted.',
+      ),
+    ).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('explains when the server cannot delete accounts yet', async () => {
+    const user = userEvent.setup();
+    const storage = createSupabaseStorage({
+      deleteAccount: vi
+        .fn()
+        .mockResolvedValue(err({ code: 'NOT_SUPPORTED', message: 'missing' })),
+    });
+    renderAccountModal(storage);
+
+    await user.click(await fillDeletionForm(user, 'test@example.com', 'pw'));
+
+    expect(
+      await screen.findByText(
+        'Account deletion is not available on this server yet. Nothing was deleted.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('closes the modal after the account is deleted', async () => {
+    const user = userEvent.setup();
+    const storage = createSupabaseStorage({
+      deleteAccount: vi.fn().mockResolvedValue(ok(undefined)),
+    });
+    const { onClose } = renderAccountModal(storage);
+
+    await user.click(await fillDeletionForm(user, 'test@example.com', 'pw'));
+
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+    expect(storage.deleteAccount).toHaveBeenCalledWith('pw');
+  });
+
+  it('hides the error-report setting in builds without a Sentry DSN', () => {
+    renderAccountModal(createLocalStorage());
+
+    expect(
+      screen.queryByRole('switch', { name: 'Send error reports' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('turns error reports on only when the user asks', async () => {
+    vi.stubEnv('VITE_SENTRY_DSN', 'https://key@o1.ingest.sentry.io/2');
+    vi.stubEnv('PROD', true);
+    try {
+      const user = userEvent.setup();
+      renderAccountModal(createLocalStorage());
+      const toggle = screen.getByRole('switch', {
+        name: 'Send error reports',
+      });
+      expect(toggle).toHaveAttribute('aria-checked', 'false');
+      expect(sentrySdk.init).not.toHaveBeenCalled();
+
+      await user.click(toggle);
+
+      await waitFor(() => expect(sentrySdk.init).toHaveBeenCalledTimes(1));
+      expect(localStorage.getItem('momentum_error_reporting_enabled')).toBe(
+        'true',
+      );
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   it('shows fallback sign-out message when signOut throws', async () => {

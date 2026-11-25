@@ -24,7 +24,8 @@
 | `src/hooks/domains/useRulesDomain.ts`                         | 业务逻辑 Hook                                     |
 | `src/services/exception-rule-manager/ExceptionRuleManager.ts` | 核心管理器（唯一入口）                            |
 | `src/domain/rules.ts`                                         | 校验、重名、动作可用性、使用记录、启动时数据修复  |
-| `src/storage/localRuleStore.ts`                               | 规则与使用记录的 localStorage 存储                |
+| `src/storage/localRuleStore.ts`                               | 本地模式：规则与使用记录的 localStorage 存储      |
+| `src/infra/storage/supabase/exceptionRules.ts`                | 云端模式：每用户一行的 `exception_rule_sets`      |
 | `src/components/rule-manager/`                                | 规则管理页（首页顶栏“例外规则”按钮打开）          |
 
 ---
@@ -111,9 +112,15 @@ enum ExceptionRuleError {
 ExceptionRuleManager（串行执行每个操作）
 ├── domain/rules.ts（纯函数）
 │   └── 校验、重名与相似名称、动作可用性、使用记录、数据修复
-└── RuleStore（storage/ports.ts）
-    └── localRuleStore：localStorage，读写失败直接抛出
+└── RuleStore（storage/ports.ts，随当前存储模式切换）
+    ├── localRuleStore：localStorage，读写失败直接抛出
+    └── 云端 RuleStore：exception_rule_sets，按 revision 拒绝过期写入
 ```
+
+云端模式下，每台设备第一次读取时会把该设备之前只存在本地的规则合并上传一次
+（同 id，或同名、同类型、同作用域视为同一条规则），之后云端删除不会被本地副本恢复。
+数据库尚未应用迁移时，规则继续保存在本地。另一台设备已修改规则时保存会失败，
+重新打开规则列表即可读取最新数据。
 
 详见 [系统设计文档](../modules/EXCEPTION_RULE_SYSTEM.md)。
 

@@ -77,6 +77,8 @@ function createBaseStorageMock(kind: Kind): MomentumStorage {
     // Compatibility / maintenance
     migrateCompletionHistoryForTiming: vi.fn(async () => undefined),
     clearCache: vi.fn(),
+    exportLocalRawData: vi.fn(async () => '{}'),
+    discardInterruptedOperation: vi.fn(async () => undefined),
 
     // Auth
     getCurrentUser: vi.fn(async () => ok(null)),
@@ -87,6 +89,9 @@ function createBaseStorageMock(kind: Kind): MomentumStorage {
     signUp: vi.fn(async () => ok(undefined)),
     signIn: vi.fn(async () => ok(undefined)),
     signOut: vi.fn(async () => ok(undefined)),
+    requestPasswordReset: vi.fn(async () => ok(undefined)),
+    updatePassword: vi.fn(async () => ok(undefined)),
+    deleteAccount: vi.fn(async () => ok(undefined)),
     onAuthStateChange: vi.fn(() => ok(() => undefined)),
 
     // User settings
@@ -141,6 +146,12 @@ function createBaseStorageMock(kind: Kind): MomentumStorage {
 
     // Pet
     getPetState: vi.fn(async () => null),
+    // Exception rules
+    getRules: vi.fn(async () => []),
+    saveRules: vi.fn(async () => undefined),
+    getUsageRecords: vi.fn(async () => []),
+    saveUsageRecords: vi.fn(async () => undefined),
+    getSyncFingerprint: vi.fn(async () => null),
     savePetState: vi.fn(async () => undefined),
   };
 }

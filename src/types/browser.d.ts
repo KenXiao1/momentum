@@ -15,7 +15,6 @@ declare global {
 
     webkitAudioContext?: typeof AudioContext;
 
-    __realTimeSync?: unknown;
     migrateTimerData?: unknown;
   }
 

@@ -477,4 +477,26 @@ describe('ExceptionRuleManager', () => {
       'Water 5',
     ]);
   });
+
+  describe('setStore', () => {
+    it('lets a queued operation finish on the store it started with', async () => {
+      const { store: first, manager } = setup([storedRule()]);
+      const second = createMemoryRuleStore({
+        rules: [storedRule({ id: 'cloud-1', name: 'Cloud rule' })],
+      });
+
+      const created = manager.createRule('Stretch', PAUSE);
+      manager.setStore(second);
+      await created;
+
+      expect(first.rules.map((rule) => rule.name)).toEqual([
+        'Refill water',
+        'Stretch',
+      ]);
+      expect(second.rules.map((rule) => rule.name)).toEqual(['Cloud rule']);
+      await expect(manager.getAllRules()).resolves.toMatchObject([
+        { name: 'Cloud rule' },
+      ]);
+    });
+  });
 });

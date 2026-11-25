@@ -6,6 +6,11 @@
 import { useState, useCallback, useMemo } from 'react';
 import type { Chain, CompletionHistory } from '../types';
 import { useI18n } from '../i18n';
+import { isUserInterruptedReason } from '../domain/failureReason';
+import { buildActivityCalendar } from '../domain/activityCalendar';
+
+/** About six months: long enough to see a habit form, narrow enough for phones. */
+const ACTIVITY_WEEKS = 26;
 
 interface UseChainDetailOptions {
   chain: Chain;
@@ -34,6 +39,13 @@ export function useChainDetail({
     [chainHistory],
   );
 
+  // The calendar ends with the week the page was opened in.
+  const [openedAt] = useState(() => new Date());
+  const activity = useMemo(
+    () => buildActivityCalendar(chainHistory, openedAt, ACTIVITY_WEEKS),
+    [chainHistory, openedAt],
+  );
+
   const successRate = useMemo(() => {
     if (chain.totalCompletions <= 0) return 0;
     return Math.round(
@@ -46,9 +58,7 @@ export function useChainDetail({
   // 格式化失败原因
   const formatFailureReason = useCallback(
     (reason: string): string => {
-      if (reason === '用户主动中断')
-        return t('useChainDetail.interruptedByUser');
-      if (reason === 'Interrupted by user')
+      if (isUserInterruptedReason(reason))
         return t('useChainDetail.interruptedByUser');
       return reason;
     },
@@ -76,6 +86,7 @@ export function useChainDetail({
     // 计算值
     chainHistory,
     recentHistory,
+    activity,
     successRate,
     chainHistoryCount: chainHistory.length,
 

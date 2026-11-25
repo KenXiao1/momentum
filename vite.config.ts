@@ -2,8 +2,20 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { visualizer } from 'rollup-plugin-visualizer';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
+import { readFileSync } from 'node:fs';
 
 const isTauri = !!process.env.TAURI_ENV_PLATFORM;
+const appVersion: string = JSON.parse(
+  readFileSync(new URL('./package.json', import.meta.url), 'utf8'),
+).version;
+// Source maps are built and uploaded only when a release build can send them
+// to Sentry; they are deleted from the output afterwards.
+const uploadSourceMaps = Boolean(
+  process.env.SENTRY_AUTH_TOKEN &&
+  process.env.SENTRY_ORG &&
+  process.env.SENTRY_PROJECT,
+);
 
 // 自定义插件：性能优化（预连接 + 首屏样式）
 function performanceOptimizations() {
@@ -36,6 +48,9 @@ function performanceOptimizations() {
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
   plugins: [
     performanceOptimizations(),
     react(),
@@ -78,16 +93,10 @@ export default defineConfig({
             },
             workbox: {
               globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-              runtimeCaching: [
-                {
-                  urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-                  handler: 'NetworkFirst',
-                  options: {
-                    cacheName: 'supabase-api',
-                    expiration: { maxEntries: 50, maxAgeSeconds: 300 },
-                  },
-                },
-              ],
+              // Only the app shell is precached. Supabase responses carry one
+              // user's data and must never outlive sign-out or stand in for a
+              // failed read; src/utils/apiResponseCache.ts purges the cache
+              // that earlier builds created.
             },
           }),
         ]
@@ -99,6 +108,18 @@ export default defineConfig({
       gzipSize: true,
       brotliSize: true,
     }),
+    ...(uploadSourceMaps
+      ? [
+          sentryVitePlugin({
+            org: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT,
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+            release: { name: `momentum@${appVersion}` },
+            sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] },
+            telemetry: false,
+          }),
+        ]
+      : []),
   ],
   server: {
     host: isTauri ? '0.0.0.0' : undefined,
@@ -139,8 +160,8 @@ export default defineConfig({
     },
     // 调整警告阈值
     chunkSizeWarningLimit: 500,
-    // 禁用源码映射以减小体积
-    sourcemap: false,
+    // Hidden maps (no sourceMappingURL) exist only for the Sentry upload.
+    sourcemap: uploadSourceMaps ? 'hidden' : false,
     // 启用CSS代码分割
     cssCodeSplit: true,
     // 设置目标浏览器以减少polyfill

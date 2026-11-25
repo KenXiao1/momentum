@@ -428,6 +428,68 @@ class DatabaseContracts(unittest.TestCase):
         self.assertEqual(self.balance(B),1000)
 
 
+    def test_every_user_table_cascades_from_auth_users(self):
+        self.assertEqual(self.db.sql("SELECT count(*) FROM pg_constraint c JOIN pg_class r ON r.oid=c.confrelid "
+            "JOIN pg_namespace n ON n.oid=r.relnamespace WHERE c.contype='f' AND n.nspname='auth' "
+            "AND r.relname='users' AND c.confdeltype<>'c';"), '0')
+        self.assertEqual(self.db.sql("SELECT count(*) FROM pg_attribute a JOIN pg_class t ON t.oid=a.attrelid "
+            "JOIN pg_namespace n ON n.oid=t.relnamespace WHERE n.nspname='public' AND t.relkind='r' "
+            "AND a.attname='user_id' AND NOT a.attisdropped AND NOT EXISTS(SELECT 1 FROM pg_constraint c "
+            "WHERE c.conrelid=t.oid AND c.contype='f' AND c.confrelid='auth.users'::regclass "
+            "AND a.attnum=ANY(c.conkey));"), '0')
+
+    def test_delete_my_account_removes_only_the_caller(self):
+        for role, user in [('anon', None), ('authenticated', None)]:
+            self.denied('SELECT public.delete_my_account()', user, role)
+        sid = self.session(); self.bet(sid)
+        self.db.rpc('perform_daily_checkin', f"'{A}'", A)
+        self.db.sql('SELECT public.delete_my_account();', 'authenticated', A)
+        self.assertEqual(self.db.sql(f"SELECT count(*) FROM auth.users WHERE id='{A}'"), '0')
+        for table in ['chains', 'user_points', 'user_settings', 'active_sessions', 'task_bets',
+                'daily_checkins', 'point_transactions']:
+            self.assertEqual(self.db.sql(f"SELECT count(*) FROM public.{table} WHERE user_id='{A}'"), '0', table)
+        self.assertEqual(self.db.sql(f"SELECT count(*) FROM public.chains WHERE user_id='{B}'"), '1')
+        self.assertEqual(self.balance(B), 1000)
+        with self.assertRaisesRegex(RuntimeError, 'Account not found'):
+            self.db.sql('SELECT public.delete_my_account();', 'authenticated', A)
+
+    def test_exception_rule_sets_are_private_and_compare_and_swap(self):
+        rules = literal(json.dumps([{'id': 'r1', 'name': 'Phone call'}]))
+        self.denied(f"INSERT INTO public.exception_rule_sets(user_id) VALUES('{A}')", None, 'anon')
+        self.denied(f"INSERT INTO public.exception_rule_sets(user_id) VALUES('{B}')", A)
+        with self.assertRaisesRegex(RuntimeError, 'revision 1'):
+            self.db.sql(f"INSERT INTO public.exception_rule_sets(user_id,revision) VALUES('{A}',5)", 'authenticated', A)
+        self.db.sql(f"INSERT INTO public.exception_rule_sets(user_id,rules) VALUES('{A}',{rules}::jsonb)", 'authenticated', A)
+        self.assertEqual(self.db.sql('SELECT count(*) FROM public.exception_rule_sets', 'authenticated', B), '0')
+        self.assertEqual(self.db.sql(f"WITH changed AS (UPDATE public.exception_rule_sets SET revision=2 "
+            f"WHERE user_id='{A}' RETURNING 1) SELECT count(*) FROM changed", 'authenticated', B), '0')
+        # A writer that read revision 1 advances it; a second writer holding 1 matches no row.
+        update = (f"WITH changed AS (UPDATE public.exception_rule_sets SET usage_records='[{{}}]', revision=2 "
+            f"WHERE user_id='{A}' AND revision=1 RETURNING 1) SELECT count(*) FROM changed")
+        self.assertEqual(self.db.sql(update, 'authenticated', A), '1')
+        self.assertEqual(self.db.sql(update, 'authenticated', A), '0')
+        with self.assertRaisesRegex(RuntimeError, 'Stale exception rule revision'):
+            self.db.sql(f"UPDATE public.exception_rule_sets SET revision=7 WHERE user_id='{A}'", 'authenticated', A)
+        with self.assertRaisesRegex(RuntimeError, 'check constraint'):
+            self.db.sql(f"UPDATE public.exception_rule_sets SET rules='{{}}', revision=3 WHERE user_id='{A}'", 'authenticated', A)
+        self.denied(f"DELETE FROM public.exception_rule_sets WHERE user_id='{A}'", A)
+        self.db.sql('SELECT public.delete_my_account();', 'authenticated', A)
+        self.assertEqual(self.db.sql('SELECT count(*) FROM public.exception_rule_sets'), '0')
+
+    def test_sync_fingerprint_tracks_only_the_callers_data(self):
+        self.denied('SELECT public.get_sync_fingerprint()', None, 'anon')
+        fingerprint = lambda user: self.db.sql('SELECT public.get_sync_fingerprint()', 'authenticated', user)
+        before_a, before_b = fingerprint(A), fingerprint(B)
+        self.assertEqual(fingerprint(A), before_a)
+        self.db.sql(f"UPDATE public.chains SET name='renamed' WHERE id='{CB}'", 'authenticated', B)
+        self.assertEqual(fingerprint(A), before_a)
+        self.assertNotEqual(fingerprint(B), before_b)
+        self.db.sql(f"UPDATE public.chains SET name='renamed' WHERE id='{CA}'", 'authenticated', A)
+        after_rename = fingerprint(A)
+        self.assertNotEqual(after_rename, before_a)
+        self.db.sql(f"INSERT INTO public.exception_rule_sets(user_id) VALUES('{A}')", 'authenticated', A)
+        self.assertNotEqual(fingerprint(A), after_rename)
+
     def test_completed_session_cannot_be_resurrected(self):
         sid = self.session(); self.bet(sid)
         old = self.rows('active_sessions')[0]

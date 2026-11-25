@@ -48,6 +48,55 @@ const tables: Record<TableName, Map<string, JsonRow>> = {
 };
 
 let authenticated = false;
+/** The password grant rejects this value as invalid credentials. */
+export const TEST_SUPABASE_WRONG_PASSWORD = 'wrong-password';
+const authRequests = {
+  passwordResets: [] as { email: string; redirectTo: string | null }[],
+  passwordUpdates: [] as string[],
+  deletedAccounts: 0,
+};
+let deleteAccountRpcAvailable = true;
+/** `exception_rule_sets` rows by user id, with the table's revision rule. */
+const ruleSets = new Map<string, JsonRow>();
+let ruleSetTableAvailable = true;
+let syncFingerprintRpcAvailable = true;
+
+/** Answers get_sync_fingerprint as PostgREST does before its migration runs. */
+export function simulateMissingSyncFingerprintRpc(): void {
+  syncFingerprintRpcAvailable = false;
+}
+
+/** Answers exception_rule_sets as PostgREST does before its migration runs. */
+export function simulateMissingRuleSetTable(): void {
+  ruleSetTableAvailable = false;
+}
+
+/** Writes a rule set as if another device had saved it. */
+export function writeRuleSetFromAnotherDevice(row: JsonRow): void {
+  const current = ruleSets.get(TEST_SUPABASE_USER_ID);
+  ruleSets.set(TEST_SUPABASE_USER_ID, {
+    rules: [],
+    usage_records: [],
+    ...current,
+    ...row,
+    user_id: TEST_SUPABASE_USER_ID,
+    revision: Number(current?.revision ?? 0) + 1,
+  });
+}
+
+export function getStoredRuleSet(): JsonRow | undefined {
+  return ruleSets.get(TEST_SUPABASE_USER_ID);
+}
+
+/** What the auth and account-deletion endpoints have received. */
+export function getSupabaseAuthRequests(): Readonly<typeof authRequests> {
+  return authRequests;
+}
+
+/** Answers delete_my_account as PostgREST does before its migration runs. */
+export function simulateMissingDeleteAccountRpc(): void {
+  deleteAccountRpcAvailable = false;
+}
 const storageOperations = new Map<string, string>();
 let loseStorageOperationResponse = false;
 export function failNextStorageOperationResponse(): void {
@@ -77,6 +126,13 @@ export function resetSupabaseMockState(): void {
   loseRSIPCreationResponse = false;
   for (const table of Object.values(tables)) table.clear();
   authenticated = false;
+  authRequests.passwordResets.length = 0;
+  authRequests.passwordUpdates.length = 0;
+  authRequests.deletedAccounts = 0;
+  deleteAccountRpcAvailable = true;
+  ruleSets.clear();
+  ruleSetTableAvailable = true;
+  syncFingerprintRpcAvailable = true;
   generatedId = 0;
   pendingFailure = undefined;
 }
@@ -282,6 +338,77 @@ function authResponse() {
   };
 }
 
+function ruleSetHandlers() {
+  const endpoint = `${TEST_SUPABASE_URL}/rest/v1/exception_rule_sets`;
+  const missing = () =>
+    HttpResponse.json(
+      {
+        code: 'PGRST205',
+        message:
+          "Could not find the table 'public.exception_rule_sets' in the schema cache",
+      },
+      { status: 404 },
+    );
+  const denied = () =>
+    HttpResponse.json(
+      { code: '42501', message: 'permission denied' },
+      { status: 401 },
+    );
+  const ownRow = (url: string) => {
+    const params = new URL(url).searchParams;
+    const row = ruleSets.get(TEST_SUPABASE_USER_ID);
+    if (!row || params.get('user_id') !== `eq.${TEST_SUPABASE_USER_ID}`)
+      return undefined;
+    const revision = params.get('revision');
+    return revision && revision !== `eq.${row.revision}` ? undefined : row;
+  };
+  return [
+    http.get(endpoint, ({ request }) => {
+      if (!ruleSetTableAvailable) return missing();
+      if (!authenticated) return HttpResponse.json([]);
+      const row = ownRow(request.url);
+      return HttpResponse.json(row ? [row] : []);
+    }),
+    http.post(endpoint, async ({ request }) => {
+      if (!ruleSetTableAvailable) return missing();
+      if (!authenticated) return denied();
+      const posted = (await request.json()) as JsonRow;
+      if (posted.user_id !== TEST_SUPABASE_USER_ID) return denied();
+      if (ruleSets.has(TEST_SUPABASE_USER_ID))
+        return HttpResponse.json(
+          { code: '23505', message: 'duplicate key value' },
+          { status: 409 },
+        );
+      if (posted.revision !== 1)
+        return HttpResponse.json(
+          { code: '22023', message: 'A new rule set starts at revision 1' },
+          { status: 400 },
+        );
+      ruleSets.set(TEST_SUPABASE_USER_ID, {
+        rules: [],
+        usage_records: [],
+        ...posted,
+      });
+      return new HttpResponse(null, { status: 201 });
+    }),
+    http.patch(endpoint, async ({ request }) => {
+      if (!ruleSetTableAvailable) return missing();
+      if (!authenticated) return denied();
+      const row = ownRow(request.url);
+      if (!row) return HttpResponse.json([]);
+      const patch = (await request.json()) as JsonRow;
+      if (patch.revision !== Number(row.revision) + 1)
+        return HttpResponse.json(
+          { code: '40001', message: 'Stale exception rule revision' },
+          { status: 400 },
+        );
+      const next = { ...row, ...patch };
+      ruleSets.set(TEST_SUPABASE_USER_ID, next);
+      return HttpResponse.json([{ revision: next.revision }]);
+    }),
+  ];
+}
+
 export const supabaseMockHandlers = [
   // This handler checks HTTP protocol and retry identity only. SQL constraints,
   // RLS, locking, and rollback are verified by scripts/database/run-tests.py.
@@ -428,14 +555,93 @@ export const supabaseMockHandlers = [
     authenticated = true;
     return HttpResponse.json(authResponse());
   }),
-  http.post(`${TEST_SUPABASE_URL}/auth/v1/token`, () => {
+  http.post(`${TEST_SUPABASE_URL}/auth/v1/token`, async ({ request }) => {
+    const body = (await request.json()) as { password?: string };
+    if (body.password === TEST_SUPABASE_WRONG_PASSWORD)
+      return HttpResponse.json(
+        {
+          code: 400,
+          error_code: 'invalid_credentials',
+          msg: 'Invalid login credentials',
+        },
+        { status: 400 },
+      );
     authenticated = true;
     return HttpResponse.json(authResponse());
+  }),
+  http.post(`${TEST_SUPABASE_URL}/auth/v1/recover`, async ({ request }) => {
+    const { email } = (await request.json()) as { email: string };
+    authRequests.passwordResets.push({
+      email,
+      redirectTo: new URL(request.url).searchParams.get('redirect_to'),
+    });
+    return HttpResponse.json({});
+  }),
+  http.put(`${TEST_SUPABASE_URL}/auth/v1/user`, async ({ request }) => {
+    if (!authenticated)
+      return HttpResponse.json(
+        { code: 401, msg: 'Invalid JWT' },
+        { status: 401 },
+      );
+    const { password } = (await request.json()) as { password?: string };
+    if (password) authRequests.passwordUpdates.push(password);
+    return HttpResponse.json(mockUser);
+  }),
+  // The SQL function, its cascade, and its caller checks are verified by
+  // scripts/database/run-tests.py; this handler only models the HTTP shape.
+  http.post(`${TEST_SUPABASE_URL}/rest/v1/rpc/delete_my_account`, () => {
+    if (!authenticated)
+      return HttpResponse.json(
+        { code: '42501', message: 'Authentication required' },
+        { status: 403 },
+      );
+    if (!deleteAccountRpcAvailable)
+      return HttpResponse.json(
+        {
+          code: 'PGRST202',
+          message:
+            'Could not find the function public.delete_my_account without parameters in the schema cache',
+          details: null,
+          hint: null,
+        },
+        { status: 404 },
+      );
+    for (const table of Object.values(tables)) table.clear();
+    ruleSets.clear();
+    authRequests.deletedAccounts += 1;
+    authenticated = false;
+    return new HttpResponse(null, { status: 204 });
   }),
   http.post(`${TEST_SUPABASE_URL}/auth/v1/logout`, () => {
     authenticated = false;
     return new HttpResponse(null, { status: 204 });
   }),
+  http.post(`${TEST_SUPABASE_URL}/rest/v1/rpc/get_sync_fingerprint`, () => {
+    if (!syncFingerprintRpcAvailable)
+      return HttpResponse.json(
+        {
+          code: 'PGRST202',
+          message:
+            'Could not find the function public.get_sync_fingerprint without parameters in the schema cache',
+        },
+        { status: 404 },
+      );
+    if (!authenticated)
+      return HttpResponse.json(
+        { code: '42501', message: 'permission denied' },
+        { status: 401 },
+      );
+    // Any change to stored rows changes the digest, like the SQL function.
+    return HttpResponse.json(
+      canonicalJson({
+        tables: Object.fromEntries(
+          Object.entries(tables).map(([name, rows]) => [name, [...rows]]),
+        ),
+        rules: ruleSets.get(TEST_SUPABASE_USER_ID)?.revision ?? null,
+      }),
+    );
+  }),
+  ...ruleSetHandlers(),
   ...createTableHandlers('rsip_policy_library'),
   ...createTableHandlers('rsip_run_history'),
   ...createTableHandlers('rsip_task_links'),

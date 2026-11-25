@@ -1,8 +1,10 @@
 import type { MomentumStorage } from '../../storage/MomentumStorage';
 import { getAppStateSnapshot } from '../../stores/appShellStore';
+import { getPlatformCapabilityCenter } from '../../utils/platform-capabilities/center';
 import { useAppDataLoad } from '../hooks/useAppDataLoad';
 import { useAuthController } from '../hooks/useAuthController';
 import { usePeriodicCleanup } from '../hooks/usePeriodicCleanup';
+import { useRemoteChangeNotice } from '../hooks/useRemoteChangeNotice';
 import { useServiceLifecycle } from '../hooks/useServiceLifecycle';
 import { useViewUrlSync } from '../hooks/useViewUrlSync';
 import { useViewValidation } from '../hooks/useViewValidation';
@@ -43,7 +45,30 @@ export function useAppShellBootstrap(
     isInitialized,
   });
 
-  return { isInitialized, isLoadingData, loadError, retryDataLoad };
+  const remoteChanges = useRemoteChangeNotice(
+    storage,
+    isInitialized && !isLoadingData && !loadError,
+  );
+
+  const exportLocalData = async () =>
+    getPlatformCapabilityCenter().file.saveFile(
+      await storage.exportLocalRawData(),
+      `momentum-device-backup-${new Date().toISOString().slice(0, 10)}.json`,
+    );
+  const discardInterruptedOperation = async () => {
+    await storage.discardInterruptedOperation();
+    retryDataLoad();
+  };
+
+  return {
+    isInitialized,
+    isLoadingData,
+    loadError,
+    retryDataLoad,
+    remoteChanges,
+    exportLocalData,
+    discardInterruptedOperation,
+  };
 }
 
 export type AppShellBootstrap = ReturnType<typeof useAppShellBootstrap>;

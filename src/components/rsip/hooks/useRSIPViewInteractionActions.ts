@@ -26,7 +26,7 @@ function confirmLinkedTaskAction(params: {
   return window.confirm(
     translate(
       params.language.startsWith('zh') ? 'zh' : 'en',
-      'rsip.interaction.message1',
+      'rsip.interaction.confirmLinkedTask',
       { targetChainName: params.targetChainName },
     ),
   );
@@ -192,7 +192,7 @@ export function useRSIPViewInteractionActions({
         setViolationGroupMessage(
           translate(
             language.startsWith('zh') ? 'zh' : 'en',
-            'rsip.interaction.message2',
+            'rsip.interaction.toleranceRemaining',
             { groupTitle: assessment.groupTitle },
           ),
         );
@@ -200,7 +200,7 @@ export function useRSIPViewInteractionActions({
         setViolationGroupMessage(
           translate(
             language.startsWith('zh') ? 'zh' : 'en',
-            'rsip.interaction.message3',
+            'rsip.interaction.toleranceExhausted',
             { groupTitle: assessment.groupTitle },
           ),
         );

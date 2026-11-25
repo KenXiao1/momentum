@@ -66,7 +66,11 @@ function isRlsError(lower: string): boolean {
 }
 
 function isRateLimitedError(lower: string): boolean {
-  return includesAny(lower, ['too many requests', '429']);
+  return includesAny(lower, [
+    'too many requests',
+    '429',
+    'you can only request this after',
+  ]);
 }
 
 function isProjectPausedError(lower: string): boolean {

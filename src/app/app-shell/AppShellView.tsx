@@ -1,6 +1,9 @@
 import { Suspense } from 'react';
 import { Dashboard } from '../../components/Dashboard';
 import { MobileBottomNav } from '../../components/mobile/MobileBottomNav';
+import { InterruptedOperationRecovery } from '../../components/InterruptedOperationRecovery';
+import { RemoteChangeBanner } from '../../components/RemoteChangeBanner';
+import { InterruptedOperationConflictError } from '../../domain/errors';
 import { useI18n } from '../../i18n';
 import { fireAndForget as runAsync } from '../../utils/fireAndForget';
 import { isTauriMobile } from '../../utils/platform';
@@ -70,6 +73,15 @@ export function AppShellView({
             </p>
           </div>
         </div>
+      );
+    }
+
+    if (app.loadError instanceof InterruptedOperationConflictError) {
+      return (
+        <InterruptedOperationRecovery
+          onExport={app.onExportLocalData}
+          onContinue={app.onDiscardInterruptedOperation}
+        />
       );
     }
 
@@ -280,6 +292,13 @@ export function AppShellView({
       <main id="main" tabIndex={-1}>
         {renderCurrentView()}
       </main>
+
+      {app.hasRemoteChanges && (
+        <RemoteChangeBanner
+          onReload={app.onReloadRemoteChanges}
+          onDismiss={app.onDismissRemoteChanges}
+        />
+      )}
 
       {shouldShowPetWidget && (
         <Suspense fallback={null}>

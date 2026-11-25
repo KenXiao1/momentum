@@ -5,8 +5,10 @@ import type { ComponentProps } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { createUnitChain } from '../../../test/factories';
 import { ChainDetailView } from '../../ChainDetailView';
+import { buildActivityCalendar } from '../../../domain/activityCalendar';
 
 vi.mock('../../chain-detail', () => ({
+  ChainDetailActivity: () => <div data-testid="activity" />,
   ChainDetailHeader: ({
     chainName,
     onBack,
@@ -67,6 +69,7 @@ function createProps(
   return {
     chain,
     recentHistory: [],
+    activity: buildActivityCalendar([], new Date(2026, 10, 25), 26),
     chainHistoryCount: 0,
     successRate: 100,
     showDeleteConfirm: false,

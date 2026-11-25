@@ -8,6 +8,7 @@ import {
   assertRuleUsableForAction,
   findExactDuplicates,
   findSimilarRules,
+  mergeRuleData,
   ruleTypeForAction,
   suggestRuleNames,
   validateRuleInput,
@@ -125,5 +126,57 @@ describe('assertRuleUsableForAction', () => {
     expect(ruleTypeForAction('early_completion')).toBe(
       ExceptionRuleType.EARLY_COMPLETION_ONLY,
     );
+  });
+});
+
+describe('mergeRuleData', () => {
+  const usage = (id: string, ruleId: string) => ({
+    id,
+    ruleId,
+    chainId: 'chain-1',
+    sessionId: 'session-1',
+    usedAt: new Date('2026-01-02T00:00:00.000Z'),
+    actionType: 'pause' as const,
+    taskElapsedTime: 60,
+    ruleScope: 'global' as const,
+  });
+
+  it('adds new rules and records and keeps base rules first', () => {
+    const merged = mergeRuleData(
+      { rules: [rule('a', 'Phone call')], usageRecords: [usage('u1', 'a')] },
+      { rules: [rule('b', 'Doorbell')], usageRecords: [usage('u2', 'b')] },
+    );
+
+    expect(merged.rules.map((item) => item.id)).toEqual(['a', 'b']);
+    expect(merged.usageRecords.map((item) => item.id)).toEqual(['u1', 'u2']);
+    expect(merged.changed).toBe(true);
+  });
+
+  it('treats a same-named rule of the same type and scope as the same rule', () => {
+    const merged = mergeRuleData(
+      { rules: [rule('a', 'Phone call')], usageRecords: [] },
+      {
+        rules: [
+          rule('b', '  phone CALL '),
+          rule('c', 'Phone call', {
+            type: ExceptionRuleType.EARLY_COMPLETION_ONLY,
+          }),
+          rule('d', 'Phone call', { scope: 'chain', chainId: 'chain-1' }),
+        ],
+        usageRecords: [usage('u1', 'b')],
+      },
+    );
+
+    expect(merged.rules.map((item) => item.id)).toEqual(['a', 'c', 'd']);
+    expect(merged.usageRecords).toMatchObject([{ id: 'u1', ruleId: 'a' }]);
+  });
+
+  it('reports no change when everything incoming is already present', () => {
+    const base = {
+      rules: [rule('a', 'Phone call')],
+      usageRecords: [usage('u1', 'a')],
+    };
+
+    expect(mergeRuleData(base, base).changed).toBe(false);
   });
 });

@@ -1,5 +1,7 @@
 pub mod file_ops;
 pub mod notifications;
+pub mod session_alarm;
+pub mod tray;
 pub mod window;
 
 #[tauri::command]

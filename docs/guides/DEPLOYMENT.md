@@ -26,6 +26,23 @@ to its configured site; inspect that target before using it.
 Database deployment is separate: follow the
 [migration guide](apply-migration.md) for schema changes.
 
+### Error reporting
+
+Error reports go to Sentry only from production builds with `VITE_SENTRY_DSN`
+set, and only after a user turns on "Send error reports" in Settings (off by
+default). The SDK is loaded on demand when reporting starts, and
+`src/utils/errorReporting.ts` drops the user, cookies, headers, bodies, URL
+queries and console breadcrumbs before sending. Errors passed to
+`logger.error` are reported with their category; logged context objects stay
+local. Both CSPs allow `https://*.sentry.io`.
+
+Source maps are built (hidden, with no `sourceMappingURL`) and uploaded only
+when `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` are all set; the
+plugin deletes the `.map` files after upload, so none are deployed. Set them in
+Netlify's environment for the web build. The release workflow reads
+`VITE_SENTRY_DSN`, `SENTRY_ORG` and `SENTRY_PROJECT` from repository variables
+and `SENTRY_AUTH_TOKEN` from secrets; all are optional.
+
 ## Tauri
 
 Native builds require Rust stable, Node from `.nvmrc`, and platform dependencies:
@@ -48,6 +65,17 @@ npm run tauri build
 ```
 
 Bundles are produced under `src-tauri/target/release/bundle/`.
+
+The app identifier is `io.github.kenxiao1.momentum`; releases up to 0.3.6 used
+`com.momentum.app`. The webview stores local-mode data in a directory named
+after the identifier (`~/Library/WebKit/<id>` on macOS, the app-local data
+directory on Windows and Linux), so on desktop startup, before the main window
+is created, `src-tauri/src/identifier_migration.rs` copies the old directory
+into an unused new one and leaves the old copy in place. Android and iOS treat
+a new identifier as a different app, and their data cannot be carried over:
+mobile users of an old build should export a backup before installing.
+Capabilities name the `main` window; a capability without `windows` grants
+nothing.
 Configuration lives in `src-tauri/tauri.conf.json`, Rust features/dependencies
 in `src-tauri/Cargo.toml`, and permissions in `src-tauri/capabilities/`.
 The [architecture guide](ARCHITECTURE.md#platform-and-tauri) describes the

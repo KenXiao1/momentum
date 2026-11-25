@@ -54,6 +54,14 @@ export interface AppShellAppViewModel {
   /** Set when the initial data load failed; the app must not render data views. */
   loadError: Error | null;
   onRetryDataLoad: () => void;
+  /** Saves a backup of this device's raw data; `false` when cancelled. */
+  onExportLocalData: () => Promise<boolean>;
+  /** Drops an interrupted local operation, keeping current data, and reloads. */
+  onDiscardInterruptedOperation: () => Promise<void>;
+  /** Another device changed the data while the app was in the background. */
+  hasRemoteChanges: boolean;
+  onReloadRemoteChanges: () => void;
+  onDismissRemoteChanges: () => void;
   currentView: ViewState;
   hasActiveSession: boolean;
   onNavigateToView: (view: ViewState) => void;

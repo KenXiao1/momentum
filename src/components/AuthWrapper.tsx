@@ -4,10 +4,15 @@ import { useStorage } from '../storage/useStorage';
 import { hasStorageCapability } from '../storage/ports';
 import { useStorageMode } from '../storage/useStorageMode';
 import { logger } from '../utils/logger';
-import { AuthForm } from './AuthForm';
+import { AuthForm, type AuthFormMode } from './AuthForm';
 import { IntroScreen } from './intro/IntroScreen';
+import { PasswordRecoveryForm } from './PasswordRecoveryForm';
 import { Loader2 } from 'lucide-react';
 import { useI18n } from '../i18n';
+import {
+  getInitialAuthRedirect,
+  type AuthRedirect,
+} from '../utils/authRedirect';
 import { isTauri } from '../utils/platform';
 
 interface AuthWrapperProps {
@@ -25,7 +30,11 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
     user: AuthUser | null;
   } | null>(null);
   const [view, setView] = useState<'intro' | 'auth'>('intro');
-  const [initialIsSignUp, setInitialIsSignUp] = useState(false);
+  const [initialMode, setInitialMode] = useState<AuthFormMode>('sign-in');
+  // An email link the app opened with, until the user has dealt with it.
+  const [redirect, setRedirect] = useState<AuthRedirect>(
+    getInitialAuthRedirect,
+  );
   const canUseAuth = hasStorageCapability(storage, 'auth');
   const loading = authState?.storage !== storage;
   const user = loading ? null : authState.user;
@@ -44,6 +53,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
         event,
         hasUser: Boolean(session.user),
       });
+      if (event === 'PASSWORD_RECOVERY') setRedirect('password-recovery');
       setAuthState({ storage, user: session.user });
     });
 
@@ -95,16 +105,39 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
     );
   }
 
+  // A failed link only matters to someone who is signed out.
+  if (user && redirect === 'invalid-link') setRedirect('none');
+
+  if (user && redirect === 'password-recovery') {
+    return (
+      <PasswordRecoveryForm
+        email={user.email}
+        onDone={() => setRedirect('none')}
+      />
+    );
+  }
+
   if (!user) {
+    // A failed link, or a recovery link that did not produce a session.
+    if (redirect !== 'none') {
+      return (
+        <AuthForm
+          initialMode={redirect === 'password-recovery' ? 'reset' : 'sign-in'}
+          initialError={t('authForm.emailLinkInvalid')}
+          onBack={() => setRedirect('none')}
+          onUseLocalMode={isTauri ? handleSwitchToLocalMode : undefined}
+        />
+      );
+    }
     if (view === 'intro') {
       return (
         <IntroScreen
           onSignIn={() => {
-            setInitialIsSignUp(false);
+            setInitialMode('sign-in');
             setView('auth');
           }}
           onSignUp={() => {
-            setInitialIsSignUp(true);
+            setInitialMode('sign-up');
             setView('auth');
           }}
           onUseLocalMode={isTauri ? handleSwitchToLocalMode : undefined}
@@ -113,7 +146,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
     }
     return (
       <AuthForm
-        initialIsSignUp={initialIsSignUp}
+        initialMode={initialMode}
         onBack={() => setView('intro')}
         onUseLocalMode={isTauri ? handleSwitchToLocalMode : undefined}
       />

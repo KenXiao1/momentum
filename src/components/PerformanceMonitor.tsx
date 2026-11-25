@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { realTimeSyncService } from '../services/RealTimeSyncService';
 import { reactPerformanceMonitor } from '../utils/reactPerformanceMonitor';
 
 interface PerformanceSnapshot {
-  sync: ReturnType<typeof realTimeSyncService.getStats>;
   react: ReturnType<typeof reactPerformanceMonitor.getStats>;
   timestamp: string;
 }
@@ -15,7 +13,7 @@ interface PerformanceMonitorProps {
 
 /**
  * Performance monitoring component for development and debugging.
- * Shows real-time sync status and React render metrics.
+ * Shows React render metrics.
  */
 export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   isVisible,
@@ -27,11 +25,9 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   useEffect(() => {
     if (isVisible) {
       const updateStats = () => {
-        const syncStats = realTimeSyncService.getStats();
         const reactStats = reactPerformanceMonitor.getStats();
 
         setStats({
-          sync: syncStats,
           react: reactStats,
           timestamp: new Date().toLocaleTimeString(),
         });
@@ -86,30 +82,6 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
       </div>
 
       <div className="space-y-3 text-xs">
-        <div>
-          <h4 className="mb-1 font-semibold text-blue-600 dark:text-blue-400">
-            Real-time Sync
-          </h4>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              Status:{' '}
-              <span
-                className={
-                  stats?.sync.isEnabled ? 'text-green-600' : 'text-red-600'
-                }
-              >
-                {stats?.sync.isEnabled ? 'Enabled' : 'Disabled'}
-              </span>
-            </div>
-            <div>
-              Subscribers:{' '}
-              <span className="font-mono">
-                {stats?.sync.subscriberCount ?? 0}
-              </span>
-            </div>
-          </div>
-        </div>
-
         {stats?.react && (
           <div>
             <h4 className="mb-1 font-semibold text-purple-600 dark:text-purple-400">
@@ -131,16 +103,6 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
             </div>
           </div>
         )}
-
-        <div className="flex space-x-2 border-t border-gray-200 pt-2 dark:border-slate-600">
-          <button
-            type="button"
-            onClick={() => realTimeSyncService.forceRefresh()}
-            className="rounded-sm bg-blue-500 px-2 py-1 text-xs text-white hover:bg-blue-600"
-          >
-            Force Refresh
-          </button>
-        </div>
 
         <div className="text-xs text-gray-500 dark:text-gray-400">
           Updated: {stats?.timestamp ?? '-'}

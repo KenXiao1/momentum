@@ -3,9 +3,14 @@ import { LOCAL_STORAGE_CAPABILITIES } from './ports';
 import { storage as localStorageUtils } from '../utils/storage';
 import { err, ok } from '../domain/result';
 import type { AppError } from '../domain/errors';
-import { withOperationLock } from '../utils/storage/operationJournal';
+import {
+  discardOperationJournal,
+  exportLocalRawData,
+  withOperationLock,
+} from '../utils/storage/operationJournal';
 import { measureStorageOperation } from '../utils/diagnostics';
 import { commitSessionCompletion, importData } from './localOperations';
+import { localRuleStore } from './localRuleStore';
 
 const notSupported = (message: string) =>
   err<AppError>({ code: 'NOT_SUPPORTED', message });
@@ -187,6 +192,9 @@ export const localStorageAdapter: MomentumStorage = {
       localStorageUtils.migrateCompletionHistoryForTiming(),
     ),
   clearCache: () => localStorageUtils.clearCache(),
+  exportLocalRawData: async () => exportLocalRawData(),
+  discardInterruptedOperation: async () =>
+    withOperationLock('local-data', async () => discardOperationJournal()),
 
   // Auth (not supported in local mode)
   getCurrentUser: async () => ok(null),
@@ -195,6 +203,9 @@ export const localStorageAdapter: MomentumStorage = {
   signUp: async () => notSupported(AUTH_NOT_SUPPORTED_MESSAGE),
   signIn: async () => notSupported(AUTH_NOT_SUPPORTED_MESSAGE),
   signOut: async () => notSupported(AUTH_NOT_SUPPORTED_MESSAGE),
+  requestPasswordReset: async () => notSupported(AUTH_NOT_SUPPORTED_MESSAGE),
+  updatePassword: async () => notSupported(AUTH_NOT_SUPPORTED_MESSAGE),
+  deleteAccount: async () => notSupported(AUTH_NOT_SUPPORTED_MESSAGE),
   onAuthStateChange: () => ok(() => {}),
 
   // User settings (not supported in local mode)
@@ -219,6 +230,12 @@ export const localStorageAdapter: MomentumStorage = {
     notSupported(DAILY_CHECKIN_NOT_SUPPORTED_MESSAGE),
   getUserCheckinStats: async () =>
     notSupported(DAILY_CHECKIN_NOT_SUPPORTED_MESSAGE),
+
+  // Exception rules
+  ...localRuleStore,
+
+  // A single device has no other device's changes to notice.
+  getSyncFingerprint: async () => null,
 
   // Pet (supported in local mode)
   getPetState: async () => readLocal(() => localStorageUtils.getPetState()),

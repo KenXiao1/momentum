@@ -79,10 +79,24 @@ export class ExceptionRuleManager {
   private queue: Promise<unknown> = Promise.resolve();
 
   constructor(
-    private readonly store: RuleStore,
+    private store: RuleStore,
     private readonly generateId: () => string = () => randomId('rule'),
     private readonly now: () => Date = () => new Date(),
   ) {}
+
+  /**
+   * Switches to another store, such as the cloud rule set after the storage
+   * mode changes. The switch waits for queued operations, so no operation can
+   * read one store and write the other.
+   */
+  setStore(store: RuleStore): void {
+    const switched = this.queue.then(() => {
+      if (store === this.store) return;
+      this.store = store;
+      this.initialization = null;
+    });
+    this.queue = switched;
+  }
 
   /** Repairs stored data once; later calls reuse the result. */
   initialize(): Promise<void> {

@@ -24,27 +24,7 @@
     />
     <title>Momentum - 心理学驱动的专注力应用</title>
 
-    <script>
-      (() => {
-        const root = document.documentElement;
-
-        const prefersDark =
-          typeof window.matchMedia === 'function' &&
-          window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        let isDark = prefersDark;
-        try {
-          const storedTheme = localStorage.getItem('theme');
-          if (storedTheme === 'dark') isDark = true;
-          else if (storedTheme === 'light') isDark = false;
-        } catch {
-          // Ignore storage access errors and fallback to system preference.
-        }
-
-        root.classList.toggle('dark', isDark);
-        root.style.colorScheme = isDark ? 'dark' : 'light';
-      })();
-    </script>
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>

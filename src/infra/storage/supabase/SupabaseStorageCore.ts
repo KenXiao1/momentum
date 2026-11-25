@@ -8,6 +8,11 @@ import {
   SUPABASE_STORAGE_CAPABILITIES,
   type StorageCapabilityProvider,
 } from '../../../storage/ports';
+import {
+  discardOperationJournal,
+  exportLocalRawData,
+  withOperationLock,
+} from '../../../utils/storage/operationJournal';
 import { retryOperation, retryWithAuth } from './retry';
 import type {
   SchemaCapabilityState,
@@ -50,6 +55,17 @@ export abstract class SupabaseStorageCore implements StorageCapabilityProvider {
 
   clearCache(): void {
     this.clearSchemaCache();
+  }
+
+  // Device-local maintenance: cloud mode still keeps pet data on this device.
+  async exportLocalRawData(): Promise<string> {
+    return exportLocalRawData();
+  }
+
+  async discardInterruptedOperation(): Promise<void> {
+    await withOperationLock('local-data', async () =>
+      discardOperationJournal(),
+    );
   }
 
   async verifySchemaColumns(

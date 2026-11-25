@@ -1,7 +1,7 @@
 {
   "name": "momentum",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.3.6",
   "type": "module",
   "license": "GPL-3.0-only",
   "engines": {
@@ -71,6 +71,7 @@
     "security:gitleaks": "node tools/quality/run-gitleaks.mjs"
   },
   "dependencies": {
+    "@sentry/browser": "^11.17.0",
     "@supabase/supabase-js": "^2.119.1",
     "@tauri-apps/api": "^2.12.5",
     "@tauri-apps/plugin-dialog": "^2.8.4",
@@ -90,6 +91,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "1.65.1",
+    "@sentry/vite-plugin": "^11.17.0",
     "@stryker-mutator/core": "^10.1.1",
     "@stryker-mutator/vitest-runner": "^10.1.1",
     "@tailwindcss/postcss": "^4.3.5",

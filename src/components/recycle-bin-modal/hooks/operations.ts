@@ -2,6 +2,7 @@ import { type Translator } from '../../../i18n';
 import type { Language } from '../../../i18n';
 import { logger } from '../../../utils/logger';
 import { toast } from '../../../utils/toast';
+import { PartialRestoreError } from '../../../services/chainOperations';
 import {
   getSafeErrorDetailFromUnknown,
   toError,
@@ -11,13 +12,6 @@ import type {
   ConfirmDialogState,
   OperationResult,
 } from '../types';
-
-function isPartialRestoreFailureMessage(message: string) {
-  return (
-    message.includes('Partial restore failure') ||
-    message.includes('部分链条恢复可能失败')
-  );
-}
 
 async function performRestoreOperation(params: {
   chainIds: string[];
@@ -69,7 +63,7 @@ async function performRestoreOperation(params: {
       toError(error),
     );
 
-    if (isPartialRestoreFailureMessage(rawErrorMessage)) {
+    if (error instanceof PartialRestoreError) {
       result.message = t(
         'recycleBinModal.operations.someChainsMayNotHaveBeenRestoredPleaseCheck',
       );

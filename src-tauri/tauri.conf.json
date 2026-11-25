@@ -1,7 +1,7 @@
 {
   "productName": "Momentum",
   "version": "0.3.6",
-  "identifier": "com.momentum.app",
+  "identifier": "io.github.kenxiao1.momentum",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -12,6 +12,8 @@
   "app": {
     "windows": [
       {
+        "label": "main",
+        "create": false,
         "title": "Momentum",
         "width": 1200,
         "height": 800,
@@ -21,7 +23,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'"
+      "csp": "default-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'"
     }
   },
   "bundle": {

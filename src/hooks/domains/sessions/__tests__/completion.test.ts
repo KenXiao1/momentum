@@ -15,6 +15,7 @@ import { forwardTimerManager } from '../../../../utils/forward-timer';
 import { systemNotificationService } from '../../../../services/platform/SystemNotificationService';
 import { emitPointsChanged } from '../../../../utils/pointsEvents';
 import { logger } from '../../../../utils/logger';
+import { USER_INTERRUPTED_REASON } from '../../../../domain/failureReason';
 
 vi.mock('../../../../utils/logger', () => ({
   logger: {
@@ -767,7 +768,7 @@ describe('createCompletionHandlers', () => {
     expect(forwardTimerManager.clearTimer).not.toHaveBeenCalled();
     expect(onNavigateToDashboard).toHaveBeenCalledTimes(1);
     expect(stateRef.getState().completionHistory.at(-1)?.reasonForFailure).toBe(
-      '用户主动中断',
+      USER_INTERRUPTED_REASON,
     );
   });
 

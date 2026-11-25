@@ -13,7 +13,6 @@
 - **软删除**：删除的链条移入回收箱而非永久删除
 - **恢复功能**：可随时恢复已删除的链条
 - **永久删除**：支持从回收箱永久删除
-- **多端同步**：通过 RealTimeSyncService 确保同步
 
 ---
 
@@ -22,7 +21,7 @@
 | 文件                                       | 职责                |
 | ------------------------------------------ | ------------------- |
 | `src/hooks/domains/useRecycleBinDomain.ts` | 回收箱业务逻辑 Hook |
-| `src/services/RealTimeSyncService.ts`      | 实时同步服务        |
+| `src/services/chainOperations.ts`          | 删除、恢复与读取    |
 | `src/components/RecycleBinModal.tsx`       | 回收箱模态框组件    |
 
 ---
@@ -62,14 +61,14 @@ sequenceDiagram
     participant User
     participant Dashboard
     participant useRecycleBinDomain
-    participant RealTimeSyncService
+    participant chainOperations
     participant Storage
 
     User->>Dashboard: 点击删除链条
     Dashboard->>useRecycleBinDomain: handleDeleteChain(chainId)
-    useRecycleBinDomain->>RealTimeSyncService: deleteWithSync()
-    RealTimeSyncService->>Storage: 设置 deletedAt
-    RealTimeSyncService->>RealTimeSyncService: 广播同步事件
+    useRecycleBinDomain->>chainOperations: softDeleteChain()
+    chainOperations->>Storage: 设置 deletedAt
+    chainOperations->>Storage: 读取活动链条
     Storage-->>Dashboard: 更新链条列表
     Note over Dashboard: 链条从列表消失，进入回收箱
 ```
@@ -81,14 +80,14 @@ sequenceDiagram
     participant User
     participant RecycleBinModal
     participant useRecycleBinDomain
-    participant RealTimeSyncService
+    participant chainOperations
     participant Storage
 
     User->>RecycleBinModal: 选择链条并点击恢复
     RecycleBinModal->>useRecycleBinDomain: handleRestoreChains(chainIds)
-    useRecycleBinDomain->>RealTimeSyncService: restoreWithSync()
-    RealTimeSyncService->>Storage: 清除 deletedAt
-    RealTimeSyncService->>RealTimeSyncService: 广播同步事件
+    useRecycleBinDomain->>chainOperations: restoreChains()
+    chainOperations->>Storage: 清除 deletedAt
+    chainOperations->>Storage: 读取活动链条
     Storage-->>RecycleBinModal: 更新列表
     Note over RecycleBinModal: 链条从回收箱移回主列表
 ```
@@ -100,15 +99,15 @@ sequenceDiagram
     participant User
     participant RecycleBinModal
     participant useRecycleBinDomain
-    participant RealTimeSyncService
+    participant chainOperations
     participant Storage
 
     User->>RecycleBinModal: 选择链条并点击永久删除
     RecycleBinModal->>User: 确认对话框
     User->>RecycleBinModal: 确认
     RecycleBinModal->>useRecycleBinDomain: handlePermanentDeleteChains(chainIds)
-    useRecycleBinDomain->>RealTimeSyncService: permanentDeleteWithSync()
-    RealTimeSyncService->>Storage: 物理删除记录
+    useRecycleBinDomain->>chainOperations: permanentlyDeleteChains()
+    chainOperations->>Storage: 物理删除记录
     Storage-->>RecycleBinModal: 更新列表
 ```
 
@@ -176,33 +175,11 @@ const handleDeleteChain = async (chainId: string) => {
 
 ---
 
-## 多端同步
+## 读取更新后的列表
 
-### RealTimeSyncService 集成
-
-```typescript
-// 删除时同步
-const updatedChains = await realTimeSyncService.deleteWithSync(
-  storage,
-  chainId,
-);
-
-// 恢复时同步
-const updatedChains = await realTimeSyncService.restoreWithSync(
-  storage,
-  chainIds,
-);
-
-// 永久删除时同步
-const updatedChains = await realTimeSyncService.permanentDeleteWithSync(
-  storage,
-  chainIds,
-);
-```
-
-### 同步事件
-
-当链条状态改变时，RealTimeSyncService 会广播事件，其他设备收到后更新本地状态。
+`src/services/chainOperations.ts` 在每次删除、恢复或永久删除之后重新读取活动链条，
+领域 Hook 用读到的列表更新界面。部分链条恢复失败时抛出 `PartialRestoreError`，
+其中带有失败的链条 ID 和已恢复后的列表。其他设备上的变化需要重新加载后才会出现。
 
 ---
 
@@ -214,18 +191,20 @@ const updatedChains = await realTimeSyncService.permanentDeleteWithSync(
 try {
   await handleRestoreChains(chainIds);
 } catch (error) {
-  const rawMessage = error instanceof Error ? error.message : '';
-
-  if (rawMessage.includes('Partial restore failure')) {
-    // 重新加载数据
-    const currentChains = await storage.getActiveChains();
-    setState((prev) => ({ ...prev, chains: currentChains }));
-
-    toast.warning('部分链条恢复可能失败，请检查回收箱确认结果。');
+  // 领域 Hook 已用 error.chains 更新了已恢复的链条
+  if (error instanceof PartialRestoreError) {
+    toast.warning(
+      t(
+        'recycleBinModal.operations.someChainsMayNotHaveBeenRestoredPleaseCheck',
+      ),
+    );
     return;
   }
-
-  toast.error('恢复失败，请重试');
+  toast.error(
+    t(
+      'recycleBinModal.operations.restoreFailedCheckTheConsoleForDetailsThenTry',
+    ),
+  );
 }
 ```
 

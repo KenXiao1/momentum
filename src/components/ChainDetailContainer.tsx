@@ -21,6 +21,7 @@ export const ChainDetailContainer: React.FC<ChainDetailProps> = React.memo(
     const {
       showDeleteConfirm,
       recentHistory,
+      activity,
       successRate,
       chainHistoryCount,
       language,
@@ -36,6 +37,7 @@ export const ChainDetailContainer: React.FC<ChainDetailProps> = React.memo(
       <ChainDetailView
         chain={chain}
         recentHistory={recentHistory}
+        activity={activity}
         chainHistoryCount={chainHistoryCount}
         successRate={successRate}
         showDeleteConfirm={showDeleteConfirm}

@@ -4,6 +4,7 @@
 
 import { isDev, isProd } from './env';
 import { recordDiagnosticError } from './diagnostics';
+import { reportError } from './errorReporting';
 
 enum LogLevel {
   DEBUG = 0,
@@ -108,6 +109,10 @@ class Logger {
         entry.error ?? entry.message,
         entry.level === LogLevel.ERROR ? 'error' : 'warning',
       );
+    }
+    if (entry.level === LogLevel.ERROR) {
+      // Context objects stay local; only the error and its category are sent.
+      reportError(entry.error ?? new Error(entry.message), entry.category);
     }
     this.logs.push(entry);
 

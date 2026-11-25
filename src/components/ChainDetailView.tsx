@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  ChainDetailActivity,
   ChainDetailHeader,
   ChainDetailStats,
   ChainDetailExceptions,
@@ -12,6 +13,7 @@ import type { ChainDetailViewProps } from './chain-detail';
 const ChainDetailViewComponent: React.FC<ChainDetailViewProps> = ({
   chain,
   recentHistory,
+  activity,
   chainHistoryCount,
   successRate,
   showDeleteConfirm,
@@ -50,6 +52,8 @@ const ChainDetailViewComponent: React.FC<ChainDetailViewProps> = ({
 
           <div className="space-y-6 xl:col-span-2">
             <ChainDetailDescription description={chain.description} t={t} />
+
+            <ChainDetailActivity calendar={activity} locale={locale} t={t} />
 
             <ChainDetailHistory
               recentHistory={recentHistory}

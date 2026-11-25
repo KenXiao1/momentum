@@ -110,6 +110,13 @@ export interface TaskTimeStatsStore {
 export interface MaintenanceStore {
   migrateCompletionHistoryForTiming(): Promise<void>;
   clearCache(): void;
+  /** This device's raw stored data as JSON, for a backup before recovery. */
+  exportLocalRawData(): Promise<string>;
+  /**
+   * Gives up an interrupted local operation that conflicts with newer data
+   * (`InterruptedOperationConflictError`), keeping the current values.
+   */
+  discardInterruptedOperation(): Promise<void>;
 }
 
 export interface AuthGateway {
@@ -121,6 +128,19 @@ export interface AuthGateway {
   signUp(email: string, password: string): Promise<Result<void, AppError>>;
   signIn(email: string, password: string): Promise<Result<void, AppError>>;
   signOut(): Promise<Result<void, AppError>>;
+  /**
+   * Emails a password reset link. Succeeds whether or not the address is
+   * registered, so callers cannot learn which emails have accounts.
+   */
+  requestPasswordReset(email: string): Promise<Result<void, AppError>>;
+  /** Sets a new password for the signed-in user, including a reset session. */
+  updatePassword(password: string): Promise<Result<void, AppError>>;
+  /**
+   * Re-checks `currentPassword`, permanently deletes the account and all of
+   * its cloud data, then signs this device out. A wrong password fails with
+   * `INVALID_CREDENTIALS` and deletes nothing.
+   */
+  deleteAccount(currentPassword: string): Promise<Result<void, AppError>>;
   onAuthStateChange(
     callback: (event: AuthStateChangeEvent, session: AuthSession) => void,
   ): Result<() => void, AppError>;
@@ -161,6 +181,15 @@ export interface RuleStore {
   saveRules(rules: ExceptionRule[]): Promise<void>;
   getUsageRecords(): Promise<RuleUsageRecord[]>;
   saveUsageRecords(records: RuleUsageRecord[]): Promise<void>;
+}
+
+/**
+ * A short digest of the user's synced data, compared before and after the app
+ * was in the background to notice another device's changes. `null` where
+ * there is nothing to compare: local storage, or a server without the RPC.
+ */
+export interface SyncFingerprintGateway {
+  getSyncFingerprint(): Promise<string | null>;
 }
 
 export interface PetStore {

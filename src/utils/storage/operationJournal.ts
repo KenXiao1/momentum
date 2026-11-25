@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { InterruptedOperationConflictError } from '../../domain/errors';
 
 const JOURNAL_KEY = 'momentum_operation_journal';
 const journalSchema = z.object({
@@ -25,13 +26,36 @@ export function recoverOperationJournal(): void {
   for (const item of journal.writes) {
     const current = localStorage.getItem(item.key);
     if (current !== item.before && current !== item.after) {
-      throw new Error(
-        'A saved operation conflicts with newer data. Export diagnostics before recovery.',
-      );
+      throw new InterruptedOperationConflictError();
     }
   }
   for (const item of journal.writes) write(item.key, item.after);
   localStorage.removeItem(JOURNAL_KEY);
+}
+
+/**
+ * Drops an unfinished operation and keeps every key's current value. Only for
+ * the conflict case, after the user has exported `exportLocalRawData()`.
+ */
+export function discardOperationJournal(): void {
+  localStorage.removeItem(JOURNAL_KEY);
+}
+
+/**
+ * Every Momentum key in this browser's storage, including an unfinished
+ * operation's journal, as JSON the user can keep before recovering.
+ */
+export function exportLocalRawData(): string {
+  const entries: Record<string, string | null> = {};
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+    if (key?.startsWith('momentum')) entries[key] = localStorage.getItem(key);
+  }
+  return JSON.stringify(
+    { schemaVersion: 1, exportedAt: new Date().toISOString(), entries },
+    null,
+    2,
+  );
 }
 
 /** Persist the complete recovery plan before the first application write. */

@@ -36,8 +36,8 @@ deleted rules and a previous action's list from surviving a reload. The unused
 exception-rule cache framework, subscribers, and cleanup timer were removed with
 the last two consumers in the [third ablation round](../plans/ablation-driven-simplification-2026-09-18-round-3.md).
 
-`RealTimeSyncService.clearAllCaches` asks the selected storage implementation to
-clear its caches. Other invalidation behavior belongs to each cache and caller;
+`useSafeSaveChains` asks the selected storage implementation to clear its caches
+before retrying a failed save. Other invalidation behavior belongs to each cache and caller;
 there is no universal invalidation mechanism.
 
 The unused rule prevalidation cache was removed in the

@@ -8,10 +8,6 @@ import { useStorage } from '../useStorage';
 const supabaseConfiguredRef = vi.hoisted(() => ({ value: false }));
 const isTauriRef = vi.hoisted(() => ({ value: false }));
 
-const realTimeSyncServiceMock = vi.hoisted(() => ({
-  setStorage: vi.fn(),
-}));
-
 const localAdapterMock = vi.hoisted(() => ({
   kind: 'local',
 }));
@@ -35,10 +31,6 @@ vi.mock('../../utils/supabaseConfig', () => ({
   get isSupabaseConfigured() {
     return supabaseConfiguredRef.value;
   },
-}));
-
-vi.mock('../../services/RealTimeSyncService', () => ({
-  realTimeSyncService: realTimeSyncServiceMock,
 }));
 
 vi.mock('../localStorageAdapter', () => ({
@@ -106,21 +98,16 @@ describe('StorageProvider', () => {
     vi.clearAllMocks();
   });
 
-  it('provides explicit storage and wires dependent services', () => {
+  it('provides explicit storage', () => {
     const storage = { kind: 'supabase' };
 
-    const { unmount } = render(
+    render(
       <StorageProvider storage={storage as any}>
         <StorageConsumer />
       </StorageProvider>,
     );
 
     expect(screen.getByTestId('storage-kind').textContent).toBe('supabase');
-    expect(realTimeSyncServiceMock.setStorage).toHaveBeenCalledWith(storage);
-
-    unmount();
-
-    expect(realTimeSyncServiceMock.setStorage).toHaveBeenCalledWith(null);
   });
 
   it('falls back to local storage adapter when no storage is provided', () => {

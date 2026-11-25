@@ -4,7 +4,6 @@
  *
  * 职责：
  * - 提供带重试机制的链条保存函数（只 upsert，不会删除未列出的链条）
- * - 通过 RealTimeSyncService 确保多端同步
  *
  * 重试策略：
  * - 最多重试 3 次
@@ -16,7 +15,7 @@
 import { useCallback } from 'react';
 import type { Chain } from '../../types';
 import type { MomentumStorage } from '../../storage/MomentumStorage';
-import { realTimeSyncService } from '../../services/RealTimeSyncService';
+import { upsertChains } from '../../services/chainOperations';
 import { logger } from '../../utils/logger';
 import { isDev } from '../../utils/env';
 
@@ -34,7 +33,7 @@ export function useSafeSaveChains(storage: MomentumStorage) {
           });
         }
 
-        await realTimeSyncService.saveWithSync(storage, updatedActiveChains);
+        await upsertChains(storage, updatedActiveChains);
 
         if (isDev) {
           logger.debug(
@@ -73,7 +72,7 @@ export function useSafeSaveChains(storage: MomentumStorage) {
             });
           }
 
-          await realTimeSyncService.clearAllCaches(storage);
+          storage.clearCache();
 
           return new Promise((resolve, reject) => {
             setTimeout(async () => {

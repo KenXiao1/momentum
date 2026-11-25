@@ -4,12 +4,14 @@ import { type Translator } from '../../i18n';
  */
 
 import { Chain, CompletionHistory } from '../../types';
+import type { ActivityCalendar } from '../../domain/activityCalendar';
 
 export type TranslationFn = Translator;
 
 export interface ChainDetailViewProps {
   chain: Chain;
   recentHistory: CompletionHistory[];
+  activity: ActivityCalendar;
   chainHistoryCount: number;
   successRate: number;
   showDeleteConfirm: boolean;

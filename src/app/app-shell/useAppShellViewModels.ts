@@ -37,6 +37,14 @@ export function useAppShellViewModels(
     isLoadingData: bootstrap.isLoadingData,
     loadError: bootstrap.loadError,
     onRetryDataLoad: bootstrap.retryDataLoad,
+    onExportLocalData: bootstrap.exportLocalData,
+    onDiscardInterruptedOperation: bootstrap.discardInterruptedOperation,
+    hasRemoteChanges: bootstrap.remoteChanges.hasRemoteChanges,
+    onReloadRemoteChanges: () => {
+      bootstrap.remoteChanges.dismiss();
+      bootstrap.retryDataLoad();
+    },
+    onDismissRemoteChanges: bootstrap.remoteChanges.dismiss,
     currentView: state.currentView,
     hasActiveSession: !!state.activeSession,
     onNavigateToView,

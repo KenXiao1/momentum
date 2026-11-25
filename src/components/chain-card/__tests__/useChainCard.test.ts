@@ -34,7 +34,8 @@ vi.mock('../../../storage/useStorage', () => ({
   useStorage: () => storageMock,
 }));
 
-vi.mock('../../../domain/scheduling', () => ({
+vi.mock('../../../domain/scheduling', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../domain/scheduling')>()),
   getTimeRemaining: getTimeRemainingMock,
 }));
 

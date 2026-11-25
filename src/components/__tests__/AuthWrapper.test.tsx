@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '../../i18n';
 import { StorageProvider } from '../../storage/StorageContext';
 import { err, ok } from '../../domain/result';
+import { captureInitialAuthRedirect } from '../../utils/authRedirect';
 
 const isTauriRef = vi.hoisted(() => ({ value: false }));
 const storageModeMock = vi.hoisted(() => ({
@@ -52,16 +53,20 @@ vi.mock('../intro/IntroScreen', () => ({
 
 vi.mock('../AuthForm', () => ({
   AuthForm: ({
-    initialIsSignUp,
+    initialMode,
+    initialError,
     onBack,
     onUseLocalMode,
   }: {
-    initialIsSignUp: boolean;
+    initialMode: string;
+    initialError?: string | null;
     onBack: () => void;
     onUseLocalMode?: () => void;
   }) => (
     <div data-testid="auth-form">
-      <span>{initialIsSignUp ? 'signup' : 'signin'}</span>
+      <span>{initialMode === 'sign-up' ? 'signup' : 'signin'}</span>
+      <span data-testid="auth-form-mode">{initialMode}</span>
+      {initialError && <p role="alert">{initialError}</p>}
       <button type="button" onClick={onBack}>
         auth-back
       </button>
@@ -75,6 +80,14 @@ vi.mock('../AuthForm', () => ({
 }));
 
 import { AuthWrapper } from '../AuthWrapper';
+
+/** Opens the app as if from a URL with this hash (an email link). */
+function openedWithHash(hash: string) {
+  captureInitialAuthRedirect({
+    location: { hash, pathname: '/', search: '' },
+    history: { state: null, replaceState: vi.fn() },
+  } as unknown as Window);
+}
 
 function renderWrapper(storage: any) {
   localStorage.setItem('language', 'en');
@@ -92,7 +105,106 @@ function renderWrapper(storage: any) {
 describe('AuthWrapper', () => {
   beforeEach(() => {
     isTauriRef.value = false;
+    openedWithHash('');
     storageModeMock.setMode.mockReset();
+  });
+
+  function signedInStorage(overrides: Record<string, unknown> = {}) {
+    return {
+      kind: 'supabase',
+      onAuthStateChange: vi.fn(() => ok(() => undefined)),
+      waitForAuthentication: vi.fn().mockResolvedValue(
+        ok({
+          user: { id: 'user-1', email: 'me@example.com' },
+          isAuthenticated: true,
+        }),
+      ),
+      updatePassword: vi.fn().mockResolvedValue(ok(undefined)),
+      ...overrides,
+    };
+  }
+
+  it('asks for a new password after a recovery link signs the user in', async () => {
+    openedWithHash('#access_token=token&type=recovery');
+    const storage = signedInStorage();
+    renderWrapper(storage);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Set a New Password' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText('New password'), 'fresh-pass');
+    await userEvent.type(
+      screen.getByLabelText('Confirm new password'),
+      'fresh-pass',
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Save New Password' }),
+    );
+
+    expect(storage.updatePassword).toHaveBeenCalledWith('fresh-pass');
+    expect(await screen.findByTestId('protected-content')).toBeInTheDocument();
+  });
+
+  it('switches to the new-password form on a PASSWORD_RECOVERY event', async () => {
+    let authCallback:
+      | ((event: string, session: { user: { id: string } | null }) => void)
+      | undefined;
+    renderWrapper(
+      signedInStorage({
+        onAuthStateChange: vi.fn((callback) => {
+          authCallback = callback;
+          return ok(() => undefined);
+        }),
+      }),
+    );
+    expect(await screen.findByTestId('protected-content')).toBeInTheDocument();
+
+    act(() => {
+      authCallback?.('PASSWORD_RECOVERY', { user: { id: 'user-1' } });
+    });
+
+    expect(
+      await screen.findByRole('heading', { name: 'Set a New Password' }),
+    ).toBeInTheDocument();
+  });
+
+  it('offers a new reset email when a recovery link did not sign the user in', async () => {
+    openedWithHash('#access_token=token&type=recovery');
+    renderWrapper({
+      kind: 'supabase',
+      onAuthStateChange: vi.fn(() => ok(() => undefined)),
+      waitForAuthentication: vi
+        .fn()
+        .mockResolvedValue(ok({ user: null, isAuthenticated: false })),
+    });
+
+    expect(await screen.findByTestId('auth-form-mode')).toHaveTextContent(
+      'reset',
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'This email link is invalid or has expired',
+    );
+  });
+
+  it('reports a failed email link on the sign-in form', async () => {
+    openedWithHash('#error=access_denied&error_code=otp_expired');
+    renderWrapper({
+      kind: 'supabase',
+      onAuthStateChange: vi.fn(() => ok(() => undefined)),
+      waitForAuthentication: vi
+        .fn()
+        .mockResolvedValue(ok({ user: null, isAuthenticated: false })),
+    });
+
+    expect(await screen.findByTestId('auth-form-mode')).toHaveTextContent(
+      'sign-in',
+    );
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'auth-back' }));
+    expect(screen.getByTestId('intro-screen')).toBeInTheDocument();
   });
 
   it('passes local mode switch entry in tauri intro view', async () => {

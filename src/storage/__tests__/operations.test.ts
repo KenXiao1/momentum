@@ -4,6 +4,7 @@ import { createUnitChain } from '../../test/factories';
 import type { SessionCompletionInput } from '../operations';
 import { STORAGE_KEYS } from '../../utils/storage/keys';
 import { withOperationLock } from '../../utils/storage/operationJournal';
+import { InterruptedOperationConflictError } from '../../domain/errors';
 
 async function sessionInput(): Promise<SessionCompletionInput> {
   const chain = createUnitChain({ currentStreak: 2, totalCompletions: 5 });
@@ -93,6 +94,40 @@ describe('durable local operations', () => {
     expect(history).toHaveLength(1);
     expect(history[0].completedAt).toEqual(input.record.completedAt);
     expect(localStorage.getItem('momentum_operation_journal')).toBeNull();
+  });
+
+  it('lets the user back up and continue when newer data overtook an interrupted save', async () => {
+    const input = await sessionInput();
+    const original = Storage.prototype.setItem;
+    const write = vi
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(function (this: Storage, key, value) {
+        if (key === STORAGE_KEYS.COMPLETION_HISTORY)
+          throw new Error('disk temporarily unavailable');
+        original.call(this, key, value);
+      });
+    await expect(storage.commitSessionCompletion(input)).rejects.toThrow(
+      'disk temporarily',
+    );
+    write.mockRestore();
+    // Something outside the adapter's lock changed a key in the journal since.
+    localStorage.setItem(STORAGE_KEYS.COMPLETION_HISTORY, '[]');
+
+    await expect(storage.getChains()).rejects.toBeInstanceOf(
+      InterruptedOperationConflictError,
+    );
+    const backup = JSON.parse(await storage.exportLocalRawData());
+    expect(Object.keys(backup.entries)).toEqual(
+      expect.arrayContaining([
+        'momentum_operation_journal',
+        STORAGE_KEYS.COMPLETION_HISTORY,
+      ]),
+    );
+
+    await storage.discardInterruptedOperation();
+    expect(localStorage.getItem('momentum_operation_journal')).toBeNull();
+    expect(await storage.getCompletionHistory()).toEqual([]);
+    expect(await storage.getChains()).toHaveLength(1);
   });
 
   it('does not write application data when the journal itself cannot be saved', async () => {

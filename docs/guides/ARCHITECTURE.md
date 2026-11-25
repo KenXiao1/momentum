@@ -82,7 +82,13 @@ and validates the current rule. There is no service-level temporary ID registry 
 rule-state mirror. The rule manager UI keeps its own optimistic update/rollback.
 
 Exception rules go through `exceptionRuleManager`, which combines pure functions
-in `src/domain/rules.ts` with the `RuleStore` port (`src/storage/localRuleStore.ts`).
+in `src/domain/rules.ts` with the active storage's `RuleStore` port.
+`StorageProvider` hands the manager each new storage; the switch waits for
+queued rule operations. Local mode uses `src/storage/localRuleStore.ts`. Cloud
+mode uses the per-user `exception_rule_sets` row
+(`src/infra/storage/supabase/exceptionRules.ts`), whose `revision` rejects a
+save based on stale rules; each device merges its pre-sync local rules into
+that row once, and the store stays local while the table is not migrated.
 It runs one operation at a time, so concurrent writes cannot overwrite each other.
 Focus-mode creation passes `{ reuseExisting: true }`: an exact name reuses the
 existing rule, a similar name is created with a warning. Rule failures surface to
@@ -101,8 +107,11 @@ Database schema changes are SQL files in `supabase/migrations/`. On the client,
 the only data migration is the completion-history timing normalization that
 `useAppDataLoad` applies after loading (`utils/completionHistoryTimingMigration.ts`).
 Add a client migration only for stored data that cannot be normalized on read,
-and make it run once. `StorageProvider` in `StorageContext.tsx` supplies the
-current adapter to the realtime sync service and clears it on cleanup.
+and make it run once. `StorageProvider` in `StorageContext.tsx` hands the
+current adapter to the exception rule manager. There is no cross-device push.
+In cloud mode `useRemoteChangeNotice` compares the `get_sync_fingerprint` digest
+from when the app went to the background with the one when it returns, and
+offers a reload when another device changed the data; nothing reloads by itself.
 
 ## Error handling
 
@@ -128,7 +137,12 @@ its own adapter, without a callback through the aggregate capability query. Its
 wrappers preserve unsupported, cancellation, and failure results used by UI workflows.
 
 `src-tauri/src/lib.rs` registers Rust commands and plugins; `main.rs` is the
-desktop entry. `src-tauri/capabilities/` controls permissions and
+desktop entry. `setup` copies webview data from the previous app identifier
+(`identifier_migration.rs`) before it creates the main window. Desktop-only
+commands keep the tray menu in the app language (`set_tray_labels`) and post a
+system notification when a timed focus session ends (`schedule_session_end` /
+`cancel_session_end`, scheduled by `useSessionEndAlarm`), because the
+webview's own timers are throttled while the window is hidden. `src-tauri/capabilities/` controls permissions and
 `src-tauri/Cargo.toml` separates desktop/mobile dependencies. The mobile code
 path exists; release CI builds desktop targets and Android, while iOS packaging
 remains in progress. See [deployment](DEPLOYMENT.md) for prerequisites and builds.

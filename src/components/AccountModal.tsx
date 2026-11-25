@@ -1,9 +1,12 @@
 import type React from 'react';
 import { AlertCircle, User } from 'lucide-react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { isErrorReportingAvailable } from '../utils/errorReporting';
 import { isTauri } from '../utils/platform';
 import { fireAndForget } from '../utils/fireAndForget';
+import { AccountModalDeleteSection } from './account-modal/AccountModalDeleteSection';
 import { AccountModalDiagnosticsSection } from './account-modal/AccountModalDiagnosticsSection';
+import { AccountModalErrorReportingSection } from './account-modal/AccountModalErrorReportingSection';
 import { AccountModalHeader } from './account-modal/AccountModalHeader';
 import { AccountModalLanguageSection } from './account-modal/AccountModalLanguageSection';
 import { AccountModalStorageSection } from './account-modal/AccountModalStorageSection';
@@ -72,26 +75,40 @@ export const AccountModal: React.FC<AccountModalProps> = ({
     );
   } else if (controller.user) {
     accountContent = (
-      <AccountModalUserContent
-        user={controller.user}
-        userFullName={controller.userFullName}
-        locale={controller.locale}
-        t={controller.t}
-        gamblingSettings={controller.gamblingSettings}
-        gamblingLoading={controller.gamblingLoading}
-        gamblingError={controller.gamblingError}
-        gamblingSuccess={controller.gamblingSuccess}
-        signingOut={controller.signingOut}
-        onToggleGambling={() =>
-          fireAndForget(controller.toggleGambling(), {
-            label: 'ACCOUNT toggle gambling',
-          })
-        }
-        onDismissGamblingError={controller.dismissGamblingError}
-        onSignOut={() =>
-          fireAndForget(controller.signOut(), { label: 'ACCOUNT sign out' })
-        }
-      />
+      <div className="space-y-6">
+        <AccountModalUserContent
+          user={controller.user}
+          userFullName={controller.userFullName}
+          locale={controller.locale}
+          t={controller.t}
+          gamblingSettings={controller.gamblingSettings}
+          gamblingLoading={controller.gamblingLoading}
+          gamblingError={controller.gamblingError}
+          gamblingSuccess={controller.gamblingSuccess}
+          signingOut={controller.signingOut}
+          onToggleGambling={() =>
+            fireAndForget(controller.toggleGambling(), {
+              label: 'ACCOUNT toggle gambling',
+            })
+          }
+          onDismissGamblingError={controller.dismissGamblingError}
+          onSignOut={() =>
+            fireAndForget(controller.signOut(), { label: 'ACCOUNT sign out' })
+          }
+        />
+        <AccountModalDeleteSection
+          email={controller.user.email}
+          deleting={controller.deletingAccount}
+          error={controller.deleteAccountError}
+          t={controller.t}
+          onDelete={(currentPassword) =>
+            fireAndForget(controller.deleteAccount(currentPassword), {
+              label: 'ACCOUNT delete account',
+            })
+          }
+          onCancel={controller.dismissDeleteAccountError}
+        />
+      </div>
     );
   } else {
     accountContent = (
@@ -137,6 +154,9 @@ export const AccountModal: React.FC<AccountModalProps> = ({
             />
           )}
           <NotificationToggle placement="settings" />
+          {isErrorReportingAvailable() && (
+            <AccountModalErrorReportingSection t={controller.t} />
+          )}
           {accountContent}
           <AccountModalDiagnosticsSection
             t={controller.t}

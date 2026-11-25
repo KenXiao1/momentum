@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ActiveSession, Chain } from '../../../types';
 import { FocusMode } from '../FocusModeContainer';
+import { USER_INTERRUPTED_REASON } from '../../../domain/failureReason';
 
 const useAutoResumeMock = vi.hoisted(() => vi.fn());
 const useExceptionRuleFlowMock = vi.hoisted(() => vi.fn());
@@ -161,7 +162,7 @@ describe('FocusModeContainer', () => {
     expect(screen.getByTestId('interrupt-open').textContent).toBe('true');
 
     fireEvent.click(screen.getByText('confirm-interrupt'));
-    expect(onInterrupt).toHaveBeenCalledWith('User interrupted');
+    expect(onInterrupt).toHaveBeenCalledWith(USER_INTERRUPTED_REASON);
 
     fireEvent.click(screen.getByText('resume-now'));
     expect(autoResumeActions.clearAutoResumeSchedule).toHaveBeenCalledTimes(1);
