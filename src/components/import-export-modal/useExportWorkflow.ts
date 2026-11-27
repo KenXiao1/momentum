@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useContext, useState } from 'react';
+import { ChainTagsContext } from '../chain-tags/ChainTagsContext';
 import type {
   Chain,
   CompletionHistory,
@@ -34,6 +35,7 @@ export function useExportWorkflow(data: {
   userPreferences?: unknown;
 }) {
   const file = getPlatformCapabilityCenter().file;
+  const chainTags = useContext(ChainTagsContext)?.tagSet;
   const [exportFailed, setExportFailed] = useState(false);
   const handleExport = useCallback(async () => {
     setExportFailed(false);
@@ -42,6 +44,7 @@ export function useExportWorkflow(data: {
         importExportService.createExportData({
           ...data,
           exceptionRules: await exceptionRuleManager.exportRules(true),
+          chainTags,
         });
       const saved = await file.saveFile(
         JSON.stringify(exportData, null, 2),
@@ -53,6 +56,6 @@ export function useExportWorkflow(data: {
       logger.error('IMPORT_EXPORT', 'Export failed', undefined, toError(error));
       setExportFailed(true);
     }
-  }, [data, file]);
+  }, [chainTags, data, file]);
   return { handleExport, exportFailed };
 }

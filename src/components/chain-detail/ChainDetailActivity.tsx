@@ -108,7 +108,10 @@ export function ChainDetailActivity({
           className="mb-1 flex gap-0.5 text-[10px] text-gray-500 dark:text-slate-400"
         >
           {monthLabels.map((label, index) => (
-            <span key={calendar.weeks[index][0].date} className="w-3">
+            <span
+              key={calendar.weeks[index][0].date}
+              className="w-3 shrink-0 overflow-visible whitespace-nowrap"
+            >
               {label}
             </span>
           ))}

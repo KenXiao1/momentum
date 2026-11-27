@@ -241,6 +241,17 @@ class SystemNotificationService {
     });
   }
 
+  /** A daily chain reminder; never prompts for permission on its own. */
+  async notifyDailyReminder(title: string, body: string): Promise<void> {
+    await this.show({
+      title,
+      body,
+      icon: DEFAULT_NOTIFICATION_ICON,
+      tag: randomId('daily-reminder'),
+      requireInteraction: false,
+    });
+  }
+
   async notifyTimerCompleted(
     title: string,
     body: string,

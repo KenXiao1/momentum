@@ -33,6 +33,9 @@
 
 ### 核心类型
 
+> 分类已改为用户自定义标签：`type` 只区分单链（`unit`）和任务组（`group`），旧的兵种值
+> 保留在数据里，作为默认标签的来源。见 [链条标签](../modules/CHAIN_TAGS.md)。
+
 ```typescript
 // 基础链条记录
 interface ChainRecord {

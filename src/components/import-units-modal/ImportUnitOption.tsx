@@ -4,6 +4,7 @@ import type { Chain } from '../../types';
 import { getChainTypeConfig } from '../../utils/chain-tree';
 import { Icon } from '../../utils/iconMap';
 import { formatChainDuration } from '../../utils/formatChainDuration';
+import { useChainTagsOf } from '../chain-tags/ChainTagsContext';
 
 interface ImportUnitOptionProps {
   unit: Chain;
@@ -21,6 +22,7 @@ export function ImportUnitOption({
   t: t,
 }: ImportUnitOptionProps) {
   const typeConfig = getChainTypeConfig(unit.type, language);
+  const tags = useChainTagsOf(unit);
   const completionsText =
     unit.totalCompletions === 1
       ? t('counts.completion', { count: unit.totalCompletions })
@@ -62,9 +64,11 @@ export function ImportUnitOption({
               <h4 className="truncate font-chinese font-bold text-gray-900 dark:text-slate-100">
                 {unit.name}
               </h4>
-              <p className="font-mono text-xs tracking-wide text-gray-500">
-                {typeConfig.name}
-              </p>
+              {tags.length > 0 && (
+                <span className="block truncate text-xs text-gray-500">
+                  {tags.map((tag) => tag.name).join(' · ')}
+                </span>
+              )}
             </div>
           </div>
           <p className="mb-2 line-clamp-2 font-chinese text-sm text-gray-600 dark:text-slate-400">

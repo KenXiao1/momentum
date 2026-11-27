@@ -152,6 +152,8 @@ function createBaseStorageMock(kind: Kind): MomentumStorage {
     getUsageRecords: vi.fn(async () => []),
     saveUsageRecords: vi.fn(async () => undefined),
     getSyncFingerprint: vi.fn(async () => null),
+    getChainTagSet: vi.fn(async () => null),
+    saveChainTagSet: vi.fn(async () => undefined),
     savePetState: vi.fn(async () => undefined),
   };
 }

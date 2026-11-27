@@ -1,4 +1,5 @@
 import type { Chain } from './chain';
+import type { ChainTagSet } from './chainTag';
 import type { ExceptionRule, RuleUsageRecord } from './exception-rule';
 import type {
   RSIPExecutionRecord,
@@ -49,4 +50,10 @@ export interface RuleState {
   ruleUsageRecords: RuleUsageRecord[];
 }
 
-export interface AppState extends TaskRuntimeState, RsipState, RuleState {}
+interface TagState {
+  /** `null` until the user first changes tags; the defaults apply until then. */
+  chainTags: ChainTagSet | null;
+}
+
+export interface AppState
+  extends TaskRuntimeState, RsipState, RuleState, TagState {}

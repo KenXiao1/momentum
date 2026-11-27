@@ -7,3 +7,4 @@ export * from './exception-rule-errors';
 export * from './app-state';
 export * from './rsipIntegration';
 export * from './taskLifecycle';
+export * from './chainTag';

@@ -1,17 +1,21 @@
 import { Icon } from '../../../utils/iconMap';
 import { getTriggerLabel } from '../../chain-editor/constants';
 import type { ChainCardViewProps } from '../types';
+import { useChainTagsOf } from '../../chain-tags/ChainTagsContext';
+import { TagChips } from '../../chain-tags/TagChips';
 
 type ChainCardSummaryProps = Pick<
   ChainCardViewProps,
-  'chain' | 'typeConfig' | 'language'
+  'chain' | 'typeConfig' | 'language' | 't'
 >;
 
 export function ChainCardSummary({
   chain,
   typeConfig,
   language,
+  t,
 }: ChainCardSummaryProps) {
+  const tags = useChainTagsOf(chain);
   return (
     <div className="mb-6 flex items-start justify-between">
       <div className="min-w-0 flex-1 pr-4">
@@ -29,10 +33,16 @@ export function ChainCardSummary({
             <h3 className="truncate font-chinese text-2xl font-bold text-gray-900 transition-colors group-hover:text-primary-500 dark:text-slate-100">
               {chain.name}
             </h3>
-            {chain.type !== 'unit' && (
+            {chain.type === 'group' ? (
               <p className="truncate font-mono text-xs tracking-wide text-gray-500">
                 {typeConfig.name}
               </p>
+            ) : (
+              tags.length > 0 && (
+                <div className="mt-1">
+                  <TagChips tags={tags} t={t} />
+                </div>
+              )
             )}
           </div>
         </div>

@@ -56,9 +56,6 @@ const authRequests = {
   deletedAccounts: 0,
 };
 let deleteAccountRpcAvailable = true;
-/** `exception_rule_sets` rows by user id, with the table's revision rule. */
-const ruleSets = new Map<string, JsonRow>();
-let ruleSetTableAvailable = true;
 let syncFingerprintRpcAvailable = true;
 
 /** Answers get_sync_fingerprint as PostgREST does before its migration runs. */
@@ -66,26 +63,139 @@ export function simulateMissingSyncFingerprintRpc(): void {
   syncFingerprintRpcAvailable = false;
 }
 
+/**
+ * A per-user document table (`exception_rule_sets`, `chain_tag_sets`) with
+ * the database's rules: one row per user, inserted at revision 1, updated
+ * only by advancing the revision the writer read.
+ */
+function createDocumentTable(table: string, defaults: JsonRow) {
+  const rows = new Map<string, JsonRow>();
+  let available = true;
+  const endpoint = `${TEST_SUPABASE_URL}/rest/v1/${table}`;
+  const missing = () =>
+    HttpResponse.json(
+      {
+        code: 'PGRST205',
+        message: `Could not find the table 'public.${table}' in the schema cache`,
+      },
+      { status: 404 },
+    );
+  const denied = () =>
+    HttpResponse.json(
+      { code: '42501', message: 'permission denied' },
+      { status: 401 },
+    );
+  const ownRow = (url: string) => {
+    const params = new URL(url).searchParams;
+    const row = rows.get(TEST_SUPABASE_USER_ID);
+    if (!row || params.get('user_id') !== `eq.${TEST_SUPABASE_USER_ID}`)
+      return undefined;
+    const revision = params.get('revision');
+    return revision && revision !== `eq.${row.revision}` ? undefined : row;
+  };
+  return {
+    reset() {
+      rows.clear();
+      available = true;
+    },
+    clear() {
+      rows.clear();
+    },
+    simulateMissing() {
+      available = false;
+    },
+    current(): JsonRow | undefined {
+      return rows.get(TEST_SUPABASE_USER_ID);
+    },
+    writeFromAnotherDevice(row: JsonRow) {
+      const current = rows.get(TEST_SUPABASE_USER_ID);
+      rows.set(TEST_SUPABASE_USER_ID, {
+        ...defaults,
+        ...current,
+        ...row,
+        user_id: TEST_SUPABASE_USER_ID,
+        revision: Number(current?.revision ?? 0) + 1,
+      });
+    },
+    handlers: () => [
+      http.get(endpoint, ({ request }) => {
+        if (!available) return missing();
+        if (!authenticated) return HttpResponse.json([]);
+        const row = ownRow(request.url);
+        return HttpResponse.json(row ? [row] : []);
+      }),
+      http.post(endpoint, async ({ request }) => {
+        if (!available) return missing();
+        if (!authenticated) return denied();
+        const posted = (await request.json()) as JsonRow;
+        if (posted.user_id !== TEST_SUPABASE_USER_ID) return denied();
+        if (rows.has(TEST_SUPABASE_USER_ID))
+          return HttpResponse.json(
+            { code: '23505', message: 'duplicate key value' },
+            { status: 409 },
+          );
+        if (posted.revision !== 1)
+          return HttpResponse.json(
+            { code: '22023', message: 'A new rule set starts at revision 1' },
+            { status: 400 },
+          );
+        rows.set(TEST_SUPABASE_USER_ID, { ...defaults, ...posted });
+        return new HttpResponse(null, { status: 201 });
+      }),
+      http.patch(endpoint, async ({ request }) => {
+        if (!available) return missing();
+        if (!authenticated) return denied();
+        const row = ownRow(request.url);
+        if (!row) return HttpResponse.json([]);
+        const patch = (await request.json()) as JsonRow;
+        if (patch.revision !== Number(row.revision) + 1)
+          return HttpResponse.json(
+            { code: '40001', message: 'Stale exception rule revision' },
+            { status: 400 },
+          );
+        const next = { ...row, ...patch };
+        rows.set(TEST_SUPABASE_USER_ID, next);
+        return HttpResponse.json([{ revision: next.revision }]);
+      }),
+    ],
+  };
+}
+
+const ruleSetTable = createDocumentTable('exception_rule_sets', {
+  rules: [],
+  usage_records: [],
+});
+const chainTagTable = createDocumentTable('chain_tag_sets', {
+  tags: [],
+  assignments: {},
+});
+
 /** Answers exception_rule_sets as PostgREST does before its migration runs. */
 export function simulateMissingRuleSetTable(): void {
-  ruleSetTableAvailable = false;
+  ruleSetTable.simulateMissing();
 }
 
 /** Writes a rule set as if another device had saved it. */
 export function writeRuleSetFromAnotherDevice(row: JsonRow): void {
-  const current = ruleSets.get(TEST_SUPABASE_USER_ID);
-  ruleSets.set(TEST_SUPABASE_USER_ID, {
-    rules: [],
-    usage_records: [],
-    ...current,
-    ...row,
-    user_id: TEST_SUPABASE_USER_ID,
-    revision: Number(current?.revision ?? 0) + 1,
-  });
+  ruleSetTable.writeFromAnotherDevice(row);
 }
 
 export function getStoredRuleSet(): JsonRow | undefined {
-  return ruleSets.get(TEST_SUPABASE_USER_ID);
+  return ruleSetTable.current();
+}
+
+/** Answers chain_tag_sets as PostgREST does before its migration runs. */
+export function simulateMissingChainTagTable(): void {
+  chainTagTable.simulateMissing();
+}
+
+/** Writes a chain tag set as if another device had saved it. */
+export function writeChainTagSetFromAnotherDevice(row: JsonRow): void {
+  chainTagTable.writeFromAnotherDevice(row);
+}
+
+export function getStoredChainTagSet(): JsonRow | undefined {
+  return chainTagTable.current();
 }
 
 /** What the auth and account-deletion endpoints have received. */
@@ -130,8 +240,8 @@ export function resetSupabaseMockState(): void {
   authRequests.passwordUpdates.length = 0;
   authRequests.deletedAccounts = 0;
   deleteAccountRpcAvailable = true;
-  ruleSets.clear();
-  ruleSetTableAvailable = true;
+  ruleSetTable.reset();
+  chainTagTable.reset();
   syncFingerprintRpcAvailable = true;
   generatedId = 0;
   pendingFailure = undefined;
@@ -338,77 +448,6 @@ function authResponse() {
   };
 }
 
-function ruleSetHandlers() {
-  const endpoint = `${TEST_SUPABASE_URL}/rest/v1/exception_rule_sets`;
-  const missing = () =>
-    HttpResponse.json(
-      {
-        code: 'PGRST205',
-        message:
-          "Could not find the table 'public.exception_rule_sets' in the schema cache",
-      },
-      { status: 404 },
-    );
-  const denied = () =>
-    HttpResponse.json(
-      { code: '42501', message: 'permission denied' },
-      { status: 401 },
-    );
-  const ownRow = (url: string) => {
-    const params = new URL(url).searchParams;
-    const row = ruleSets.get(TEST_SUPABASE_USER_ID);
-    if (!row || params.get('user_id') !== `eq.${TEST_SUPABASE_USER_ID}`)
-      return undefined;
-    const revision = params.get('revision');
-    return revision && revision !== `eq.${row.revision}` ? undefined : row;
-  };
-  return [
-    http.get(endpoint, ({ request }) => {
-      if (!ruleSetTableAvailable) return missing();
-      if (!authenticated) return HttpResponse.json([]);
-      const row = ownRow(request.url);
-      return HttpResponse.json(row ? [row] : []);
-    }),
-    http.post(endpoint, async ({ request }) => {
-      if (!ruleSetTableAvailable) return missing();
-      if (!authenticated) return denied();
-      const posted = (await request.json()) as JsonRow;
-      if (posted.user_id !== TEST_SUPABASE_USER_ID) return denied();
-      if (ruleSets.has(TEST_SUPABASE_USER_ID))
-        return HttpResponse.json(
-          { code: '23505', message: 'duplicate key value' },
-          { status: 409 },
-        );
-      if (posted.revision !== 1)
-        return HttpResponse.json(
-          { code: '22023', message: 'A new rule set starts at revision 1' },
-          { status: 400 },
-        );
-      ruleSets.set(TEST_SUPABASE_USER_ID, {
-        rules: [],
-        usage_records: [],
-        ...posted,
-      });
-      return new HttpResponse(null, { status: 201 });
-    }),
-    http.patch(endpoint, async ({ request }) => {
-      if (!ruleSetTableAvailable) return missing();
-      if (!authenticated) return denied();
-      const row = ownRow(request.url);
-      if (!row) return HttpResponse.json([]);
-      const patch = (await request.json()) as JsonRow;
-      if (patch.revision !== Number(row.revision) + 1)
-        return HttpResponse.json(
-          { code: '40001', message: 'Stale exception rule revision' },
-          { status: 400 },
-        );
-      const next = { ...row, ...patch };
-      ruleSets.set(TEST_SUPABASE_USER_ID, next);
-      return HttpResponse.json([{ revision: next.revision }]);
-    }),
-  ];
-}
-
 export const supabaseMockHandlers = [
   // This handler checks HTTP protocol and retry identity only. SQL constraints,
   // RLS, locking, and rollback are verified by scripts/database/run-tests.py.
@@ -607,7 +646,8 @@ export const supabaseMockHandlers = [
         { status: 404 },
       );
     for (const table of Object.values(tables)) table.clear();
-    ruleSets.clear();
+    ruleSetTable.clear();
+    chainTagTable.clear();
     authRequests.deletedAccounts += 1;
     authenticated = false;
     return new HttpResponse(null, { status: 204 });
@@ -637,11 +677,13 @@ export const supabaseMockHandlers = [
         tables: Object.fromEntries(
           Object.entries(tables).map(([name, rows]) => [name, [...rows]]),
         ),
-        rules: ruleSets.get(TEST_SUPABASE_USER_ID)?.revision ?? null,
+        rules: ruleSetTable.current()?.revision ?? null,
+        tags: chainTagTable.current()?.revision ?? null,
       }),
     );
   }),
-  ...ruleSetHandlers(),
+  ...ruleSetTable.handlers(),
+  ...chainTagTable.handlers(),
   ...createTableHandlers('rsip_policy_library'),
   ...createTableHandlers('rsip_run_history'),
   ...createTableHandlers('rsip_task_links'),

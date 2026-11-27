@@ -76,6 +76,7 @@ export const ChainCardView: React.FC<ChainCardViewProps> = React.memo(
             chain={chain}
             typeConfig={typeConfig}
             language={language}
+            t={t}
           />
           <ChainCardMetrics
             chain={chain}

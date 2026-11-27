@@ -1,10 +1,12 @@
 import React from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import { HeaderProps } from './types';
+import { TagChips } from '../chain-tags/TagChips';
 import { BackButton } from '../BackButton';
 
 export const ChainDetailHeader: React.FC<HeaderProps> = ({
   chainName,
+  tags,
   t,
   onBack,
   onEdit,
@@ -24,6 +26,11 @@ export const ChainDetailHeader: React.FC<HeaderProps> = ({
         <p className="font-mono text-sm tracking-wider text-gray-500 uppercase">
           {t('chainDetail.chainDetailHeader.chainDetails')}
         </p>
+        {tags.length > 0 && (
+          <div className="mt-2">
+            <TagChips tags={tags} t={t} max={8} />
+          </div>
+        )}
       </div>
     </div>
     <div className="flex space-x-3">

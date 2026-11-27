@@ -146,10 +146,11 @@ export function useChainsDomain({
     }
   };
 
+  /** Saves the chain and returns its id, or `null` after a reported failure. */
   const handleSaveChain = async (
     chainData: ChainDraft,
     isCopy: boolean = false,
-  ) => {
+  ): Promise<string | null> => {
     logger.debug('CHAINS', 'Starting to save chain data', {
       chainId: editingChainId,
       chainName: chainData.name,
@@ -160,6 +161,7 @@ export function useChainsDomain({
 
     try {
       let updatedActiveChains: Chain[];
+      let savedId: string;
       const normalizedParentId = normalizeOptionalParentId(chainData.parentId);
 
       if (editingChainId && !isCopy) {
@@ -167,6 +169,7 @@ export function useChainsDomain({
           chainId: editingChainId,
         });
 
+        savedId = editingChainId;
         updatedActiveChains = readState().chains.map((chain) =>
           chain.id === editingChainId
             ? updateChainFromDraft(chain, chainData, normalizedParentId)
@@ -186,6 +189,7 @@ export function useChainsDomain({
         });
       } else {
         const id = crypto.randomUUID();
+        savedId = id;
         const createdAt = new Date();
         const newChain = createNewChain({
           chainData,
@@ -214,6 +218,7 @@ export function useChainsDomain({
         chains: updatedActiveChains,
       }));
       onNavigateToDashboard();
+      return savedId;
     } catch (error) {
       logger.error('CHAINS', 'Failed to save chain', undefined, toError(error));
 
@@ -240,6 +245,7 @@ export function useChainsDomain({
           toError(reloadError),
         );
       }
+      return null;
     }
   };
 

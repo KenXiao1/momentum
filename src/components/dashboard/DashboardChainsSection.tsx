@@ -2,11 +2,18 @@ import { type Translator } from '../../i18n';
 import React from 'react';
 import { Download, Layers, Plus, Trash2, TreePine } from 'lucide-react';
 
-import type { ChainTreeNode, ScheduledSession } from '../../types';
+import type { ChainTag, ChainTreeNode, ScheduledSession } from '../../types';
+import { TagFilterBar } from '../chain-tags/TagFilterBar';
 import { VirtualizedChainList } from '../VirtualizedChainList';
 
 interface DashboardChainsSectionProps {
+  /** The top-level chains the tag filter lets through. */
   topLevelChains: ChainTreeNode[];
+  totalCount: number;
+  tagFilterUsage: { tag: ChainTag; count: number }[];
+  selectedTagIds: readonly string[];
+  onToggleTagFilter: (tagId: string) => void;
+  onClearTagFilter: () => void;
   recycleBinCount: number;
   getScheduledSession: (chainId: string) => ScheduledSession | undefined;
   onStartChain: (chainId: string) => void;
@@ -27,6 +34,11 @@ const DashboardChainsSectionComponent: React.FC<
   DashboardChainsSectionProps
 > = ({
   topLevelChains,
+  totalCount,
+  tagFilterUsage,
+  selectedTagIds,
+  onToggleTagFilter,
+  onClearTagFilter,
   recycleBinCount,
   getScheduledSession,
   onStartChain,
@@ -120,16 +132,43 @@ const DashboardChainsSectionComponent: React.FC<
       </div>
     </div>
 
-    <VirtualizedChainList
-      topLevelChains={topLevelChains}
-      getScheduledSession={getScheduledSession}
-      onStartChain={onStartChain}
-      onScheduleChain={onScheduleChain}
-      onViewDetail={onViewChainDetail}
-      onCancelScheduledSession={onCancelScheduledSession}
-      onCompleteBooking={onCompleteBooking}
-      onDelete={onDeleteChain}
-    />
+    {tagFilterUsage.length > 0 && (
+      <TagFilterBar
+        usage={tagFilterUsage}
+        selectedIds={selectedTagIds}
+        shownCount={topLevelChains.length}
+        totalCount={totalCount}
+        onToggle={onToggleTagFilter}
+        onClear={onClearTagFilter}
+        t={t}
+      />
+    )}
+
+    {topLevelChains.length === 0 && selectedTagIds.length > 0 ? (
+      <div className="rounded-2xl border border-dashed border-gray-300 p-8 text-center dark:border-slate-600">
+        <p className="mb-3 font-chinese text-sm text-gray-600 dark:text-slate-300">
+          {t('chainTags.filter.noMatches')}
+        </p>
+        <button
+          type="button"
+          onClick={onClearTagFilter}
+          className="focus-ring rounded-xl px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-slate-800"
+        >
+          {t('chainTags.filter.clear')}
+        </button>
+      </div>
+    ) : (
+      <VirtualizedChainList
+        topLevelChains={topLevelChains}
+        getScheduledSession={getScheduledSession}
+        onStartChain={onStartChain}
+        onScheduleChain={onScheduleChain}
+        onViewDetail={onViewChainDetail}
+        onCancelScheduledSession={onCancelScheduledSession}
+        onCompleteBooking={onCompleteBooking}
+        onDelete={onDeleteChain}
+      />
+    )}
   </div>
 );
 

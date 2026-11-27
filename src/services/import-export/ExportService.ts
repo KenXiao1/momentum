@@ -24,6 +24,7 @@ import {
   toExportedRSIPRunRecord,
   toExportedRSIPTaskLink,
 } from './DataTransformers';
+import type { ChainTagSet } from '../../types';
 
 export class ExportService {
   createExportData(params: {
@@ -39,6 +40,7 @@ export class ExportService {
     petState?: PetState | null;
     userPreferences?: unknown;
     exceptionRules?: unknown;
+    chainTags?: ChainTagSet;
   }): MomentumExportDataV3 {
     const {
       chains,
@@ -53,6 +55,7 @@ export class ExportService {
       petState,
       userPreferences,
       exceptionRules,
+      chainTags,
     } = params;
 
     return {
@@ -78,6 +81,7 @@ export class ExportService {
       petState: petState ? toExportedPetState(petState) : undefined,
       userPreferences,
       exceptionRules,
+      chainTags,
     };
   }
 }

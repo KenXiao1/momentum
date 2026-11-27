@@ -30,6 +30,8 @@ import {
   parseImportRsipRunHistory,
   parseImportRsipTaskLinks,
 } from './import/rsip';
+import { decodeChainTagSet } from '../../serialization';
+import type { ChainTagSet } from '../../types';
 
 export interface ImportExportImportOptions {
   preserveStatistics: boolean;
@@ -54,6 +56,26 @@ interface ParsedImportData {
     rsipTaskLinksSkipped: number;
   };
   exceptionRulesToImport: ExceptionRuleImportData[];
+  /** Imported tags with assignments already moved to the new chain ids. */
+  chainTagsToImport: ChainTagSet | null;
+}
+
+/**
+ * Decodes the exported tag set and keys its assignments by the ids the
+ * imported chains receive; assignments of chains not in the file are dropped.
+ */
+function parseImportChainTags(
+  raw: unknown,
+  idMap: ReadonlyMap<string, string>,
+): ChainTagSet | null {
+  const decoded = decodeChainTagSet(raw);
+  if (!decoded) return null;
+  const assignments: Record<string, string[]> = {};
+  for (const [sourceId, tagIds] of Object.entries(decoded.assignments)) {
+    const chainId = idMap.get(sourceId);
+    if (chainId) assignments[chainId] = tagIds;
+  }
+  return { tags: decoded.tags, assignments };
 }
 
 function asOptionalArray<T>(values: T[]): T[] | undefined {
@@ -131,6 +153,7 @@ export class ImportService {
         rsipTaskLinksSkipped: rsipTaskLinks.skipped,
       },
       exceptionRulesToImport,
+      chainTagsToImport: parseImportChainTags(parsed.chainTags, idMap),
     };
   }
 }

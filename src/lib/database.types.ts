@@ -9,6 +9,30 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      chain_tag_sets: {
+        Row: {
+          user_id: string;
+          tags: Json;
+          assignments: Json;
+          revision: number;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          tags?: Json;
+          assignments?: Json;
+          revision?: number;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          tags?: Json;
+          assignments?: Json;
+          revision?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       exception_rule_sets: {
         Row: {
           user_id: string;

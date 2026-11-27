@@ -1,5 +1,6 @@
 import { type Translator } from '../../i18n';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useContext, useRef, useState } from 'react';
+import { ChainTagsContext } from '../chain-tags/ChainTagsContext';
 import type React from 'react';
 import type { RSIPNode, RSIPNodeGroup } from '../../types';
 import { useI18n, type Language } from '../../i18n';
@@ -68,6 +69,7 @@ export function useImportWorkflow(params: {
     },
   );
 
+  const chainTags = useContext(ChainTagsContext);
   const importing = useRef(false);
   const handleImport = useCallback(async () => {
     if (importing.current) return;
@@ -134,6 +136,8 @@ export function useImportWorkflow(params: {
             'Some exception rules could not be imported. Retry to finish the saved import.',
           );
       }
+      if (plan.stage === 'rules' && parsed.chainTagsToImport && chainTags)
+        await chainTags.importTags(parsed.chainTagsToImport);
       await save('committed');
       setImportStatus('success');
       setTimeout(params.onClose, 3000);
@@ -144,7 +148,7 @@ export function useImportWorkflow(params: {
     } finally {
       importing.current = false;
     }
-  }, [importData, importOptions, language, params, storage, t]);
+  }, [chainTags, importData, importOptions, language, params, storage, t]);
 
   const handleFileUpload = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {

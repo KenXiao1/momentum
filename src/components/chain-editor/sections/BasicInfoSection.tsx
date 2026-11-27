@@ -1,14 +1,16 @@
-import type { UnitChainType } from '../../../types';
 import { Copy, Layers, Tag } from 'lucide-react';
 import { SettingSection } from '../../SettingSection';
 import type { ChainEditorFormModel } from '../hooks/useChainEditorForm';
 import { useI18n } from '../../../i18n';
+import type { ChainTagsContextValue } from '../../chain-tags/ChainTagsContext';
+import { TagPicker } from '../../chain-tags/TagPicker';
 
 interface BasicInfoSectionProps {
   form: ChainEditorFormModel;
+  tags: ChainTagsContextValue | null;
 }
 
-export function BasicInfoSection({ form }: BasicInfoSectionProps) {
+export function BasicInfoSection({ form, tags }: BasicInfoSectionProps) {
   const { t } = useI18n();
 
   return (
@@ -47,48 +49,30 @@ export function BasicInfoSection({ form }: BasicInfoSectionProps) {
         />
       </div>
 
-      <div className="bento-card animate-scale-in">
-        <div className="mb-4">
-          <label
-            htmlFor="chain-type"
-            className="mb-2 block font-chinese text-lg font-semibold text-gray-900 dark:text-slate-100"
-          >
-            {t('chainEditor.basicInfoSection.taskType')}
-          </label>
-          <p className="mb-4 font-chinese text-sm text-gray-500 dark:text-slate-400">
-            {t('chainEditor.basicInfoSection.chooseTheMostSuitableTaskType')}
-          </p>
+      {tags && (
+        <div className="bento-card animate-scale-in">
+          <div className="mb-4">
+            <h3
+              id="chain-tags-heading"
+              className="mb-2 block font-chinese text-lg font-semibold text-gray-900 dark:text-slate-100"
+            >
+              {t('chainTags.section')}
+            </h3>
+            <p className="mb-4 font-chinese text-sm text-gray-500 dark:text-slate-400">
+              {t('chainTags.sectionHint')}
+            </p>
+          </div>
+          <TagPicker
+            tagSet={tags.tagSet}
+            selectedIds={form.tagIds}
+            onChange={form.setTagIds}
+            onCreate={tags.createTag}
+            onUpdate={tags.updateTag}
+            onDelete={tags.deleteTag}
+            t={t}
+          />
         </div>
-        <select
-          id="chain-type"
-          name="chainType"
-          value={form.type}
-          onChange={(e) => form.setType(e.target.value as UnitChainType)}
-          className="w-full rounded-2xl border border-gray-200 bg-white px-6 py-4 font-chinese text-gray-900 transition duration-300 hover:border-primary-300 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-primary-400"
-        >
-          <option value="unit">{t('chainEditor.basicInfoSection.unit')}</option>
-          <option value="assault">
-            {t('chainEditor.basicInfoSection.assaultStudyExperimentsPapers')}
-          </option>
-          <option value="recon">
-            {t(
-              'chainEditor.basicInfoSection.reconResearchInformationGathering',
-            )}
-          </option>
-          <option value="command">
-            {t('chainEditor.basicInfoSection.commandPlanningStrategy')}
-          </option>
-          <option value="special_ops">
-            {t('chainEditor.basicInfoSection.specialOpsMiscellaneousTasks')}
-          </option>
-          <option value="engineering">
-            {t('chainEditor.basicInfoSection.engineeringExerciseTraining')}
-          </option>
-          <option value="quartermaster">
-            {t('chainEditor.basicInfoSection.quartermasterCookingMealPrep')}
-          </option>
-        </select>
-      </div>
+      )}
 
       {form.parentId && (
         <div className="bento-card animate-scale-in border-l-4 border-l-blue-500 bg-blue-50/50 dark:bg-blue-900/10">

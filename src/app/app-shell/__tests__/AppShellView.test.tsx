@@ -232,6 +232,14 @@ function createProps(overrides: AppShellViewOverrides = {}): AppShellViewProps {
 
   return {
     app,
+    tags: {
+      tagSet: { tags: [], assignments: {} },
+      tagsFor: () => [],
+      createTag: vi.fn(),
+      updateTag: vi.fn(async () => undefined),
+      deleteTag: vi.fn(async () => undefined),
+      importTags: vi.fn(async () => undefined),
+    },
     dashboard,
     rsip,
     session,

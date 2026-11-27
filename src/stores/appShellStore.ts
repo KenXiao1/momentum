@@ -33,6 +33,7 @@ export function createInitialAppState(): AppState {
     taskTimeStats: [],
     exceptionRules: [],
     ruleUsageRecords: [],
+    chainTags: null,
   };
 }
 
@@ -70,6 +71,7 @@ function extractAppState(state: AppState): AppState {
     ...extractTaskRuntimeState(state),
     ...extractRsipState(state),
     ...extractRuleState(state),
+    chainTags: state.chainTags,
   };
 }
 

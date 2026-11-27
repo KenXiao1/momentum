@@ -9,6 +9,9 @@ import { buildActivityCalendar } from '../../../domain/activityCalendar';
 
 vi.mock('../../chain-detail', () => ({
   ChainDetailActivity: () => <div data-testid="activity" />,
+  ChainDetailHours: () => <div data-testid="hours" />,
+  ChainDetailReminder: () => <div data-testid="reminder" />,
+  ChainDetailStreak: () => <div data-testid="streak" />,
   ChainDetailHeader: ({
     chainName,
     onBack,
@@ -70,6 +73,15 @@ function createProps(
     chain,
     recentHistory: [],
     activity: buildActivityCalendar([], new Date(2026, 10, 25), 26),
+    hours: [],
+    streak: [],
+    tags: [],
+    reminder: {
+      time: null,
+      support: 'web' as const,
+      canNotify: true,
+      onChange: vi.fn(),
+    },
     chainHistoryCount: 0,
     successRate: 100,
     showDeleteConfirm: false,

@@ -15,8 +15,10 @@ import {
 export interface ChainEditorFormModel {
   name: string;
   setName: Dispatch<SetStateAction<string>>;
+  /** The stored legacy category; the editor no longer changes it. */
   type: UnitChainType;
-  setType: Dispatch<SetStateAction<UnitChainType>>;
+  tagIds: string[];
+  setTagIds: Dispatch<SetStateAction<string[]>>;
   parentId: string | undefined;
   setParentId: Dispatch<SetStateAction<string | undefined>>;
   sortOrder: number;
@@ -62,19 +64,26 @@ interface UseChainEditorFormParams {
   chain?: Chain;
   isEditing: boolean;
   initialParentId?: string;
-  onSave: (chain: ChainDraft, isCopy?: boolean) => void;
+  /** The tags the chain shows now; they start the tag picker. */
+  initialTagIds?: readonly string[];
+  onSave: (
+    chain: ChainDraft,
+    isCopy?: boolean,
+    tagIds?: readonly string[],
+  ) => void;
 }
 
 export function useChainEditorForm({
   chain,
   isEditing,
   initialParentId,
+  initialTagIds = [],
   onSave,
 }: UseChainEditorFormParams): ChainEditorFormModel {
   const [name, setName] = useState(chain?.name || '');
-  const [type, setType] = useState<UnitChainType>(
-    chain && chain.type !== 'group' ? chain.type : 'unit',
-  );
+  const type: UnitChainType =
+    chain && chain.type !== 'group' ? chain.type : 'unit';
+  const [tagIds, setTagIds] = useState<string[]>(() => [...initialTagIds]);
 
   const [parentId, setParentId] = useState<string | undefined>(
     chain ? chain.parentId : initialParentId,
@@ -231,14 +240,15 @@ export function useChainEditorForm({
       }
     }
 
-    onSave(chainData, isCopyMode);
+    onSave(chainData, isCopyMode, tagIds);
   };
 
   return {
     name,
     setName,
     type,
-    setType,
+    tagIds,
+    setTagIds,
     parentId,
     setParentId,
     sortOrder,

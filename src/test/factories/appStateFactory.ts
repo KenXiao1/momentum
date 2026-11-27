@@ -16,6 +16,7 @@ export function createAppState(overrides: Partial<AppState> = {}): AppState {
     taskTimeStats: [],
     exceptionRules: [],
     ruleUsageRecords: [],
+    chainTags: null,
     ...overrides,
   };
 }

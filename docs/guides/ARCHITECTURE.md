@@ -142,7 +142,10 @@ desktop entry. `setup` copies webview data from the previous app identifier
 commands keep the tray menu in the app language (`set_tray_labels`) and post a
 system notification when a timed focus session ends (`schedule_session_end` /
 `cancel_session_end`, scheduled by `useSessionEndAlarm`), because the
-webview's own timers are throttled while the window is hidden. `src-tauri/capabilities/` controls permissions and
+webview's own timers are throttled while the window is hidden. For the same
+reason `set_daily_reminders` hands this device's daily chain reminders to a
+Rust thread (`daily_reminders.rs`, local time via `chrono`);
+`useDailyReminderScheduler` sends the list, or keeps a page timer on the web. `src-tauri/capabilities/` controls permissions and
 `src-tauri/Cargo.toml` separates desktop/mobile dependencies. The mobile code
 path exists; release CI builds desktop targets and Android, while iOS packaging
 remains in progress. See [deployment](DEPLOYMENT.md) for prerequisites and builds.

@@ -6,6 +6,7 @@
 import React from 'react';
 import { ChainDetailView } from './ChainDetailView';
 import { useChainDetail } from './useChainDetail';
+import { useChainTagsOf } from './chain-tags/ChainTagsContext';
 import type { Chain, CompletionHistory } from '../types';
 
 interface ChainDetailProps {
@@ -22,6 +23,9 @@ export const ChainDetailContainer: React.FC<ChainDetailProps> = React.memo(
       showDeleteConfirm,
       recentHistory,
       activity,
+      hours,
+      streak,
+      reminder,
       successRate,
       chainHistoryCount,
       language,
@@ -32,12 +36,17 @@ export const ChainDetailContainer: React.FC<ChainDetailProps> = React.memo(
       handleDeleteConfirm,
       handleDeleteCancel,
     } = useChainDetail({ chain, history, onDelete });
+    const tags = useChainTagsOf(chain);
 
     return (
       <ChainDetailView
         chain={chain}
         recentHistory={recentHistory}
         activity={activity}
+        hours={hours}
+        streak={streak}
+        reminder={reminder}
+        tags={tags}
         chainHistoryCount={chainHistoryCount}
         successRate={successRate}
         showDeleteConfirm={showDeleteConfirm}

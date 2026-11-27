@@ -11,6 +11,7 @@ import type {
 } from '../../types';
 import type { PetState } from '../../types/pet';
 import { importExportService } from '../ImportExportService';
+import { createUnitChain } from '../../test/factories';
 
 describe('ImportExportService integration', () => {
   const t = createTranslator('zh');
@@ -404,5 +405,47 @@ describe('ImportExportService integration', () => {
     expect(imported.rsipTaskLinks).toHaveLength(1);
     expect(imported.invalidReferences.rsipExecutionRecordsSkipped).toBe(1);
     expect(imported.invalidReferences.rsipTaskLinksSkipped).toBe(2);
+  });
+
+  it('exports chain tags and moves their assignments to the imported chain ids', () => {
+    const exportData = importExportService.createExportData({
+      chains: [
+        createUnitChain({ id: 'study', name: 'study', type: 'assault' }),
+        createUnitChain({ id: 'read', name: 'read' }),
+      ],
+      chainTags: {
+        tags: [
+          { id: 'focus', name: 'Focus', color: 'blue' },
+          {
+            id: 'legacy:assault',
+            name: 'Assault',
+            color: 'rose',
+            legacyType: 'assault',
+          },
+        ],
+        assignments: { read: ['focus'], 'not-exported': ['focus'] },
+      },
+    });
+
+    const imported = importExportService.parseImportData({
+      json: JSON.stringify(exportData),
+      options: {
+        preserveStatistics: false,
+        preserveTimestamps: false,
+        importCompletionHistory: false,
+      },
+      existingRsipNodes: [],
+      existingRsipGroups: [],
+      t,
+    });
+
+    const read = imported.chains.find((chain) => chain.name === 'read')!;
+    const study = imported.chains.find((chain) => chain.name === 'study')!;
+    expect(read.id).not.toBe('read');
+    expect(study.type).toBe('assault');
+    expect(imported.chainTagsToImport).toEqual({
+      tags: exportData.chainTags!.tags,
+      assignments: { [read.id]: ['focus'] },
+    });
   });
 });

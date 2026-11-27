@@ -3,6 +3,7 @@ import type {
   AuthGateway,
   BettingGateway,
   ChainStore,
+  ChainTagStore,
   CheckinGateway,
   HistoryStore,
   MaintenanceStore,
@@ -19,6 +20,7 @@ import type {
 export interface MomentumStorage
   extends
     ChainStore,
+    ChainTagStore,
     SessionStore,
     HistoryStore,
     RsipStore,

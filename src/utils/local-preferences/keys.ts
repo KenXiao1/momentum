@@ -4,6 +4,7 @@ export const LOCAL_STORAGE_KEYS = {
   LANGUAGE: 'language',
   NOTIFICATIONS_ENABLED: 'notifications_enabled',
   ERROR_REPORTING_ENABLED: 'momentum_error_reporting_enabled',
+  DAILY_REMINDERS: 'momentum_daily_reminders',
   STORAGE_MODE: 'momentum_storage_mode',
   STORAGE_MODE_HINT_DISMISSED: 'momentum_storage_mode_hint_dismissed',
 

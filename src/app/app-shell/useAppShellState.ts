@@ -18,6 +18,7 @@ export function useAppShellState() {
       scheduledSessions: state.scheduledSessions,
       activeSession: state.activeSession,
       completionHistory: state.completionHistory,
+      chainTags: state.chainTags,
     })),
   );
   const rsipState = useAppShellStore(

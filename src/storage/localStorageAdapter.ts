@@ -10,6 +10,7 @@ import {
 } from '../utils/storage/operationJournal';
 import { measureStorageOperation } from '../utils/diagnostics';
 import { commitSessionCompletion, importData } from './localOperations';
+import { localChainTagStore } from './localChainTagStore';
 import { localRuleStore } from './localRuleStore';
 
 const notSupported = (message: string) =>
@@ -231,8 +232,9 @@ export const localStorageAdapter: MomentumStorage = {
   getUserCheckinStats: async () =>
     notSupported(DAILY_CHECKIN_NOT_SUPPORTED_MESSAGE),
 
-  // Exception rules
+  // Exception rules and chain tags
   ...localRuleStore,
+  ...localChainTagStore,
 
   // A single device has no other device's changes to notice.
   getSyncFingerprint: async () => null,

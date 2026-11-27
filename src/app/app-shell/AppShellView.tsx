@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { ChainTagsContext } from '../../components/chain-tags/ChainTagsContext';
 import { Dashboard } from '../../components/Dashboard';
 import { MobileBottomNav } from '../../components/mobile/MobileBottomNav';
 import { InterruptedOperationRecovery } from '../../components/InterruptedOperationRecovery';
@@ -24,6 +25,7 @@ import {
 
 export function AppShellView({
   app,
+  tags,
   dashboard,
   rsip,
   session,
@@ -271,79 +273,81 @@ export function AppShellView({
   };
 
   return (
-    <div
-      style={
-        isTauriMobile
-          ? {
-              paddingTop: 'env(safe-area-inset-top)',
-              paddingBottom: 'env(safe-area-inset-bottom)',
-            }
-          : undefined
-      }
-    >
-      <a
-        href="#main"
-        onClick={() => document.getElementById('main')?.focus()}
-        className="focus-ring sr-only z-200 rounded-xl bg-white/95 px-4 py-2 text-sm font-medium text-gray-900 shadow-lg focus:not-sr-only focus:fixed focus:top-4 focus:left-4 dark:bg-slate-900/90 dark:text-slate-100"
+    <ChainTagsContext.Provider value={tags}>
+      <div
+        style={
+          isTauriMobile
+            ? {
+                paddingTop: 'env(safe-area-inset-top)',
+                paddingBottom: 'env(safe-area-inset-bottom)',
+              }
+            : undefined
+        }
       >
-        {t('app.appShell.appShellView.skipToMainContent')}
-      </a>
+        <a
+          href="#main"
+          onClick={() => document.getElementById('main')?.focus()}
+          className="focus-ring sr-only z-200 rounded-xl bg-white/95 px-4 py-2 text-sm font-medium text-gray-900 shadow-lg focus:not-sr-only focus:fixed focus:top-4 focus:left-4 dark:bg-slate-900/90 dark:text-slate-100"
+        >
+          {t('app.appShell.appShellView.skipToMainContent')}
+        </a>
 
-      <main id="main" tabIndex={-1}>
-        {renderCurrentView()}
-      </main>
+        <main id="main" tabIndex={-1}>
+          {renderCurrentView()}
+        </main>
 
-      {app.hasRemoteChanges && (
-        <RemoteChangeBanner
-          onReload={app.onReloadRemoteChanges}
-          onDismiss={app.onDismissRemoteChanges}
-        />
-      )}
-
-      {shouldShowPetWidget && (
-        <Suspense fallback={null}>
-          <AppShellProfiler id="pet-widget">
-            <PetWidget
-              pet={pet.pet}
-              mood={pet.mood}
-              isLoading={pet.isLoading}
-              hasPet={pet.hasPet}
-              onCreatePet={pet.createPet}
-              onFeedPet={pet.feedPet}
-              onUpdatePosition={pet.updatePosition}
-              onUpdateMinimizedPosition={pet.updateMinimizedPosition}
-              onToggleVisibility={pet.toggleVisibility}
-              onMinimize={pet.minimize}
-              onExpand={pet.expand}
-            />
-          </AppShellProfiler>
-        </Suspense>
-      )}
-
-      {session.bettingModal.isOpen && session.bettingModal.sessionId && (
-        <Suspense fallback={null}>
-          <BettingModal
-            isOpen={session.bettingModal.isOpen}
-            onClose={session.handleBetCancelled}
-            onBetPlaced={session.handleBetPlaced}
-            sessionId={session.bettingModal.sessionId}
-            chainName={
-              session.bettingModal.chainName ??
-              t('app.appShell.appShellView.unknownTask')
-            }
-            taskDuration={session.bettingModal.taskDuration}
+        {app.hasRemoteChanges && (
+          <RemoteChangeBanner
+            onReload={app.onReloadRemoteChanges}
+            onDismiss={app.onDismissRemoteChanges}
           />
-        </Suspense>
-      )}
+        )}
 
-      {isTauriMobile && (
-        <MobileBottomNav
-          currentView={app.currentView}
-          hasActiveSession={app.hasActiveSession}
-          onNavigate={app.onNavigateToView}
-          onOpenSettings={() => undefined}
-        />
-      )}
-    </div>
+        {shouldShowPetWidget && (
+          <Suspense fallback={null}>
+            <AppShellProfiler id="pet-widget">
+              <PetWidget
+                pet={pet.pet}
+                mood={pet.mood}
+                isLoading={pet.isLoading}
+                hasPet={pet.hasPet}
+                onCreatePet={pet.createPet}
+                onFeedPet={pet.feedPet}
+                onUpdatePosition={pet.updatePosition}
+                onUpdateMinimizedPosition={pet.updateMinimizedPosition}
+                onToggleVisibility={pet.toggleVisibility}
+                onMinimize={pet.minimize}
+                onExpand={pet.expand}
+              />
+            </AppShellProfiler>
+          </Suspense>
+        )}
+
+        {session.bettingModal.isOpen && session.bettingModal.sessionId && (
+          <Suspense fallback={null}>
+            <BettingModal
+              isOpen={session.bettingModal.isOpen}
+              onClose={session.handleBetCancelled}
+              onBetPlaced={session.handleBetPlaced}
+              sessionId={session.bettingModal.sessionId}
+              chainName={
+                session.bettingModal.chainName ??
+                t('app.appShell.appShellView.unknownTask')
+              }
+              taskDuration={session.bettingModal.taskDuration}
+            />
+          </Suspense>
+        )}
+
+        {isTauriMobile && (
+          <MobileBottomNav
+            currentView={app.currentView}
+            hasActiveSession={app.hasActiveSession}
+            onNavigate={app.onNavigateToView}
+            onOpenSettings={() => undefined}
+          />
+        )}
+      </div>
+    </ChainTagsContext.Provider>
   );
 }

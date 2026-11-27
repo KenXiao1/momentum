@@ -11,6 +11,7 @@ import type {
   RSIPTaskLink,
 } from '../../types';
 import type { PetState } from '../../types/pet';
+import type { ChainTagSet } from '../../types';
 
 type ChainDateFields =
   | 'createdAt'
@@ -92,6 +93,7 @@ export interface MomentumExportDataV3 {
   petState?: ExportedPetState;
   userPreferences?: unknown;
   exceptionRules?: unknown;
+  chainTags?: ChainTagSet;
 }
 
 function serializeDeletedAt(

@@ -50,38 +50,38 @@ erDiagram
 
 主要的任务/习惯定义表。
 
-| 字段                           | 类型        | 约束                          | 说明                              |
-| ------------------------------ | ----------- | ----------------------------- | --------------------------------- |
-| `id`                           | uuid        | PK, DEFAULT gen_random_uuid() | 主键                              |
-| `user_id`                      | uuid        | FK → auth.users, NOT NULL     | 所属用户                          |
-| `parent_id`                    | uuid        | FK → chains(id)               | 父任务（任务群）                  |
-| `type`                         | text        |                               | 任务类型（unit/group/assault...） |
-| `name`                         | text        | NOT NULL                      | 任务名称                          |
-| `trigger`                      | text        | NOT NULL                      | 神圣座位触发条件                  |
-| `duration`                     | integer     | NOT NULL, DEFAULT 45          | 任务时长（分钟）                  |
-| `description`                  | text        | NOT NULL                      | 任务描述                          |
-| `current_streak`               | integer     | NOT NULL, DEFAULT 0           | 当前连胜                          |
-| `auxiliary_streak`             | integer     | NOT NULL, DEFAULT 0           | 辅助链连胜                        |
-| `total_completions`            | integer     | NOT NULL, DEFAULT 0           | 总完成次数                        |
-| `total_failures`               | integer     | NOT NULL, DEFAULT 0           | 总失败次数                        |
-| `auxiliary_failures`           | integer     | NOT NULL, DEFAULT 0           | 辅助链失败次数                    |
-| `exceptions`                   | jsonb       | NOT NULL, DEFAULT '[]'        | 例外规则列表                      |
-| `auxiliary_exceptions`         | jsonb       | NOT NULL, DEFAULT '[]'        | 辅助链例外规则                    |
-| `auxiliary_signal`             | text        | NOT NULL                      | 预约信号                          |
-| `auxiliary_duration`           | integer     | NOT NULL, DEFAULT 15          | 预约时长                          |
-| `auxiliary_completion_trigger` | text        | NOT NULL                      | 辅助完成条件                      |
-| `time_limit_hours`             | integer     |                               | 任务群时间限制                    |
-| `group_started_at`             | timestamptz |                               | 任务群开始时间                    |
-| `group_expires_at`             | timestamptz |                               | 任务群过期时间                    |
-| `is_durationless`              | boolean     | DEFAULT false                 | 无时长任务标记                    |
-| `minimum_duration`             | integer     |                               | 无时长任务最小时长                |
-| `is_task_group`                | boolean     |                               | 是否为任务群                      |
-| `task_repeat_count`            | integer     |                               | 任务重复次数                      |
-| `group_repeat_count`           | integer     |                               | 任务群重复次数                    |
-| `sort_order`                   | integer     | DEFAULT 0                     | 排序顺序                          |
-| `deleted_at`                   | timestamptz | DEFAULT NULL                  | 软删除时间戳                      |
-| `created_at`                   | timestamptz | DEFAULT now()                 | 创建时间                          |
-| `last_completed_at`            | timestamptz |                               | 最后完成时间                      |
+| 字段                           | 类型        | 约束                          | 说明                                       |
+| ------------------------------ | ----------- | ----------------------------- | ------------------------------------------ |
+| `id`                           | uuid        | PK, DEFAULT gen_random_uuid() | 主键                                       |
+| `user_id`                      | uuid        | FK → auth.users, NOT NULL     | 所属用户                                   |
+| `parent_id`                    | uuid        | FK → chains(id)               | 父任务（任务群）                           |
+| `type`                         | text        |                               | 结构：unit/group；旧分类值仅作默认标签来源 |
+| `name`                         | text        | NOT NULL                      | 任务名称                                   |
+| `trigger`                      | text        | NOT NULL                      | 神圣座位触发条件                           |
+| `duration`                     | integer     | NOT NULL, DEFAULT 45          | 任务时长（分钟）                           |
+| `description`                  | text        | NOT NULL                      | 任务描述                                   |
+| `current_streak`               | integer     | NOT NULL, DEFAULT 0           | 当前连胜                                   |
+| `auxiliary_streak`             | integer     | NOT NULL, DEFAULT 0           | 辅助链连胜                                 |
+| `total_completions`            | integer     | NOT NULL, DEFAULT 0           | 总完成次数                                 |
+| `total_failures`               | integer     | NOT NULL, DEFAULT 0           | 总失败次数                                 |
+| `auxiliary_failures`           | integer     | NOT NULL, DEFAULT 0           | 辅助链失败次数                             |
+| `exceptions`                   | jsonb       | NOT NULL, DEFAULT '[]'        | 例外规则列表                               |
+| `auxiliary_exceptions`         | jsonb       | NOT NULL, DEFAULT '[]'        | 辅助链例外规则                             |
+| `auxiliary_signal`             | text        | NOT NULL                      | 预约信号                                   |
+| `auxiliary_duration`           | integer     | NOT NULL, DEFAULT 15          | 预约时长                                   |
+| `auxiliary_completion_trigger` | text        | NOT NULL                      | 辅助完成条件                               |
+| `time_limit_hours`             | integer     |                               | 任务群时间限制                             |
+| `group_started_at`             | timestamptz |                               | 任务群开始时间                             |
+| `group_expires_at`             | timestamptz |                               | 任务群过期时间                             |
+| `is_durationless`              | boolean     | DEFAULT false                 | 无时长任务标记                             |
+| `minimum_duration`             | integer     |                               | 无时长任务最小时长                         |
+| `is_task_group`                | boolean     |                               | 是否为任务群                               |
+| `task_repeat_count`            | integer     |                               | 任务重复次数                               |
+| `group_repeat_count`           | integer     |                               | 任务群重复次数                             |
+| `sort_order`                   | integer     | DEFAULT 0                     | 排序顺序                                   |
+| `deleted_at`                   | timestamptz | DEFAULT NULL                  | 软删除时间戳                               |
+| `created_at`                   | timestamptz | DEFAULT now()                 | 创建时间                                   |
+| `last_completed_at`            | timestamptz |                               | 最后完成时间                               |
 
 **索引**：
 
@@ -458,6 +458,13 @@ erDiagram
 - `idx_task_bets_user_status` (user_id, bet_status)
 - `idx_task_bets_settled_at` (settled_at DESC) WHERE settled_at IS NOT NULL
 
+### chain_tag_sets（链条标签）
+
+每个用户一行，`tags` 是标签数组（id、name、color、可选 legacyType），`assignments` 是
+链条 id 到标签 id 数组的对象。没有记录的链条显示其旧类型对应的默认标签。`revision`
+规则与 `exception_rule_sets` 相同，复用同一个触发器函数；RLS 只允许用户读写自己的行，
+客户端没有 DELETE 权限，删除账号时级联删除。详见 [链条标签](../modules/CHAIN_TAGS.md)。
+
 ### exception_rule_sets（例外规则）
 
 每个用户一行，保存例外规则和使用记录两个 JSON 数组。客户端整体替换列表，
@@ -586,6 +593,8 @@ RLS 与 `SECURITY DEFINER` 的调用者校验要求见迁移指南。
 | `20260225000000_fix_settle_task_bet_loss_noop_transaction.sql` | 2026-02-25 | 修复输掉赌注的 0 分事务问题            |
 | `20261124000000_add_delete_my_account.sql`                     | 2026-11-24 | 用户自助删除账号 RPC                   |
 | `20261124010000_add_exception_rule_sets.sql`                   | 2026-11-24 | 例外规则云端同步                       |
+| `20261124020000_add_sync_fingerprint.sql`                      | 2026-11-24 | 其他设备更新检测用的数据摘要           |
+| `20261125000000_add_chain_tag_sets.sql`                        | 2026-11-25 | 链条标签云端同步                       |
 
 ---
 

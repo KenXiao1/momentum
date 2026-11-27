@@ -1,3 +1,5 @@
+import { useContext } from 'react';
+import { ChainTagsContext } from '../chain-tags/ChainTagsContext';
 import type { Chain, ChainDraft, RSIPNode, RSIPTaskLink } from '../../types';
 import { useVirtualKeyboard } from '../../hooks/useVirtualKeyboard';
 import { useChainEditorForm } from './hooks/useChainEditorForm';
@@ -7,7 +9,11 @@ interface ChainEditorProps {
   chain?: Chain;
   isEditing: boolean;
   initialParentId?: string;
-  onSave: (chain: ChainDraft, isCopy?: boolean) => void;
+  onSave: (
+    chain: ChainDraft,
+    isCopy?: boolean,
+    tagIds?: readonly string[],
+  ) => void;
   onCancel: () => void;
   rsipNodes?: RSIPNode[];
   rsipTaskLinks?: RSIPTaskLink[];
@@ -24,10 +30,13 @@ export function ChainEditor({
   rsipTaskLinks,
   onUpsertRSIPTaskLinks,
 }: ChainEditorProps) {
+  const tags = useContext(ChainTagsContext);
   const form = useChainEditorForm({
     chain,
     isEditing,
     initialParentId,
+    initialTagIds:
+      chain && tags ? tags.tagsFor(chain).map((tag) => tag.id) : undefined,
     onSave,
   });
 
@@ -39,6 +48,7 @@ export function ChainEditor({
       isEditing={isEditing}
       onCancel={onCancel}
       form={form}
+      tags={tags}
       keyboardHeight={keyboardHeight}
       rsipNodes={rsipNodes}
       rsipTaskLinks={rsipTaskLinks}

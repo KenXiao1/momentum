@@ -12,7 +12,8 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { getChainTypeConfig } from '../../utils/chain-tree';
+import { useChainTagsOf } from '../chain-tags/ChainTagsContext';
+import { TagChips } from '../chain-tags/TagChips';
 import { getTimeRemaining } from '../../domain/scheduling';
 import { formatChainDuration } from '../../utils/formatChainDuration';
 import { soundManager } from '../../utils/soundManager';
@@ -56,7 +57,7 @@ export const UnitCard: React.FC<UnitCardProps> = ({
 }) => {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const lastPlayedExpiresAtRef = useRef<number | null>(null);
-  const unitTypeConfig = getChainTypeConfig(unit.type, language);
+  const tags = useChainTagsOf(unit);
   const requiredRepeats = unit.taskRepeatCount || 1;
   const isCompleted = unit.currentStreak >= requiredRepeats;
   const isNext = nextUnit?.id === unit.id;
@@ -130,13 +131,6 @@ export const UnitCard: React.FC<UnitCardProps> = ({
 
           <div className="flex-1">
             <div className="mb-1 flex items-center space-x-2">
-              <div
-                className={`h-6 w-6 rounded-lg ${unitTypeConfig.bgColor} flex items-center justify-center`}
-              >
-                <i
-                  className={`${unitTypeConfig.icon} ${unitTypeConfig.color} text-xs`}
-                ></i>
-              </div>
               <h4 className="font-chinese font-bold text-gray-900 dark:text-slate-100">
                 {unit.name}
               </h4>
@@ -146,6 +140,11 @@ export const UnitCard: React.FC<UnitCardProps> = ({
                 </span>
               )}
             </div>
+            {tags.length > 0 && (
+              <div className="mb-1">
+                <TagChips tags={tags} t={t} />
+              </div>
+            )}
             <p className="font-chinese text-sm text-gray-600 dark:text-slate-400">
               {unit.description}
             </p>
@@ -168,7 +167,6 @@ export const UnitCard: React.FC<UnitCardProps> = ({
                 <CalendarCheck size={12} />
                 <span>{unit.auxiliaryStreak || 0}</span>
               </span>
-              <span className="font-chinese">{unitTypeConfig.name}</span>
             </div>
           </div>
 

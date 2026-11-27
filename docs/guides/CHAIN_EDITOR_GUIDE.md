@@ -14,7 +14,7 @@ ChainEditor是Momentum应用中用于创建和编辑链条的核心组件。经�
     {/* 基础信息区 */}
     <SettingSection title="基础信息" icon={<Tag />}>
       <ChainNameInput />
-      <ChainTypeSelector />
+      <TagPicker /> {/* 标签选择，替代旧的类型下拉框 */}
     </SettingSection>
 
     {/* 主链设置区 */}

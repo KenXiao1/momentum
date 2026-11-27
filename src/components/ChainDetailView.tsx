@@ -2,7 +2,10 @@ import React from 'react';
 import {
   ChainDetailActivity,
   ChainDetailHeader,
+  ChainDetailHours,
+  ChainDetailReminder,
   ChainDetailStats,
+  ChainDetailStreak,
   ChainDetailExceptions,
   ChainDetailDescription,
   ChainDetailHistory,
@@ -14,6 +17,10 @@ const ChainDetailViewComponent: React.FC<ChainDetailViewProps> = ({
   chain,
   recentHistory,
   activity,
+  hours,
+  streak,
+  reminder,
+  tags,
   chainHistoryCount,
   successRate,
   showDeleteConfirm,
@@ -32,6 +39,7 @@ const ChainDetailViewComponent: React.FC<ChainDetailViewProps> = ({
       <div className="mx-auto max-w-7xl">
         <ChainDetailHeader
           chainName={chain.name}
+          tags={tags}
           t={t}
           onBack={onBack}
           onEdit={onEdit}
@@ -47,6 +55,8 @@ const ChainDetailViewComponent: React.FC<ChainDetailViewProps> = ({
               t={t}
             />
 
+            <ChainDetailReminder reminder={reminder} t={t} />
+
             <ChainDetailExceptions chain={chain} t={t} />
           </div>
 
@@ -54,6 +64,11 @@ const ChainDetailViewComponent: React.FC<ChainDetailViewProps> = ({
             <ChainDetailDescription description={chain.description} t={t} />
 
             <ChainDetailActivity calendar={activity} locale={locale} t={t} />
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <ChainDetailHours hours={hours} t={t} />
+              <ChainDetailStreak points={streak} locale={locale} t={t} />
+            </div>
 
             <ChainDetailHistory
               recentHistory={recentHistory}

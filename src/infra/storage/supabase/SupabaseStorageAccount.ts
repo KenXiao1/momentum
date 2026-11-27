@@ -1,6 +1,7 @@
 import type {
   AuthGateway,
   BettingGateway,
+  ChainTagStore,
   CheckinGateway,
   PetStore,
   RuleStore,
@@ -10,6 +11,7 @@ import type {
 import { storage as localStorageUtils } from '../../../utils/storage';
 import * as authApi from './auth';
 import * as bettingApi from './betting';
+import { createSupabaseChainTagStore } from './chainTags';
 import * as checkinApi from './checkin';
 import { createSupabaseRuleStore } from './exceptionRules';
 import { getSyncFingerprint } from './syncFingerprint';
@@ -25,6 +27,7 @@ export abstract class SupabaseStorageAccount
     CheckinGateway,
     PetStore,
     RuleStore,
+    ChainTagStore,
     SyncFingerprintGateway
 {
   getCurrentUser: AuthGateway['getCurrentUser'] = () =>
@@ -94,6 +97,16 @@ export abstract class SupabaseStorageAccount
     this.rules.getUsageRecords();
   saveUsageRecords: RuleStore['saveUsageRecords'] = (records) =>
     this.rules.saveUsageRecords(records);
+
+  private chainTagStore: ChainTagStore | null = null;
+  private get chainTags(): ChainTagStore {
+    this.chainTagStore ??= createSupabaseChainTagStore(this.ctx);
+    return this.chainTagStore;
+  }
+  getChainTagSet: ChainTagStore['getChainTagSet'] = () =>
+    this.chainTags.getChainTagSet();
+  saveChainTagSet: ChainTagStore['saveChainTagSet'] = (set) =>
+    this.chainTags.saveChainTagSet(set);
 
   getSyncFingerprint: SyncFingerprintGateway['getSyncFingerprint'] = () =>
     getSyncFingerprint(this.ctx);

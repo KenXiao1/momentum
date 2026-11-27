@@ -23,6 +23,7 @@ export async function loadAppDataSnapshot(storage: MomentumStorage) {
     rsipRunHistory,
     rsipTaskLinks,
     rsipExecutionRecords,
+    chainTags,
     taskTimeStats,
   ] = await Promise.all([
     storage.getActiveChains(),
@@ -36,6 +37,7 @@ export async function loadAppDataSnapshot(storage: MomentumStorage) {
     storage.getRSIPRunHistory(),
     storage.getRSIPTaskLinks(),
     storage.getRSIPExecutionRecords(),
+    storage.getChainTagSet(),
     storage.getTaskTimeStats().catch((error: unknown) => {
       logger.warn(
         'APP_SHELL',
@@ -58,6 +60,7 @@ export async function loadAppDataSnapshot(storage: MomentumStorage) {
     rsipPolicyLibrary,
     rsipRunHistory,
     rsipTaskLinks,
+    chainTags,
     rsipExecutionRecords,
     taskTimeStats,
   };

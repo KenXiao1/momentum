@@ -13,6 +13,7 @@ export const STORAGE_KEYS = {
   RSIP_EXECUTION_RECORDS: 'momentum_rsip_execution_records',
   TASK_TIME_STATS: 'momentum_task_time_stats',
   PET_STATE: 'momentum_pet_state',
+  CHAIN_TAGS: 'momentum_chain_tags',
 } as const;
 
 export function completedSessionKey(session: {

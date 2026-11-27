@@ -443,6 +443,42 @@ export function describeStorageContract(
       });
     });
 
+    describe('ChainTagStore', () => {
+      it('starts with no tag set and replaces the stored set', async () => {
+        await expect(storage.getChainTagSet()).resolves.toBeNull();
+
+        await storage.saveChainTagSet({
+          tags: [{ id: 'focus', name: 'Focus', color: 'blue' }],
+          assignments: { 'chain-1': ['focus'] },
+        });
+        await storage.saveChainTagSet({
+          tags: [
+            { id: 'focus', name: 'Deep focus', color: 'violet' },
+            {
+              id: 'legacy:recon',
+              name: 'Recon',
+              color: 'emerald',
+              legacyType: 'recon',
+            },
+          ],
+          assignments: { 'chain-1': [], 'chain-2': ['legacy:recon'] },
+        });
+
+        await expect(storage.getChainTagSet()).resolves.toEqual({
+          tags: [
+            { id: 'focus', name: 'Deep focus', color: 'violet' },
+            {
+              id: 'legacy:recon',
+              name: 'Recon',
+              color: 'emerald',
+              legacyType: 'recon',
+            },
+          ],
+          assignments: { 'chain-1': [], 'chain-2': ['legacy:recon'] },
+        });
+      });
+    });
+
     describe('RsipStore', () => {
       it('starts with every RSIP collection empty and default metadata', async () => {
         await expect(storage.getRSIPNodes()).resolves.toEqual([]);

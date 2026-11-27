@@ -26,6 +26,7 @@ import type {
   BetPlacementRequest,
   BetPlacementResult,
 } from '../domain/betting';
+import type { ChainTagSet } from '../types';
 import type { CheckinResult, CheckinStats } from '../domain/checkin';
 import type { AppError } from '../domain/errors';
 import type { Result } from '../domain/result';
@@ -181,6 +182,15 @@ export interface RuleStore {
   saveRules(rules: ExceptionRule[]): Promise<void>;
   getUsageRecords(): Promise<RuleUsageRecord[]>;
   saveUsageRecords(records: RuleUsageRecord[]): Promise<void>;
+}
+
+/**
+ * The user's chain tags and their assignments, saved as one document.
+ * `null` until the first save; callers then show the default tags.
+ */
+export interface ChainTagStore {
+  getChainTagSet(): Promise<ChainTagSet | null>;
+  saveChainTagSet(set: ChainTagSet): Promise<void>;
 }
 
 /**

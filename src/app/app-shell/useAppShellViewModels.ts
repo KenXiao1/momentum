@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { chainTagsFor } from '../../domain/chainTags';
 import { buildChainTree } from '../../utils/chain-tree';
 import type { Chain, ViewState } from '../../types';
 import { navigationStore } from '../../stores/navigationStore';
@@ -136,8 +137,19 @@ export function useAppShellViewModels(
     handleAuxiliaryJudgmentAllow: domains.handleAuxiliaryJudgmentAllow,
   };
 
+  const tagSet = state.chainTags ?? domains.chainTagsDomain.defaultChainTags();
+  const tags: AppShellViewProps['tags'] = {
+    tagSet,
+    tagsFor: (chain) => chainTagsFor(tagSet, chain),
+    createTag: domains.chainTagsDomain.createChainTag,
+    updateTag: domains.chainTagsDomain.updateChainTag,
+    deleteTag: domains.chainTagsDomain.deleteChainTag,
+    importTags: domains.chainTagsDomain.importChainTags,
+  };
+
   return {
     app,
+    tags,
     dashboard,
     rsip,
     session,

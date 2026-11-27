@@ -59,7 +59,7 @@
 
 - [EXCEPTION_RULE_SYSTEM](modules/EXCEPTION_RULE_SYSTEM.md) - 例外规则系统设计
 - [RSIP_PROTOCOL](modules/RSIP_PROTOCOL.md) - RSIP 协议概述
-- [CHAIN_TYPES](modules/CHAIN_TYPES.md) - 链条类型说明
+- [CHAIN_TAGS](modules/CHAIN_TAGS.md) - 链条标签与旧类型迁移
 
 ## 历史记录
 

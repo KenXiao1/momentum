@@ -18,6 +18,7 @@ import type {
   ViewState,
 } from '../../types';
 import type { PetState } from '../../types/pet';
+import type { ChainTagsContextValue } from '../../components/chain-tags/ChainTagsContext';
 
 interface ImportChainsOptions {
   history?: CompletionHistory[];
@@ -78,7 +79,11 @@ export interface AppShellDashboardViewModel {
   handleCreateChain: (parentId?: string | null) => void;
   handleCreateTaskGroup: () => void;
   handleEditChain: (chainId: string) => void;
-  handleSaveChain: (chainData: ChainDraft, isCopy?: boolean) => void;
+  handleSaveChain: (
+    chainData: ChainDraft,
+    isCopy?: boolean,
+    tagIds?: readonly string[],
+  ) => Promise<void>;
   handleViewChainDetail: (chainId: string) => void;
   handleBackToDashboard: () => void;
   openRSIP: () => void;
@@ -191,6 +196,7 @@ export type AppShellPetViewModel = UsePetDomainReturn;
 
 export interface AppShellViewProps {
   app: AppShellAppViewModel;
+  tags: ChainTagsContextValue;
   dashboard: AppShellDashboardViewModel;
   rsip: AppShellRsipViewModel;
   session: AppShellSessionViewModel;

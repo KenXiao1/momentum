@@ -3,6 +3,7 @@ import { getAppStateSnapshot } from '../../stores/appShellStore';
 import { getPlatformCapabilityCenter } from '../../utils/platform-capabilities/center';
 import { useAppDataLoad } from '../hooks/useAppDataLoad';
 import { useAuthController } from '../hooks/useAuthController';
+import { useDailyReminderScheduler } from '../hooks/useDailyReminderScheduler';
 import { usePeriodicCleanup } from '../hooks/usePeriodicCleanup';
 import { useRemoteChangeNotice } from '../hooks/useRemoteChangeNotice';
 import { useServiceLifecycle } from '../hooks/useServiceLifecycle';
@@ -45,6 +46,10 @@ export function useAppShellBootstrap(
     isInitialized,
   });
 
+  useDailyReminderScheduler(
+    state.chains,
+    isInitialized && !isLoadingData && !loadError,
+  );
   const remoteChanges = useRemoteChangeNotice(
     storage,
     isInitialized && !isLoadingData && !loadError,

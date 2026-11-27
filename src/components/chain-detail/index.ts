@@ -6,3 +6,6 @@ export { ChainDetailHistory } from './ChainDetailHistory';
 export { DeleteConfirmModal } from './DeleteConfirmModal';
 export * from './types';
 export { ChainDetailActivity } from './ChainDetailActivity';
+export { ChainDetailHours } from './ChainDetailHours';
+export { ChainDetailStreak } from './ChainDetailStreak';
+export { ChainDetailReminder } from './ChainDetailReminder';

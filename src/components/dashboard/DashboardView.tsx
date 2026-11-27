@@ -9,6 +9,7 @@ import { DashboardRecommendSection } from './DashboardRecommendSection';
 import { DashboardTopBar } from './DashboardTopBar';
 import type { DashboardProps } from './types';
 import type { DashboardController } from './useDashboardController';
+import { WeeklyReviewCard } from './WeeklyReviewCard';
 
 const ImportExportModal = lazy(
   lazyWithChunkRecovery(
@@ -109,6 +110,11 @@ export function DashboardView({
   t,
   language,
   topLevelChains,
+  visibleChains,
+  tagFilterUsage,
+  selectedTagIds,
+  toggleTagFilter,
+  clearTagFilter,
   recycleBinCount,
   canUseCheckin,
   canUseSupabase,
@@ -211,13 +217,24 @@ export function DashboardView({
 
         {!isLoading && chains.length !== 0 && (
           <>
+            <WeeklyReviewCard
+              history={history ?? []}
+              chains={chains}
+              language={language}
+              t={t}
+            />
             <DashboardRecommendSection
               chains={topLevelChains}
               onStartChain={onStartChain}
               t={t}
             />
             <DashboardChainsSection
-              topLevelChains={topLevelChains}
+              topLevelChains={visibleChains}
+              totalCount={topLevelChains.length}
+              tagFilterUsage={tagFilterUsage}
+              selectedTagIds={selectedTagIds}
+              onToggleTagFilter={toggleTagFilter}
+              onClearTagFilter={clearTagFilter}
               recycleBinCount={recycleBinCount}
               getScheduledSession={getScheduledSession}
               onStartChain={onStartChain}

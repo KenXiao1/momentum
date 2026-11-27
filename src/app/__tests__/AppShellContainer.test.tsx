@@ -11,6 +11,7 @@ import {
   navigationStore,
   createInitialNavigationState,
 } from '../../stores/navigationStore';
+import { I18nProvider } from '../../i18n';
 
 const useStorageMock = vi.hoisted(() => vi.fn());
 const useSafeSaveChainsMock = vi.hoisted(() => vi.fn());
@@ -177,6 +178,15 @@ vi.mock('../app-shell/AppShellView', () => ({
   ),
 }));
 
+/** The container reads translations, so it renders inside the provider. */
+function renderContainer() {
+  return render(
+    <I18nProvider>
+      <AppShellContainer />
+    </I18nProvider>,
+  );
+}
+
 describe('AppShellContainer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -260,7 +270,7 @@ describe('AppShellContainer', () => {
   });
 
   it('composes domain hooks into grouped AppShellView models', () => {
-    render(<AppShellContainer />);
+    renderContainer();
 
     expect(screen.getByTestId('initialized').textContent).toBe('true');
     expect(screen.getByTestId('loading').textContent).toBe('false');
@@ -281,7 +291,7 @@ describe('AppShellContainer', () => {
   it('reads navigation state from the navigation store', () => {
     navigationStore.setState({ currentView: 'rsip' });
 
-    render(<AppShellContainer />);
+    renderContainer();
 
     expect(screen.getByTestId('view').textContent).toBe('rsip');
   });
@@ -303,7 +313,7 @@ describe('AppShellContainer', () => {
       currentView: 'group',
       viewingChainId: group.id,
     });
-    render(<AppShellContainer />);
+    renderContainer();
     expect(screen.getByTestId('group-progress')).toHaveTextContent(
       'Local task:0/2',
     );
@@ -355,7 +365,7 @@ describe('AppShellContainer', () => {
       pendingChainId: focus.id,
       currentSessionId: 'session-1',
     });
-    render(<AppShellContainer />);
+    renderContainer();
     expect(
       JSON.parse(screen.getByTestId('chain-context').textContent!),
     ).toEqual({
@@ -413,7 +423,7 @@ describe('AppShellContainer', () => {
     },
   ])('keeps incomplete or closed betting flow hidden: %j', (navigation) => {
     navigationStore.setState(navigation);
-    render(<AppShellContainer />);
+    renderContainer();
     expect(
       JSON.parse(screen.getByTestId('chain-context').textContent!).betting
         .isOpen,
@@ -421,14 +431,14 @@ describe('AppShellContainer', () => {
   });
 
   it('passes the dedicated atomic creation action to the RSIP view model', () => {
-    render(<AppShellContainer />);
+    renderContainer();
     fireEvent.click(screen.getByText('create-policy'));
     expect(handlers.createRSIPNodes).toHaveBeenCalledWith([]);
     expect(handlers.saveRSIPNodes).not.toHaveBeenCalled();
   });
 
   it('connects the session callback to RSIP task integration', async () => {
-    render(<AppShellContainer />);
+    renderContainer();
     const listener = useSessionsDomainMock.mock.calls[0]?.[0]
       .onTaskLifecycleEvent as (event: {
       type: 'task_completed';

@@ -10,6 +10,7 @@ import { MainChainSettingsSection } from './sections/MainChainSettingsSection';
 import { TaskDescriptionSection } from './sections/TaskDescriptionSection';
 import { useI18n } from '../../i18n';
 import type { CSSProperties } from 'react';
+import type { ChainTagsContextValue } from '../chain-tags/ChainTagsContext';
 
 type EditorSurfaceStyle = CSSProperties & { '--keyboard-height': string };
 
@@ -18,6 +19,8 @@ interface ChainEditorViewProps {
   isEditing: boolean;
   onCancel: () => void;
   form: ChainEditorFormModel;
+  /** Tag list and editing actions; absent outside the app shell. */
+  tags: ChainTagsContextValue | null;
   keyboardHeight: number;
   rsipNodes?: RSIPNode[];
   rsipTaskLinks?: RSIPTaskLink[];
@@ -29,6 +32,7 @@ export function ChainEditorView({
   isEditing,
   onCancel,
   form,
+  tags,
   keyboardHeight,
   rsipNodes,
   rsipTaskLinks,
@@ -59,7 +63,7 @@ export function ChainEditorView({
           onSubmit={form.handleSubmit}
           className="performance-layer animate-slide-up space-y-8"
         >
-          <BasicInfoSection form={form} />
+          <BasicInfoSection form={form} tags={tags} />
           <MainChainSettingsSection form={form} />
           <AuxiliaryChainSettingsSection form={form} />
           <TaskDescriptionSection form={form} />

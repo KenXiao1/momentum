@@ -23,6 +23,7 @@ pub fn run() {
 
     builder
         .manage(commands::session_alarm::SessionAlarms::default())
+        .manage(commands::daily_reminders::DailyReminders::default())
         .invoke_handler(tauri::generate_handler![
             commands::get_platform,
             commands::notifications::send_notification,
@@ -33,10 +34,14 @@ pub fn run() {
             commands::tray::set_tray_labels,
             commands::session_alarm::schedule_session_end,
             commands::session_alarm::cancel_session_end,
+            commands::daily_reminders::set_daily_reminders,
         ])
         .setup(|app| {
             #[cfg(desktop)]
-            identifier_migration::migrate_webview_data(app);
+            {
+                identifier_migration::migrate_webview_data(app);
+                commands::daily_reminders::start(app.handle().clone());
+            }
 
             // The main window is created here, after the data migration, so
             // its webview opens the migrated store. Config sets create: false.

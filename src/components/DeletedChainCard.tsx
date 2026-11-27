@@ -4,6 +4,8 @@ import { getChainTypeConfig } from '../utils/chain-tree';
 import { Icon } from '../utils/iconMap';
 import { RotateCcw, Trash2, CheckSquare, Square } from 'lucide-react';
 import { useI18n } from '../i18n';
+import { useChainTagsOf } from './chain-tags/ChainTagsContext';
+import { TagChips } from './chain-tags/TagChips';
 
 interface DeletedChainCardProps {
   chain: DeletedChain;
@@ -24,6 +26,7 @@ export const DeletedChainCard: React.FC<DeletedChainCardProps> = ({
 }) => {
   const { language, t } = useI18n();
   const typeConfig = getChainTypeConfig(chain.type, language);
+  const tags = useChainTagsOf(chain);
 
   const handleSelectToggle = () => {
     onSelect(chain.id, !isSelected);
@@ -75,11 +78,15 @@ export const DeletedChainCard: React.FC<DeletedChainCardProps> = ({
             <h3 className="mb-1 truncate font-chinese text-base leading-tight font-bold text-gray-900 dark:text-slate-100">
               {chain.name}
             </h3>
-            <span
-              className={`inline-block rounded-md px-2 py-0.5 text-xs ${typeConfig.bgColor} ${typeConfig.color} font-medium`}
-            >
-              {typeConfig.name}
-            </span>
+            {chain.type === 'group' ? (
+              <span
+                className={`inline-block rounded-md px-2 py-0.5 text-xs ${typeConfig.bgColor} ${typeConfig.color} font-medium`}
+              >
+                {typeConfig.name}
+              </span>
+            ) : (
+              <TagChips tags={tags} t={t} />
+            )}
           </div>
         </div>
 

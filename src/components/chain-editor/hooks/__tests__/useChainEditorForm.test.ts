@@ -192,6 +192,7 @@ describe('useChainEditorForm', () => {
         timeLimitExceptions: [],
       }),
       true,
+      [],
     );
   });
 
@@ -224,6 +225,7 @@ describe('useChainEditorForm', () => {
         minimumDuration: 25,
       }),
       false,
+      [],
     );
   });
 
@@ -262,6 +264,7 @@ describe('useChainEditorForm', () => {
         timeLimitExceptions: [],
       }),
       false,
+      [],
     );
 
     nowSpy.mockRestore();

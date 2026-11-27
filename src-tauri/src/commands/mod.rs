@@ -1,3 +1,4 @@
+pub mod daily_reminders;
 pub mod file_ops;
 pub mod notifications;
 pub mod session_alarm;

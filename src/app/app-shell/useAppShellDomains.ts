@@ -1,4 +1,5 @@
 import { useBettingDomain } from '../../hooks/domains/useBettingDomain';
+import { useChainTagsDomain } from '../../hooks/domains/useChainTagsDomain';
 import { useChainsDomain } from '../../hooks/domains/useChainsDomain';
 import { useGroupDomain } from '../../hooks/domains/useGroupDomain';
 import { useImportExportDomain } from '../../hooks/domains/useImportExportDomain';
@@ -8,7 +9,12 @@ import { useRsipDomain } from '../../hooks/domains/useRsipDomain';
 import { useRulesDomain } from '../../hooks/domains/useRulesDomain';
 import { useSafeSaveChains } from '../../hooks/domains/useSafeSaveChains';
 import { useSessionsDomain } from '../../hooks/domains/useSessionsDomain';
+import { useI18n } from '../../i18n';
 import type { MomentumStorage } from '../../storage/MomentumStorage';
+import type { ChainDraft } from '../../types';
+import { toError } from '../../utils/errorMessage';
+import { logger } from '../../utils/logger';
+import { toast } from '../../utils/toast';
 import { getAppStateSnapshot } from '../../stores/appShellStore';
 import { navigationStore } from '../../stores/navigationStore';
 import { useTaskLifecycleIntegration } from '../hooks/useTaskLifecycleIntegration';
@@ -132,6 +138,35 @@ export function useAppShellDomains(
     setState: state.setState,
     onPetImported: petDomain.reloadPet,
   });
+  const chainTagsDomain = useChainTagsDomain({
+    getState: getAppStateSnapshot,
+    setState: state.setState,
+    storage,
+  });
+  const { t } = useI18n();
+  /** Saves the chain, then its tags once the chain has an id. */
+  const handleSaveChain = async (
+    chainData: ChainDraft,
+    isCopy?: boolean,
+    tagIds?: readonly string[],
+  ) => {
+    const savedId = await chainsDomain.handleSaveChain(chainData, isCopy);
+    const saved = getAppStateSnapshot().chains.find(
+      (chain) => chain.id === savedId,
+    );
+    if (!saved || !tagIds) return;
+    try {
+      await chainTagsDomain.setChainTags(saved, tagIds);
+    } catch (error) {
+      logger.error(
+        'CHAIN_TAGS',
+        'Saving chain tags failed',
+        undefined,
+        toError(error),
+      );
+      toast.error(t('chainTags.saveFailedAfterChain'));
+    }
+  };
   const groupDomain = useGroupDomain({
     getState: getAppStateSnapshot,
     setState: state.setState,
@@ -141,6 +176,8 @@ export function useAppShellDomains(
 
   return {
     ...chainsDomain,
+    handleSaveChain,
+    chainTagsDomain,
     ...rsipDomain,
     ...sessionsDomain,
     petDomain,

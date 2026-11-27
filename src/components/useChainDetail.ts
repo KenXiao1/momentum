@@ -3,14 +3,25 @@
  * 封装 ChainDetail 的状态和业务逻辑
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useSyncExternalStore } from 'react';
 import type { Chain, CompletionHistory } from '../types';
 import { useI18n } from '../i18n';
 import { isUserInterruptedReason } from '../domain/failureReason';
 import { buildActivityCalendar } from '../domain/activityCalendar';
+import { hourlyDistribution, streakSeries } from '../domain/completionStats';
+import { useSystemNotificationState } from '../hooks/useSystemNotificationState';
+import {
+  getDailyReminderTimes,
+  setDailyReminderTime,
+  subscribeDailyReminderTimes,
+} from '../utils/local-preferences/dailyReminders';
+import { isTauri, isTauriMobile } from '../utils/platform';
+import type { ReminderSettings } from './chain-detail/types';
 
 /** About six months: long enough to see a habit form, narrow enough for phones. */
 const ACTIVITY_WEEKS = 26;
+/** Enough records to see several streaks rise and reset. */
+const STREAK_POINTS = 60;
 
 interface UseChainDetailOptions {
   chain: Chain;
@@ -44,6 +55,23 @@ export function useChainDetail({
   const activity = useMemo(
     () => buildActivityCalendar(chainHistory, openedAt, ACTIVITY_WEEKS),
     [chainHistory, openedAt],
+  );
+  const hours = useMemo(() => hourlyDistribution(chainHistory), [chainHistory]);
+
+  const reminderTimes = useSyncExternalStore(
+    subscribeDailyReminderTimes,
+    getDailyReminderTimes,
+  );
+  const notifications = useSystemNotificationState();
+  const reminder: ReminderSettings = {
+    time: reminderTimes[chain.id] ?? null,
+    support: isTauriMobile ? 'none' : isTauri ? 'native' : 'web',
+    canNotify: notifications.enabled && notifications.permission === 'granted',
+    onChange: (time) => setDailyReminderTime(chain.id, time),
+  };
+  const streak = useMemo(
+    () => streakSeries(chainHistory, STREAK_POINTS),
+    [chainHistory],
   );
 
   const successRate = useMemo(() => {
@@ -87,6 +115,9 @@ export function useChainDetail({
     chainHistory,
     recentHistory,
     activity,
+    hours,
+    streak,
+    reminder,
     successRate,
     chainHistoryCount: chainHistory.length,
 

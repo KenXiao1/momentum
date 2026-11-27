@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { filterChainTreeByTags, tagUsage } from '../../domain/chainTags';
 import { useI18n } from '../../i18n';
 import type { MomentumStorage } from '../../storage/MomentumStorage';
 import { hasStorageCapability } from '../../storage/ports';
@@ -9,6 +10,7 @@ import { isDev } from '../../utils/env';
 import { toError } from '../../utils/errorMessage';
 import { logger } from '../../utils/logger';
 import { buildChainTree } from '../../utils/chain-tree';
+import { ChainTagsContext } from '../chain-tags/ChainTagsContext';
 import type { DashboardProps } from './types';
 
 /** Counts recycle-bin chains, or returns null when they cannot be read. */
@@ -82,6 +84,27 @@ export function useDashboardController({
     return result;
   }, [chainTree]);
 
+  const tagSet = useContext(ChainTagsContext)?.tagSet;
+  const [chosenTagIds, setChosenTagIds] = useState<string[]>([]);
+  const tagFilterUsage = useMemo(
+    () => (tagSet ? tagUsage(tagSet, chains) : []),
+    [tagSet, chains],
+  );
+  // A tag no chain shows any more drops out of the filter.
+  const selectedTagIds = chosenTagIds.filter((id) =>
+    tagFilterUsage.some(({ tag }) => tag.id === id),
+  );
+  if (selectedTagIds.length !== chosenTagIds.length) {
+    setChosenTagIds(selectedTagIds);
+  }
+  const visibleChains = useMemo(
+    () =>
+      tagSet && chosenTagIds.length > 0
+        ? filterChainTreeByTags(topLevelChains, tagSet, new Set(chosenTagIds))
+        : topLevelChains,
+    [topLevelChains, tagSet, chosenTagIds],
+  );
+
   const loadRecycleBinStats = useCallback(async () => {
     const count = await readRecycleBinCount(storage);
     if (count !== null) setRecycleBinCount(count);
@@ -127,6 +150,19 @@ export function useDashboardController({
     t,
     language,
     topLevelChains,
+    visibleChains,
+    tagFilterUsage,
+    selectedTagIds: chosenTagIds,
+    toggleTagFilter: useCallback(
+      (tagId: string) =>
+        setChosenTagIds((ids) =>
+          ids.includes(tagId)
+            ? ids.filter((id) => id !== tagId)
+            : [...ids, tagId],
+        ),
+      [],
+    ),
+    clearTagFilter: useCallback(() => setChosenTagIds([]), []),
     recycleBinCount,
     canUseCheckin,
     canUseSupabase,

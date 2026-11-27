@@ -476,6 +476,27 @@ class DatabaseContracts(unittest.TestCase):
         self.db.sql('SELECT public.delete_my_account();', 'authenticated', A)
         self.assertEqual(self.db.sql('SELECT count(*) FROM public.exception_rule_sets'), '0')
 
+    def test_chain_tag_sets_are_private_and_compare_and_swap(self):
+        tags = literal(json.dumps([{'id': 'legacy:assault', 'name': 'Assault', 'color': 'rose'}]))
+        self.denied(f"INSERT INTO public.chain_tag_sets(user_id) VALUES('{A}')", None, 'anon')
+        self.denied(f"INSERT INTO public.chain_tag_sets(user_id) VALUES('{B}')", A)
+        self.db.sql(f"INSERT INTO public.chain_tag_sets(user_id,tags) VALUES('{A}',{tags}::jsonb)", 'authenticated', A)
+        self.assertEqual(self.db.sql('SELECT count(*) FROM public.chain_tag_sets', 'authenticated', B), '0')
+        update = (f"WITH changed AS (UPDATE public.chain_tag_sets SET assignments='{{\"{CA}\": []}}', revision=2 "
+            f"WHERE user_id='{A}' AND revision=1 RETURNING 1) SELECT count(*) FROM changed")
+        self.assertEqual(self.db.sql(update, 'authenticated', A), '1')
+        self.assertEqual(self.db.sql(update, 'authenticated', A), '0')
+        with self.assertRaisesRegex(RuntimeError, 'Stale exception rule revision'):
+            self.db.sql(f"UPDATE public.chain_tag_sets SET revision=9 WHERE user_id='{A}'", 'authenticated', A)
+        with self.assertRaisesRegex(RuntimeError, 'check constraint'):
+            self.db.sql(f"UPDATE public.chain_tag_sets SET assignments='[]', revision=3 WHERE user_id='{A}'", 'authenticated', A)
+        self.denied(f"DELETE FROM public.chain_tag_sets WHERE user_id='{A}'", A)
+        before = self.db.sql('SELECT public.get_sync_fingerprint()', 'authenticated', A)
+        self.db.sql(f"UPDATE public.chain_tag_sets SET tags='[]', revision=3 WHERE user_id='{A}'", 'authenticated', A)
+        self.assertNotEqual(self.db.sql('SELECT public.get_sync_fingerprint()', 'authenticated', A), before)
+        self.db.sql('SELECT public.delete_my_account();', 'authenticated', A)
+        self.assertEqual(self.db.sql('SELECT count(*) FROM public.chain_tag_sets'), '0')
+
     def test_sync_fingerprint_tracks_only_the_callers_data(self):
         self.denied('SELECT public.get_sync_fingerprint()', None, 'anon')
         fingerprint = lambda user: self.db.sql('SELECT public.get_sync_fingerprint()', 'authenticated', user)
